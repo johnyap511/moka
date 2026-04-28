@@ -1,0 +1,227 @@
+/* ============================================================
+   MOKA v2 — Header & Navigation
+   ============================================================ */
+
+/* ── Fixed Header ─────────────────────────────────────────── */
+.moka-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  transition: background var(--ease-slow), box-shadow var(--ease-slow);
+}
+
+/* Transparent on hero (default) */
+.moka-header.transparent {
+  background: transparent;
+}
+
+/* Solid on scroll */
+.moka-header.scrolled {
+  background: var(--teal);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+
+/* Solid on non-hero pages */
+.moka-header.solid {
+  background: var(--teal);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* ── Logo ──────────────────────────────────────────────────── */
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.header-logo img {
+  height: 42px;
+  width: auto;
+  filter: brightness(0) invert(1); /* white logo on teal */
+}
+
+/* ── Desktop Nav ───────────────────────────────────────────── */
+.header-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (min-width: 992px) {
+  .header-nav {
+    display: flex;
+  }
+}
+
+.nav-link {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: color var(--ease-fast), background var(--ease-fast);
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--white);
+  background: rgba(255,255,255,0.1);
+}
+
+.nav-link.active {
+  color: var(--white);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+/* ── Header Actions ────────────────────────────────────────── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.header-login-btn {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  transition: all var(--ease-fast);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.header-login-btn:hover {
+  color: var(--white);
+  background: rgba(255,255,255,0.1);
+}
+
+.header-cta {
+  display: none;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--teal) !important;
+  background: var(--white) !important;
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--ease-normal);
+}
+
+.header-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 992px) {
+  .header-cta { display: inline-flex; }
+}
+
+/* ── Mobile Hamburger ──────────────────────────────────────── */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--ease-fast);
+}
+
+.hamburger:hover { background: rgba(255,255,255,0.1); }
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--white);
+  border-radius: 2px;
+  transform-origin: center;
+  transition: all var(--ease-normal);
+}
+
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (min-width: 992px) {
+  .hamburger { display: none; }
+}
+
+/* ── Mobile Drawer ─────────────────────────────────────────── */
+.mobile-drawer {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--teal);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-8) var(--space-6);
+  transform: translateX(100%);
+  transition: transform var(--ease-slow);
+  overflow-y: auto;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-nav-link {
+  font-size: var(--text-xl);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--white);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: block;
+  transition: color var(--ease-fast), padding-left var(--ease-fast);
+}
+
+.mobile-nav-link:hover {
+  color: var(--orange);
+  padding-left: var(--space-3);
+}
+
+.mobile-drawer-footer {
+  margin-top: auto;
+  padding-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mobile-drawer-footer .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ── Active page indicator ─────────────────────────────────── */
+.moka-header.page-dark .nav-link { color: rgba(255,255,255,0.7); }
