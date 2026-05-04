@@ -1,0 +1,153 @@
+# =============================================================================
+# MOKA — Staging docker-compose
+# Exposes the application on port 8080 (avoids conflict with production :80)
+# All secrets are loaded from .env.staging — never commit real credentials.
+# =============================================================================
+
+version: "3.9"
+
+# ---------------------------------------------------------------------------
+# Named volumes — data persists across container restarts
+# ---------------------------------------------------------------------------
+volumes:
+  db_data:
+    driver: local
+  storage_data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# Shared network so all services can address each other by service name
+# ---------------------------------------------------------------------------
+networks:
+  staging_net:
+    driver: bridge
+
+services:
+
+  # --------------------------------------------------------------------------
+  # app — Laravel PHP-FPM process
+  # --------------------------------------------------------------------------
+  app:
+    build:
+      context: ../..          # repo root so COPY . . picks up the full source
+      dockerfile: deployment/staging/Dockerfile
+    image: moka-staging-app:latest
+    container_name: moka_staging_app
+    restart: unless-stopped
+
+    env_file:
+      - .env.staging
+
+    # Mount persistent storage so uploaded files survive redeploys
+    volumes:
+      - storage_data:/var/www/html/storage
+      # Mount bootstrap/cache as a tmpfs for fast cache clears
+      - type: tmpfs
+        target: /var/www/html/bootstrap/cache
+
+    networks:
+      - staging_net
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # --------------------------------------------------------------------------
+  # nginx — Web server / reverse proxy
+  # --------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: moka_staging_nginx
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"   # Staging port — open via GCP firewall rule
+
+    volumes:
+      # Serve static assets directly from host-copied source
+      - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf:ro
+      # Share storage/app/public for uploaded-file serving
+      - storage_data:/var/www/html/storage:ro
+      # Mount public directory read-only for static asset serving
+      - type: bind
+        source: ../../public
+        target: /var/www/html/public
+        read_only: true
+
+    networks:
+      - staging_net
+
+    depends_on:
+      - app
+
+  # --------------------------------------------------------------------------
+  # db — MySQL 8 database
+  # --------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: moka_staging_db
+    restart: unless-stopped
+
+    env_file:
+      - .env.staging
+
+    # Map .env.staging DB_* variables to MySQL's expected env vars
+    environment:
+      MYSQL_DATABASE:      ${DB_DATABASE}
+      MYSQL_USER:          ${DB_USERNAME}
+      MYSQL_PASSWORD:      ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      # UTF-8 everywhere
+      MYSQL_CHARSET:       utf8mb4
+      MYSQL_COLLATION:     utf8mb4_unicode_ci
+
+    volumes:
+      - db_data:/var/lib/mysql
+      # Custom MySQL config for staging tuning
+      - ./mysql/staging.cnf:/etc/mysql/conf.d/staging.cnf:ro
+
+    ports:
+      # Bind to localhost only — DB must NOT be internet-accessible
+      - "127.0.0.1:3307:3306"
+
+    networks:
+      - staging_net
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # --------------------------------------------------------------------------
+  # redis — Cache & session store
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7.2-alpine
+    container_name: moka_staging_redis
+    restart: unless-stopped
+
+    # Persistence: AOF for durability during staging tests
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+
+    volumes:
+      - type: tmpfs
+        target: /data   # ephemeral for staging — swap for named volume if needed
+
+    networks:
+      - staging_net
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
