@@ -23,7 +23,7 @@ RUN composer install \
 
 # Now copy the full application source and generate the optimized autoloader
 COPY . .
-RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
+RUN composer dump-autoload --optimize --no-dev --no-scripts --ignore-platform-reqs
 
 
 # --- Stage 2: Final runtime image ---
