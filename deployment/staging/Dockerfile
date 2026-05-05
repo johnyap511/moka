@@ -18,11 +18,12 @@ RUN composer install \
     --no-scripts \
     --no-autoloader \
     --prefer-dist \
-    --ignore-platform-reqs
+    --ignore-platform-reqs \
+    --ignore-platform-req=php
 
 # Now copy the full application source and generate the optimized autoloader
 COPY . .
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
 
 # --- Stage 2: Final runtime image ---
