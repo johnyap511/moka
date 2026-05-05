@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Copy only the files Composer needs first so this layer is cached
 # unless composer.json or composer.lock actually changes.
-COPY composer.json composer.lock* ./
+COPY composer.json ./
 
 # Install production dependencies only, no scripts yet (app code not copied)
 RUN composer install \
