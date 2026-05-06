@@ -1,0 +1,73 @@
+@extends('admin.layout')
+@section('title', 'Listing Calendar')
+@section('page-title', 'Listing Calendar')
+
+@section('content')
+
+<div class="page-header">
+    <div>
+        <h1>Listing Calendar</h1>
+        <p>Availability and booking overview</p>
+    </div>
+    <div class="flex gap-2">
+        @if(isset($listing))
+        <a href="/admin/listing/{{ $listing->id }}/edit" class="btn btn-secondary">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Edit
+        </a>
+        @endif
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Calendar View</h2>
+        @if(isset($listing))
+            <span class="badge badge-blue">{{ $listing->title ?? $listing->name ?? 'Listing #'.$listing->id }}</span>
+        @endif
+    </div>
+    <div class="card-body">
+        {{-- FullCalendar container --}}
+        <div id="calendar" style="min-height:500px"></div>
+    </div>
+</div>
+
+@php
+    $eventsJson = json_encode($events ?? []);
+@endphp
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var events = {!! $eventsJson !!};
+
+    // Simple table fallback if FullCalendar is not loaded
+    if (typeof FullCalendar === 'undefined') {
+        var calEl = document.getElementById('calendar');
+        if (events && events.length > 0) {
+            var html = '<table><thead><tr><th>Title</th><th>Start</th><th>End</th></tr></thead><tbody>';
+            events.forEach(function(e) {
+                html += '<tr><td>' + (e.title || '') + '</td><td>' + (e.start || '') + '</td><td>' + (e.end || '') + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            calEl.innerHTML = html;
+        } else {
+            calEl.innerHTML = '<div class="empty-state"><p>No events to display</p></div>';
+        }
+        return;
+    }
+
+    var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        events: events,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        eventColor: '#14b8a6'
+    });
+    calendar.render();
+});
+</script>
+
+@endsection
