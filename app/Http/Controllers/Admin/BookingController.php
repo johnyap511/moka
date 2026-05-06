@@ -857,9 +857,12 @@ private function getActionButtons($book)
     public function show($id)
     {
         $book = Booking::find($id);
+        if (!$book) {
+            return redirect('/admin/book')->with('error', 'Booking not found.');
+        }
         $user = User::find($book->user_id);
         $listing = Listing::find($book->listing_id);
-        $owner = User::find($listing->user_id);
+        $owner = $listing ? User::find($listing->user_id) : null;
         return view('admin.listing.book.detail', compact('book', 'user', 'listing', 'owner'));
     }
 

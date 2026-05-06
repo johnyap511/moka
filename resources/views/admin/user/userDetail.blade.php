@@ -5,7 +5,7 @@
 @section('content')
 
 @php
-    $bookings = App\Models\Booking::where('user_id', $user->id)->orderBy('created_at','desc')->limit(10)->get();
+    $bookings = App\Booking::where('user_id', $user->id)->orderBy('created_at','desc')->limit(10)->get();
 @endphp
 
 <div class="page-header">

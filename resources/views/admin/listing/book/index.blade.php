@@ -38,7 +38,7 @@ $statusMap = [
 {{-- Stats --}}
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="val">{{ $books->total() ?? $books->count() }}</div>
+        <div class="val">{{ method_exists($books, 'total') ? $books->total() : $books->count() }}</div>
         <div class="lbl">Total Bookings</div>
     </div>
     <div class="stat-card">
