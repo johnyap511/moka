@@ -24,7 +24,6 @@ class CalendarController extends Controller
         } else {
             $list = '';
         }
-        // dd($list);
         $books = Booking::where([['listing_id', $list], ['status', '>', 1]])->get();
         $events = [];
         foreach ($books as $book) {
@@ -82,9 +81,7 @@ class CalendarController extends Controller
                 'id' => $book->id, 'title' => 'Booked by ' . $name, 'start' => $book->check_in, 'end' => $book->check_out, 'guest' => $guest, 'price_night' => $book->price_night, 'sst' => $book->sst, 'sst_cf' => $book->sst_cf, 'created_at' => $book->created_at,
                 'nights' => $book->nights, 'cleaning_fee' => $book->cleaning_fee, 'discount' => $book->discount_fee, 'ota_fee' => $book->ota_fee, 'price' => $book->price, 'source' => $book->source,
             ];
-            // $events[] = ['id'=>$book->id, 'title'=>'Booked by '.$name, 'start'=>$book->check_in, 'end'=>$book->check_out];
         }
-        // dd($events);
         $events = json_encode($events);
         return view('owner.listing.calendar', compact('events'));
     }
@@ -111,7 +108,6 @@ class CalendarController extends Controller
         $end = Carbon::now()->modify('+' . $dif . ' days');
 
         $listings = Listing::where('user_id', Auth::user()->id)->where('status', 1)->get();
-        // dd($listings);
         $alphabet = range('A', 'Z');
         $alphas = range('A', 'Z');
 
@@ -152,7 +148,6 @@ class CalendarController extends Controller
         $oldCoordinate = 'A1';
         $index = 1;
         foreach ($sheet->getRowIterator() as $row) {
-            // dd($row);
             $cellIterator = $row->getCellIterator();
             foreach ($cellIterator as $cell) {
                 if (!empty($cell) && $row->getRowIndex() == $index && $cell->getValue() == $oldVal) {
@@ -165,7 +160,6 @@ class CalendarController extends Controller
         }
 
         $start = Carbon::now()->modify('-' . $weekDay . ' days');
-        // dd($start,$end);
         $i = 0;
         $curRow = 4;
         $lastDay = end($dateArray);
@@ -180,11 +174,9 @@ class CalendarController extends Controller
             $sheet->setCellValue('A' . $curRow, $name);
             $sheet->setCellValue('B' . $curRow, $ownerName);
             $books = Booking::where([['listing_id', $listing->id], ['check_out', '>=', $start], ['check_in', '<=', $end]])->get();
-            // dd($books);
             foreach ($books as $book) {
                 $checkIn = $book->check_in;
                 $checkOut = $book->check_out;
-                // dd($checkIn);
                 $checked = false;
                 $checkInCoor = "";
                 foreach ($dateArray as $date22) {

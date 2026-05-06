@@ -44,9 +44,7 @@ class ListingController extends Controller
                 $listing = Listing::where('user_id', Auth::id())->find($listingData->id);
             }
         }
-        // dd($listing);
         $allListings = Listing::where('user_id', Auth::id())->where('status', 1)->get();
-        // dd(Auth::id());
         $selDate = $request->date;
         if (empty($selDate)) {
             $selDate = Carbon::now();
@@ -84,7 +82,6 @@ class ListingController extends Controller
             array_push($arrayCheckOut, $to);
         }
         $data = array_combine($arrayCheckIn, $arrayCheckOut);
-//    dd($data);
         $mobile = [];
         $graphArray = [];
         $graphavg = [];
@@ -117,7 +114,6 @@ class ListingController extends Controller
                         $diff = $later->diff($earlier)->format("%a");
                         $nights = $book->nights - $diff;
                         $checkOut = $end;
-//            dd($nights);
                     }
 
                 } elseif ($book->check_out > $start && $book->check_out <= $end) {
@@ -162,7 +158,6 @@ class ListingController extends Controller
             }
 
             $mobile_chart = [$months, (($book->price_night) * $nights + $book->cleaning_fee), (($book->price_night) * $nights), (($book->price_night) * $nights), ($book->price_night + ($book->price_night * $nights))];
-            // dd($mobile_chart);
             $occupancyRateThis = $bookedDays / date_format($selDate, 't');
             if ($listing->type == 'group') {
                 $bookingThisMonth = 0;
@@ -232,9 +227,6 @@ class ListingController extends Controller
             array_push($mobile, $mobile_chart);
             array_push($graphArray, $graphData);
             array_push($graphavg, $graphavgs);
-            // echo "<pre>";
-            // print_r($mobile);
-            // echo "<pre>";
         }
 
         $graphO = DB::table('bookings')
