@@ -19,7 +19,7 @@ class RedirectIfAuthenticated
     {
         if (Auth::guard($guard)->check()) {
             if(Auth::user()->hasRole("user")){
-                return redirect('/home');
+                return redirect('/home/dashboard');
             }elseif(Auth::user()->hasRole("admin")){
                 return redirect('/admin/dashboard');
             }elseif(Auth::user()->hasRole("owner")){

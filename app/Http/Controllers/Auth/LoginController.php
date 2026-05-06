@@ -49,6 +49,6 @@ class LoginController extends Controller
         if (Auth::user()->hasRole('owner')) {
             return redirect('/owner/dashboard');
         }
-        return redirect('/home');
+        return redirect('/home/dashboard');
     }
 }
