@@ -2,11 +2,45 @@
 
 namespace App\Providers;
 
+use App\Events\BookingCompletedEvent;
+use App\Events\BookingCompleteEZEEAPIEvent;
+use App\Listeners\BookingCompleteEZEEAPIListener;
+use App\Listeners\BookingCompleteEZEEPaymentListener;
+use App\Listeners\BookingCompleteListener;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
-    protected $listen = [];
-    public function boot(): void {}
-    public function shouldDiscoverEvents(): bool { return false; }
+    /**
+     * The event listener mappings for the application.
+     *
+     * @var array
+     */
+    protected $listen = [
+        Registered::class => [
+            SendEmailVerificationNotification::class,
+        ],
+        BookingCompletedEvent::class => [
+            BookingCompleteListener::class,
+        ],
+        BookingCompleteEZEEAPIEvent::class => [
+            BookingCompleteEZEEAPIListener::class,
+            BookingCompleteEZEEPaymentListener::class
+        ],
+    ];
+
+    /**
+     * Register any events for your application.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        parent::boot();
+
+        //
+    }
 }

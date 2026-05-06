@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ResetPasswordController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest');
+    }
+
     public function showResetForm(Request $request, $token)
     {
         return view('v2.pages.reset-password', ['token' => $token, 'email' => $request->email]);
@@ -14,6 +19,6 @@ class ResetPasswordController extends Controller
 
     public function reset(Request $request)
     {
-        return redirect('/login')->with('status', 'Password reset is not configured in staging.');
+        return redirect('/login')->with('status', 'Password reset is not available in staging.');
     }
 }

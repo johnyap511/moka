@@ -41,9 +41,15 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        Laratrust\LaratrustServiceProvider::class,
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class,
+        UniSharp\LaravelFilemanager\LaravelFilemanagerServiceProvider::class,
     ],
 
     'aliases' => Illuminate\Support\Facades\Facade::defaultAliases()->merge([
-        //
+        'Laratrust' => Laratrust\LaratrustFacade::class,
+        'Excel'     => Maatwebsite\Excel\Facades\Excel::class,
+        'Image'     => Intervention\Image\Facades\Image::class,
     ])->toArray(),
 ];

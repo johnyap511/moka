@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ForgotPasswordController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest');
+    }
+
     public function showLinkRequestForm()
     {
         return view('v2.pages.forgot-password');
