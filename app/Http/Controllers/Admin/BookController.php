@@ -1827,7 +1827,6 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             //         ',' , ';', '<', '>' ), ' ', $user_name);
             //         echo $insert_user = "INSERT INTO `users` (`id`, `name`, `last_name`, `email`, `phone`, `country_code`, `address`, `password`, `provider`, `provider_token`, `status`, `ezee_tmp`, `remember_token`, `created_at`, `updated_at`) VALUES (NULL, '$res1', NULL, NULL, NULL, '60', NULL, '', NULL, NULL, '1', '0', NULL, '2020-05-24 13:51:40', '2022-08-01 00:29:26')";
 
-            dd($already_exixts);
         }
     }
 

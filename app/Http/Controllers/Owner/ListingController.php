@@ -249,7 +249,6 @@ class ListingController extends Controller
             ->orderBy('check_in', 'ASC')
             ->groupBy('month')
             ->get();
-        //  dd($graph);
         $sub_month = json_encode($graph, true);
         $graphmonth = json_decode(json_encode($graph), true);
 

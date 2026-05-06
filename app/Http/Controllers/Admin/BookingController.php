@@ -30,7 +30,6 @@ class BookingController extends Controller
 
     public function __construct()
     {
-        // dd("ok");
         // $this->historicalAPI();
     }
 
@@ -79,7 +78,6 @@ class BookingController extends Controller
             $json = json_encode($xml);
             $res = json_decode($json, true);
             $reservation_data_ezee = array();
-            // dd($res);
             if (is_array($res)) {
                 foreach ($res as $reservation) {
 
@@ -94,7 +92,6 @@ class BookingController extends Controller
                             }
                             if (array_key_exists('BookingTran', $reserve['BookByInfo'])) {
                                 //BookByInfo loop
-                                // dd($reserve);
                                 foreach ($reserve as $reserve1) {
                                     //getting key if exist to find array inside array or elements
                                     if (array_key_exists('IsConfirmed', $reserve1['BookingTran'])) {
@@ -891,7 +888,6 @@ private function getActionButtons($book)
      */
     public function update(Request $request, $id)
     {
-        // dd($request->sst_cf);
         $validator = Validator::make($request->all(), [
             'email' => 'nullable|email|max:120',
             'check_in' => 'required|date',
@@ -1031,7 +1027,6 @@ private function getActionButtons($book)
      */
     public function exportExcel()
     {
-        // dd("oo");
         $bookings = Booking::where('status', '>=', 3)->get();
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -1119,7 +1114,6 @@ private function getActionButtons($book)
                 } else {
                     $ota = $booking->ota_fee;
                 }
-                // dd($ota);
             } elseif ($booking->source == 'Owner' || $booking->source == 'owner') {
                 $ota = number_format(0.00, 2);
             } elseif ($booking->source == 'Long Term Rental') {
@@ -1439,7 +1433,6 @@ private function getActionButtons($book)
 
         $bookings = Booking::where('status', '>=', 3)->whereBetween('created_at', [$request->from_date, $request->to_date])->get();
 
-        // dd($bookings);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->mergeCells('A1:R1');

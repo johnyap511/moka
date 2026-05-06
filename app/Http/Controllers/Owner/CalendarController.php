@@ -242,8 +242,14 @@ class CalendarController extends Controller
     public function show($id)
     {
         $book = Booking::find($id);
-        $user = User::find($book->user_id);
+        if (empty($book)) {
+            abort(404, 'Booking not found.');
+        }
         $listing = Listing::find($book->listing_id);
+        if (empty($listing) || $listing->user_id !== Auth::id()) {
+            abort(403, 'You do not have access to this listing.');
+        }
+        $user = User::find($book->user_id);
         $owner = User::find($listing->user_id);
         return view('owner.listing.book.detail', compact('book', 'user', 'listing', 'owner'));
     }

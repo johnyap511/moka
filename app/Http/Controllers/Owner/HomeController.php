@@ -55,7 +55,6 @@ class HomeController extends Controller
             if (empty($id)) {
 
                 $revenueyearly = 0;
-                // dd($selDate);
                 $allListings = Listing::where('user_id', $authId)->pluck('id')->toArray();
                 if (empty($selDate)) {
                     $selDate = Carbon::now();
@@ -71,7 +70,6 @@ class HomeController extends Controller
                 $prevMonth5 = date_create($thisMonth)->modify('-2 months');
                 $nextOf6Month = date_format($nextMonth6, 'Y-m-01');
                 $prevOf6Month = date_format($prevMonth5, 'Y-m-01');
-                // dd($thisMonth, $nextMonth3);
                 $graphArray = [];
                 $graphavg = [];
                 $mobile = [];
@@ -291,7 +289,6 @@ class HomeController extends Controller
         $formatted_date = date_create($year_start)->modify('+12 month');
         $year_end = date_format($formatted_date, 'Y-01-01');
 
-        // dd($thisMonth, $endOfMonth, $year_start, $year_end);
         if ($thisMonth_today) {
             $revenue = 0;
             $revenueyearly = 0;
@@ -314,7 +311,6 @@ class HomeController extends Controller
                         $diff = $later->diff($earlier)->format("%a");
                         $nights = $book->nights - $diff;
                         $checkOut = $endOfMonth;
-                        //            dd($nights);
                     }
                 } elseif ($book->check_out > $thisMonth && $book->check_out <= $endOfMonth) {
                     $earlier = new DateTime($book->check_in);

@@ -30,7 +30,6 @@ class EzeeBookingController extends Controller
     public function update(Request $request, $id)
     {
         $booking = EzeeBooking::findOrFail($id);
-        // dd($booking);
         $validatedData = $request->validate([
             'FirstName' => 'required|string|max:255', 
             'LastName' => 'required|string|max:255',
