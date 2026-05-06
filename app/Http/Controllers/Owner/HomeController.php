@@ -112,7 +112,7 @@ class HomeController extends Controller
         $prevOf6Month = date_format($prevMonth5, 'Y-m-01');
         $totalNights = 0;
         $graphdata = DB::table('bookings')
-            ->select(DB::raw('DATE_FORMAT(check_in, "%m") as month , DATE_FORMAT(check_in, "%Y") as year'))
+            ->select(DB::raw("strftime('%m', check_in) as month, strftime('%Y', check_in) as year"))
             ->where('listing_id', $request->listing_id ?? $id)
             ->where('check_in', '>=', $prevOf6Month)
             ->where('check_in', '<', $nextOf6Month)
