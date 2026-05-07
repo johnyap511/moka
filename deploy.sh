@@ -96,13 +96,13 @@ FLUSH PRIVILEGES;
 SQLEOF
 
 # Update .env for MySQL
-sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' "$APP_DIR/.env"
-sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' "$APP_DIR/.env"
-sed -i 's/^DB_DATABASE=.*/DB_DATABASE=moka/' "$APP_DIR/.env"
-sed -i 's/^DB_USERNAME=.*/DB_USERNAME=moka/' "$APP_DIR/.env"
-sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=Moka@Prod2026/' "$APP_DIR/.env"
-sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' "$APP_DIR/.env"
-sed -i 's/^APP_ENV=.*/APP_ENV=production/' "$APP_DIR/.env"
+sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' "$APP_DIR/.env"
+sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' "$APP_DIR/.env"
+sed -i 's|^DB_DATABASE=.*|DB_DATABASE=moka|' "$APP_DIR/.env"
+sed -i 's|^DB_USERNAME=.*|DB_USERNAME=moka|' "$APP_DIR/.env"
+sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=Moka@Prod2026|' "$APP_DIR/.env"
+sed -i 's|^APP_DEBUG=.*|APP_DEBUG=false|' "$APP_DIR/.env"
+sed -i 's|^APP_ENV=.*|APP_ENV=production|' "$APP_DIR/.env"
 
 # Get the server's public IP and update APP_URL
 SERVER_IP=$(curl -s --max-time 5 http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/externalIp -H "Metadata-Flavor: Google" 2>/dev/null || hostname -I | awk '{print $1}')
