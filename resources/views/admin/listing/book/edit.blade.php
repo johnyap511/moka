@@ -50,7 +50,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Total Price (RM)</label>
-                    <input type="number" name="total_price" class="form-input" value="{{ old('total_price', $book->total_price) }}" step="0.01">
+                    <input type="number" name="price" class="form-input" value="{{ old('price', $book->price) }}" step="0.01">
                 </div>
                 <div class="form-group">
                     <label>Status</label>

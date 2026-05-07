@@ -10,8 +10,8 @@
     $totalGuests    = \App\User::whereHas('roles', fn($q) => $q->where('name','user'))->count();
     $totalBookings  = \App\Booking::count();
     $activeBookings = \App\Booking::where('status', '>=', 3)->where('status', '<', 9)->count();
-    $revenue        = \App\Booking::where('status', '>=', 5)->sum('total_price');
-    $thisMonth      = \App\Booking::where('status', '>=', 5)->whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->sum('total_price');
+    $revenue        = \App\Booking::where('status', '>=', 5)->sum('price');
+    $thisMonth      = \App\Booking::where('status', '>=', 5)->whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->sum('price');
     $recentBookings = \App\Booking::with(['listing'])->orderBy('created_at','desc')->limit(8)->get();
 @endphp
 
@@ -74,7 +74,7 @@
                     <td>{{ $b->name ?? '—' }}</td>
                     <td>{{ $b->check_in }}</td>
                     <td>{{ $b->check_out }}</td>
-                    <td>RM {{ number_format($b->total_price ?? 0) }}</td>
+                    <td>RM {{ number_format($b->price ?? 0) }}</td>
                     <td>
                         @php $s = $b->status ?? 0; @endphp
                         @if($s >= 9) <span class="badge badge-gray">Completed</span>

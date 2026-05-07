@@ -46,7 +46,7 @@
             </div>
             <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
                 <div class="text-sm text-secondary">Total Price</div>
-                <div class="font-600">RM {{ number_format($book->total_price ?? 0, 2) }}</div>
+                <div class="font-600">RM {{ number_format($book->price ?? 0, 2) }}</div>
             </div>
             <div style="padding:14px 20px">
                 <div class="text-sm text-secondary">Booking Date</div>

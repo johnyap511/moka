@@ -139,8 +139,8 @@ $statusMap = [
                     <td>{{ $checkOut ? $checkOut->format('d M Y') : '—' }}</td>
                     <td>{{ is_numeric($nights) ? $nights : $nights }}</td>
                     <td>
-                        @if($book->total_price ?? null)
-                            <span class="font-600">{{ number_format($book->total_price, 2) }}</span>
+                        @if($book->price ?? null)
+                            <span class="font-600">{{ number_format($book->price, 2) }}</span>
                         @else
                             —
                         @endif
