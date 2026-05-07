@@ -89,7 +89,7 @@
 
             <div class="form-group">
                 <label>Notes / Remarks</label>
-                <textarea name="notes" class="form-textarea" rows="3">{{ old('notes') }}</textarea>
+                <textarea name="remark" class="form-textarea" rows="3">{{ old('remark') }}</textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Create Booking</button>

@@ -19,8 +19,8 @@
         <div class="card-header">
             <h2>Booking Details</h2>
             @php
-                $statusLabels = [1=>'Pending',2=>'Confirmed',3=>'Cancelled',4=>'Expired',5=>'Completed',6=>'Checked In',7=>'Checked Out'];
-                $statusClasses = [1=>'badge-orange',2=>'badge-blue',3=>'badge-red',4=>'badge-gray',5=>'badge-green',6=>'badge-teal',7=>'badge-gray'];
+                $statusLabels = [0=>'Cancelled',1=>'New',3=>'Pending',5=>'Confirmed',7=>'Checked In',9=>'Completed'];
+                $statusClasses = [0=>'badge-red',1=>'badge-gray',3=>'badge-orange',5=>'badge-green',7=>'badge-blue',9=>'badge-gray'];
                 $status = $book->status ?? 0;
             @endphp
             <span class="badge {{ $statusClasses[$status] ?? 'badge-gray' }}">{{ $statusLabels[$status] ?? 'Unknown' }}</span>

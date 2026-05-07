@@ -68,7 +68,7 @@
 
             <div class="form-group">
                 <label>Notes / Remarks</label>
-                <textarea name="notes" class="form-textarea" rows="3">{{ old('notes', $book->notes ?? '') }}</textarea>
+                <textarea name="remark" class="form-textarea" rows="3">{{ old('remark', $book->remark ?? '') }}</textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Update Booking</button>
