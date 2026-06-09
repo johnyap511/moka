@@ -471,12 +471,35 @@ public function index(Request $request)
     $to_date = $request->to_date;
     $checkin_date = $request->checkin_date;
     $checkinto_date = $request->checkinto_date;
-    
-    // Only get minimal data for the page (modals, etc.)
-    $books = Booking::with('ezeeBooking')
+
+    $query = Booking::with(['user:id,name,last_name,email', 'listing:id,name,title'])
         ->where('status', '>=', 3)
-        ->limit(20) // Just enough for any modals on the page
-        ->get();
+        ->orderBy('check_in', 'desc');
+
+    // Search by guest name (q param)
+    if ($request->filled('q')) {
+        $q = $request->q;
+        $query->where(function ($sq) use ($q) {
+            $sq->where('name', 'LIKE', "%{$q}%")
+               ->orWhereHas('user', fn($u) => $u->where('name', 'LIKE', "%{$q}%")
+                   ->orWhere('last_name', 'LIKE', "%{$q}%"));
+        });
+    }
+
+    // Status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Check-in date range filter
+    if ($request->filled('from_date')) {
+        $query->where('check_in', '>=', $request->from_date);
+    }
+    if ($request->filled('to_date')) {
+        $query->where('check_in', '<=', $request->to_date);
+    }
+
+    $books = $query->paginate(50);
 
     $totalBookings  = Booking::where('status', '>=', 3)->count();
     $confirmedCount = Booking::where('status', 5)->count();
