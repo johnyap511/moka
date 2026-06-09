@@ -122,10 +122,12 @@
             <h3 style="font-size:16px;font-weight:600" id="edit-modal-title">Utility Charges</h3>
             <button type="button" class="btn btn-secondary btn-sm" onclick="closeEdit()">Close</button>
         </div>
-        <form method="POST" id="edit-form" action="/admin/import/approval">
+        <form method="POST" id="edit-form" action="/admin/utility/store">
             @csrf
+            <input type="hidden" name="_method" id="ef-method" value="POST">
             <input type="hidden" name="listing_id" id="ef-listing-id">
-            <input type="hidden" name="date" value="{{ $selDate->format('Y-m-d') }}">
+            <input type="hidden" name="util_id" id="ef-util-id">
+            <input type="hidden" name="date" value="{{ $selDate->format('Y-m') }}">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
                 <div class="form-group">
                     <label class="form-label">Water (RM)</label>
@@ -191,6 +193,7 @@ var utilData = @json($utilities->values()->keyBy('listing_id'));
 function openEdit(listingId, listingName, utilId) {
     document.getElementById('edit-modal-title').textContent = listingName + ' — Utility Charges';
     document.getElementById('ef-listing-id').value = listingId;
+    document.getElementById('ef-util-id').value    = utilId;
 
     var u = utilData[listingId] || {};
     document.getElementById('ef-water').value       = u.water || '';
@@ -203,6 +206,10 @@ function openEdit(listingId, listingName, utilId) {
     document.getElementById('ef-adj2').value        = u.adjustment2 || '';
     document.getElementById('ef-adj3-label').value  = u.adjustment3_text || '';
     document.getElementById('ef-adj3').value        = u.adjustment3 || '';
+
+    // Always use storeUtility — it handles both create and update
+    document.getElementById('edit-form').action = '/admin/utility/store';
+    document.getElementById('ef-method').value  = 'POST';
 
     document.getElementById('edit-modal').classList.add('open');
 }

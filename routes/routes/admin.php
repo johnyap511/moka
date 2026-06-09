@@ -132,6 +132,7 @@ Route::post('/send/approval', 'Admin\ListingController@sendApproval');
 Route::delete('/utility/{id}', 'Admin\ListingController@destroyUtility')->name('destroyUtility');
 Route::post('/utility/edit/{id}', 'Admin\ListingController@editUtility');
 Route::put('/utility/update/{id}', 'Admin\ListingController@updateUtility')->name('admin.utility.update');
+Route::post('/utility/store', 'Admin\ListingController@storeUtility')->name('utility.store');
 Route::match(['get', 'post'], '/approval/month_wise', 'Admin\ListingController@approval_new')->name('approval.month');
 
 // filemanager
