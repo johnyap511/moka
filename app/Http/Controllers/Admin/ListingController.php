@@ -413,37 +413,25 @@ class ListingController extends Controller
      */
     public function report(Request $request)
     {
-        $id = $request->listing_id;
-        if (empty($id)) {
-            $listing = Listing::where('status', 1)->first();
-            $id      = $listing->id ?? '';
+        $rawDate = $request->date;
+        if (empty($rawDate)) {
+            $selDate = Carbon::now()->startOfMonth();
         } else {
-            $listing = Listing::find($id);
-        }
-        $allListings = Listing::where('status', 1)->get();
-        $selDate     = $request->date;
-        if (empty($selDate)) {
-            $selDate = Carbon::now();
-        } else {
-            $selDate = date_create($request->date);
-        }
-        $testing = $request->testing;
-
-        $books = collect();
-        if (!empty($id)) {
-            $dateObj        = ($selDate instanceof \Carbon\Carbon) ? $selDate : \Carbon\Carbon::instance(date_create($selDate instanceof \DateTime ? date_format($selDate, 'Y-m-d') : (string)$selDate));
-            $thisMonthStart = $dateObj->format('Y-m-01');
-            $thisMonthEnd   = $dateObj->copy()->addMonth()->format('Y-m-01');
-            $books = Booking::where([
-                ['listing_id', $id],
-                ['status', '>=', 5],
-                ['check_in', '>=', $thisMonthStart],
-                ['check_in', '<', $thisMonthEnd],
-                ['check_out', '>', $thisMonthStart],
-            ])->orderBy('check_in')->get();
+            $selDate = Carbon::parse(strlen($rawDate) === 7 ? $rawDate . '-01' : $rawDate)->startOfMonth();
         }
 
-        return view('admin.listing.report', compact('id', 'listing', 'allListings', 'selDate', 'testing', 'books'));
+        $thisMonth = $selDate->format('m');
+        $thisYear  = $selDate->format('Y');
+
+        $allListings = Listing::where('status', 1)->orderBy('name')->get();
+
+        // Utility records for this month keyed by listing_id
+        $utilities = update_excel::whereMonth('excel_date', $thisMonth)
+            ->whereYear('excel_date', $thisYear)
+            ->get()
+            ->keyBy('listing_id');
+
+        return view('admin.listing.report', compact('allListings', 'selDate', 'utilities'));
     }
 
     /**
