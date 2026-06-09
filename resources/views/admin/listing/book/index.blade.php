@@ -168,10 +168,31 @@ $statusMap = [
         </table>
     </div>
 
-    @if(method_exists($books, 'links'))
-        <div class="card-body" style="padding-top:0">
-            <div class="pagination">
-                {{ $books->withQueryString()->links() }}
+    @if(method_exists($books, 'lastPage') && $books->lastPage() > 1)
+        <div class="card-body" style="padding-top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <span class="text-sm text-secondary">
+                Showing {{ $books->firstItem() }}–{{ $books->lastItem() }} of {{ number_format($books->total()) }} results
+            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+                @if($books->onFirstPage())
+                    <span class="btn btn-secondary btn-sm" style="opacity:.4;cursor:default">← Prev</span>
+                @else
+                    <a href="{{ $books->withQueryString()->previousPageUrl() }}" class="btn btn-secondary btn-sm">← Prev</a>
+                @endif
+
+                @foreach($books->withQueryString()->getUrlRange(max(1,$books->currentPage()-2), min($books->lastPage(),$books->currentPage()+2)) as $page => $url)
+                    @if($page == $books->currentPage())
+                        <span class="btn btn-primary btn-sm">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}" class="btn btn-secondary btn-sm">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($books->hasMorePages())
+                    <a href="{{ $books->withQueryString()->nextPageUrl() }}" class="btn btn-secondary btn-sm">Next →</a>
+                @else
+                    <span class="btn btn-secondary btn-sm" style="opacity:.4;cursor:default">Next →</span>
+                @endif
             </div>
         </div>
     @endif
