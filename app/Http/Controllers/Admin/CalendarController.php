@@ -188,7 +188,12 @@ class CalendarController extends Controller
      */
     public function allBooks()
     {
-        $books = Booking::where('status', '>', 1)->get();
+        $start = Carbon::now()->startOfMonth()->subMonth();
+        $end   = Carbon::now()->endOfMonth()->addMonths(2);
+        $books = Booking::where('status', '>', 1)
+            ->where('check_out', '>=', $start)
+            ->where('check_in', '<=', $end)
+            ->get();
         $events = [];
         foreach ($books as $book) {
             $user = User::find($book->user_id);

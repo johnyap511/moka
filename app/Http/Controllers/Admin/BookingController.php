@@ -478,17 +478,26 @@ public function index(Request $request)
         ->limit(20) // Just enough for any modals on the page
         ->get();
 
+    $totalBookings  = Booking::where('status', '>=', 3)->count();
+    $confirmedCount = Booking::where('status', 5)->count();
+    $pendingCount   = Booking::whereIn('status', [1, 2, 3])->count();
+    $cancelledCount = Booking::where('status', 0)->count();
+
     $action = $request->action;
     return view('admin.listing.book.index', compact(
-        'books', 
-        'action', 
-        'id', 
-        'userName', 
+        'books',
+        'action',
+        'id',
+        'userName',
         'listingName',
         'from_date',
         'to_date',
         'checkin_date',
-        'checkinto_date'
+        'checkinto_date',
+        'totalBookings',
+        'confirmedCount',
+        'pendingCount',
+        'cancelledCount'
     ));
 }
 

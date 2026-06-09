@@ -38,25 +38,19 @@ $statusMap = [
 {{-- Stats --}}
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="val">{{ method_exists($books, 'total') ? $books->total() : $books->count() }}</div>
+        <div class="val">{{ $totalBookings }}</div>
         <div class="lbl">Total Bookings</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--teal)">
-            {{ $books->filter(fn($b) => $b->status == 5)->count() }}
-        </div>
+        <div class="val" style="color:var(--teal)">{{ $confirmedCount }}</div>
         <div class="lbl">Confirmed</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--blue)">
-            {{ $books->filter(fn($b) => in_array($b->status, [1,2,3]))->count() }}
-        </div>
+        <div class="val" style="color:var(--blue)">{{ $pendingCount }}</div>
         <div class="lbl">Pending</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--text-secondary)">
-            {{ $books->filter(fn($b) => $b->status == 0)->count() }}
-        </div>
+        <div class="val" style="color:var(--text-secondary)">{{ $cancelledCount }}</div>
         <div class="lbl">Cancelled</div>
     </div>
 </div>
