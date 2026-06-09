@@ -180,7 +180,11 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
         Room Mapping
     </a>
-    <a href="/admin/approval/review" class="sidebar-link {{ request()->is('admin/approval*') ? 'active' : '' }}">
+    <a href="/admin/approval/month_wise" class="sidebar-link {{ request()->is('admin/approval/month*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+        Listing Approval
+    </a>
+    <a href="/admin/approval/review" class="sidebar-link {{ request()->is('admin/approval/review*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Approvals
     </a>
