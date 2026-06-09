@@ -33,7 +33,8 @@
 </div>
 
 @php
-    $eventsJson = json_encode($events ?? []);
+    // $events is already json_encode()'d by the controller; just pass it through
+    $eventsJson = is_string($events) ? $events : json_encode($events ?? []);
 @endphp
 
 <script>
