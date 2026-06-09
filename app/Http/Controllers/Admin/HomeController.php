@@ -57,7 +57,7 @@ class HomeController extends Controller
             }
         }
         $listings = Listing::all();
-        return view('admin.home.viewCalendar', compact('listings', 'start', 'end', 'dateArray', 'date'));
+        return view('admin.home.viewCalendar', compact('listings', 'start', 'end', 'dateArray', 'date', 'groups', 'bookedListingId'));
     }
 
     /**
