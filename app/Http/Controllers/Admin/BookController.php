@@ -1542,7 +1542,7 @@ $total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->To
                 $otaText = preg_replace('/[^A-Za-z\. ]/', '', $otaText);
 
                 $bookingData = [
-                    'listing_id' => $request->listing_id, 'user_id' => $userId, 'server_folio_no' => $server_folio_no, 'folio_no' => $folioNo, 'check_in' => date_format($tempStartDate, 'Y-m-d'),
+                    'listing_id' => $listingId, 'user_id' => $userId, 'server_folio_no' => $server_folio_no, 'folio_no' => $folioNo, 'check_in' => date_format($tempStartDate, 'Y-m-d'),
                     'check_out' => date_format($tempEndDate, 'Y-m-d'), 'adult' => 2, 'infant' => 0,
                     'nights' => $nightsThis, 'price_night' => $pricePerNight, 'cleaning_fee' => $cleaning_fee, 'ota_fee' => $ota, 'sst' => $tax, 'sst_cf' => $sst_cf,
                     'price' => $total, 'source' => $otaText, 'status' => 5, 'tourism_tax' => $tax, 'discount_fee' => $ezee->TotalDiscount, 'remark' => $ezee->Source,
@@ -1689,7 +1689,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             $otaText = preg_replace('/[^A-Za-z\. ]/', '', $otaText);
 
             $book = Booking::create([
-                'listing_id' => $request->listing_id, 'server_folio_no' => $server_folio_no, 'user_id' => $userId, 'folio_no' => $folioNo, 'check_in' => $ezee->Start, 'check_out' => $end_date, 'adult' => 2, 'infant' => 0,
+                'listing_id' => $listingId, 'server_folio_no' => $server_folio_no, 'user_id' => $userId, 'folio_no' => $folioNo, 'check_in' => $ezee->Start, 'check_out' => $end_date, 'adult' => 2, 'infant' => 0,
                 'nights' => $nights, 'price_night' => $pricePerNight, 'cleaning_fee' => $ezee->TotalExtraCharge, 'ota_fee' => $ota, 'sst' => $tax, 'sst_cf' => $sst_cf,
                 'price' => $total, 'source' => $otaText, 'status' => 5, 'tourism_tax' => $tax, 'discount_fee' => $ezee->TotalDiscount, 'remark' => $ezee->Source,
             ]);
@@ -1837,7 +1837,6 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
 
     public function history_api(Request $request)
     {
-        // echo "hi";die;
         set_time_limit(0);
         $listings = EzeeGroup::all();
         if (empty($request->from_date) || empty($request->to_date)) {
@@ -1906,6 +1905,8 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             }
         }
         foreach ($listings as $listing) {
+            $ezeeGroupListing = \App\EzeeGroupListing::where('ezee_group_id', $listing->id)->first();
+            $listingId = $ezeeGroupListing ? $ezeeGroupListing->listing_id : null;
             $xml_response = array();
             $curl = curl_init();
 
