@@ -4,22 +4,20 @@
 
 @push('styles')
 <style>
-.group-section { margin-bottom: 32px; }
-.group-header  { display:flex; align-items:center; gap:10px; padding:12px 0 8px; border-bottom:2px solid var(--teal); margin-bottom:0; }
-.group-header h3 { font-size:14px; font-weight:700; margin:0; color:var(--text-primary); }
 .mapping-table { width:100%; border-collapse:collapse; }
-.mapping-table th { padding:9px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+.mapping-table th { padding:9px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); background:var(--bg-secondary); border-bottom:1px solid var(--border); white-space:nowrap; }
 .mapping-table td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
 .mapping-table tr:last-child td { border-bottom:none; }
 .mapping-table tr:hover td { background:#fafafa; }
-.pill-mapped   { background:#d1fae5; color:#065f46; padding:2px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
-.pill-unmapped { background:#fff7ed; color:#c2410c; padding:2px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
-.stat-chip     { font-size:11.5px; color:var(--text-secondary); }
-.stat-chip span { font-weight:600; color:var(--text-primary); }
-select.mapping-select { padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; min-width:220px; max-width:320px; background:#fff; }
-select.mapping-select:focus { outline:2px solid var(--teal); }
-select.mapping-select.has-value { border-color: var(--teal); }
-.sticky-bar { position:sticky; top:0; z-index:100; background:#fff; border-bottom:1px solid var(--border); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+.pill-mapped    { background:#d1fae5; color:#065f46; padding:2px 10px; border-radius:20px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+.pill-unmapped  { background:#fff7ed; color:#c2410c; padding:2px 10px; border-radius:20px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+.pill-suggested { background:#eff6ff; color:#1d4ed8; padding:2px 10px; border-radius:20px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+select.msel { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12.5px; width:100%; max-width:340px; background:#fff; }
+select.msel:focus { outline:2px solid var(--teal); border-color:var(--teal); }
+select.msel.is-mapped { border-color:#10b981; background:#f0fdf4; }
+select.msel.is-suggested { border-color:#3b82f6; background:#eff6ff; }
+.sticky-bar { position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid var(--border); padding:10px 0 10px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.search-filter { padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; width:240px; }
 </style>
 @endpush
 
@@ -27,7 +25,7 @@ select.mapping-select.has-value { border-color: var(--teal); }
 <div class="page-header">
     <div>
         <h1>EZEE Room Mapping</h1>
-        <p>Map each EZEE room type to a listing unit for automatic booking assignment</p>
+        <p>Map each EZEE room name to a listing unit for automatic booking assignment</p>
     </div>
     <div class="flex gap-2">
         <a href="/admin/ezee/assignment-log" class="btn btn-secondary">
@@ -45,182 +43,171 @@ select.mapping-select.has-value { border-color: var(--teal); }
 <div class="alert alert-success" style="margin-bottom:16px">{{ session('success') }}</div>
 @endif
 
-{{-- Summary stats --}}
+{{-- Stats --}}
 @php
-$totalRooms   = $rooms->count();
-$mappedRooms  = $rooms->filter(fn($r) => isset($mappings[$r->ezee_group_id.'||'.$r->RoomTypeName]) && $mappings[$r->ezee_group_id.'||'.$r->RoomTypeName]->listing_id)->count();
-$totalBooks   = $stats->sum('total');
-$assignedBooks= $stats->sum('assigned');
+$totalRooms    = count($rooms);
+$mappedRooms   = collect($rooms)->filter(fn($r) => isset($mappings[$r]) && $mappings[$r]->listing_id)->count();
+$suggestedCount= count($suggestions);
+$totalBooks    = $stats->sum('total');
+$assignedBooks = $stats->sum('assigned');
 @endphp
 <div class="stats-grid" style="margin-bottom:20px">
-    <div class="stat-card">
-        <div class="val">{{ $totalRooms }}</div>
-        <div class="lbl">Room Types Found</div>
-    </div>
-    <div class="stat-card">
-        <div class="val" style="color:var(--teal)">{{ $mappedRooms }}</div>
-        <div class="lbl">Mapped</div>
-    </div>
-    <div class="stat-card">
-        <div class="val" style="color:var(--blue)">{{ $totalRooms - $mappedRooms }}</div>
-        <div class="lbl">Unmapped</div>
-    </div>
-    <div class="stat-card">
-        <div class="val">{{ number_format($totalBooks) }}</div>
-        <div class="lbl">Total Bookings</div>
-    </div>
-    <div class="stat-card">
-        <div class="val" style="color:var(--teal)">{{ number_format($assignedBooks) }}</div>
-        <div class="lbl">Assigned</div>
-    </div>
-    <div class="stat-card">
-        <div class="val" style="color:var(--orange, #f59e0b)">{{ number_format($totalBooks - $assignedBooks) }}</div>
-        <div class="lbl">Unassigned</div>
-    </div>
+    <div class="stat-card"><div class="val">{{ $totalRooms }}</div><div class="lbl">Room Names</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--teal)">{{ $mappedRooms }}</div><div class="lbl">Mapped</div></div>
+    <div class="stat-card"><div class="val" style="color:#3b82f6">{{ $suggestedCount }}</div><div class="lbl">Auto-Matched</div></div>
+    <div class="stat-card"><div class="val" style="color:#f59e0b">{{ $totalRooms - $mappedRooms - $suggestedCount }}</div><div class="lbl">Need Manual Map</div></div>
+    <div class="stat-card"><div class="val">{{ number_format($totalBooks) }}</div><div class="lbl">Total Bookings</div></div>
+    <div class="stat-card"><div class="val" style="color:#f59e0b">{{ number_format($totalBooks - $assignedBooks) }}</div><div class="lbl">Unassigned</div></div>
 </div>
 
 <form method="POST" action="/admin/ezee/room-mapping/save" id="mapping-form">
     @csrf
 
-    {{-- Sticky save bar --}}
     <div class="sticky-bar">
         <button type="submit" class="btn btn-primary">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             Save All Mappings
         </button>
-        <span id="changed-count" style="font-size:12px;color:var(--text-secondary)"></span>
-        <label style="font-size:12px;color:var(--text-secondary);margin-left:auto;display:flex;align-items:center;gap:6px">
+        @if($suggestedCount > 0)
+        <button type="button" class="btn btn-secondary" onclick="applyAllSuggestions()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Apply {{ $suggestedCount }} Auto-Matches
+        </button>
+        @endif
+        <input type="text" id="search-box" class="search-filter" placeholder="Filter room names…" oninput="filterRooms(this.value)">
+        <label style="font-size:12px;color:var(--text-secondary);margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="checkbox" id="show-unmapped-only" onchange="filterUnmapped(this.checked)">
             Show unmapped only
         </label>
+        <span id="changed-count" style="font-size:12px;color:var(--text-secondary)"></span>
     </div>
 
-    @php $grouped = $rooms->groupBy('ezee_group_id'); @endphp
-
-    @forelse($grouped as $groupId => $groupRooms)
-    @php $group = $groups[$groupId] ?? null; @endphp
-    <div class="card group-section" data-group="{{ $groupId }}">
-        <div class="card-body" style="padding-bottom:0">
-            <div class="group-header">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                <h3>{{ $group ? $group->name : 'Hotel #'.$groupId }}</h3>
-                @if($group)
-                <span class="badge badge-blue" style="font-size:11px">Code: {{ $group->hotel_code }}</span>
-                @endif
-                <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)">{{ $groupRooms->count() }} room types</span>
-            </div>
-        </div>
+    <div class="card">
         <div class="table-wrap">
-            <table class="mapping-table">
+            <table class="mapping-table" id="mapping-table">
                 <thead>
                     <tr>
                         <th style="width:36px">#</th>
-                        <th>Room Type Name (EZEE)</th>
-                        <th style="width:100px">Bookings</th>
-                        <th style="width:100px">Assigned</th>
-                        <th style="width:140px">Status</th>
-                        <th>Map to Listing Unit</th>
+                        <th>EZEE Room Name</th>
+                        <th style="width:80px;text-align:center">Bookings</th>
+                        <th style="width:80px;text-align:center">Assigned</th>
+                        <th style="width:130px;text-align:center">Status</th>
+                        <th>Map to Listing Unit ↓</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($groupRooms as $i => $room)
+                    @forelse($rooms as $i => $roomTypeName)
                     @php
-                        $mapKey    = $room->ezee_group_id . '||' . $room->RoomTypeName;
-                        $mapping   = $mappings[$mapKey] ?? null;
-                        $statRow   = $stats[$mapKey]    ?? null;
+                        $mapping   = $mappings[$roomTypeName] ?? null;
+                        $statRow   = $stats[$roomTypeName]    ?? null;
                         $isMapped  = $mapping && $mapping->listing_id;
+                        $suggested = !$isMapped && isset($suggestions[$roomTypeName]) ? $suggestions[$roomTypeName] : null;
                         $total     = $statRow->total    ?? 0;
                         $assigned  = $statRow->assigned ?? 0;
                     @endphp
-                    <tr class="room-row {{ $isMapped ? 'mapped-row' : 'unmapped-row' }}">
+                    <tr class="room-row {{ $isMapped ? 'is-mapped-row' : ($suggested ? 'is-suggested-row' : 'is-unmapped-row') }}"
+                        data-room="{{ strtolower($roomTypeName) }}">
                         <td class="mono" style="color:var(--text-secondary)">{{ $i+1 }}</td>
-                        <td>
-                            <div style="font-weight:500">{{ $room->RoomTypeName }}</div>
+                        <td style="font-weight:500">{{ $roomTypeName }}</td>
+                        <td style="text-align:center;font-weight:600">{{ $total }}</td>
+                        <td style="text-align:center;color:{{ $assigned < $total ? '#f59e0b' : '#10b981' }};font-weight:600">
+                            {{ $assigned }}
                         </td>
-                        <td class="stat-chip"><span>{{ $total }}</span></td>
-                        <td class="stat-chip">
-                            <span style="{{ $assigned < $total ? 'color:#f59e0b' : 'color:#10b981' }}">{{ $assigned }}</span>
-                            @if($total > 0)
-                            <span style="color:var(--text-secondary)">/{{ $total }}</span>
-                            @endif
-                        </td>
-                        <td>
+                        <td style="text-align:center">
                             @if($isMapped)
                                 <span class="pill-mapped">Mapped</span>
+                            @elseif($suggested)
+                                <span class="pill-suggested">Auto-matched</span>
                             @else
                                 <span class="pill-unmapped">Unmapped</span>
                             @endif
                         </td>
                         <td>
-                            <select name="mappings[{{ $mapKey }}]"
-                                    class="mapping-select {{ $isMapped ? 'has-value' : '' }}"
+                            <select name="mappings[{{ $roomTypeName }}]"
+                                    data-suggested="{{ $suggested }}"
+                                    class="msel {{ $isMapped ? 'is-mapped' : ($suggested ? 'is-suggested' : '') }}"
                                     onchange="onMappingChange(this)">
                                 <option value="">— Not mapped —</option>
                                 @foreach($listings as $l)
                                 <option value="{{ $l->id }}"
-                                    {{ ($mapping && $mapping->listing_id == $l->id) ? 'selected' : '' }}>
+                                    {{ ($isMapped && $mapping->listing_id == $l->id) ? 'selected' : ($suggested == $l->id && !$isMapped ? 'data-suggest=1' : '') }}>
                                     {{ $l->name }}
                                 </option>
                                 @endforeach
                             </select>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:60px;color:var(--text-secondary)">
+                            No EZEE room names found. Import EZEE bookings first.
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-    @empty
-    <div class="card">
-        <div class="card-body" style="text-align:center;padding:60px;color:var(--text-secondary)">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:12px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            <p>No EZEE room types found. Import EZEE bookings first, then come back to map them.</p>
-        </div>
-    </div>
-    @endforelse
-
 </form>
 
-{{-- Auto-assign result toast --}}
-<div id="assign-toast" style="display:none;position:fixed;bottom:24px;right:24px;background:#111827;color:#fff;padding:14px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:320px"></div>
-
+<div id="assign-toast" style="display:none;position:fixed;bottom:24px;right:24px;background:#111827;color:#fff;padding:14px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:340px"></div>
 @endsection
 
 @push('scripts')
 <script>
 var changedCount = 0;
 
+// Pre-select suggested (auto-matched) options in dropdowns
+document.querySelectorAll('select.msel.is-suggested').forEach(function(sel) {
+    var suggestedId = sel.getAttribute('data-suggested');
+    if (!suggestedId) return;
+    Array.from(sel.options).forEach(function(opt) {
+        if (opt.value == suggestedId) opt.selected = true;
+    });
+});
+
 function onMappingChange(sel) {
     var row = sel.closest('tr');
     var hasMapped = sel.value !== '';
-    sel.classList.toggle('has-value', hasMapped);
-    var pill = row.querySelector('.pill-mapped, .pill-unmapped');
+    sel.className = 'msel' + (hasMapped ? ' is-mapped' : '');
+    var pill = row.querySelector('[class^="pill-"]');
     if (pill) {
         pill.className   = hasMapped ? 'pill-mapped' : 'pill-unmapped';
         pill.textContent = hasMapped ? 'Mapped' : 'Unmapped';
     }
-    row.className = row.className.replace(/\b(mapped|unmapped)-row\b/g, '') + ' ' + (hasMapped ? 'mapped' : 'unmapped') + '-row';
+    row.className = row.className.replace(/\bis-(mapped|suggested|unmapped)-row\b/g, '') + ' ' + (hasMapped ? 'is-mapped' : 'is-unmapped') + '-row';
     changedCount++;
-    document.getElementById('changed-count').textContent = changedCount + ' change(s) unsaved';
+    document.getElementById('changed-count').textContent = changedCount + ' unsaved change(s)';
 }
 
-function filterUnmapped(onlyUnmapped) {
+function applyAllSuggestions() {
+    document.querySelectorAll('select.msel.is-suggested').forEach(function(sel) {
+        var suggestedId = sel.getAttribute('data-suggested');
+        if (!suggestedId || sel.value) return;
+        Array.from(sel.options).forEach(function(opt) {
+            if (opt.value == suggestedId) opt.selected = true;
+        });
+        onMappingChange(sel);
+    });
+}
+
+function filterRooms(q) {
+    q = q.toLowerCase();
     document.querySelectorAll('.room-row').forEach(function(row) {
-        if (onlyUnmapped && row.classList.contains('mapped-row')) {
-            row.style.display = 'none';
-        } else {
-            row.style.display = '';
-        }
+        row.style.display = (!q || row.dataset.room.includes(q)) ? '' : 'none';
+    });
+}
+
+function filterUnmapped(only) {
+    document.querySelectorAll('.room-row').forEach(function(row) {
+        row.style.display = (only && row.classList.contains('is-mapped-row')) ? 'none' : '';
     });
 }
 
 function runAutoAssign() {
-    if (!confirm('Auto-assign all unassigned EZEE bookings that have a matching room type mapping?\n\nThis will create Booking records for matched entries.')) return;
-
+    if (!confirm('Auto-assign all unassigned EZEE bookings that have a saved room mapping?\n\nThis creates Booking records for each matched entry.')) return;
     var btn = document.getElementById('btn-auto-assign');
-    btn.disabled = true;
-    btn.textContent = 'Running…';
-
+    btn.disabled = true; btn.textContent = 'Running…';
     fetch('/admin/ezee/room-mapping/auto-assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
@@ -230,33 +217,21 @@ function runAutoAssign() {
     .then(function(res) {
         btn.disabled = false;
         btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Auto-Assign Unassigned';
-        showToast(res.message || 'Done!', res.ok ? '#10b981' : '#ef4444');
-        if (res.assigned > 0) setTimeout(() => location.reload(), 2000);
+        showToast(res.message, res.ok ? '#10b981' : '#ef4444');
+        if (res.assigned > 0) setTimeout(() => location.reload(), 2500);
     })
-    .catch(function() {
-        btn.disabled = false;
-        btn.textContent = 'Auto-Assign Unassigned';
-        showToast('Error running auto-assign.', '#ef4444');
-    });
+    .catch(() => { btn.disabled = false; showToast('Error running auto-assign.', '#ef4444'); });
 }
 
 function showToast(msg, color) {
     var t = document.getElementById('assign-toast');
-    t.textContent  = msg;
-    t.style.background = color || '#111827';
-    t.style.display = 'block';
+    t.textContent = msg; t.style.background = color || '#111827'; t.style.display = 'block';
     setTimeout(() => { t.style.display = 'none'; }, 5000);
 }
 
-// Warn before leaving with unsaved changes
 window.addEventListener('beforeunload', function(e) {
-    if (changedCount > 0) {
-        e.preventDefault();
-        e.returnValue = '';
-    }
+    if (changedCount > 0) { e.preventDefault(); e.returnValue = ''; }
 });
-document.getElementById('mapping-form').addEventListener('submit', function() {
-    changedCount = 0;
-});
+document.getElementById('mapping-form').addEventListener('submit', function() { changedCount = 0; });
 </script>
 @endpush

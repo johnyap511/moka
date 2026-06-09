@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('listing_id')->nullable();
             $table->timestamps();
 
-            $table->unique(['ezee_group_id', 'room_type_name']);
+            $table->unique('room_type_name');
         });
 
         Schema::create('ezee_assignment_logs', function (Blueprint $table) {

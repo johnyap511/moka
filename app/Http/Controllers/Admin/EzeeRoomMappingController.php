@@ -16,36 +16,49 @@ class EzeeRoomMappingController extends Controller
 {
     public function index()
     {
-        $groups   = EzeeGroup::orderBy('name')->get()->keyBy('id');
         $listings = Listing::orderBy('name')->get();
 
-        // All distinct (ezee_group_id, RoomTypeName) combos from imported bookings
-        $rooms = EzeeBooking::select('ezee_group_id', 'RoomTypeName')
+        // All distinct RoomTypeName values (room-specific names from EZEE)
+        $rooms = EzeeBooking::select('RoomTypeName')
             ->whereNotNull('RoomTypeName')
             ->where('RoomTypeName', '!=', '')
-            ->whereNotNull('ezee_group_id')
             ->distinct()
-            ->orderBy('ezee_group_id')
             ->orderBy('RoomTypeName')
-            ->get();
+            ->pluck('RoomTypeName');
 
-        // Existing mappings keyed by "groupId||roomTypeName"
-        $mappings = EzeeRoomMapping::all()
-            ->keyBy(fn($m) => $m->ezee_group_id . '||' . $m->room_type_name);
+        // Existing mappings keyed by room_type_name
+        $mappings = EzeeRoomMapping::all()->keyBy('room_type_name');
 
-        // Booking counts per room type per group
+        // Booking counts per room type
         $stats = EzeeBooking::select(
-                'ezee_group_id', 'RoomTypeName',
+                'RoomTypeName',
                 DB::raw('COUNT(*) as total'),
                 DB::raw('SUM(CASE WHEN book_id IS NOT NULL THEN 1 ELSE 0 END) as assigned')
             )
             ->whereNotNull('RoomTypeName')
-            ->whereNotNull('ezee_group_id')
-            ->groupBy('ezee_group_id', 'RoomTypeName')
+            ->where('RoomTypeName', '!=', '')
+            ->groupBy('RoomTypeName')
             ->get()
-            ->keyBy(fn($r) => $r->ezee_group_id . '||' . $r->RoomTypeName);
+            ->keyBy('RoomTypeName');
 
-        return view('admin.ezee.room_mapping', compact('groups', 'listings', 'rooms', 'mappings', 'stats'));
+        // Build auto-match suggestions: compare RoomTypeName against listing names
+        $listingMap = $listings->keyBy('name');
+        $suggestions = [];
+        foreach ($rooms as $roomTypeName) {
+            if (isset($mappings[$roomTypeName])) continue; // already mapped
+            // Exact match
+            if (isset($listingMap[$roomTypeName])) {
+                $suggestions[$roomTypeName] = $listingMap[$roomTypeName]->id;
+                continue;
+            }
+            // Case-insensitive match
+            $match = $listings->first(fn($l) => strtolower($l->name) === strtolower($roomTypeName));
+            if ($match) {
+                $suggestions[$roomTypeName] = $match->id;
+            }
+        }
+
+        return view('admin.ezee.room_mapping', compact('listings', 'rooms', 'mappings', 'stats', 'suggestions'));
     }
 
     public function saveAll(Request $request)
@@ -53,13 +66,12 @@ class EzeeRoomMappingController extends Controller
         $data  = $request->input('mappings', []);
         $saved = 0;
 
-        foreach ($data as $key => $listingId) {
-            [$groupId, $roomTypeName] = explode('||', $key, 2);
+        foreach ($data as $roomTypeName => $listingId) {
             if (empty($roomTypeName)) continue;
 
             EzeeRoomMapping::updateOrCreate(
-                ['ezee_group_id' => $groupId, 'room_type_name' => $roomTypeName],
-                ['listing_id' => $listingId ?: null]
+                ['room_type_name' => $roomTypeName],
+                ['listing_id' => $listingId ?: null, 'ezee_group_id' => null]
             );
             $saved++;
         }
@@ -69,21 +81,18 @@ class EzeeRoomMappingController extends Controller
 
     public function autoAssign(Request $request)
     {
-        $mappings = EzeeRoomMapping::whereNotNull('listing_id')->get()
-            ->keyBy(fn($m) => $m->ezee_group_id . '||' . $m->room_type_name);
+        $mappings = EzeeRoomMapping::whereNotNull('listing_id')->get()->keyBy('room_type_name');
 
         $assigned = 0;
         $skipped  = 0;
 
         $unassigned = EzeeBooking::whereNull('book_id')
             ->whereNotNull('RoomTypeName')
-            ->whereNotNull('ezee_group_id')
+            ->where('RoomTypeName', '!=', '')
             ->get();
 
         foreach ($unassigned as $eb) {
-            $key     = $eb->ezee_group_id . '||' . $eb->RoomTypeName;
-            $mapping = $mappings[$key] ?? null;
-
+            $mapping = $mappings[$eb->RoomTypeName] ?? null;
             if (!$mapping) { $skipped++; continue; }
 
             $booking = \App\Booking::create([
@@ -130,8 +139,8 @@ class EzeeRoomMappingController extends Controller
         if ($eb->book_id) {
             $existing = \App\Booking::find($eb->book_id);
             if ($existing) {
-                $oldListingId            = $existing->listing_id;
-                $existing->listing_id    = $request->listing_id;
+                $oldListingId         = $existing->listing_id;
+                $existing->listing_id = $request->listing_id;
                 $existing->save();
             }
         } else {
@@ -167,7 +176,6 @@ class EzeeRoomMappingController extends Controller
             ->orderByDesc('created_at')
             ->paginate(50);
 
-        // Attach ezee booking guest names
         $ezeeIds = $logs->pluck('ezee_booking_id')->unique();
         $ezeeMap = EzeeBooking::whereIn('id', $ezeeIds)
             ->get(['id', 'FirstName', 'LastName', 'RoomTypeName', 'Start', 'End'])
