@@ -2074,9 +2074,12 @@ class ListingController extends Controller
     {
         $listing = Listing::where('id', $id)->first();
         if (empty($listing)) {
-            return back()->with('error', 'This listing does not exist!');
+            return response()->json(['ok' => false, 'message' => 'Listing not found.']);
         }
-        $date = date_create($request->date);
+        // Support 'Y-m' format from month picker by appending '-01'
+        $rawDate = $request->date ?? '';
+        if (strlen($rawDate) === 7) { $rawDate .= '-01'; }
+        $date = date_create($rawDate);
         $y    = date_format($date, 'Y');
         $m    = date_format($date, 'm');
         if ($y < 2020) {
@@ -4288,8 +4291,13 @@ class ListingController extends Controller
         $html .= "<br>
              <p>This is a computer-generated document. No signature is required</p>
              </body>
-
              </html>";
+
+        // Preview mode — return HTML as JSON for modal display
+        if ($request->preview === 'preview') {
+            return response()->json(['ok' => true, 'data' => $html]);
+        }
+
         $pdf_name = 'r_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $listing->name) . '_' . $y . $m . '.pdf';
         $saveDir  = public_path('files/utility');
         if (!is_dir($saveDir)) {
@@ -5802,7 +5810,6 @@ class ListingController extends Controller
     public function sendPdf(Request $request)
     {
 
-        require_once '../vendor/dompdf/autoload.inc.php';
         $id             = $request->id;
         $listing_id     = $request->listing_id;
         $listing        = update_excel::where('id', $id)->first();
@@ -5870,10 +5877,12 @@ class ListingController extends Controller
         $ota2                = 0;
         $discount            = 0;
         $otaBooking1         = 0;
-        $path                = 'public/logo1.png';
-        $type                = pathinfo($path, PATHINFO_EXTENSION);
-        $data                = file_get_contents("logo1.png");
-        $base64              = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        $logoPath = public_path('logo1.png');
+        $base64   = '';
+        if (file_exists($logoPath)) {
+            $type   = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $base64 = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logoPath));
+        }
         //  <img src='$base64' alt='' srcset='' width='90px'>
 
         if ($request->preview === 'preview') {

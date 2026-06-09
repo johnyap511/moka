@@ -10,6 +10,8 @@
 .utility-item { display:flex; flex-direction:column; gap:6px; }
 .utility-item input[type=number] { width:100%; }
 .badge-channel { background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:500; }
+#preview-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; }
+#preview-modal.open { display:flex; }
 </style>
 @endpush
 
@@ -25,9 +27,9 @@
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Export Excel
         </button>
-        <button type="button" class="btn btn-primary" onclick="submitAs('pdf')">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-            Generate PDF
+        <button type="button" class="btn btn-primary" id="btn-preview" onclick="previewReport()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Preview Report
         </button>
     </div>
     @endif
@@ -97,7 +99,7 @@
 <div class="card">
     <div class="card-header">
         <h2>Utility Charges</h2>
-        <p style="font-size:13px;color:var(--text-secondary);margin:0;">Enter charges for the selected month, then export the report.</p>
+        <p style="font-size:13px;color:var(--text-secondary);margin:0;">Enter charges then preview or export the report.</p>
     </div>
     <div class="card-body">
         <form method="POST" action="/admin/listing/report/{{ $id }}" id="export-form" target="_blank">
@@ -150,9 +152,9 @@
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Export Excel
                 </button>
-                <button type="button" class="btn btn-primary" onclick="submitAs('pdf')">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    Generate PDF
+                <button type="button" class="btn btn-primary" id="btn-preview-bottom" onclick="previewReport()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    Preview Report
                 </button>
             </div>
         </form>
@@ -166,21 +168,72 @@
 </div>
 @endif
 
+{{-- Preview Modal --}}
+<div id="preview-modal">
+    <div style="background:#fff;border-radius:16px;width:90vw;max-width:1100px;height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+            <h3 style="font-size:15px;font-weight:600">Report Preview</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closePreview()">Close</button>
+        </div>
+        <iframe id="preview-frame" style="flex:1;border:none;border-radius:0 0 16px 16px;width:100%"></iframe>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
+var listingId = '{{ $id ?? "" }}';
+var csrfToken = '{{ csrf_token() }}';
+
+function getFormData() {
+    var form = document.getElementById('export-form');
+    var data = new FormData(form);
+    return data;
+}
+
+function previewReport() {
+    var btn1 = document.getElementById('btn-preview');
+    var btn2 = document.getElementById('btn-preview-bottom');
+    if (btn1) { btn1.disabled = true; btn1.textContent = 'Loading…'; }
+    if (btn2) { btn2.disabled = true; btn2.textContent = 'Loading…'; }
+
+    var data = getFormData();
+    data.append('preview', 'preview');
+
+    fetch('/admin/listings/reports/' + listingId, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken },
+        body: data
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (btn1) { btn1.disabled = false; btn1.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> Preview Report'; }
+        if (btn2) { btn2.disabled = false; btn2.innerHTML = btn1 ? btn1.innerHTML : 'Preview Report'; }
+        if (!res.ok) { alert(res.message || 'Error generating preview.'); return; }
+        document.getElementById('preview-frame').srcdoc = res.data;
+        document.getElementById('preview-modal').classList.add('open');
+    })
+    .catch(function(err) {
+        if (btn1) { btn1.disabled = false; btn1.textContent = 'Preview Report'; }
+        if (btn2) { btn2.disabled = false; btn2.textContent = 'Preview Report'; }
+        alert('Error: ' + err.message);
+    });
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.remove('open');
+}
+
 function submitAs(type) {
     var form = document.getElementById('export-form');
-    var id   = '{{ $id ?? "" }}';
-    if (type === 'pdf') {
-        form.action = '/admin/listings/reports/' + id;
-        form.target = '_blank';
-    } else {
-        form.action = '/admin/listing/report/' + id;
-        form.target = '_blank';
-    }
+    form.action = '/admin/listing/report/' + listingId;
+    form.target = '_blank';
     form.submit();
 }
+
+document.getElementById('preview-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePreview();
+});
 </script>
 @endpush
