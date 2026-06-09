@@ -5797,43 +5797,52 @@ class ListingController extends Controller
 
     public function storeUtility(Request $request)
     {
-        $listing = Listing::find($request->listing_id);
-        if (!$listing) {
-            return back()->with('error', 'Listing not found.');
+        try {
+            $listing = Listing::find($request->listing_id);
+            if (!$listing) {
+                return back()->with('error', 'Listing not found.');
+            }
+            $rawDate  = $request->date ?? '';
+            if (strlen($rawDate) === 7) { $rawDate .= '-01'; }
+            $excelDate = date_create($rawDate) ? date_format(date_create($rawDate), 'Y-m-01') : date('Y-m-01');
+
+            $existing = update_excel::where('listing_id', $listing->id)
+                ->whereYear('excel_date', substr($excelDate, 0, 4))
+                ->whereMonth('excel_date', substr($excelDate, 5, 2))
+                ->first();
+
+            $fields = [
+                'listing_id'   => $listing->id,
+                'listing_name' => $listing->name,
+                'excel_date'   => $excelDate,
+                'water'        => $request->water_amount ?: null,
+                'internet'     => $request->internet_amount ?: null,
+                'electricity'  => $request->electricity_amount ?: null,
+                'mfsf'         => $request->mfsf_amount ?: null,
+                'adjustment1'  => $request->adjustment1_amount ?: null,
+                'adjustment2'  => $request->adjustment2_amount ?: null,
+                'adjustment3'  => $request->adjustment3_amount ?: null,
+                'adjustment1_text' => $request->adjustment1_text ?: null,
+                'adjustment2_text' => $request->adjustment2_text ?: null,
+                'adjustment3_text' => $request->adjustment3_text ?: null,
+            ];
+
+            if ($existing) {
+                $existing->update($fields);
+            } else {
+                update_excel::create($fields);
+            }
+
+            return redirect('/admin/listing/chart/report?date=' . substr($excelDate, 0, 7))
+                ->with('success', $listing->name . ' utility charges saved.');
+
+        } catch (\Throwable $e) {
+            return response('<pre style="font:13px monospace;padding:20px;color:darkred">'
+                . '<b>' . htmlspecialchars($e->getMessage()) . '</b><br><br>'
+                . 'File: ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '<br><br>'
+                . htmlspecialchars($e->getTraceAsString())
+                . '</pre>', 500);
         }
-        $rawDate  = $request->date ?? '';
-        if (strlen($rawDate) === 7) { $rawDate .= '-01'; }
-        $excelDate = date_create($rawDate) ? date_format(date_create($rawDate), 'Y-m-01') : date('Y-m-01');
-
-        $existing = update_excel::where('listing_id', $listing->id)
-            ->whereYear('excel_date', substr($excelDate, 0, 4))
-            ->whereMonth('excel_date', substr($excelDate, 5, 2))
-            ->first();
-
-        $fields = [
-            'listing_id'   => $listing->id,
-            'listing_name' => $listing->name,
-            'excel_date'   => $excelDate,
-            'water'        => $request->water_amount ?: null,
-            'internet'     => $request->internet_amount ?: null,
-            'electricity'  => $request->electricity_amount ?: null,
-            'mfsf'         => $request->mfsf_amount ?: null,
-            'adjustment1'  => $request->adjustment1_amount ?: null,
-            'adjustment2'  => $request->adjustment2_amount ?: null,
-            'adjustment3'  => $request->adjustment3_amount ?: null,
-            'adjustment1_text' => $request->adjustment1_text ?: null,
-            'adjustment2_text' => $request->adjustment2_text ?: null,
-            'adjustment3_text' => $request->adjustment3_text ?: null,
-        ];
-
-        if ($existing) {
-            $existing->update($fields);
-        } else {
-            update_excel::create($fields);
-        }
-
-        return redirect('/admin/listing/chart/report?date=' . substr($excelDate, 0, 7))
-            ->with('success', $listing->name . ' utility charges saved.');
     }
 
     public function sendPdf(Request $request)
