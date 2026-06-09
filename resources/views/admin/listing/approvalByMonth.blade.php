@@ -110,47 +110,61 @@
     </div>
 </div>
 
+{{-- Preview Modal --}}
+<div id="preview-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;width:90vw;max-width:860px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e7eb">
+            <h2 style="font-size:16px;font-weight:600;margin:0">Report Preview</h2>
+            <button onclick="closePreview()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">&times;</button>
+        </div>
+        <div id="preview-body" style="overflow-y:auto;flex:1;padding:0">
+            <div id="preview-loading" style="padding:60px;text-align:center;color:#9ca3af">Loading preview…</div>
+            <iframe id="preview-frame" style="width:100%;height:70vh;border:none;display:none"></iframe>
+        </div>
+    </div>
+</div>
+
 {{-- Edit Modal --}}
 <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:16px;padding:28px;width:560px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-        <h2 style="font-size:17px;font-weight:600;margin-bottom:20px">Edit Utility Entry</h2>
+        <h2 style="font-size:17px;font-weight:600;margin-bottom:4px">Update Utility</h2>
+        <p id="edit-listing-label" style="font-size:13px;color:var(--text-secondary);margin-bottom:20px"></p>
         <form method="POST" id="edit-form">
             @csrf
             @method('PUT')
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Water (RM)</label>
-                    <input type="number" step="0.01" name="water" id="edit-water" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Internet (RM)</label>
-                    <input type="number" step="0.01" name="internet" id="edit-internet" class="form-input">
-                </div>
+            @php
+            $utilOpts = ['' => 'Please Select', 'A' => 'Split by Profit %', 'B' => 'Split (Special)', 'C' => 'Host Pays All', 'D' => 'Owner Pays All', 'E' => 'Owner Pays All (Alt)'];
+            @endphp
+            @foreach([
+                ['water',       'Water'],
+                ['internet',    'Internet'],
+                ['electricity', 'Electricity'],
+                ['mfsf',        'MF + SF'],
+            ] as [$field, $label])
+            <div style="display:grid;grid-template-columns:130px 1fr 1fr;gap:12px;align-items:center;margin-bottom:10px">
+                <label style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="cb-{{ $field }}" onchange="toggleField('{{ $field }}')" style="accent-color:var(--teal)">
+                    {{ $label }}
+                </label>
+                <select name="{{ $field }}_option" id="opt-{{ $field }}" class="form-input" style="font-size:12px" disabled>
+                    @foreach($utilOpts as $v => $t)
+                    <option value="{{ $v }}">{{ $t }}</option>
+                    @endforeach
+                </select>
+                <input type="number" step="0.01" name="{{ $field }}" id="edit-{{ $field }}" class="form-input" placeholder="Amount (RM)" disabled>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Electricity (RM)</label>
-                    <input type="number" step="0.01" name="electricity" id="edit-electricity" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">MF + SF (RM)</label>
-                    <input type="number" step="0.01" name="mfsf" id="edit-mfsf" class="form-input">
-                </div>
+            @endforeach
+
+            @foreach([1,2,3] as $n)
+            <div style="display:grid;grid-template-columns:130px 1fr 1fr;gap:12px;align-items:center;margin-bottom:10px">
+                <label style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="cb-adj{{ $n }}" onchange="toggleField('adj{{ $n }}')" style="accent-color:var(--teal)">
+                    Adjustment {{ $n }}
+                </label>
+                <input type="text" name="adjustment{{ $n }}_name" id="edit-adj{{ $n }}-name" class="form-input" placeholder="Label (e.g. Rental)" disabled style="font-size:12px">
+                <input type="number" step="0.01" name="adjustment{{ $n }}" id="edit-adj{{ $n }}" class="form-input" placeholder="Amount (RM)" disabled>
             </div>
-            <div class="form-row-3">
-                <div class="form-group">
-                    <label class="form-label">Adjustment 1</label>
-                    <input type="number" step="0.01" name="adjustment1" id="edit-adj1" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Adjustment 2</label>
-                    <input type="number" step="0.01" name="adjustment2" id="edit-adj2" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Adjustment 3</label>
-                    <input type="number" step="0.01" name="adjustment3" id="edit-adj3" class="form-input">
-                </div>
-            </div>
+            @endforeach
             <div class="flex gap-2" style="margin-top:8px;justify-content:flex-end">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -166,15 +180,40 @@ function selectAll() {
     document.querySelectorAll('.tb-check').forEach(cb => { cb.checked = true; });
 }
 
+function toggleField(field) {
+    var cb = document.getElementById('cb-' + field);
+    var isChecked = cb.checked;
+    var amtEl = document.getElementById('edit-' + field);
+    if (amtEl) amtEl.disabled = !isChecked;
+    var optEl = document.getElementById('opt-' + field);
+    if (optEl) optEl.disabled = !isChecked;
+    var nameEl = document.getElementById('edit-' + field + '-name');
+    if (nameEl) nameEl.disabled = !isChecked;
+}
+
+function setField(field, value) {
+    var el = document.getElementById('edit-' + field);
+    if (!el) return;
+    el.value = value || '';
+    var cb = document.getElementById('cb-' + field);
+    if (cb) {
+        cb.checked = value > 0;
+        toggleField(field);
+    }
+}
+
 function editUtility(id, name, date, water, internet, electricity, mfsf, adj1, adj2, adj3) {
-    document.getElementById('edit-water').value = water;
-    document.getElementById('edit-internet').value = internet;
-    document.getElementById('edit-electricity').value = electricity;
-    document.getElementById('edit-mfsf').value = mfsf;
-    document.getElementById('edit-adj1').value = adj1;
-    document.getElementById('edit-adj2').value = adj2;
-    document.getElementById('edit-adj3').value = adj3;
+    document.getElementById('edit-listing-label').textContent = name + ' · ' + date;
     document.getElementById('edit-form').action = '/admin/utility/update/' + id;
+
+    setField('water',       water);
+    setField('internet',    internet);
+    setField('electricity', electricity);
+    setField('mfsf',        mfsf);
+    setField('adj1',        adj1);
+    setField('adj2',        adj2);
+    setField('adj3',        adj3);
+
     document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -183,7 +222,34 @@ function closeModal() {
 }
 
 function previewUtility(id) {
-    window.open('/admin/approval/month_wise?preview=' + id, '_blank');
+    document.getElementById('preview-modal').style.display = 'flex';
+    document.getElementById('preview-loading').style.display = 'block';
+    document.getElementById('preview-frame').style.display = 'none';
+
+    fetch('/admin/import/pdf/approval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ id: id, preview: 'preview' })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status === 200 && res.data) {
+            var frame = document.getElementById('preview-frame');
+            document.getElementById('preview-loading').style.display = 'none';
+            frame.style.display = 'block';
+            frame.srcdoc = res.data;
+        } else {
+            document.getElementById('preview-loading').textContent = 'Failed to load preview. ' + (res.message || '');
+        }
+    })
+    .catch(() => {
+        document.getElementById('preview-loading').textContent = 'Error loading preview.';
+    });
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').style.display = 'none';
+    document.getElementById('preview-frame').srcdoc = '';
 }
 
 function sendMails() {

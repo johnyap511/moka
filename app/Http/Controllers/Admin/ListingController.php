@@ -5685,8 +5685,7 @@ class ListingController extends Controller
                         $data[] = [
                             'name'      => 'HOMEMOKA',
                             'user_name' => $user->name,
-                            'email'     => 'ss.samdeawesome@gmail.com', // Static email (for testing?)
-                                                                        // 'email'  => $user->email,
+                            'email'     => $user->email,
                             'id'        => $user->id,
                             'filename'  => (function() use ($y, $m, $value) {
                                 $source = public_path("/files/PDFS/{$y}/{$m}/{$value->excel_name}");
@@ -5785,15 +5784,12 @@ class ListingController extends Controller
             $update = $updateData->update($arr);
         }
         if ($request->type == "month") {
-            return redirect('listing/approval')->with('success', 'Update successfully!');
-
+            return redirect()->route('approval.month', ['date' => request('date')])->with('success', 'Update successfully!');
         }
         if ($update) {
-
-            return redirect('listing/approval')->with('success', 'Update successfully!', $update);
+            return redirect()->route('approval.month', ['date' => request('date')])->with('success', 'Update successfully!');
         } else {
-
-            return redirect('listing/approval')->with('error', 'Something went wrong!');
+            return redirect()->route('approval.month', ['date' => request('date')])->with('error', 'Something went wrong!');
         }
     }
 
