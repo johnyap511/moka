@@ -19,6 +19,18 @@
         <h1>Listing Report</h1>
         <p>Monthly booking summary &amp; utility charges per listing</p>
     </div>
+    @if($listing)
+    <div style="display:flex;gap:10px;align-items:center">
+        <button type="button" class="btn btn-secondary" onclick="submitAs('excel')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export Excel
+        </button>
+        <button type="button" class="btn btn-primary" onclick="submitAs('pdf')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Generate PDF
+        </button>
+    </div>
+    @endif
 </div>
 
 {{-- Filter Bar --}}
@@ -88,7 +100,7 @@
         <p style="font-size:13px;color:var(--text-secondary);margin:0;">Enter charges for the selected month, then export the report.</p>
     </div>
     <div class="card-body">
-        <form method="POST" action="/admin/listing/report/{{ $id }}" id="export-form">
+        <form method="POST" action="/admin/listing/report/{{ $id }}" id="export-form" target="_blank">
             @csrf
             <input type="hidden" name="date" value="{{ $selDate instanceof \Carbon\Carbon ? $selDate->format('Y-m') : date_format($selDate,'Y-m') }}">
 
@@ -134,9 +146,13 @@
             </div>
 
             <div style="margin-top:24px;display:flex;gap:12px;">
-                <button type="submit" class="btn btn-primary">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <button type="button" class="btn btn-secondary" onclick="submitAs('excel')">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Export Excel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitAs('pdf')">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Generate PDF
                 </button>
             </div>
         </form>
@@ -151,3 +167,20 @@
 @endif
 
 @endsection
+
+@push('scripts')
+<script>
+function submitAs(type) {
+    var form = document.getElementById('export-form');
+    var id   = '{{ $id ?? "" }}';
+    if (type === 'pdf') {
+        form.action = '/admin/listings/reports/' + id;
+        form.target = '_blank';
+    } else {
+        form.action = '/admin/listing/report/' + id;
+        form.target = '_blank';
+    }
+    form.submit();
+}
+</script>
+@endpush
