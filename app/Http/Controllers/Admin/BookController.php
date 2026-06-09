@@ -262,7 +262,15 @@ class BookController extends Controller
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5, 8])
             ->orderBy('id', 'desc')->get();
         $listings = Listing::where('status', 1)->get();
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings'));
+
+        // Build listing name map from linked bookings
+        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
+        $linkedListings = \App\Booking::whereIn('id', $bookIds)
+            ->with('listing:id,name')
+            ->get(['id','listing_id'])
+            ->keyBy('id');
+
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
     public static function historicalAPI()
@@ -736,7 +744,9 @@ class BookController extends Controller
         // $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->orderBy('id','DESC')->limit(100)->get();
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->get();
         $listings = Listing::where('status', 1)->get();
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings'));
+        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
+        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id','listing_id'])->keyBy('id');
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
     public function ezeeBookingsAssigned()
@@ -744,16 +754,10 @@ class BookController extends Controller
         $currentMonth = date('Y-m-') . '01';
         $newdate = date("Y-m-d", strtotime('-1 month', strtotime($currentMonth)));
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [8])->get();
-        //    $db =  DB::table('ezee_bookings')
-        //    ->select('ezee_bookings.id','ezee_bookings.book_id','bookings.ota_fee')
-        //    ->join('bookings','bookings.id','=','ezee_bookings.book_id')
-        //    ->whereIn('ezee_bookings.status', [8])
-        //    ->where([['ezee_bookings.End', '>=', $newdate]])
-        //    ->get();
-        //    dd($db);
         $listings = Listing::where('status', 1)->get();
-
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings'));
+        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
+        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id','listing_id'])->keyBy('id');
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
     /**

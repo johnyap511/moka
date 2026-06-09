@@ -40,7 +40,7 @@
         <table style="width:100%;border-collapse:collapse;min-width:900px">
             <thead>
                 <tr>
-                    @foreach(['#','Guest','Room Type','Check In','Check Out','Amount','Source','Status','Action'] as $h)
+                    @foreach(['#','Guest','Room Type','Assigned Unit','Check In','Check Out','Amount','Source','Status','Action'] as $h)
                     <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap">{{ $h }}</th>
                     @endforeach
                 </tr>
@@ -54,6 +54,14 @@
                         <div style="font-size:11.5px;color:var(--text-secondary)">{{ $b->Email }}</div>
                     </td>
                     <td style="padding:10px 14px;font-size:13px">{{ $b->RoomTypeName ?? '—' }}</td>
+                    <td style="padding:10px 14px;font-size:13px">
+                        @php $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null; @endphp
+                        @if($linked && $linked->listing)
+                            <span style="font-weight:500;color:var(--teal)">{{ $linked->listing->name }}</span>
+                        @else
+                            <span style="color:var(--text-secondary)">—</span>
+                        @endif
+                    </td>
                     <td style="padding:10px 14px;font-size:13px">{{ $b->Start }}</td>
                     <td style="padding:10px 14px;font-size:13px">{{ $b->End }}</td>
                     <td style="padding:10px 14px;font-size:13px">RM {{ number_format($b->TotalAmountAfterTax ?? 0, 2) }}</td>
@@ -73,7 +81,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
+                <tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
                 @endforelse
             </tbody>
         </table>
