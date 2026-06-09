@@ -428,7 +428,22 @@ class ListingController extends Controller
             $selDate = date_create($request->date);
         }
         $testing = $request->testing;
-        return view('admin.listing.report', compact('id', 'listing', 'allListings', 'selDate', 'testing'));
+
+        $books = collect();
+        if (!empty($id)) {
+            $dateObj        = ($selDate instanceof \Carbon\Carbon) ? $selDate : \Carbon\Carbon::instance(date_create($selDate instanceof \DateTime ? date_format($selDate, 'Y-m-d') : (string)$selDate));
+            $thisMonthStart = $dateObj->format('Y-m-01');
+            $thisMonthEnd   = $dateObj->copy()->addMonth()->format('Y-m-01');
+            $books = Booking::where([
+                ['listing_id', $id],
+                ['status', '>=', 5],
+                ['check_in', '>=', $thisMonthStart],
+                ['check_in', '<', $thisMonthEnd],
+                ['check_out', '>', $thisMonthStart],
+            ])->orderBy('check_in')->get();
+        }
+
+        return view('admin.listing.report', compact('id', 'listing', 'allListings', 'selDate', 'testing', 'books'));
     }
 
     /**
