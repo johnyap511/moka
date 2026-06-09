@@ -7,23 +7,42 @@
 <div class="page-header">
     <div>
         <h1>Listing Calendar</h1>
-        <p>Availability and booking overview</p>
+        <p>Booking overview for selected property</p>
     </div>
     <div class="flex gap-2">
-        @if(isset($listing))
+        @if(isset($listing) && $listing)
         <a href="/admin/listing/{{ $listing->id }}/edit" class="btn btn-secondary">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Back to Edit
+            Edit Listing
         </a>
         @endif
     </div>
 </div>
 
+{{-- Listing selector --}}
+@if(isset($allListings) && $allListings->count())
+<div class="card" style="margin-bottom:16px">
+    <div class="card-body" style="padding:14px 20px">
+        <form method="GET" action="/admin/calendar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">Select Property:</label>
+            <select name="listing_id" class="form-input" style="min-width:260px;max-width:400px" onchange="this.form.submit()">
+                @foreach($allListings as $l)
+                    <option value="{{ $l->id }}" {{ $l->id == ($selectedId ?? '') ? 'selected' : '' }}>
+                        {{ $l->name }}
+                    </option>
+                @endforeach
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">View</button>
+        </form>
+    </div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-header">
         <h2>Calendar View</h2>
-        @if(isset($listing))
-            <span class="badge badge-blue">{{ $listing->title ?? $listing->name ?? 'Listing #'.$listing->id }}</span>
+        @if(isset($listing) && $listing)
+            <span class="badge badge-blue">{{ $listing->name }}</span>
         @endif
     </div>
     <div class="card-body">

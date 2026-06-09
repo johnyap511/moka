@@ -186,46 +186,59 @@ class CalendarController extends Controller
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function allBooks()
+    public function allBooks(Request $request)
     {
+        $allListings = Listing::orderBy('name')->get();
+        $selectedId  = $request->listing_id ?? ($allListings->first()->id ?? null);
+        $listing     = $selectedId ? Listing::find($selectedId) : null;
+
         $start = Carbon::now()->startOfMonth()->subMonth();
         $end   = Carbon::now()->endOfMonth()->addMonths(2);
-        $books = Booking::where('status', '>', 1)
+
+        $query = Booking::where('status', '>', 1)
             ->where('check_out', '>=', $start)
-            ->where('check_in', '<=', $end)
-            ->get();
+            ->where('check_in', '<=', $end);
+
+        if ($selectedId) {
+            $query->where('listing_id', $selectedId);
+        }
+
+        $books  = $query->get();
         $events = [];
+
         foreach ($books as $book) {
-            $user = User::find($book->user_id);
             $name = '';
-            if (!empty($user)) {
-                $name = $user->name . ' ' . $user->last_name;
-            } else {
-                $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
-                if (!empty($ezeeBook)) {
-                    $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
+            $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
+            if (!empty($ezeeBook)) {
+                $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
+            }
+            if (empty($name)) {
+                $user = User::find($book->user_id);
+                if (!empty($user)) {
+                    $name = $user->name . ' ' . $user->last_name;
                 }
             }
-            $guest = $book->adult . ' adults, ' . $book->infant . ' children';
+
+            $guest = ($book->adult ?? 0) . ' adults, ' . ($book->infant ?? 0) . ' children';
             $events[] = [
-                'id' => $book->id,
-                'title' => $name,
-                'start' => $book->check_in,
-                'end' => $book->check_out,
-                'guest' => $guest,
-                'price_night' => $book->price_night,
-                'sst' => $book->sst,
-                'sst_cf' => $book->sst_cf,
-                'created_at' => $book->created_at,
-                'nights' => $book->nights,
+                'id'           => $book->id,
+                'title'        => $name ?: 'Guest',
+                'start'        => $book->check_in,
+                'end'          => $book->check_out,
+                'guest'        => $guest,
+                'price_night'  => $book->price_night,
+                'sst'          => $book->sst,
+                'sst_cf'       => $book->sst_cf,
+                'created_at'   => $book->created_at,
+                'nights'       => $book->nights,
                 'cleaning_fee' => $book->cleaning_fee,
-                'ota_fee' => $book->ota_fee,
-                'price' => $book->price,
+                'ota_fee'      => $book->ota_fee,
+                'price'        => $book->price,
             ];
         }
+
         $events = json_encode($events);
-        //        session()->put('calendar_date', '2020-06-14');
-        return view('admin.listing.calendar', compact('events'));
+        return view('admin.listing.calendar', compact('events', 'allListings', 'selectedId', 'listing'));
     }
 
     /**
