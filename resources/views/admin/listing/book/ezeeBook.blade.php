@@ -126,7 +126,8 @@ function openAssign(id, guest, start, end, bookId) {
     document.getElementById('modal-guest').textContent = guest + ' · ' + start + ' → ' + end;
     document.getElementById('modal-checkin').value = start;
     document.getElementById('modal-checkout').value = end;
-    document.getElementById('assign-form').action = '/admin/ezee/bookingEdit/' + id;
+    const route = bookId ? '/admin/ezee/bookingEdit/' + id : '/admin/ezee/booking/' + id;
+    document.getElementById('assign-form').action = route;
     document.getElementById('reassign-wrap').style.display = bookId ? 'block' : 'none';
     document.getElementById('assign-modal').style.display = 'flex';
 }
