@@ -2072,7 +2072,6 @@ class ListingController extends Controller
 
     public function reportExports(Request $request, $id)
     {
-        require_once '../vendor/dompdf/autoload.inc.php';
         $listing = Listing::where('id', $id)->first();
         if (empty($listing)) {
             return back()->with('error', 'This listing does not exist!');
@@ -2120,10 +2119,12 @@ class ListingController extends Controller
         $no                  = 1;
         $array               = [];
         $ota                 = 0;
-        $path                = 'public/logo1.png';
-        $type                = pathinfo($path, PATHINFO_EXTENSION);
-        $data                = file_get_contents("logo1.png");
-        $base64              = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        $logoPath = public_path('logo1.png');
+        $base64   = '';
+        if (file_exists($logoPath)) {
+            $type   = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $base64 = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logoPath));
+        }
 
         $html = "<!DOCTYPE html>
         <html lang='en'>
@@ -4289,17 +4290,22 @@ class ListingController extends Controller
              </body>
 
              </html>";
-        $pdf_name = 'r_' . $listing->name . '_' . $y . $m . '.pdf';
-        $dompdf   = new Dompdf();
+        $pdf_name = 'r_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $listing->name) . '_' . $y . $m . '.pdf';
+        $saveDir  = public_path('files/utility');
+        if (!is_dir($saveDir)) {
+            mkdir($saveDir, 0775, true);
+        }
+        $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->getOptions()->setIsFontSubsettingEnabled(true);
         $dompdf->render();
-        header('Content-Type: application/pdf; charset=utf-8');
-        header("Content-disposition: inline; filename='./files/utility/$pdf_name'", true);
-        $dompdf->stream("./files/utility/$pdf_name", ["Attachment" => 1]);
         $output = $dompdf->output();
-        file_put_contents("./files/utility/$pdf_name", $output);
+        file_put_contents($saveDir . '/' . $pdf_name, $output);
+        return response($output, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdf_name . '"',
+        ]);
     }
     // return response()->download($filePath, 'Report_' . $y . $m . '.pdf', $headers);
 
