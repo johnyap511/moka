@@ -18,11 +18,13 @@ class EzeeBooking extends Model
      */
     protected $fillable = [
         'book_id',
+        'ezee_group_id',
         'SubBookingId',
         'TransactionId',
         'IsConfirmed',
         'RateplanName',
         'RoomTypeName',
+        'RoomName',
         'Start',
         'End',
         'CurrencyCode',

@@ -62,6 +62,13 @@ Route::post('/ezee/booking/{bookId}', 'Admin\BookController@ezeeBookingStore');
 Route::post('/ezee/bookingEdit/{bookId}', 'Admin\BookController@ezeeBookingStoreEdit')->name('admin.ezee.booking.store.edit');
 Route::delete('/ezee/booking/{bookId}', 'Admin\BookController@ezeeBookingDelete');
 
+// EZEE Room Mapping & Auto-Assignment
+Route::get('/ezee/room-mapping', 'Admin\EzeeRoomMappingController@index')->name('admin.ezee.room-mapping');
+Route::post('/ezee/room-mapping/save', 'Admin\EzeeRoomMappingController@saveAll')->name('admin.ezee.room-mapping.save');
+Route::post('/ezee/room-mapping/auto-assign', 'Admin\EzeeRoomMappingController@autoAssign')->name('admin.ezee.auto-assign');
+Route::post('/ezee/booking/{ezeeBookingId}/reassign', 'Admin\EzeeRoomMappingController@reassign')->name('admin.ezee.reassign');
+Route::get('/ezee/assignment-log', 'Admin\EzeeRoomMappingController@auditLog')->name('admin.ezee.assignment-log');
+
 // Images
 Route::get('/listing/{id}/images', 'Admin\ListingImagesController@show');
 Route::post('/listing/{id}/images', 'Admin\ListingImagesController@store');
