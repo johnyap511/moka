@@ -1,36 +1,33 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up()
     {
-        Schema::table('ezee_room_mappings', function (Blueprint $table) {
-            // Drop old unique constraint on room_type_name
-            $table->dropUnique(['room_type_name']);
-            // room_type_name is now optional context only
-            $table->string('room_type_name')->nullable()->change();
-            // ezee_group_id is optional
-            $table->unsignedBigInteger('ezee_group_id')->nullable()->change();
-        });
+        // Drop unique constraint on room_type_name
+        DB::statement('ALTER TABLE ezee_room_mappings DROP INDEX ezee_room_mappings_room_type_name_unique');
 
-        // Add unique index on room_name only if not already present
-        if (!collect(\DB::select("SHOW INDEX FROM ezee_room_mappings WHERE Key_name = 'ezee_room_mappings_room_name_unique'"))->count()) {
-            Schema::table('ezee_room_mappings', function (Blueprint $table) {
-                $table->unique('room_name');
-            });
+        // Make room_type_name nullable (just metadata now)
+        DB::statement('ALTER TABLE ezee_room_mappings MODIFY COLUMN room_type_name VARCHAR(255) NULL');
+
+        // Make ezee_group_id nullable
+        DB::statement('ALTER TABLE ezee_room_mappings MODIFY COLUMN ezee_group_id BIGINT UNSIGNED NULL');
+
+        // Add unique index on room_name (only if not already present)
+        $indexExists = collect(DB::select("SHOW INDEX FROM ezee_room_mappings WHERE Key_name = 'ezee_room_mappings_room_name_unique'"))->count() > 0;
+        if (!$indexExists) {
+            DB::statement('ALTER TABLE ezee_room_mappings ADD UNIQUE INDEX ezee_room_mappings_room_name_unique (room_name)');
         }
     }
 
     public function down()
     {
-        Schema::table('ezee_room_mappings', function (Blueprint $table) {
-            $table->dropUnique(['room_name']);
-            $table->string('room_type_name')->nullable(false)->change();
-            $table->unique('room_type_name');
-        });
+        DB::statement('ALTER TABLE ezee_room_mappings DROP INDEX ezee_room_mappings_room_name_unique');
+        DB::statement('ALTER TABLE ezee_room_mappings MODIFY COLUMN room_type_name VARCHAR(255) NOT NULL');
+        DB::statement('ALTER TABLE ezee_room_mappings ADD UNIQUE INDEX ezee_room_mappings_room_type_name_unique (room_type_name)');
     }
 };
