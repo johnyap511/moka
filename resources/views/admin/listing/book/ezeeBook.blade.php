@@ -7,6 +7,12 @@
 .badge-unassigned { background:#fff7ed; color:#c2410c; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
 .badge-source { background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:500; }
 .assign-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; align-items:center; justify-content:center; }
+th.sortable { cursor:pointer; user-select:none; white-space:nowrap; }
+th.sortable:hover { color:var(--teal); }
+th.sortable .sort-icon { margin-left:4px; opacity:.4; font-style:normal; font-size:10px; }
+th.sortable.asc .sort-icon::after  { content:'▲'; opacity:1; }
+th.sortable.desc .sort-icon::after { content:'▼'; opacity:1; }
+th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
 </style>
 @endpush
 
@@ -25,36 +31,50 @@
 <div class="alert alert-error" style="margin-bottom:16px">{{ session('error') }}</div>
 @endif
 
-{{-- Filter Tabs --}}
-<div style="display:flex;gap:8px;margin-bottom:20px">
+{{-- Filter Tabs + Search --}}
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
     <a href="/admin/ezee/booking" class="btn {{ !request()->is('admin/ezee/unassigned_booking') && !request()->is('admin/ezee/assigned_booking') ? 'btn-primary' : 'btn-secondary' }}">All</a>
     <a href="/admin/ezee/unassigned_booking" class="btn {{ request()->is('admin/ezee/unassigned_booking') ? 'btn-primary' : 'btn-secondary' }}">Unassigned</a>
     <a href="/admin/ezee/assigned_booking" class="btn {{ request()->is('admin/ezee/assigned_booking') ? 'btn-primary' : 'btn-secondary' }}">Assigned</a>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div class="search-bar" style="min-width:280px">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="ezee-search" placeholder="Search guest, room, source…" oninput="filterTable(this.value)">
+        </div>
+        <span id="result-count" style="font-size:12px;color:var(--text-secondary);white-space:nowrap"></span>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h2>Bookings <span class="badge badge-blue">{{ count($books) }}</span></h2>
+        <h2>Bookings <span class="badge badge-blue" id="visible-count">{{ count($books) }}</span></h2>
     </div>
     <div class="table-wrap" style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:900px">
+        <table style="width:100%;border-collapse:collapse;min-width:900px" id="ezee-table">
             <thead>
                 <tr>
-                    @foreach(['#','Guest','Room Type','Assigned Unit','Check In','Check Out','Amount','Source','Status','Action'] as $h)
-                    <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap">{{ $h }}</th>
-                    @endforeach
+                    <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">#</th>
+                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="2" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="3" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Assigned Unit <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="4" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="5" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="6" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Amount <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="7" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="8" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Action</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="ezee-tbody">
                 @forelse($books as $i => $b)
                 <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-                    <td style="padding:10px 14px;font-size:13px">{{ $i + 1 }}</td>
-                    <td style="padding:10px 14px;font-size:13px">
+                    <td style="padding:10px 14px;font-size:13px" class="row-num">{{ $i + 1 }}</td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->FirstName.' '.$b->LastName) }}">
                         <div style="font-weight:500">{{ $b->FirstName }} {{ $b->LastName }}</div>
                         <div style="font-size:11.5px;color:var(--text-secondary)">{{ $b->Email }}</div>
                     </td>
-                    <td style="padding:10px 14px;font-size:13px">{{ $b->RoomTypeName ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:13px">
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->RoomTypeName ?? '') }}">{{ $b->RoomTypeName ?? '—' }}</td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower(($b->book_id && isset($linkedListings[$b->book_id]) && $linkedListings[$b->book_id]->listing) ? $linkedListings[$b->book_id]->listing->name : '') }}">
                         @php $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null; @endphp
                         @if($linked && $linked->listing)
                             <span style="font-weight:500;color:var(--teal)">{{ $linked->listing->name }}</span>
@@ -62,11 +82,11 @@
                             <span style="color:var(--text-secondary)">—</span>
                         @endif
                     </td>
-                    <td style="padding:10px 14px;font-size:13px">{{ $b->Start }}</td>
-                    <td style="padding:10px 14px;font-size:13px">{{ $b->End }}</td>
-                    <td style="padding:10px 14px;font-size:13px">RM {{ number_format($b->TotalAmountAfterTax ?? 0, 2) }}</td>
-                    <td style="padding:10px 14px;font-size:13px"><span class="badge-source">{{ $b->Source ?? '—' }}</span></td>
-                    <td style="padding:10px 14px;font-size:13px">
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->Start }}">{{ $b->Start }}</td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->End }}">{{ $b->End }}</td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->TotalAmountAfterTax ?? 0 }}">RM {{ number_format($b->TotalAmountAfterTax ?? 0, 2) }}</td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->Source ?? '') }}"><span class="badge-source">{{ $b->Source ?? '—' }}</span></td>
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->book_id ? 'assigned' : 'unassigned' }}">
                         @if($b->book_id)
                             <span class="badge-assigned">Assigned</span>
                         @else
@@ -130,6 +150,7 @@
 
 @push('scripts')
 <script>
+// ---- Assign modal ----
 function openAssign(id, guest, start, end, bookId) {
     document.getElementById('modal-guest').textContent = guest + ' · ' + start + ' → ' + end;
     document.getElementById('modal-checkin').value = start;
@@ -145,5 +166,85 @@ function closeAssign() {
 document.getElementById('assign-modal').addEventListener('click', function(e) {
     if (e.target === this) closeAssign();
 });
+
+// ---- Search ----
+function filterTable(q) {
+    q = q.toLowerCase().trim();
+    var rows = document.querySelectorAll('#ezee-tbody tr');
+    var visible = 0;
+    rows.forEach(function(row) {
+        var text = row.innerText.toLowerCase();
+        var show = !q || text.includes(q);
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    document.getElementById('visible-count').textContent = visible;
+    document.getElementById('result-count').textContent = q ? ('Showing ' + visible + ' result' + (visible !== 1 ? 's' : '')) : '';
+    renumberRows();
+}
+
+function renumberRows() {
+    var n = 1;
+    document.querySelectorAll('#ezee-tbody tr').forEach(function(row) {
+        if (row.style.display !== 'none') {
+            var numCell = row.querySelector('.row-num');
+            if (numCell) numCell.textContent = n++;
+        }
+    });
+}
+
+// ---- Sorting ----
+var sortState = { col: null, dir: 0 }; // dir: 0=none, 1=asc, -1=desc
+
+document.querySelectorAll('th.sortable').forEach(function(th) {
+    th.addEventListener('click', function() {
+        var col = parseInt(this.getAttribute('data-col'));
+        if (sortState.col === col) {
+            sortState.dir = sortState.dir === 1 ? -1 : (sortState.dir === -1 ? 0 : 1);
+        } else {
+            sortState.col = col;
+            sortState.dir = 1;
+        }
+        document.querySelectorAll('th.sortable').forEach(function(t) {
+            t.classList.remove('asc', 'desc');
+        });
+        if (sortState.dir !== 0) {
+            this.classList.add(sortState.dir === 1 ? 'asc' : 'desc');
+        }
+        sortTable(col, sortState.dir);
+    });
+});
+
+function sortTable(col, dir) {
+    var tbody = document.getElementById('ezee-tbody');
+    var rows  = Array.from(tbody.querySelectorAll('tr'));
+
+    if (dir === 0) {
+        // Restore original order
+        rows.sort(function(a, b) {
+            return parseInt(a.getAttribute('data-orig') || 0) - parseInt(b.getAttribute('data-orig') || 0);
+        });
+    } else {
+        // Save original order on first sort
+        rows.forEach(function(r, i) {
+            if (!r.getAttribute('data-orig')) r.setAttribute('data-orig', i);
+        });
+        rows.sort(function(a, b) {
+            var aVal = (a.cells[col] ? a.cells[col].getAttribute('data-val') || a.cells[col].innerText : '').toLowerCase();
+            var bVal = (b.cells[col] ? b.cells[col].getAttribute('data-val') || b.cells[col].innerText : '').toLowerCase();
+            // Numeric sort for amount column (col 6)
+            if (col === 6) {
+                return (parseFloat(aVal) - parseFloat(bVal)) * dir;
+            }
+            return aVal < bVal ? -dir : (aVal > bVal ? dir : 0);
+        });
+    }
+
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    renumberRows();
+}
+
+// Init count
+document.getElementById('visible-count').textContent = document.querySelectorAll('#ezee-tbody tr').length;
 </script>
 @endpush
