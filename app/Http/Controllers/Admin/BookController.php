@@ -6,6 +6,7 @@ use App\Booking;
 use App\DataLog;
 use App\Events\BookingCompleteEZEEAPIEvent;
 use App\EzeeGroup;
+use App\EzeeSyncLog;
 use App\Http\Controllers\Controller;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
@@ -13,6 +14,7 @@ use App\Role;
 use App\User;
 use Carbon\Carbon;
 use DateTime;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -1850,12 +1852,14 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
 
     public function history(Request $request)
     {
-        return view('admin.listing.history');
+        $logs = EzeeSyncLog::orderByDesc('created_at')->limit(50)->get();
+        return view('admin.listing.history', compact('logs'));
     }
 
     public function history_api(Request $request)
     {
         set_time_limit(0);
+        $startTime = microtime(true);
         $listings = EzeeGroup::all();
         if (empty($request->from_date) || empty($request->to_date)) {
             return back()->with('error', 'From date & To date fields are required, not be empty!');
@@ -1864,13 +1868,17 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
         if (!empty($request->from_date)) {
             $date_current = $request->from_date;
         }
-        // date("Y-m-d");
 
         if (!empty($request->to_date)) {
             $newDate = $request->to_date;
             $first_date_of_month = date("Y-m-01");
             $new_date_folio = $request->to_date;
         }
+
+        $newCount       = 0;
+        $updatedCount   = 0;
+        $unchangedCount = 0;
+        $details        = [];
         // dd($newDate);
         // $newDate = $request->to_date;
         // // date("Y-m-d", strtotime("-3 days"));
@@ -2118,12 +2126,6 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             ]
                                         )->first();
                                         if (empty($exist)) {
-                                            $dataLog = DataLog::create([
-                                                'title' => 'sendnotify',
-                                                'data' => '',
-                                                'related_id' => 20317,
-                                                'status' => 'started',
-                                            ]);
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
@@ -2149,8 +2151,17 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                     'Source' => preg_replace('/[^A-Za-z\. ]/', '', $source),
                                                     'created_at' => $created_at,
                                                 ]);
+                                                $newCount++;
+                                                $details[] = ['action' => 'new', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax];
                                             }
                                         } else {
+                                            // Detect changes
+                                            $changes = [];
+                                            if ($exist->RoomName !== $roomName) $changes['room_name'] = ['from' => $exist->RoomName, 'to' => $roomName];
+                                            if ($exist->Start !== $start) $changes['check_in'] = ['from' => $exist->Start, 'to' => $start];
+                                            if ($exist->End !== $end) $changes['check_out'] = ['from' => $exist->End, 'to' => $end];
+                                            if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
+
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
                                                 ->update([
                                                     'RoomTypeName' => $roomTypeName,
@@ -2161,6 +2172,12 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                     "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                     "TotalAmountBeforeTax" => $totalAmountBeforeTax,
                                                 ]);
+                                            if (count($changes)) {
+                                                $updatedCount++;
+                                                $details[] = ['action' => 'updated', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax, 'changes' => $changes];
+                                            } else {
+                                                $unchangedCount++;
+                                            }
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -2305,14 +2322,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             )->first();
 
                                             if (empty($exist)) {
-                                                $dataLog = DataLog::create([
-                                                    'title' => 'sendnotify',
-                                                    'data' => '',
-                                                    'related_id' => 20317,
-                                                    'status' => 'started',
-                                                ]);
                                                 if ($sub_booking_id) {
-
                                                     $exist = EzeeBooking::create([
                                                         'SubBookingId' => $sub_booking_id,
                                                         'TransactionId' => $transaction_id,
@@ -2337,8 +2347,16 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                         'Source' => preg_replace('/[^A-Za-z\. ]/', '', $source),
                                                         'created_at' => $created_at,
                                                     ]);
+                                                    $newCount++;
+                                                    $details[] = ['action' => 'new', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax];
                                                 }
                                             } else {
+                                                $changes = [];
+                                                if ($exist->RoomName !== $roomName) $changes['room_name'] = ['from' => $exist->RoomName, 'to' => $roomName];
+                                                if ($exist->Start !== $start) $changes['check_in'] = ['from' => $exist->Start, 'to' => $start];
+                                                if ($exist->End !== $end) $changes['check_out'] = ['from' => $exist->End, 'to' => $end];
+                                                if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
+
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
                                                     ->update([
                                                         'RoomTypeName' => $roomTypeName,
@@ -2349,6 +2367,12 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                         "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                         "TotalAmountBeforeTax" => $totalAmountBeforeTax,
                                                     ]);
+                                                if (count($changes)) {
+                                                    $updatedCount++;
+                                                    $details[] = ['action' => 'updated', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax, 'changes' => $changes];
+                                                } else {
+                                                    $unchangedCount++;
+                                                }
                                             }
                                         }
                                     }
@@ -2360,6 +2384,20 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                 }
             }
         }
-        return back()->with('success', 'Historical Api Run successfully!');
+
+        $duration = round(microtime(true) - $startTime, 2);
+        EzeeSyncLog::create([
+            'from_date'       => $date_current,
+            'to_date'         => $newDate,
+            'new_count'       => $newCount,
+            'updated_count'   => $updatedCount,
+            'unchanged_count' => $unchangedCount,
+            'total_count'     => $newCount + $updatedCount + $unchangedCount,
+            'duration_seconds'=> $duration,
+            'details'         => array_filter($details, fn($d) => $d['action'] !== 'unchanged'),
+            'ran_by'          => Auth::id(),
+        ]);
+
+        return back()->with('success', "Sync complete in {$duration}s — {$newCount} new, {$updatedCount} updated, {$unchangedCount} unchanged.");
     }
 }
