@@ -2153,10 +2153,13 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
                                                 ->update([
+                                                    'RoomTypeName' => $roomTypeName,
+                                                    'RoomName' => $roomName,
+                                                    'Start' => $start,
+                                                    'End' => $end,
                                                     "TotalExtraCharge" => $totalExtraCharge,
                                                     "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                     "TotalAmountBeforeTax" => $totalAmountBeforeTax,
-                                                    'End' => $end,
                                                 ]);
                                         }
                                     } else {
@@ -2338,10 +2341,13 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
                                                     ->update([
+                                                        'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
+                                                        'Start' => $start,
+                                                        'End' => $end,
                                                         "TotalExtraCharge" => $totalExtraCharge,
                                                         "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                         "TotalAmountBeforeTax" => $totalAmountBeforeTax,
-                                                        'End' => $end,
                                                     ]);
                                             }
                                         }
