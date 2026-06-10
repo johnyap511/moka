@@ -172,13 +172,25 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Payments
     </a>
-    <a href="/admin/ezee/booking" class="sidebar-link {{ request()->is('admin/ezee/booking*') ? 'active' : '' }}">
+    <a href="/admin/ezee/booking" class="sidebar-link {{ request()->is('admin/ezee/booking') || request()->is('admin/ezee/assigned_booking') || request()->is('admin/ezee/unassigned_booking') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        EZEE Channel
+        EZEE Bookings
+    </a>
+    <a href="/admin/ezee/booking_report" class="sidebar-link {{ request()->is('admin/ezee/booking_report*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        EZEE Report
+    </a>
+    <a href="/admin/ezee/upload_bookings" class="sidebar-link {{ request()->is('admin/ezee/upload_bookings*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Upload Bookings
     </a>
     <a href="/admin/ezee/room-mapping" class="sidebar-link {{ request()->is('admin/ezee/room-mapping*') || request()->is('admin/ezee/assignment*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
         Room Mapping
+    </a>
+    <a href="/admin/ezee/group" class="sidebar-link {{ request()->is('admin/ezee/group*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        EZEE Groups
     </a>
     <a href="/admin/booking/histroy/api" class="sidebar-link {{ request()->is('admin/booking/histroy/api*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -227,6 +239,10 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
     <a href="/admin/subscribe" class="sidebar-link {{ request()->is('admin/subscribe*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         Subscribers
+    </a>
+    <a href="/admin/filemanager" class="sidebar-link {{ request()->is('admin/filemanager*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        File Manager
     </a>
 
     <div class="sidebar-footer">
