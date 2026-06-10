@@ -24,7 +24,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Guest</th>
-                    <th>Room Type</th>
+                    <th>Room Unit</th>
                     <th>Check In</th>
                     <th>Check Out</th>
                     <th>Assigned To</th>
@@ -43,7 +43,7 @@
                 <tr>
                     <td class="mono">#{{ $log->ezee_booking_id }}</td>
                     <td>{{ $eb ? $eb->FirstName.' '.$eb->LastName : '—' }}</td>
-                    <td>{{ $eb->RoomTypeName ?? '—' }}</td>
+                    <td>{{ $eb->RoomName ?? ($eb->RoomTypeName ?? '—') }}</td>
                     <td>{{ $eb->Start ?? '—' }}</td>
                     <td>{{ $eb->End ?? '—' }}</td>
                     <td>{{ $log->listing->name ?? '—' }}</td>

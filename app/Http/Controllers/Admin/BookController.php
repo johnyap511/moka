@@ -414,6 +414,12 @@ class BookController extends Controller
                                             $roomTypeName = $reserve1['BookingTran']['RoomTypeName'];
                                         }
 
+                                        if (isset($reserve1['BookingTran']['RoomName']) && !is_array($reserve1['BookingTran']['RoomName'])) {
+                                            $roomName = $reserve1['BookingTran']['RoomName'];
+                                        } else {
+                                            $roomName = null;
+                                        }
+
                                         if (is_array($reserve1['BookingTran']['Createdatetime'])) {
                                             $created_at = null;
                                         } else {
@@ -530,6 +536,7 @@ class BookController extends Controller
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
                                                     'RoomTypeName' => $roomTypeName,
+                                                    'RoomName' => $roomName,
                                                     'Start' => $start,
                                                     'End' => $end,
                                                     'CurrencyCode' => $currencyCode,
@@ -583,6 +590,12 @@ class BookController extends Controller
                                                 $roomTypeName = null;
                                             } else {
                                                 $roomTypeName = $reserve_array_value['RoomTypeName'];
+                                            }
+
+                                            if (isset($reserve_array_value['RoomName']) && !is_array($reserve_array_value['RoomName'])) {
+                                                $roomName = $reserve_array_value['RoomName'];
+                                            } else {
+                                                $roomName = null;
                                             }
 
                                             if (is_array($reserve_array_value['Start'])) {
@@ -703,6 +716,7 @@ class BookController extends Controller
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
                                                         'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
                                                         'Start' => $start,
                                                         'End' => $end,
                                                         'CurrencyCode' => $currencyCode,
@@ -1995,6 +2009,12 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             $roomTypeName = $reserve1['BookingTran']['RoomTypeName'];
                                         }
 
+                                        if (isset($reserve1['BookingTran']['RoomName']) && !is_array($reserve1['BookingTran']['RoomName'])) {
+                                            $roomName = $reserve1['BookingTran']['RoomName'];
+                                        } else {
+                                            $roomName = null;
+                                        }
+
                                         if (is_array($reserve1['BookingTran']['Createdatetime'])) {
                                             $created_at = null;
                                         } else {
@@ -2111,6 +2131,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
                                                     'RoomTypeName' => $roomTypeName,
+                                                    'RoomName' => $roomName,
                                                     'Start' => $start,
                                                     'End' => $end,
                                                     'CurrencyCode' => $currencyCode,
@@ -2169,6 +2190,12 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 $roomTypeName = null;
                                             } else {
                                                 $roomTypeName = $reserve_array_value['RoomTypeName'];
+                                            }
+
+                                            if (isset($reserve_array_value['RoomName']) && !is_array($reserve_array_value['RoomName'])) {
+                                                $roomName = $reserve_array_value['RoomName'];
+                                            } else {
+                                                $roomName = null;
                                             }
 
                                             if (is_array($reserve_array_value['Start'])) {
@@ -2289,6 +2316,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
                                                         'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
                                                         'Start' => $start,
                                                         'End' => $end,
                                                         'CurrencyCode' => $currencyCode,

@@ -46,7 +46,7 @@ select.msel.is-suggested { border-color:#3b82f6; background:#eff6ff; }
 {{-- Stats --}}
 @php
 $totalRooms    = count($rooms);
-$mappedRooms   = collect($rooms)->filter(fn($r) => isset($mappings[$r]) && $mappings[$r]->listing_id)->count();
+$mappedRooms   = $rooms->filter(fn($r) => isset($mappings[$r->RoomName]) && $mappings[$r->RoomName]->listing_id)->count();
 $suggestedCount= count($suggestions);
 $totalBooks    = $stats->sum('total');
 $assignedBooks = $stats->sum('assigned');
@@ -88,7 +88,8 @@ $assignedBooks = $stats->sum('assigned');
                 <thead>
                     <tr>
                         <th style="width:36px">#</th>
-                        <th>EZEE Room Name</th>
+                        <th>Room Unit (RoomName)</th>
+                        <th>Room Category (RoomTypeName)</th>
                         <th style="width:80px;text-align:center">Bookings</th>
                         <th style="width:80px;text-align:center">Assigned</th>
                         <th style="width:130px;text-align:center">Status</th>
@@ -96,19 +97,22 @@ $assignedBooks = $stats->sum('assigned');
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($rooms as $i => $roomTypeName)
+                    @forelse($rooms as $i => $room)
                     @php
-                        $mapping   = $mappings[$roomTypeName] ?? null;
-                        $statRow   = $stats[$roomTypeName]    ?? null;
-                        $isMapped  = $mapping && $mapping->listing_id;
-                        $suggested = !$isMapped && isset($suggestions[$roomTypeName]) ? $suggestions[$roomTypeName] : null;
-                        $total     = $statRow->total    ?? 0;
-                        $assigned  = $statRow->assigned ?? 0;
+                        $roomName     = $room->RoomName;
+                        $roomTypeName = $room->RoomTypeName;
+                        $mapping      = $mappings[$roomName] ?? null;
+                        $statRow      = $stats[$roomName]    ?? null;
+                        $isMapped     = $mapping && $mapping->listing_id;
+                        $suggested    = !$isMapped && isset($suggestions[$roomName]) ? $suggestions[$roomName] : null;
+                        $total        = $statRow->total    ?? 0;
+                        $assigned     = $statRow->assigned ?? 0;
                     @endphp
                     <tr class="room-row {{ $isMapped ? 'is-mapped-row' : ($suggested ? 'is-suggested-row' : 'is-unmapped-row') }}"
-                        data-room="{{ strtolower($roomTypeName) }}">
+                        data-room="{{ strtolower($roomName) }}">
                         <td class="mono" style="color:var(--text-secondary)">{{ $i+1 }}</td>
-                        <td style="font-weight:500">{{ $roomTypeName }}</td>
+                        <td style="font-weight:600;font-family:monospace">{{ $roomName }}</td>
+                        <td style="font-size:12px;color:var(--text-secondary)">{{ $roomTypeName ?? '—' }}</td>
                         <td style="text-align:center;font-weight:600">{{ $total }}</td>
                         <td style="text-align:center;color:{{ $assigned < $total ? '#f59e0b' : '#10b981' }};font-weight:600">
                             {{ $assigned }}
@@ -123,7 +127,7 @@ $assignedBooks = $stats->sum('assigned');
                             @endif
                         </td>
                         <td>
-                            <select name="mappings[{{ $roomTypeName }}]"
+                            <select name="mappings[{{ $roomName }}]"
                                     data-suggested="{{ $suggested }}"
                                     class="msel {{ $isMapped ? 'is-mapped' : ($suggested ? 'is-suggested' : '') }}"
                                     onchange="onMappingChange(this)">
@@ -139,7 +143,7 @@ $assignedBooks = $stats->sum('assigned');
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" style="text-align:center;padding:60px;color:var(--text-secondary)">
+                        <td colspan="7" style="text-align:center;padding:60px;color:var(--text-secondary)">
                             No EZEE room names found. Import EZEE bookings first.
                         </td>
                     </tr>
