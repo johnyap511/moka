@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'last_name', 'email', 'password', 'provider', 'provider_token', 'phone', 'country_code','address', 'status','ezee_tmp'
+        'name', 'last_name', 'email', 'password', 'provider', 'provider_token', 'phone', 'country_code', 'address', 'status', 'ezee_tmp', 'admin_role'
         // status 1->active, 2->required email activation, 6->blocked
     ];
 
