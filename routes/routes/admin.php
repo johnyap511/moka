@@ -99,6 +99,7 @@ Route::get('/payment/past', 'Admin\PaymentController@past');
 Route::get('/subscribe', 'Admin\HomeController@subscribeList');
 
 // Setting
+Route::get('/setting/admin-roles', 'Admin\AdminRoleController@index')->name('admin.roles.index');
 Route::get('/setting/estimate', 'Admin\SettingController@estimate');
 Route::delete('/setting/estimate/{id}', 'Admin\SettingController@estimateDestroy');
 Route::get('/setting/logs', 'Admin\SettingController@logs');

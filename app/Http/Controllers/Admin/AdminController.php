@@ -2,84 +2,84 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\AdminUserPermission;
 use App\Role;
 use App\User;
-use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
-
-
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Display a listing of admin users.
      */
     public function index()
     {
-        if(Auth::user()->id != 1){
+        if (! admin_can('roles.manage')) {
             return redirect('/admin/dashboard');
         }
+
         $users = User::join('role_user', 'users.id', '=', 'role_user.user_id')
-            ->where('role_id', 1)->get();
+            ->where('role_id', 1)
+            ->select('users.*')
+            ->get();
+
         return view('admin.user.adminList', compact('users'));
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Show the form for creating a new admin user.
      */
     public function create()
     {
+        if (! admin_can('roles.manage')) {
+            return redirect('/admin/dashboard');
+        }
+
         return view('admin.user.adminCreate');
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * Store a newly created admin user.
      */
     public function store(Request $request)
     {
-        if(Auth::user()->id != 1){
+        if (! admin_can('roles.manage')) {
             return redirect('/admin/dashboard');
         }
-        $data = $request->only("name","last_name","email","phone","password","status","country_code");
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:150',
-            'last_name' => 'required|string|max:150',
-            'email' => 'required|string|max:200',
-            'phone' => 'required|numeric',
+            'name'         => 'required|string|max:150',
+            'last_name'    => 'required|string|max:150',
+            'email'        => 'required|string|email|max:200|unique:users,email',
+            'phone'        => 'required|numeric',
             'country_code' => 'required|numeric',
-            'password' => 'required|string|max:100',
-            'status' => 'required|integer',
+            'password'     => 'required|string|min:6|max:100',
+            'status'       => 'required|integer',
+            'admin_role'   => 'nullable|string|in:super_admin,manager,finance,operations',
         ]);
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
+        $data = $request->only('name', 'last_name', 'email', 'phone', 'country_code', 'status');
+        $data['password']   = Hash::make($request->password);
+        $data['admin_role'] = $request->admin_role ?: null;
 
-        $data['password'] = Hash::make($data['password']);
         $user = User::create($data);
 
         $role = Role::find(1);
         $user->attachRole($role);
-        return redirect('/admin/admin')->with('success', 'Admin is created successfully!');
+
+        return redirect('/admin/admin')->with('success', 'Admin created successfully!');
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Display the specified resource (unused).
      */
     public function show($id)
     {
@@ -87,63 +87,112 @@ class AdminController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Show the form for editing an admin user + their permission overrides.
      */
     public function edit($id)
     {
-        if(Auth::user()->id != 1){
+        if (! admin_can('roles.manage')) {
             return redirect('/admin/dashboard');
         }
-        $user = User::find($id);
-        return view('admin.user.adminEdit', compact('user'));
+
+        $user = User::findOrFail($id);
+
+        // Build a keyed map of explicit overrides: ['permission.key' => true/false]
+        $overrides = AdminUserPermission::where('user_id', $id)
+            ->get()
+            ->keyBy('permission')
+            ->map(fn ($row) => $row->granted);
+
+        $permissionGroups = config('admin_permissions.groups', []);
+
+        return view('admin.user.adminEdit', compact('user', 'overrides', 'permissionGroups'));
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Update an admin user's details and permission overrides.
      */
     public function update(Request $request, $id)
     {
-        if(Auth::user()->id != 1){
+        if (! admin_can('roles.manage')) {
             return redirect('/admin/dashboard');
         }
-        $data = $request->only("name","last_name","email","phone","status","country_code");
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:150',
-            'last_name' => 'required|string|max:150',
-            'email' => 'required|string|max:200',
+            'name'         => 'required|string|max:150',
+            'last_name'    => 'required|string|max:150',
+            'email'        => 'required|string|email|max:200',
+            'phone'        => 'required|numeric',
             'country_code' => 'required|numeric',
-            'phone' => 'required|numeric',
-            'password' => 'nullable|string|max:100',
-            'status' => 'required|integer', 
+            'password'     => 'nullable|string|min:6|max:100',
+            'status'       => 'required|integer',
+            'admin_role'   => 'nullable|string|in:super_admin,manager,finance,operations',
         ]);
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $user = User::find($id);
-        if(!empty($request->password)){
+        $user = User::findOrFail($id);
+
+        $data = $request->only('name', 'last_name', 'email', 'phone', 'country_code', 'status');
+        $data['admin_role'] = $request->admin_role ?: null;
+
+        if (! empty($request->password)) {
             $data['password'] = Hash::make($request->password);
         }
 
         $user->update($data);
-        return redirect('/admin/admin')->with('success', 'Admin is updated successfully!');
+
+        // Sync per-user permission overrides.
+        $role            = $data['admin_role'] ?? 'super_admin';
+        $rolePermissions = config("admin_permissions.roles.{$role}.permissions", []);
+        $isSuperAdmin    = $role === 'super_admin' || in_array('*', $rolePermissions, true);
+
+        $submittedPermissions = $request->input('permissions', []); // ['perm.key' => '1']
+        $allPermissions       = [];
+        foreach (config('admin_permissions.groups', []) as $perms) {
+            foreach (array_keys($perms) as $key) {
+                $allPermissions[] = $key;
+            }
+        }
+
+        foreach ($allPermissions as $permKey) {
+            $checked      = isset($submittedPermissions[$permKey]);
+            $roleDefault  = $isSuperAdmin || in_array($permKey, $rolePermissions, true);
+
+            if ($checked === $roleDefault) {
+                // No override needed – delete any existing one to keep the table clean.
+                AdminUserPermission::where('user_id', $id)
+                    ->where('permission', $permKey)
+                    ->delete();
+            } else {
+                // Store an explicit override.
+                AdminUserPermission::updateOrCreate(
+                    ['user_id' => $id, 'permission' => $permKey],
+                    ['granted' => $checked]
+                );
+            }
+        }
+
+        return redirect('/admin/admin')->with('success', 'Admin updated successfully!');
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Delete an admin user (cannot delete yourself).
      */
     public function destroy($id)
     {
-        //
+        if (! admin_can('roles.manage')) {
+            return redirect('/admin/dashboard');
+        }
+
+        if ((int) $id === Auth::id()) {
+            return redirect('/admin/admin')->with('error', 'You cannot delete your own account.');
+        }
+
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect('/admin/admin')->with('success', 'Admin deleted successfully.');
     }
 }
