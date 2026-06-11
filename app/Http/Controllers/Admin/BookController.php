@@ -1717,51 +1717,94 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
     public function ezeeRemoveDuplicates(Request $request)
     {
         try {
-            // Process 50 duplicate groups per click to avoid lock timeouts
-            $groups = DB::select("
-                SELECT MIN(id) as keep_id, FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
+            $removed = 0;
+
+            // ── Pass 1: deduplicate by SubBookingId ──────────────────────────
+            // These are the real EZEE duplicates — same booking imported multiple times.
+            $subGroups = DB::select("
+                SELECT SubBookingId, COUNT(*) as cnt
                 FROM ezee_bookings
                 WHERE status IN (5, 8)
-                GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
+                  AND SubBookingId IS NOT NULL
+                  AND SubBookingId != ''
+                GROUP BY SubBookingId
                 HAVING COUNT(*) > 1
-                LIMIT 50
+                LIMIT 100
             ");
 
-            if (empty($groups)) {
-                return back()->with('success', 'No duplicates found — all clean!');
-            }
-
-            $removed = 0;
-            foreach ($groups as $group) {
-                // Get individual IDs of duplicates for this group
-                $dupeIds = DB::select("
+            foreach ($subGroups as $g) {
+                // Prefer to keep the assigned record; otherwise keep the highest ID (most recent import).
+                $keep = DB::selectOne("
                     SELECT id FROM ezee_bookings
-                    WHERE FirstName = ? AND LastName = ? AND `Start` = ? AND `End` = ?
-                      AND TotalAmountAfterTax = ? AND status IN (5, 8)
-                      AND book_id IS NULL AND id != ?
-                ", [$group->FirstName, $group->LastName, $group->Start,
-                   $group->End, $group->TotalAmountAfterTax, $group->keep_id]);
+                    WHERE SubBookingId = ? AND status IN (5, 8)
+                    ORDER BY (book_id IS NOT NULL) DESC, id DESC
+                    LIMIT 1
+                ", [$g->SubBookingId]);
 
-                // Update one row at a time by primary key — fast, no lock contention
-                foreach ($dupeIds as $row) {
+                if (!$keep) continue;
+
+                // Delete all OTHER unassigned duplicates for this SubBookingId.
+                $dupes = DB::select("
+                    SELECT id FROM ezee_bookings
+                    WHERE SubBookingId = ? AND status IN (5, 8)
+                      AND book_id IS NULL AND id != ?
+                ", [$g->SubBookingId, $keep->id]);
+
+                foreach ($dupes as $row) {
                     DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
                     $removed++;
                 }
             }
 
-            // Check how many groups remain
-            $remaining = DB::select("
+            // ── Pass 2: deduplicate by name + dates + amount (no SubBookingId) ─
+            // Catches older records that were imported before SubBookingId was stored.
+            $nameGroups = DB::select("
+                SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax, COUNT(*) as cnt
+                FROM ezee_bookings
+                WHERE status IN (5, 8)
+                GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
+                HAVING COUNT(*) > 1
+                LIMIT 100
+            ");
+
+            foreach ($nameGroups as $g) {
+                $keep = DB::selectOne("
+                    SELECT id FROM ezee_bookings
+                    WHERE FirstName <=> ? AND LastName <=> ? AND `Start` <=> ?
+                      AND `End` <=> ? AND TotalAmountAfterTax <=> ?
+                      AND status IN (5, 8)
+                    ORDER BY (book_id IS NOT NULL) DESC, id DESC
+                    LIMIT 1
+                ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax]);
+
+                if (!$keep) continue;
+
+                $dupes = DB::select("
+                    SELECT id FROM ezee_bookings
+                    WHERE FirstName <=> ? AND LastName <=> ? AND `Start` <=> ?
+                      AND `End` <=> ? AND TotalAmountAfterTax <=> ?
+                      AND status IN (5, 8)
+                      AND book_id IS NULL AND id != ?
+                ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax, $keep->id]);
+
+                foreach ($dupes as $row) {
+                    DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
+                    $removed++;
+                }
+            }
+
+            // ── Count remaining groups ───────────────────────────────────────
+            $stillLeft = DB::selectOne("
                 SELECT COUNT(*) as cnt FROM (
                     SELECT 1 FROM ezee_bookings WHERE status IN (5, 8)
                     GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
                     HAVING COUNT(*) > 1
                 ) t
-            ");
-            $stillLeft = $remaining[0]->cnt ?? 0;
+            ")->cnt ?? 0;
 
             $msg = "Removed {$removed} duplicate(s).";
             if ($stillLeft > 0) {
-                $msg .= " {$stillLeft} duplicate group(s) still remain — click Remove Duplicates again to continue.";
+                $msg .= " {$stillLeft} group(s) still remain — click again to continue.";
             } else {
                 $msg .= " All duplicates cleared!";
             }
