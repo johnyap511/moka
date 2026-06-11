@@ -61,6 +61,7 @@ Route::get('ezee/booking_by_date/{date}', 'Admin\BookController@ezeeBookingsDate
 Route::post('/ezee/booking/{bookId}', 'Admin\BookController@ezeeBookingStore');
 Route::post('/ezee/bookingEdit/{bookId}', 'Admin\BookController@ezeeBookingStoreEdit')->name('admin.ezee.booking.store.edit');
 Route::delete('/ezee/booking/{bookId}', 'Admin\BookController@ezeeBookingDelete');
+Route::post('/ezee/bookings/remove-duplicates', 'Admin\BookController@ezeeRemoveDuplicates')->name('admin.ezee.remove-duplicates');
 
 // EZEE Room Mapping & Auto-Assignment
 Route::get('/ezee/room-mapping', 'Admin\EzeeRoomMappingController@index')->name('admin.ezee.room-mapping');

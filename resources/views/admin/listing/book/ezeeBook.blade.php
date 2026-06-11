@@ -36,6 +36,13 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
     <a href="/admin/ezee/booking" class="btn {{ !request()->is('admin/ezee/unassigned_booking') && !request()->is('admin/ezee/assigned_booking') ? 'btn-primary' : 'btn-secondary' }}">All</a>
     <a href="/admin/ezee/unassigned_booking" class="btn {{ request()->is('admin/ezee/unassigned_booking') ? 'btn-primary' : 'btn-secondary' }}">Unassigned</a>
     <a href="/admin/ezee/assigned_booking" class="btn {{ request()->is('admin/ezee/assigned_booking') ? 'btn-primary' : 'btn-secondary' }}">Assigned</a>
+    <form method="POST" action="/admin/ezee/bookings/remove-duplicates" style="margin:0" onsubmit="return confirm('This will remove all duplicate unassigned bookings (same guest, dates and amount), keeping the oldest record. Continue?')">
+        @csrf
+        <button type="submit" class="btn btn-secondary" style="color:#dc2626">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Remove Duplicates
+        </button>
+    </form>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
         <div class="search-bar" style="min-width:280px">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -96,10 +103,20 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                         @endif
                     </td>
                     <td style="padding:10px 14px;font-size:13px">
-                        <button type="button" class="btn btn-primary" style="padding:4px 12px;font-size:12px"
-                            onclick="openAssign({{ $b->id }}, '{{ addslashes($b->FirstName.' '.$b->LastName) }}', '{{ $b->Start }}', '{{ $b->End }}', '{{ $b->book_id }}')">
-                            {{ $b->book_id ? 'Reassign' : 'Assign' }}
-                        </button>
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <button type="button" class="btn btn-primary" style="padding:4px 12px;font-size:12px"
+                                onclick="openAssign({{ $b->id }}, '{{ addslashes($b->FirstName.' '.$b->LastName) }}', '{{ $b->Start }}', '{{ $b->End }}', '{{ $b->book_id }}')">
+                                {{ $b->book_id ? 'Reassign' : 'Assign' }}
+                            </button>
+                            <form method="POST" action="/admin/ezee/booking/{{ $b->id }}" style="margin:0"
+                                onsubmit="return confirm('Delete this booking for {{ addslashes($b->FirstName.' '.$b->LastName) }}?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-secondary" style="padding:4px 8px;font-size:12px;color:#dc2626" title="Delete">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

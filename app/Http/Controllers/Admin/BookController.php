@@ -1714,6 +1714,36 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
         return back()->with('success', 'EZEE booking deleted successfully!');
     }
 
+    public function ezeeRemoveDuplicates(Request $request)
+    {
+        // Find duplicate groups: same guest name + check-in + check-out + amount
+        $duplicates = \DB::table('ezee_bookings')
+            ->select('FirstName', 'LastName', 'Start', 'End', 'TotalAmountAfterTax',
+                     \DB::raw('MIN(id) as keep_id'),
+                     \DB::raw('COUNT(*) as cnt'))
+            ->whereIn('status', [5, 8])
+            ->groupBy('FirstName', 'LastName', 'Start', 'End', 'TotalAmountAfterTax')
+            ->having('cnt', '>', 1)
+            ->get();
+
+        $removed = 0;
+        foreach ($duplicates as $group) {
+            // Mark all but the one we're keeping as deleted (status=1)
+            $deleted = EzeeBooking::where('FirstName', $group->FirstName)
+                ->where('LastName', $group->LastName)
+                ->where('Start', $group->Start)
+                ->where('End', $group->End)
+                ->where('TotalAmountAfterTax', $group->TotalAmountAfterTax)
+                ->whereIn('status', [5, 8])
+                ->where('id', '!=', $group->keep_id)
+                ->whereNull('book_id') // never remove already-assigned ones
+                ->update(['status' => 1]);
+            $removed += $deleted;
+        }
+
+        return back()->with('success', "Removed {$removed} duplicate booking(s). " . count($duplicates) . " duplicate group(s) found.");
+    }
+
     /**
      * Update the specified resource in storage.
      *
