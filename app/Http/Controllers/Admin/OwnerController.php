@@ -102,13 +102,13 @@ class OwnerController extends Controller
     {
         $data = $request->only("name", "last_name", "email", "phone", "status", "country_code");
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:150',
-            'last_name' => 'required|string|max:150',
-            'email' => 'required|string|max:200',
-            'country_code' => 'required|numeric',
-            'phone' => 'required|numeric',
-            'password' => 'nullable|string|max:100',
-            'status' => 'required|integer',
+            'name'         => 'required|string|max:150',
+            'last_name'    => 'nullable|string|max:150',
+            'email'        => 'required|string|max:200',
+            'country_code' => 'nullable',
+            'phone'        => 'nullable',
+            'password'     => 'nullable|string|max:100',
+            'status'       => 'required|integer',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();

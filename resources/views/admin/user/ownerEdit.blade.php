@@ -111,6 +111,10 @@
 
                 <div class="divider"></div>
 
+                {{-- Preserve fields not shown in this form --}}
+                <input type="hidden" name="last_name" value="{{ $user->last_name }}">
+                <input type="hidden" name="country_code" value="{{ $user->country_code }}">
+
                 <div class="flex justify-between items-center">
                     <a href="/admin/owners" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">
