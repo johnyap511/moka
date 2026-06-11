@@ -518,19 +518,8 @@ class BookController extends Controller
                                             $source = $reserve1['BookingTran']['BookedBy'];
                                         }
 
-                                        $exist = EzeeBooking::where(
-                                            [
-                                                ['SubBookingId', $sub_booking_id],
-                                                ['TransactionId', $transaction_id],
-                                            ]
-                                        )->first();
+                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
                                         if (empty($exist)) {
-                                            $dataLog = DataLog::create([
-                                                'title' => 'sendnotify',
-                                                'data' => '',
-                                                'related_id' => 20317,
-                                                'status' => 'started',
-                                            ]);
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
@@ -696,20 +685,9 @@ class BookController extends Controller
                                                 $created_at = $reserve_array_value['Createdatetime'];
                                             }
 
-                                            $exist = EzeeBooking::where(
-                                                [
-                                                    ['SubBookingId', $sub_booking_id],
-                                                    ['TransactionId', $transaction_id],
-                                                ]
-                                            )->first();
+                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
 
                                             if (empty($exist)) {
-                                                $dataLog = DataLog::create([
-                                                    'title' => 'sendnotify',
-                                                    'data' => '',
-                                                    'related_id' => 20317,
-                                                    'status' => 'started',
-                                                ]);
                                                 if ($sub_booking_id) {
 
                                                     $exist = EzeeBooking::create([
@@ -2119,12 +2097,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             $source = $reserve1['BookedBy'];
                                         }
 
-                                        $exist = EzeeBooking::where(
-                                            [
-                                                ['SubBookingId', $sub_booking_id],
-                                                ['TransactionId', $transaction_id],
-                                            ]
-                                        )->first();
+                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
                                         if (empty($exist)) {
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
@@ -2314,12 +2287,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 $created_at = $reserve_array_value['Createdatetime'];
                                             }
 
-                                            $exist = EzeeBooking::where(
-                                                [
-                                                    ['SubBookingId', $sub_booking_id],
-                                                    ['TransactionId', $transaction_id],
-                                                ]
-                                            )->first();
+                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
 
                                             if (empty($exist)) {
                                                 if ($sub_booking_id) {
