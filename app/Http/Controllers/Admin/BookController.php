@@ -1716,32 +1716,36 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
 
     public function ezeeRemoveDuplicates(Request $request)
     {
-        // Find duplicate groups: same guest name + check-in + check-out + amount
-        $duplicates = \DB::table('ezee_bookings')
-            ->select('FirstName', 'LastName', 'Start', 'End', 'TotalAmountAfterTax',
-                     \DB::raw('MIN(id) as keep_id'),
-                     \DB::raw('COUNT(*) as cnt'))
-            ->whereIn('status', [5, 8])
-            ->groupBy('FirstName', 'LastName', 'Start', 'End', 'TotalAmountAfterTax')
-            ->having('cnt', '>', 1)
-            ->get();
+        try {
+            // Find duplicate groups: same guest name + check-in + check-out + amount
+            $duplicates = DB::select("
+                SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax,
+                       MIN(id) as keep_id, COUNT(*) as cnt
+                FROM ezee_bookings
+                WHERE status IN (5, 8)
+                GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
+                HAVING COUNT(*) > 1
+            ");
 
-        $removed = 0;
-        foreach ($duplicates as $group) {
-            // Mark all but the one we're keeping as deleted (status=1)
-            $deleted = EzeeBooking::where('FirstName', $group->FirstName)
-                ->where('LastName', $group->LastName)
-                ->where('Start', $group->Start)
-                ->where('End', $group->End)
-                ->where('TotalAmountAfterTax', $group->TotalAmountAfterTax)
-                ->whereIn('status', [5, 8])
-                ->where('id', '!=', $group->keep_id)
-                ->whereNull('book_id') // never remove already-assigned ones
-                ->update(['status' => 1]);
-            $removed += $deleted;
+            $removed = 0;
+            foreach ($duplicates as $group) {
+                $deleted = DB::table('ezee_bookings')
+                    ->where('FirstName', $group->FirstName)
+                    ->where('LastName', $group->LastName)
+                    ->where('Start', $group->Start)
+                    ->where('End', $group->End)
+                    ->where('TotalAmountAfterTax', $group->TotalAmountAfterTax)
+                    ->whereIn('status', [5, 8])
+                    ->where('id', '!=', $group->keep_id)
+                    ->whereNull('book_id')
+                    ->update(['status' => 1]);
+                $removed += $deleted;
+            }
+
+            return back()->with('success', "Removed {$removed} duplicate booking(s) across " . count($duplicates) . " group(s).");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error removing duplicates: ' . $e->getMessage());
         }
-
-        return back()->with('success', "Removed {$removed} duplicate booking(s). " . count($duplicates) . " duplicate group(s) found.");
     }
 
     /**
