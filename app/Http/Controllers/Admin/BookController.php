@@ -1720,9 +1720,8 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             $removed = 0;
 
             // ── Pass 1: deduplicate by SubBookingId ──────────────────────────
-            // These are the real EZEE duplicates — same booking imported multiple times.
             $subGroups = DB::select("
-                SELECT SubBookingId, COUNT(*) as cnt
+                SELECT SubBookingId
                 FROM ezee_bookings
                 WHERE status IN (5, 8)
                   AND SubBookingId IS NOT NULL
@@ -1733,21 +1732,24 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             ");
 
             foreach ($subGroups as $g) {
-                // Prefer to keep the assigned record; otherwise keep the highest ID (most recent import).
+                // Keep the assigned record if any; otherwise keep MAX(id).
+                // Safety: we never delete the keep record because id != keep.id.
                 $keep = DB::selectOne("
                     SELECT id FROM ezee_bookings
                     WHERE SubBookingId = ? AND status IN (5, 8)
-                    ORDER BY (book_id IS NOT NULL) DESC, id DESC
+                    ORDER BY (book_id IS NOT NULL AND book_id > 0) DESC, id DESC
                     LIMIT 1
                 ", [$g->SubBookingId]);
 
                 if (!$keep) continue;
 
-                // Delete all OTHER unassigned duplicates for this SubBookingId.
+                // Delete all duplicates except the keep record.
+                // Only touch unassigned ones (book_id NULL or 0) — never an assigned booking.
                 $dupes = DB::select("
                     SELECT id FROM ezee_bookings
                     WHERE SubBookingId = ? AND status IN (5, 8)
-                      AND book_id IS NULL AND id != ?
+                      AND (book_id IS NULL OR book_id = 0)
+                      AND id != ?
                 ", [$g->SubBookingId, $keep->id]);
 
                 foreach ($dupes as $row) {
@@ -1756,10 +1758,10 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                 }
             }
 
-            // ── Pass 2: deduplicate by name + dates + amount (no SubBookingId) ─
-            // Catches older records that were imported before SubBookingId was stored.
+            // ── Pass 2: deduplicate by name + dates + amount ─────────────────
+            // Catches records that share the same guest/dates/amount regardless of SubBookingId.
             $nameGroups = DB::select("
-                SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax, COUNT(*) as cnt
+                SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
                 FROM ezee_bookings
                 WHERE status IN (5, 8)
                 GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
@@ -1768,23 +1770,28 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             ");
 
             foreach ($nameGroups as $g) {
+                // Keep assigned record first; otherwise keep MAX(id) for most recent data.
                 $keep = DB::selectOne("
                     SELECT id FROM ezee_bookings
-                    WHERE FirstName <=> ? AND LastName <=> ? AND `Start` <=> ?
-                      AND `End` <=> ? AND TotalAmountAfterTax <=> ?
+                    WHERE FirstName <=> ? AND LastName <=> ?
+                      AND `Start` <=> ? AND `End` <=> ?
+                      AND TotalAmountAfterTax <=> ?
                       AND status IN (5, 8)
-                    ORDER BY (book_id IS NOT NULL) DESC, id DESC
+                    ORDER BY (book_id IS NOT NULL AND book_id > 0) DESC, id DESC
                     LIMIT 1
                 ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax]);
 
                 if (!$keep) continue;
 
+                // Delete all unassigned duplicates except the keep record.
                 $dupes = DB::select("
                     SELECT id FROM ezee_bookings
-                    WHERE FirstName <=> ? AND LastName <=> ? AND `Start` <=> ?
-                      AND `End` <=> ? AND TotalAmountAfterTax <=> ?
+                    WHERE FirstName <=> ? AND LastName <=> ?
+                      AND `Start` <=> ? AND `End` <=> ?
+                      AND TotalAmountAfterTax <=> ?
                       AND status IN (5, 8)
-                      AND book_id IS NULL AND id != ?
+                      AND (book_id IS NULL OR book_id = 0)
+                      AND id != ?
                 ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax, $keep->id]);
 
                 foreach ($dupes as $row) {
