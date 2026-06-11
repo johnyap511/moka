@@ -168,7 +168,7 @@ class WebController extends Controller
      */
     public function login()
     {
-        return redirect('/home?modal=login');
+        return redirect('/?modal=login');
         return view('auth.login');
     }
 
@@ -183,7 +183,7 @@ class WebController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect('/home?modal=login')
+            return redirect('/?modal=login')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -219,7 +219,7 @@ class WebController extends Controller
                     }
                     Auth::guard()->logout();
                     $request->session()->invalidate();
-                    return redirect('/home?modal=login');
+                    return redirect('/?modal=login');
                 }
             }
         }
@@ -237,7 +237,7 @@ class WebController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect('/home?modal=login')
+            return redirect('/?modal=login')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -269,7 +269,7 @@ class WebController extends Controller
             }
             Auth::guard()->logout();
             $request->session()->invalidate();
-            return redirect('/home?modal=login');
+            return redirect('/?modal=login');
         }
         return back()->with("error", "Email or password is wrong!");
     }
@@ -278,7 +278,7 @@ class WebController extends Controller
      */
     public function register()
     {
-        return redirect('/home?modal=register');
+        return redirect('/?modal=register');
         return view('auth.register');
     }
 
@@ -396,17 +396,17 @@ class WebController extends Controller
     {
         $verify = Verification::where('code', $code)->first();
         if (empty($verify)) {
-            return redirect('/home')->with('error', "The link is expired, please contact support team for help!");
+            return redirect('/')->with('error', "The link is expired, please contact support team for help!");
         }
         $user = User::find($verify->user_id);
         if (empty($user)) {
-            return redirect('/home')->with('error', "Invalid code!");
+            return redirect('/')->with('error', "Invalid code!");
         }
         if ($user->status != 2) {
-            return redirect('/home')->with('error', "Your account is verified already!");
+            return redirect('/')->with('error', "Your account is verified already!");
         }
         $user->update(['status' => 1]);
-        return redirect('/home')->with("success", "Your email address is verified and your account is active now, please login using below form!");
+        return redirect('/')->with("success", "Your email address is verified and your account is active now, please login using below form!");
     }
 
     /**
@@ -434,7 +434,7 @@ class WebController extends Controller
         Auth::guard()->logout();
         $request->session()->invalidate();
 
-        return redirect('/home');
+        return redirect('/');
     }
 
     /**
