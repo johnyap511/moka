@@ -228,27 +228,6 @@
 }
 #ev-popup .pop-btn:hover { background: #dbeafe; }
 
-/* ── Colour legend ─────────────────────────────────────── */
-.cal-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid #f1f5f9;
-}
-.leg-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #475569;
-}
-.leg-dot {
-    width: 10px; height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-}
 </style>
 @endpush
 
@@ -311,7 +290,6 @@
 {{-- Calendar --}}
 <div class="cal-wrap">
     <div id="calendar"></div>
-    <div class="cal-legend" id="cal-legend"></div>
 </div>
 
 {{-- Popup --}}
@@ -412,19 +390,6 @@
     });
     cal.render();
 
-    // Build legend
-    function buildLegend() {
-        var legend = document.getElementById('cal-legend');
-        legend.innerHTML = '';
-        Object.keys(colourMap).forEach(function(name) {
-            var c = colourMap[name];
-            var item = document.createElement('div');
-            item.className = 'leg-item';
-            item.innerHTML = '<span class="leg-dot" style="background:' + c.bg + ';border:1.5px solid ' + c.text + '22"></span>' + escHtml(name);
-            legend.appendChild(item);
-        });
-    }
-    setTimeout(buildLegend, 100);
 
     // Stats strip — update for visible month
     function updateStats(dateInfo) {
