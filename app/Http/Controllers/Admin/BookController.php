@@ -1717,106 +1717,95 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
     public function ezeeRemoveDuplicates(Request $request)
     {
         try {
-            $removed = 0;
+            $removed   = 0;
+            $diagnosis = [];
 
-            // ── Pass 1: deduplicate by SubBookingId ──────────────────────────
-            $subGroups = DB::select("
-                SELECT SubBookingId
-                FROM ezee_bookings
-                WHERE status IN (5, 8)
-                  AND SubBookingId IS NOT NULL
-                  AND SubBookingId != ''
-                GROUP BY SubBookingId
-                HAVING COUNT(*) > 1
-                LIMIT 100
+            // ── Step 1: find IDs to delete grouped by SubBookingId ────────────
+            // For each SubBookingId with >1 active record, keep the assigned one
+            // (highest book_id) or, if none assigned, the highest id (most recent).
+            // Only delete records that are unassigned (book_id NULL or 0).
+            $bySubId = DB::select("
+                SELECT e.id
+                FROM ezee_bookings e
+                INNER JOIN (
+                    SELECT SubBookingId,
+                           COALESCE(
+                               MAX(CASE WHEN book_id IS NOT NULL AND book_id > 0 THEN id END),
+                               MAX(id)
+                           ) AS keep_id
+                    FROM ezee_bookings
+                    WHERE status IN (5, 8)
+                      AND SubBookingId IS NOT NULL
+                      AND SubBookingId != ''
+                    GROUP BY SubBookingId
+                    HAVING COUNT(*) > 1
+                ) k ON e.SubBookingId = k.SubBookingId
+                     AND e.id != k.keep_id
+                WHERE e.status IN (5, 8)
+                  AND (e.book_id IS NULL OR e.book_id = 0)
+                LIMIT 300
             ");
 
-            foreach ($subGroups as $g) {
-                // Keep the assigned record if any; otherwise keep MAX(id).
-                // Safety: we never delete the keep record because id != keep.id.
-                $keep = DB::selectOne("
-                    SELECT id FROM ezee_bookings
-                    WHERE SubBookingId = ? AND status IN (5, 8)
-                    ORDER BY (book_id IS NOT NULL AND book_id > 0) DESC, id DESC
-                    LIMIT 1
-                ", [$g->SubBookingId]);
+            $diagnosis[] = 'SubBookingId pass: ' . count($bySubId) . ' rows to delete';
 
-                if (!$keep) continue;
-
-                // Delete all duplicates except the keep record.
-                // Only touch unassigned ones (book_id NULL or 0) — never an assigned booking.
-                $dupes = DB::select("
-                    SELECT id FROM ezee_bookings
-                    WHERE SubBookingId = ? AND status IN (5, 8)
-                      AND (book_id IS NULL OR book_id = 0)
-                      AND id != ?
-                ", [$g->SubBookingId, $keep->id]);
-
-                foreach ($dupes as $row) {
-                    DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
-                    $removed++;
-                }
+            foreach ($bySubId as $row) {
+                DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
+                $removed++;
             }
 
-            // ── Pass 2: deduplicate by name + dates + amount ─────────────────
-            // Catches records that share the same guest/dates/amount regardless of SubBookingId.
-            $nameGroups = DB::select("
-                SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
-                FROM ezee_bookings
-                WHERE status IN (5, 8)
-                GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
-                HAVING COUNT(*) > 1
-                LIMIT 100
+            // ── Step 2: find IDs to delete grouped by name + dates + amount ──
+            // Catches records that may have different SubBookingIds but are the
+            // same real-world booking (same guest, same stay, same amount).
+            $byName = DB::select("
+                SELECT e.id
+                FROM ezee_bookings e
+                INNER JOIN (
+                    SELECT FirstName, LastName, `Start`, `End`, TotalAmountAfterTax,
+                           COALESCE(
+                               MAX(CASE WHEN book_id IS NOT NULL AND book_id > 0 THEN id END),
+                               MAX(id)
+                           ) AS keep_id
+                    FROM ezee_bookings
+                    WHERE status IN (5, 8)
+                    GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
+                    HAVING COUNT(*) > 1
+                ) k ON (e.FirstName <=> k.FirstName)
+                     AND (e.LastName <=> k.LastName)
+                     AND (e.`Start` <=> k.`Start`)
+                     AND (e.`End` <=> k.`End`)
+                     AND (e.TotalAmountAfterTax <=> k.TotalAmountAfterTax)
+                     AND e.id != k.keep_id
+                WHERE e.status IN (5, 8)
+                  AND (e.book_id IS NULL OR e.book_id = 0)
+                LIMIT 300
             ");
 
-            foreach ($nameGroups as $g) {
-                // Keep assigned record first; otherwise keep MAX(id) for most recent data.
-                $keep = DB::selectOne("
-                    SELECT id FROM ezee_bookings
-                    WHERE FirstName <=> ? AND LastName <=> ?
-                      AND `Start` <=> ? AND `End` <=> ?
-                      AND TotalAmountAfterTax <=> ?
-                      AND status IN (5, 8)
-                    ORDER BY (book_id IS NOT NULL AND book_id > 0) DESC, id DESC
-                    LIMIT 1
-                ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax]);
+            $diagnosis[] = 'Name/date pass: ' . count($byName) . ' rows to delete';
 
-                if (!$keep) continue;
-
-                // Delete all unassigned duplicates except the keep record.
-                $dupes = DB::select("
-                    SELECT id FROM ezee_bookings
-                    WHERE FirstName <=> ? AND LastName <=> ?
-                      AND `Start` <=> ? AND `End` <=> ?
-                      AND TotalAmountAfterTax <=> ?
-                      AND status IN (5, 8)
-                      AND (book_id IS NULL OR book_id = 0)
-                      AND id != ?
-                ", [$g->FirstName, $g->LastName, $g->Start, $g->End, $g->TotalAmountAfterTax, $keep->id]);
-
-                foreach ($dupes as $row) {
-                    DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
-                    $removed++;
-                }
+            foreach ($byName as $row) {
+                DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1]);
+                $removed++;
             }
 
-            // ── Count remaining groups ───────────────────────────────────────
+            // ── Count remaining duplicate groups ──────────────────────────────
             $stillLeft = DB::selectOne("
-                SELECT COUNT(*) as cnt FROM (
-                    SELECT 1 FROM ezee_bookings WHERE status IN (5, 8)
+                SELECT COUNT(*) AS cnt FROM (
+                    SELECT 1 FROM ezee_bookings
+                    WHERE status IN (5, 8)
                     GROUP BY FirstName, LastName, `Start`, `End`, TotalAmountAfterTax
                     HAVING COUNT(*) > 1
                 ) t
             ")->cnt ?? 0;
 
-            $msg = "Removed {$removed} duplicate(s).";
+            $msg = implode(' | ', $diagnosis) . ' — Removed ' . $removed . ' duplicate(s).';
             if ($stillLeft > 0) {
-                $msg .= " {$stillLeft} group(s) still remain — click again to continue.";
+                $msg .= " {$stillLeft} group(s) still remain — click again.";
             } else {
-                $msg .= " All duplicates cleared!";
+                $msg .= ' All duplicates cleared!';
             }
 
             return back()->with('success', $msg);
+
         } catch (\Throwable $e) {
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
