@@ -60,23 +60,25 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
         <table style="width:100%;border-collapse:collapse;min-width:900px" id="ezee-table">
             <thead>
                 <tr>
-                    <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">#</th>
-                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="2" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="3" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Unit <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="4" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Assigned Unit <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="5" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="6" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="7" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Amount <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="8" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="9" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="0" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="2" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="3" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="4" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Unit <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="5" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Assigned Unit <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="6" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="7" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="8" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Amount <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="9" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="10" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
                     <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Action</th>
                 </tr>
             </thead>
             <tbody id="ezee-tbody">
                 @forelse($books as $i => $b)
                 <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-                    <td style="padding:10px 14px;font-size:13px" class="row-num">{{ $i + 1 }}</td>
+                    <td style="padding:10px 14px;font-size:12px;font-family:monospace;color:var(--text-secondary)" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
+                    <td style="padding:10px 14px;font-size:12px;font-family:monospace;color:var(--text-secondary)" data-val="{{ $b->TransactionId ?? '' }}">{{ $b->TransactionId ?? '—' }}</td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->FirstName.' '.$b->LastName) }}">
                         <div style="font-weight:500">{{ $b->FirstName }} {{ $b->LastName }}</div>
                         <div style="font-size:11.5px;color:var(--text-secondary)">{{ $b->Email }}</div>
@@ -120,7 +122,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="11" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
+                <tr><td colspan="12" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -199,17 +201,6 @@ function filterTable(q) {
     });
     document.getElementById('visible-count').textContent = visible;
     document.getElementById('result-count').textContent = q ? ('Showing ' + visible + ' result' + (visible !== 1 ? 's' : '')) : '';
-    renumberRows();
-}
-
-function renumberRows() {
-    var n = 1;
-    document.querySelectorAll('#ezee-tbody tr').forEach(function(row) {
-        if (row.style.display !== 'none') {
-            var numCell = row.querySelector('.row-num');
-            if (numCell) numCell.textContent = n++;
-        }
-    });
 }
 
 // ---- Sorting ----
@@ -251,8 +242,8 @@ function sortTable(col, dir) {
         rows.sort(function(a, b) {
             var aVal = (a.cells[col] ? a.cells[col].getAttribute('data-val') || a.cells[col].innerText : '').toLowerCase();
             var bVal = (b.cells[col] ? b.cells[col].getAttribute('data-val') || b.cells[col].innerText : '').toLowerCase();
-            // Numeric sort for amount column (col 7)
-            if (col === 7) {
+            // Numeric sort for amount column (col 8)
+            if (col === 8) {
                 return (parseFloat(aVal) - parseFloat(bVal)) * dir;
             }
             return aVal < bVal ? -dir : (aVal > bVal ? dir : 0);
@@ -260,7 +251,6 @@ function sortTable(col, dir) {
     }
 
     rows.forEach(function(r) { tbody.appendChild(r); });
-    renumberRows();
 }
 
 // Init count
