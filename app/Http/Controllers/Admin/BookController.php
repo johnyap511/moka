@@ -363,6 +363,8 @@ class BookController extends Controller
 
             curl_close($curl);
 
+            DataLog::create(['title' => 'ezee_raw_xml', 'data' => substr($response, 0, 8000), 'related_id' => $listing->id ?? 0, 'status' => 'debug']);
+
             $xml = simplexml_load_string(trim($response));
             $json = json_encode($xml);
             $res = json_decode($json, true);
@@ -2038,6 +2040,8 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             $response = curl_exec($curl);
 
             curl_close($curl);
+
+            DataLog::create(['title' => 'ezee_raw_xml', 'data' => substr($response, 0, 8000), 'related_id' => $listing->id ?? 0, 'status' => 'debug']);
 
             $xml = simplexml_load_string(trim($response));
             $json = json_encode($xml);
