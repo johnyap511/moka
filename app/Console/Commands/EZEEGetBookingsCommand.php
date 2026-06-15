@@ -97,6 +97,7 @@ class EZEEGetBookingsCommand extends Command
                                             'IsConfirmed'=>$reserveData['IsConfirmed'],
                                             'RateplanName'=>$reserveData['RateplanName'],
                                             'RoomTypeName'=>$reserveData['RoomTypeName'],
+                                            'RoomName'=>$reserveData['RoomName'] ?? null,
                                             'Start'=>$reserveData['Start'],'End'=>$reserveData['End'],
                                             'CurrencyCode'=>$reserveData['CurrencyCode'],
                                             'TotalAmountAfterTax'=>$reserveData['TotalAmountAfterTax'],

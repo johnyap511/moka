@@ -183,6 +183,12 @@ class HistoricalApi extends Command
                                             $roomTypeName = $reserve1['BookingTran']['RoomTypeName'];
                                         }
 
+                                        if (isset($reserve1['BookingTran']['RoomName']) && !is_array($reserve1['BookingTran']['RoomName'])) {
+                                            $roomName = $reserve1['BookingTran']['RoomName'];
+                                        } else {
+                                            $roomName = NULL;
+                                        }
+
                                         if (is_array($reserve1['BookingTran']['Createdatetime'])) {
                                             $created_at = NULL;
                                         } else {
@@ -300,6 +306,7 @@ class HistoricalApi extends Command
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
                                                     'RoomTypeName' => $roomTypeName,
+                                                    'RoomName' => $roomName,
                                                     'Start' => $start, 'End' => $end,
                                                     'CurrencyCode' => $currencyCode,
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
@@ -319,7 +326,12 @@ class HistoricalApi extends Command
                                             }
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                ->update([
+                                                    'RoomTypeName' => $roomTypeName,
+                                                    'RoomName' => $roomName,
+                                                    'TotalExtraCharge' => $totalExtraCharge,
+                                                    'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                ]);
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -352,6 +364,12 @@ class HistoricalApi extends Command
                                                 $roomTypeName = NULL;
                                             } else {
                                                 $roomTypeName = $reserve_array_value['RoomTypeName'];
+                                            }
+
+                                            if (isset($reserve_array_value['RoomName']) && !is_array($reserve_array_value['RoomName'])) {
+                                                $roomName = $reserve_array_value['RoomName'];
+                                            } else {
+                                                $roomName = NULL;
                                             }
 
                                             if (is_array($reserve_array_value['Start'])) {
@@ -473,6 +491,7 @@ class HistoricalApi extends Command
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
                                                         'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
                                                         'Start' => $start, 'End' => $end,
                                                         'CurrencyCode' => $currencyCode,
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
@@ -492,7 +511,12 @@ class HistoricalApi extends Command
                                                 }
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                    ->update([
+                                                        'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
+                                                        'TotalExtraCharge' => $totalExtraCharge,
+                                                        'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                    ]);
                                             }
                                         }
                                     }
