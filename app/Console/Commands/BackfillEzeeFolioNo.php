@@ -60,7 +60,17 @@ class BackfillEzeeFolioNo extends Command
             }
 
             $res = json_decode(json_encode($xml), true);
-            if (!is_array($res)) continue;
+            if (!is_array($res)) {
+                $this->warn("  Failed to parse XML response");
+                continue;
+            }
+
+            $reservationCount = 0;
+            foreach ($res as $reservation) {
+                if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
+                $reservationCount += count($reservation['Reservation']);
+            }
+            $this->info("  Found {$reservationCount} reservations in response");
 
             foreach ($res as $reservation) {
                 if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
@@ -69,13 +79,19 @@ class BackfillEzeeFolioNo extends Command
                     if (array_key_exists('BookingTran', $reserve)) {
                         $reserve = ['BookByInfo' => $reserve];
                     }
-                    if (!array_key_exists('BookingTran', $reserve['BookByInfo'])) continue;
+                    if (!array_key_exists('BookByInfo', $reserve) || !array_key_exists('BookingTran', $reserve['BookByInfo'])) continue;
 
                     foreach ($reserve as $reserve1) {
+                        if (!is_array($reserve1) || !array_key_exists('BookingTran', $reserve1)) continue;
                         $tran = $reserve1['BookingTran'];
 
-                        // Handle single or multiple BookingTran
-                        $trans = isset($tran[0]) ? $tran : [$tran];
+                        // Single BookingTran: has 'IsConfirmed' key directly
+                        if (array_key_exists('IsConfirmed', $tran)) {
+                            $trans = [$tran];
+                        } else {
+                            // Multiple BookingTrans: numerically indexed array
+                            $trans = $tran;
+                        }
 
                         foreach ($trans as $t) {
                             if (!array_key_exists('IsConfirmed', $t)) continue;
@@ -98,12 +114,12 @@ class BackfillEzeeFolioNo extends Command
                                 'TotalExtraCharge'     => !is_array($t['TotalExtraCharge']    ?? null) ? ($t['TotalExtraCharge']    ?? null) : null,
                                 'TotalPayment'         => !is_array($t['TotalPayment']        ?? null) ? ($t['TotalPayment']        ?? null) : null,
                                 'TACommision'          => !is_array($t['TACommision']         ?? null) ? ($t['TACommision']         ?? null) : null,
-                                'FirstName'            => !is_array($reserve1['FirstName']    ?? null) ? ($reserve1['FirstName']    ?? null) : null,
-                                'LastName'             => !is_array($reserve1['LastName']     ?? null) ? ($reserve1['LastName']     ?? null) : null,
-                                'Mobile'               => !is_array($reserve1['Mobile']       ?? null) ? ($reserve1['Mobile']       ?? null) : null,
-                                'Email'                => !is_array($reserve1['Email']        ?? null) ? ($reserve1['Email']        ?? null) : null,
-                                'Country'              => !is_array($reserve1['Country']      ?? null) ? ($reserve1['Country']      ?? null) : null,
-                                'Source'               => !is_array($t['BookedBy']            ?? null) ? preg_replace('/[^A-Za-z\. ]/', '', $t['BookedBy'] ?? '') : null,
+                                'FirstName'            => isset($reserve1['FirstName'])  && !is_array($reserve1['FirstName'])  ? $reserve1['FirstName']  : null,
+                                'LastName'             => isset($reserve1['LastName'])   && !is_array($reserve1['LastName'])   ? $reserve1['LastName']   : null,
+                                'Mobile'               => isset($reserve1['Mobile'])     && !is_array($reserve1['Mobile'])     ? $reserve1['Mobile']     : null,
+                                'Email'                => isset($reserve1['Email'])      && !is_array($reserve1['Email'])      ? $reserve1['Email']      : null,
+                                'Country'              => isset($reserve1['Country'])    && !is_array($reserve1['Country'])    ? $reserve1['Country']    : null,
+                                'Source'               => isset($t['BookedBy'])          && !is_array($t['BookedBy'])          ? preg_replace('/[^A-Za-z\. ]/', '', $t['BookedBy']) : null,
                             ];
 
                             $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
