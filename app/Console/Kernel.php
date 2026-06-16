@@ -20,7 +20,8 @@ class Kernel extends ConsoleKernel
         UpdateVersionCommand::class,
         BookingReminderFeedbackCommand::class,
         EZEEGetBookingsCommand::class,
-        HistoricalApi::class
+        HistoricalApi::class,
+        \App\Console\Commands\BackfillEzeeFolioNo::class,
     ];
 
     /**
