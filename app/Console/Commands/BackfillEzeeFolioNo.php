@@ -153,6 +153,7 @@ class BackfillEzeeFolioNo extends Command
                         }
                     }
                 }
+                } // end res loop
             } // end chunks loop
 
             $this->info("  Done. New: {$newCount} | Updated: {$updatedCount}");
