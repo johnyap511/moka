@@ -20,6 +20,7 @@ class EzeeBooking extends Model
         'book_id',
         'ezee_group_id',
         'SubBookingId',
+        'folio_no',
         'TransactionId',
         'IsConfirmed',
         'RateplanName',

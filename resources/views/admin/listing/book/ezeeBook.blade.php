@@ -60,8 +60,8 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
         <table style="width:100%;border-collapse:collapse;min-width:900px" id="ezee-table">
             <thead>
                 <tr>
-                    <th class="sortable" data-col="0" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="0" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
                     <th class="sortable" data-col="2" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
                     <th class="sortable" data-col="3" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
                     <th class="sortable" data-col="4" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Unit <i class="sort-icon"></i></th>
@@ -77,8 +77,8 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
             <tbody id="ezee-tbody">
                 @forelse($books as $i => $b)
                 <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-                    <td style="padding:10px 14px;font-size:12px;font-family:monospace;color:var(--text-secondary)" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:12px;font-family:monospace;color:var(--text-secondary)" data-val="{{ $b->TransactionId ?? '' }}">{{ $b->TransactionId ?? '—' }}</td>
+                    <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
+                    <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->folio_no ?? '' }}">{{ $b->folio_no ?? '—' }}</td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->FirstName.' '.$b->LastName) }}">
                         <div style="font-weight:500">{{ $b->FirstName }} {{ $b->LastName }}</div>
                         <div style="font-size:11.5px;color:var(--text-secondary)">{{ $b->Email }}</div>

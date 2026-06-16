@@ -54,47 +54,33 @@ class HistoricalApi extends Command
 
         $new_date_folio = date("Y-m-d", strtotime("-30 days"));
 
-        $ezee_booking_folio = EzeeBooking::whereNotNull('book_id')->whereBetween('Start', [$new_date_folio, $date_current])->get();
-        // dd($ezee_booking_folio);
+        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $date_current])->get();
         $postData_F['Request_Type'] = 'RetrieveListofBills';
-        foreach ($ezee_booking_folio as $get_folio_no){
-            // echo '<pre>';
-            // print_r($get_folio_no);
+        foreach ($ezee_booking_folio as $get_folio_no) {
             $postData_F['Authentication'] = [
                 'HotelCode' => 19676,
                 'AuthCode' => '7181420090112972af-41e8-11ec-9',
-                'BookingId' => $get_folio_no->SubBookingId
+                'BookingId' => $get_folio_no->SubBookingId,
             ];
 
             $pd_f['RES_Request'] = $postData_F;
             $payload_f = json_encode($pd_f);
-            $notifyList = [];
             $ch_f = curl_init();
-            curl_setopt(
-                $ch_f, CURLOPT_URL,
-                "https://live.ipms247.com/index.php/page/service.kioskconnectivity"
-            );
+            curl_setopt($ch_f, CURLOPT_URL, "https://live.ipms247.com/index.php/page/service.kioskconnectivity");
             curl_setopt($ch_f, CURLOPT_POST, 1);
             curl_setopt($ch_f, CURLOPT_POSTFIELDS, $payload_f);
-            curl_setopt(
-                $ch_f,
-                CURLOPT_HTTPHEADER,
-                array('Content-Type:application/json')
-            );
+            curl_setopt($ch_f, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
             curl_setopt($ch_f, CURLOPT_RETURNTRANSFER, true);
             $server_output_f = curl_exec($ch_f);
             curl_close($ch_f);
             $res_f = json_decode($server_output_f, true);
-            $dataLog = DataLog::create([
-                'title'=>'folio_no',
-                'data'=>$server_output_f,
-                'related_id'=>19676,
-                'status'=>'getFolio'
-            ]);
 
-            if(isset($res_f['Success']['FolioList'][0]['foliono'])){
-                Booking::where('id', $get_folio_no->book_id)
-                ->update(['server_folio_no' => $res_f['Success']['FolioList'][0]['foliono']]);
+            if (isset($res_f['Success']['FolioList'][0]['foliono'])) {
+                $folioNo = $res_f['Success']['FolioList'][0]['foliono'];
+                EzeeBooking::where('id', $get_folio_no->id)->update(['folio_no' => $folioNo]);
+                if ($get_folio_no->book_id) {
+                    Booking::where('id', $get_folio_no->book_id)->update(['server_folio_no' => $folioNo]);
+                }
             }
         }
 
