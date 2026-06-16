@@ -29,51 +29,65 @@ class BackfillEzeeFolioNo extends Command
         $newCount = 0;
         $updatedCount = 0;
 
+        // Split into 6-month chunks to stay within EZEE's date range limit
+        $chunks = [];
+        $cursor = new \DateTime($fromDate);
+        $end    = new \DateTime($toDate);
+        while ($cursor <= $end) {
+            $chunkEnd = (clone $cursor)->modify('+6 months')->modify('-1 day');
+            if ($chunkEnd > $end) $chunkEnd = clone $end;
+            $chunks[] = [$cursor->format('Y-m-d'), $chunkEnd->format('Y-m-d')];
+            $cursor->modify('+6 months');
+        }
+
         foreach ($listings as $listing) {
             $this->info("Processing group: {$listing->name} (hotel: {$listing->hotel_code})");
 
-            $curl = curl_init();
-            curl_setopt_array($curl, [
-                CURLOPT_URL            => 'https://live.ipms247.com/pmsinterface/getdataAPI.php',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 120,
-                CURLOPT_CUSTOMREQUEST  => 'POST',
-                CURLOPT_POSTFIELDS     => '<RES_Request>
-                    <Request_Type>Booking</Request_Type>
-                    <Authentication>
-                        <HotelCode>' . $listing->hotel_code . '</HotelCode>
-                        <AuthCode>' . $listing->auth_key . '</AuthCode>
-                    </Authentication>
-                    <FromDate>' . $fromDate . '</FromDate>
-                    <ToDate>' . $toDate . '</ToDate>
-                </RES_Request>',
-                CURLOPT_HTTPHEADER => ['Content-Type: application/xml'],
-            ]);
+            foreach ($chunks as [$chunkFrom, $chunkTo]) {
+                $this->line("  Fetching {$chunkFrom} → {$chunkTo}");
 
-            $response = curl_exec($curl);
-            curl_close($curl);
+                $curl = curl_init();
+                curl_setopt_array($curl, [
+                    CURLOPT_URL            => 'https://live.ipms247.com/pmsinterface/getdataAPI.php',
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT        => 120,
+                    CURLOPT_CUSTOMREQUEST  => 'POST',
+                    CURLOPT_POSTFIELDS     => '<RES_Request>
+                        <Request_Type>Booking</Request_Type>
+                        <Authentication>
+                            <HotelCode>' . $listing->hotel_code . '</HotelCode>
+                            <AuthCode>' . $listing->auth_key . '</AuthCode>
+                        </Authentication>
+                        <FromDate>' . $chunkFrom . '</FromDate>
+                        <ToDate>' . $chunkTo . '</ToDate>
+                    </RES_Request>',
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/xml'],
+                ]);
 
-            $xml = simplexml_load_string(trim($response));
-            if (!$xml) {
-                $this->warn("  No valid XML response for group {$listing->hotel_code}");
-                continue;
-            }
+                $response = curl_exec($curl);
+                curl_close($curl);
 
-            $res = json_decode(json_encode($xml), true);
-            if (!is_array($res)) {
-                $this->warn("  Failed to parse XML response");
-                continue;
-            }
+                $xml = simplexml_load_string(trim($response));
+                if (!$xml) {
+                    $this->warn("    No valid XML response");
+                    continue;
+                }
 
-            $reservationCount = 0;
-            foreach ($res as $reservation) {
-                if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
-                $reservationCount += count($reservation['Reservation']);
-            }
-            $this->info("  Found {$reservationCount} reservations in response");
+                $res = json_decode(json_encode($xml), true);
+                if (!is_array($res)) {
+                    $this->warn("    Failed to parse XML response");
+                    continue;
+                }
 
-            foreach ($res as $reservation) {
-                if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
+                $reservationCount = 0;
+                foreach ($res as $reservation) {
+                    if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
+                    $reservationCount += count($reservation['Reservation']);
+                }
+                $this->line("    Found {$reservationCount} reservations");
+
+                foreach ($res as $reservation) {
+                    if (!is_array($reservation) || !array_key_exists('Reservation', $reservation)) continue;
 
                 foreach ($reservation['Reservation'] as $reserve) {
                     if (array_key_exists('BookingTran', $reserve)) {
@@ -139,10 +153,10 @@ class BackfillEzeeFolioNo extends Command
                         }
                     }
                 }
-            }
+            } // end chunks loop
 
             $this->info("  Done. New: {$newCount} | Updated: {$updatedCount}");
-        }
+        } // end listings loop
 
         $this->info("Full re-sync complete. New: {$newCount} | Updated: {$updatedCount}");
     }
