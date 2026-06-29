@@ -22,6 +22,7 @@ class Kernel extends ConsoleKernel
         EZEEGetBookingsCommand::class,
         HistoricalApi::class,
         \App\Console\Commands\BackfillEzeeFolioNo::class,
+        \App\Console\Commands\BackfillEzeeFolioNumbers::class,
     ];
 
     /**
