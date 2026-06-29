@@ -67,7 +67,9 @@ class BackfillEzeeFolioNo extends Command
                 $response = curl_exec($curl);
                 curl_close($curl);
 
+                libxml_use_internal_errors(true);
                 $xml = simplexml_load_string(trim($response));
+                libxml_clear_errors();
                 if (!$xml) {
                     $this->warn("    No valid XML response");
                     continue;
