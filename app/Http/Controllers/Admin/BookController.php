@@ -275,6 +275,26 @@ class BookController extends Controller
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
+    public function ezeeBookingsByProperty()
+    {
+        $groups = EzeeGroup::all();
+
+        $bookingsByGroup = [];
+        foreach ($groups as $group) {
+            $bookingsByGroup[$group->id] = EzeeBooking::where('ezee_group_id', $group->id)
+                ->orderBy('Start', 'desc')
+                ->get();
+        }
+
+        // Fallback: if no bookings are linked via ezee_group_id, put all under first group
+        $totalLinked = collect($bookingsByGroup)->flatten()->count();
+        if ($totalLinked === 0 && $groups->isNotEmpty()) {
+            $bookingsByGroup[$groups->first()->id] = EzeeBooking::orderBy('Start', 'desc')->get();
+        }
+
+        return view('admin.listing.book.ezeeBooksByProperty', compact('groups', 'bookingsByGroup'));
+    }
+
     public static function historicalAPI()
     {
         // echo "hi";die;

@@ -46,6 +46,7 @@ Route::get('/listing/{id}/book', 'Admin\BookController@create');
 Route::post('/listing/{id}/book', 'Admin\BookController@store');
 
 Route::get('/ezee/booking', 'Admin\BookController@ezeeBookings');
+Route::get('/ezee/bookings-by-property', 'Admin\BookController@ezeeBookingsByProperty')->name('admin.ezee.bookings-by-property');
 
 //Segregate assigned and unassigned
 Route::get('/ezee/assigned_booking', 'Admin\BookController@ezeeBookingsAssigned');
