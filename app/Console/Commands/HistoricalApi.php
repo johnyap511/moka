@@ -50,11 +50,12 @@ class HistoricalApi extends Command
         $date_current = date("Y-m-d");
 
         $newDate = date("Y-m-d", strtotime("-3 days"));
+        $futureDate = date("Y-m-d", strtotime("+6 months"));
         $first_date_of_month = date("Y-m-01");
 
         $new_date_folio = date("Y-m-d", strtotime("-30 days"));
 
-        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $date_current])->get();
+        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $futureDate])->get();
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
             $postData_F['Authentication'] = [
@@ -104,7 +105,7 @@ class HistoricalApi extends Command
             <AuthCode>' . $listing->auth_key . '</AuthCode>
             </Authentication>
             <FromDate>' . $newDate . '</FromDate>
-            <ToDate>' . $date_current . '</ToDate>
+            <ToDate>' . $futureDate . '</ToDate>
         </RES_Request>',
                 CURLOPT_HTTPHEADER => array(
                     'Content-Type: application/xml',
