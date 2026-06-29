@@ -37,7 +37,7 @@ class BackfillEzeeFolioNumbers extends Command
         $done = 0;
         $filled = 0;
 
-        $query->chunk(100, function ($bookings) use ($groups, $defaultGroup, &$done, &$filled) {
+        $query->chunk(100, function ($bookings) use ($groups, $defaultGroup, $total, &$done, &$filled) {
             foreach ($bookings as $booking) {
                 $done++;
 
