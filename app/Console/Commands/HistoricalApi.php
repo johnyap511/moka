@@ -117,7 +117,9 @@ class HistoricalApi extends Command
 
             curl_close($curl);
 
+            libxml_use_internal_errors(true);
             $xml = simplexml_load_string(trim($response));
+            libxml_clear_errors();
             $json = json_encode($xml);
             $res = json_decode($json, TRUE);
             $reservation_data_ezee = array();
@@ -310,6 +312,7 @@ class HistoricalApi extends Command
                                                     'Source' => $source,
                                                     'created_at' => $created_at
                                                 ]);
+                                                $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                             }
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
@@ -319,6 +322,9 @@ class HistoricalApi extends Command
                                                     'TotalExtraCharge' => $totalExtraCharge,
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                 ]);
+                                            if ($sub_booking_id && !$exist->folio_no) {
+                                                $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
+                                            }
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -495,6 +501,7 @@ class HistoricalApi extends Command
                                                         'Source' => $source,
                                                         'created_at' => $created_at
                                                     ]);
+                                                    $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                                 }
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
@@ -504,6 +511,9 @@ class HistoricalApi extends Command
                                                         'TotalExtraCharge' => $totalExtraCharge,
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                     ]);
+                                                if ($sub_booking_id && !$exist->folio_no) {
+                                                    $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
+                                                }
                                             }
                                         }
                                     }
@@ -512,6 +522,40 @@ class HistoricalApi extends Command
                             $i++;
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private function fetchFolioForBooking($subBookingId, $hotelCode, $authKey)
+    {
+        $payload = json_encode([
+            'RES_Request' => [
+                'Request_Type'   => 'RetrieveListofBills',
+                'Authentication' => [
+                    'HotelCode' => $hotelCode,
+                    'AuthCode'  => $authKey,
+                    'BookingId' => $subBookingId,
+                ],
+            ],
+        ]);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://live.ipms247.com/index.php/page/service.kioskconnectivity');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type:application/json']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $res = json_decode($response, true);
+        if (isset($res['Success']['FolioList'][0]['foliono'])) {
+            $folioNo = $res['Success']['FolioList'][0]['foliono'];
+            $booking = EzeeBooking::where('SubBookingId', $subBookingId)->first();
+            if ($booking) {
+                $booking->update(['folio_no' => $folioNo]);
+                if ($booking->book_id) {
+                    Booking::where('id', $booking->book_id)->update(['server_folio_no' => $folioNo]);
                 }
             }
         }
