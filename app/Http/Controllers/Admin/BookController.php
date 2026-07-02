@@ -269,7 +269,7 @@ class BookController extends Controller
         $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
         $linkedListings = \App\Booking::whereIn('id', $bookIds)
             ->with('listing:id,name')
-            ->get(['id','listing_id'])
+            ->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])
             ->keyBy('id');
 
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
@@ -759,7 +759,7 @@ class BookController extends Controller
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->get();
         $listings = Listing::where('status', 1)->get();
         $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
-        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id','listing_id'])->keyBy('id');
+        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])->keyBy('id');
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
@@ -770,7 +770,7 @@ class BookController extends Controller
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [8])->get();
         $listings = Listing::where('status', 1)->get();
         $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
-        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id','listing_id'])->keyBy('id');
+        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])->keyBy('id');
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 

@@ -85,7 +85,12 @@
     <div class="row"><span class="lbl">Check In</span><span id="pp-start"></span></div>
     <div class="row"><span class="lbl">Check Out</span><span id="pp-end"></span></div>
     <div class="row"><span class="lbl">Nights</span><span id="pp-nights"></span></div>
-    <div class="row"><span class="lbl">Total</span><span id="pp-price"></span></div>
+    <div class="row"><span class="lbl">Price / Night</span><span id="pp-price-night"></span></div>
+    <div class="row"><span class="lbl">SST</span><span id="pp-sst"></span></div>
+    <div class="row"><span class="lbl">Cleaning Fee</span><span id="pp-cleaning"></span></div>
+    <div class="row"><span class="lbl">SST (CF)</span><span id="pp-sst-cf"></span></div>
+    <div class="row"><span class="lbl">M&amp;A Fee</span><span id="pp-ota"></span></div>
+    <div class="row" style="font-weight:600"><span class="lbl" style="font-weight:600">Total</span><span id="pp-price"></span></div>
     <div style="margin-top:12px">
         <a id="pp-view" href="#" class="btn btn-primary btn-sm" style="width:100%;text-align:center">View Booking</a>
     </div>
@@ -126,12 +131,18 @@ document.addEventListener('DOMContentLoaded', function () {
         eventClick: function(info) {
             var e = info.event;
             var ext = e.extendedProps;
-            document.getElementById('pp-name').textContent   = e.title || 'Guest';
-            document.getElementById('pp-start').textContent  = e.startStr;
-            document.getElementById('pp-end').textContent    = e.endStr;
-            document.getElementById('pp-nights').textContent = ext.nights || calcNights(e.startStr, e.endStr);
-            document.getElementById('pp-price').textContent  = ext.price ? 'RM ' + parseFloat(ext.price).toFixed(2) : '—';
-            document.getElementById('pp-view').href          = '/admin/book/' + e.id;
+            var fmt = function(v) { return (v !== null && v !== undefined && v !== '') ? 'RM ' + parseFloat(v).toFixed(2) : '—'; };
+            document.getElementById('pp-name').textContent        = e.title || 'Guest';
+            document.getElementById('pp-start').textContent       = e.startStr;
+            document.getElementById('pp-end').textContent         = e.endStr;
+            document.getElementById('pp-nights').textContent      = ext.nights || calcNights(e.startStr, e.endStr);
+            document.getElementById('pp-price-night').textContent = fmt(ext.price_night);
+            document.getElementById('pp-sst').textContent         = fmt(ext.sst);
+            document.getElementById('pp-cleaning').textContent    = fmt(ext.cleaning_fee);
+            document.getElementById('pp-sst-cf').textContent      = fmt(ext.sst_cf);
+            document.getElementById('pp-ota').textContent         = fmt(ext.ota_fee);
+            document.getElementById('pp-price').textContent       = ext.price ? 'RM ' + parseFloat(ext.price).toFixed(2) : '—';
+            document.getElementById('pp-view').href               = '/admin/book/' + e.id;
             // Position popup near click
             var popup = document.getElementById('cal-popup');
             popup.style.display = 'block';

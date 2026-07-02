@@ -57,25 +57,39 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
         <h2>Bookings <span class="badge badge-blue" id="visible-count">{{ count($books) }}</span></h2>
     </div>
     <div class="table-wrap" style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:900px" id="ezee-table">
+        <table style="width:100%;border-collapse:collapse;min-width:1400px" id="ezee-table">
             <thead>
                 <tr>
-                    <th class="sortable" data-col="0" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="1" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="2" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="3" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="4" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Unit <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="5" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Assigned Unit <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="6" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="7" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="8" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Amount <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="9" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="10" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="0"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="1"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="2"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Guest <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="3"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="4"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Unit <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="5"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Assigned Unit <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="6"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="7"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="8"  style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Price/Night <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="9"  style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">SST <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="10" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Cleaning Fee <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="11" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">SST(CF) <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="12" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">M&amp;A Fee <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="13" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Total (MYR) <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="14" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="15" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
                     <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Action</th>
                 </tr>
             </thead>
             <tbody id="ezee-tbody">
                 @forelse($books as $i => $b)
+                @php
+                    $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null;
+                    $priceNight   = $linked ? $linked->price_night   : null;
+                    $sst          = $linked ? $linked->sst           : null;
+                    $cleaningFee  = $linked ? $linked->cleaning_fee  : null;
+                    $sstCf        = $linked ? $linked->sst_cf        : null;
+                    $otaFee       = $linked ? $linked->ota_fee       : null;
+                    $total        = $linked ? $linked->price         : ($b->TotalAmountAfterTax ?? null);
+                @endphp
                 <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
                     <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
                     <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->folio_no ?? '' }}">{{ $b->folio_no ?? '—' }}</td>
@@ -85,8 +99,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->RoomTypeName ?? '') }}">{{ $b->RoomTypeName ?? '—' }}</td>
                     <td style="padding:10px 14px;font-size:13px;font-family:monospace" data-val="{{ strtolower($b->RoomName ?? '') }}">{{ $b->RoomName ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower(($b->book_id && isset($linkedListings[$b->book_id]) && $linkedListings[$b->book_id]->listing) ? $linkedListings[$b->book_id]->listing->name : '') }}">
-                        @php $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null; @endphp
+                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($linked && $linked->listing ? $linked->listing->name : '') }}">
                         @if($linked && $linked->listing)
                             <span style="font-weight:500;color:var(--teal)">{{ $linked->listing->name }}</span>
                         @else
@@ -95,7 +108,24 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->Start }}">{{ $b->Start }}</td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->End }}">{{ $b->End }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->TotalAmountAfterTax ?? 0 }}">RM {{ number_format($b->TotalAmountAfterTax ?? 0, 2) }}</td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $priceNight ?? '' }}">
+                        {{ $priceNight !== null ? number_format($priceNight, 2) : '—' }}
+                    </td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $sst ?? '' }}">
+                        {{ $sst !== null ? number_format($sst, 2) : '—' }}
+                    </td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $cleaningFee ?? '' }}">
+                        {{ $cleaningFee !== null ? number_format($cleaningFee, 2) : '—' }}
+                    </td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $sstCf ?? '' }}">
+                        {{ $sstCf !== null ? number_format($sstCf, 2) : '—' }}
+                    </td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $otaFee ?? '' }}">
+                        {{ $otaFee !== null ? number_format($otaFee, 2) : '—' }}
+                    </td>
+                    <td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:600" data-val="{{ $total ?? 0 }}">
+                        RM {{ number_format($total ?? 0, 2) }}
+                    </td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->Source ?? '') }}"><span class="badge-source">{{ $b->Source ?? '—' }}</span></td>
                     <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->book_id ? 'assigned' : 'unassigned' }}">
                         @if($b->book_id)
@@ -122,7 +152,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="12" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
+                <tr><td colspan="17" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -167,6 +197,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
         </form>
     </div>
 </div>
+
 @endsection
 
 @push('scripts')
@@ -204,7 +235,7 @@ function filterTable(q) {
 }
 
 // ---- Sorting ----
-var sortState = { col: null, dir: 0 }; // dir: 0=none, 1=asc, -1=desc
+var sortState = { col: null, dir: 0 };
 
 document.querySelectorAll('th.sortable').forEach(function(th) {
     th.addEventListener('click', function() {
@@ -228,22 +259,20 @@ document.querySelectorAll('th.sortable').forEach(function(th) {
 function sortTable(col, dir) {
     var tbody = document.getElementById('ezee-tbody');
     var rows  = Array.from(tbody.querySelectorAll('tr'));
+    var numericCols = [8, 9, 10, 11, 12, 13];
 
     if (dir === 0) {
-        // Restore original order
         rows.sort(function(a, b) {
             return parseInt(a.getAttribute('data-orig') || 0) - parseInt(b.getAttribute('data-orig') || 0);
         });
     } else {
-        // Save original order on first sort
         rows.forEach(function(r, i) {
             if (!r.getAttribute('data-orig')) r.setAttribute('data-orig', i);
         });
         rows.sort(function(a, b) {
             var aVal = (a.cells[col] ? a.cells[col].getAttribute('data-val') || a.cells[col].innerText : '').toLowerCase();
             var bVal = (b.cells[col] ? b.cells[col].getAttribute('data-val') || b.cells[col].innerText : '').toLowerCase();
-            // Numeric sort for amount column (col 8)
-            if (col === 8) {
+            if (numericCols.indexOf(col) !== -1) {
                 return (parseFloat(aVal) - parseFloat(bVal)) * dir;
             }
             return aVal < bVal ? -dir : (aVal > bVal ? dir : 0);
