@@ -55,7 +55,7 @@ class HistoricalApi extends Command
 
         $new_date_folio = date("Y-m-d", strtotime("-30 days"));
 
-        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $futureDate])->whereNull('folio_no')->limit(20)->get();
+        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $futureDate])->whereNull('folio_no')->orderBy('Start', 'desc')->limit(50)->get();
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
             $postData_F['Authentication'] = [
