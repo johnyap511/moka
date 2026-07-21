@@ -17,73 +17,63 @@ class CalendarController extends Controller
 {
     public function index($id)
     {
-        $listing = Listing::where('user_id', Auth::user()->id)->find($id);
-        $list = '';
-        if ($listing) {
-            $list = $listing->id;
-        } else {
-            $list = '';
-        }
-        $books = Booking::where([['listing_id', $list], ['status', '>', 1]])->get();
-        $events = [];
-        foreach ($books as $book) {
-            $name = '';
-            $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
-            if (!empty($ezeeBook)) {
-                $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
-            }
-            if (empty($name)) {
-                $user = User::find($book->user_id);
-                if (!empty($user)) {
-                    $name = $user->name . ' ' . $user->last_name;
-                }
-            }
-
-            $exist = false;
-            foreach ($events as $event) {
-                if ($name == $event['title'] && $book->check_in == $event['start'] && $book->check_out == $event['end']) {
-                    $exist = true;
-                }
-            }
-            if ($exist === false) {
-                $guest = $book->adult . ' adults, ' . $book->infant . ' children';
-                $events[] = [
-                    'id' => $book->id, 'title' => $name, 'start' => $book->check_in, 'end' => $book->check_out, 'guest' => $guest, 'price_night' => $book->price_night, 'sst' => $book->sst, 'sst_cf' => $book->sst_cf, 'created_at' => $book->created_at,
-                    'nights' => $book->nights, 'cleaning_fee' => $book->cleaning_fee, 'ota_fee' => $book->ota_fee, 'price' => $book->price, 'source' => $book->source, 'discount' => $book->discount_fee,
-                ];
-            }
-        }
-        $events = json_encode($events);
-        return view('owner.listing.calendar', compact('listing', 'events'));
+        // Redirect to unified calendar with listing pre-selected
+        return redirect('/owner/calendar?listing_id=' . $id);
     }
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function allBooks()
+    public function allBooks(Request $request)
     {
-        $listingIds = Listing::where('user_id', Auth::user()->id)->pluck('id')->toArray();
-        $end_listingIds = reset($listingIds);
-        $books = Booking::whereIn('listing_id', [$end_listingIds])->where('status', '>', 1)->get();
+        $authId      = Auth::user()->id;
+        $allListings = Listing::where('user_id', $authId)->where('status', 1)->get();
+
+        // Selected listing
+        $selectedId = $request->listing_id ?? ($allListings->first()->id ?? null);
+        $listing    = $selectedId ? Listing::where('user_id', $authId)->find($selectedId) : null;
+
+        // Selected month for initial calendar date
+        $selDate    = $request->date
+            ? \Carbon\Carbon::parse($request->date . '-01')
+            : \Carbon\Carbon::now()->startOfMonth();
+        $initialDate = $selDate->toDateString();
+
+        $books  = $selectedId
+            ? Booking::where('listing_id', $selectedId)->where('status', '>', 1)->get()
+            : collect();
+
         $events = [];
         foreach ($books as $book) {
-            $user = User::find($book->user_id);
             $name = '';
+            $user = User::find($book->user_id);
             if (!empty($user)) {
-                $name = $user->name . ' ' . $user->last_name;
-            } else {
+                $name = trim($user->name . ' ' . $user->last_name);
+            }
+            if (empty($name)) {
                 $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
                 if (!empty($ezeeBook)) {
-                    $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
+                    $name = trim($ezeeBook->FirstName . ' ' . $ezeeBook->LastName);
                 }
             }
-            $guest = $book->adult . ' adults, ' . $book->infant . ' children';
+            $guest = ($book->adult ?? 0) . ' adults, ' . ($book->infant ?? 0) . ' children';
             $events[] = [
-                'id' => $book->id, 'title' => 'Booked by ' . $name, 'start' => $book->check_in, 'end' => $book->check_out, 'guest' => $guest, 'price_night' => $book->price_night, 'sst' => $book->sst, 'sst_cf' => $book->sst_cf, 'created_at' => $book->created_at,
-                'nights' => $book->nights, 'cleaning_fee' => $book->cleaning_fee, 'discount' => $book->discount_fee, 'ota_fee' => $book->ota_fee, 'price' => $book->price, 'source' => $book->source,
+                'id'           => $book->id,
+                'title'        => 'Booked by ' . ($name ?: 'Guest'),
+                'start'        => $book->check_in,
+                'end'          => $book->check_out,
+                'guest'        => $guest,
+                'nights'       => $book->nights,
+                'source'       => $book->source,
+                'price_night'  => $book->price_night,
+                'sst'          => $book->sst,
+                'sst_cf'       => $book->sst_cf,
+                'cleaning_fee' => $book->cleaning_fee,
+                'ota_fee'      => $book->ota_fee,
+                'price'        => $book->price,
             ];
         }
         $events = json_encode($events);
-        return view('owner.listing.calendar', compact('events'));
+        return view('owner.listing.calendar', compact('events', 'allListings', 'selectedId', 'listing', 'selDate', 'initialDate'));
     }
 
     /**
@@ -249,8 +239,9 @@ class CalendarController extends Controller
         if (empty($listing) || $listing->user_id !== Auth::id()) {
             abort(403, 'You do not have access to this listing.');
         }
-        $user = User::find($book->user_id);
-        $owner = User::find($listing->user_id);
-        return view('owner.listing.book.detail', compact('book', 'user', 'listing', 'owner'));
+        $user     = User::find($book->user_id);
+        $owner    = User::find($listing->user_id);
+        $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
+        return view('owner.listing.book.detail', compact('book', 'user', 'listing', 'owner', 'ezeeBook'));
     }
 }

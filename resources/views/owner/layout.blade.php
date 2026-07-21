@@ -8,66 +8,42 @@
 <style>
 :root{
   --sidebar-w:220px;
-  --topbar-h:52px;
+  --orange:#F36523;
+  --orange-dark:#d4541a;
+  --teal:#0a8a72;
   --bg:#f5f5f7;
-  --surface:#ffffff;
-  --sidebar-bg:#1c1c1e;
-  --sidebar-hover:rgba(255,255,255,.08);
-  --sidebar-active:rgba(255,255,255,.12);
+  --border:#e5e5ea;
   --text:#1d1d1f;
   --text-secondary:#6e6e73;
-  --border:#e5e5ea;
-  --teal:#0a8a72;
-  --teal-light:#e0f5f1;
-  --blue:#0071e3;
-  --red:#ff3b30;
-  --orange:#ff9500;
-  --green:#30d158;
   --radius:12px;
   --shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--text)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--text)}
 a{color:inherit;text-decoration:none}
 
 /* Sidebar */
-.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
-.sidebar-brand{height:var(--topbar-h);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
-.sidebar-brand span{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.5px}
-.sidebar-brand small{font-size:11px;color:rgba(255,255,255,.4);margin-left:7px;font-weight:400}
-.sidebar-section{padding:18px 12px 6px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.6px;text-transform:uppercase}
-.sidebar-link{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;margin:1px 7px;color:rgba(255,255,255,.7);font-size:13px;font-weight:450;transition:background .15s,color .15s;cursor:pointer;border-left:3px solid transparent}
-.sidebar-link:hover{background:var(--sidebar-hover);color:#fff}
-.sidebar-link.active{background:var(--sidebar-active);color:#fff;border-left-color:var(--teal)}
-.sidebar-link svg{width:16px;height:16px;flex-shrink:0;opacity:.8}
-.sidebar-link.active svg{opacity:1}
-.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.08)}
-.sidebar-footer-user{padding:10px 11px 6px;color:rgba(255,255,255,.5);font-size:12px}
-
-/* Topbar */
-.topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:99;gap:12px}
-.topbar-title{font-size:16px;font-weight:600;letter-spacing:-.3px;flex:1}
-.topbar-badge{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--text-secondary)}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--orange);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sidebar-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.2);flex-shrink:0;display:flex;align-items:center;gap:10px}
+.sidebar-brand .logo-icon{width:36px;height:36px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-brand .logo-icon svg{width:22px;height:22px;color:var(--orange)}
+.sidebar-brand .logo-text{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.5px}
+.sidebar-link{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;color:rgba(255,255,255,.85);font-size:13.5px;font-weight:500;transition:background .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.sidebar-link:hover{background:rgba(0,0,0,.1);color:#fff}
+.sidebar-link.active{background:rgba(0,0,0,.15);color:#fff;font-weight:600}
+.sidebar-link .link-inner{display:flex;align-items:center;gap:10px}
+.sidebar-link svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-spacer{flex:1}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.2);margin:8px 0}
 
 /* Content */
-.content{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);min-height:calc(100vh - var(--topbar-h));padding:28px}
-
-/* Page header */
-.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
-.page-header h1{font-size:24px;font-weight:700;letter-spacing:-.5px}
-.page-header p{color:var(--text-secondary);font-size:14px;margin-top:3px}
+.content{margin-left:var(--sidebar-w);min-height:100vh;padding:28px;background:var(--bg)}
 
 /* Cards */
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .card-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.card-header h2{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.card-header h2{font-size:15px;font-weight:600}
 .card-body{padding:20px}
-
-/* Stats grid */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
-.stat-card .val{font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1}
-.stat-card .lbl{font-size:12px;color:var(--text-secondary);margin-top:6px;font-weight:500}
 
 /* Table */
 .table-wrap{overflow-x:auto}
@@ -80,11 +56,10 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;line-height:1.4;text-decoration:none}
-.btn-primary{background:var(--teal);color:#fff}
-.btn-primary:hover{background:#0a7a65}
-.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orange-dark)}
+.btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
 .btn-secondary:hover{background:#f0f0f2}
-.btn-danger{background:#fff0ef;color:var(--red);border:1px solid #ffd0ce}
 .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
 
 /* Badges */
@@ -94,13 +69,13 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 .badge-orange{background:#fff7ed;color:#c2410c}
 .badge-blue{background:#eff6ff;color:#1d4ed8}
 .badge-gray{background:#f3f4f6;color:#4b5563}
-.badge-teal{background:var(--teal-light);color:var(--teal)}
+.badge-teal{background:#e0f5f1;color:var(--teal)}
 
 /* Forms */
 .form-group{margin-bottom:18px}
 .form-label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text)}
-.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;outline:none}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(10,138,114,.12)}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,101,35,.12)}
 
 /* Alerts */
 .alert{padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
@@ -113,20 +88,9 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 .empty-state p{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px}
 .empty-state small{font-size:13px}
 
-/* Actions */
-.actions{display:flex;gap:6px;align-items:center}
-
 /* Utility */
-.flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-2{gap:8px}.gap-3{gap:12px}.mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mb-2{margin-bottom:8px}.mb-4{margin-bottom:16px}.text-sm{font-size:12.5px}.text-secondary{color:var(--text-secondary)}.font-600{font-weight:600}
-.divider{height:1px;background:var(--border);margin:20px 0}
-
-/* Listing grid for dashboard */
-.listing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:8px}
-.listing-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
-.listing-card h3{font-size:15px;font-weight:600;margin-bottom:4px;margin-top:8px}
-.listing-card .addr{font-size:13px;color:var(--text-secondary);margin-bottom:10px}
-.listing-card .price{font-size:16px;font-weight:600}
-.listing-card .price span{font-size:13px;font-weight:400;color:var(--text-secondary)}
+.text-sm{font-size:12.5px}.text-secondary{color:var(--text-secondary)}.font-600{font-weight:600}
+.actions{display:flex;gap:6px;align-items:center}
 </style>
 @stack('styles')
 </head>
@@ -135,75 +99,75 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 {{-- SIDEBAR --}}
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <span>MOKA</span><small>Owner</small>
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </div>
+        <span class="logo-text">Moka</span>
     </div>
 
-    <div class="sidebar-section">Main</div>
     <a href="/owner/dashboard" class="sidebar-link {{ request()->is('owner/dashboard') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-        Dashboard
+        <span class="link-inner">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+        </span>
     </a>
-    <a href="/owner/listing" class="sidebar-link {{ request()->is('owner/listing') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-        My Listings
+    <a href="/owner/listing" class="sidebar-link {{ request()->is('owner/listing*') ? 'active' : '' }}">
+        <span class="link-inner">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Listing
+        </span>
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </a>
     <a href="/owner/calendar" class="sidebar-link {{ request()->is('owner/calendar') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Calendar
+        <span class="link-inner">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Calendar
+        </span>
+    </a>
+    <a href="/owner/listing/chart/report" class="sidebar-link {{ request()->is('owner/listing/chart/report') ? 'active' : '' }}">
+        <span class="link-inner">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Performance
+        </span>
     </a>
 
-    <div class="sidebar-section">Reports</div>
-    <a href="/owner/report/revenue" class="sidebar-link {{ request()->is('owner/report/revenue') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Revenue Report
-    </a>
-    <a href="/owner/report/payment" class="sidebar-link {{ request()->is('owner/report/payment') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Payment Report
-    </a>
+    <div class="sidebar-divider"></div>
 
-    <div class="sidebar-section">Account</div>
     <a href="/owner/change_password" class="sidebar-link {{ request()->is('owner/change_password') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-        Change Password
+        <span class="link-inner">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            Change Password
+        </span>
     </a>
 
-    <div class="sidebar-footer">
-        <div class="sidebar-footer-user">{{ Auth::user()->name ?? '' }}</div>
-        <form action="/logout" method="POST">
-            @csrf
-            <button type="submit" class="sidebar-link" style="width:100%;background:none;border:none;cursor:pointer;text-align:left;border-left:3px solid transparent">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                Sign Out
-            </button>
-        </form>
-    </div>
-</aside>
+    <div class="sidebar-spacer"></div>
 
-{{-- TOPBAR --}}
-<header class="topbar">
-    <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
-    <span class="topbar-badge">{{ date('D, d M Y') }}</span>
-</header>
+    <div class="sidebar-divider"></div>
+    <form action="/logout" method="POST" style="margin:0">
+        @csrf
+        <button type="submit" class="sidebar-link" style="color:rgba(255,255,255,.85)">
+            <span class="link-inner">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Log Out
+            </span>
+        </button>
+    </form>
+</aside>
 
 {{-- MAIN CONTENT --}}
 <main class="content">
     @if(session('success'))
-        <div class="alert alert-success">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            {{ session('success') }}
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-        <div class="alert alert-error">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            {{ session('error') }}
-        </div>
+        <div class="alert alert-error">{{ session('error') }}</div>
     @endif
     @if($errors->any())
         <div class="alert alert-error">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div>@foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
+            @foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach
         </div>
     @endif
 

@@ -104,9 +104,21 @@
                     <div class="font-600" style="font-size:15px;margin-bottom:4px">{{ $user->name ?? '' }} {{ $user->last_name ?? '' }}</div>
                     <div class="text-secondary" style="font-size:13px;margin-bottom:6px">{{ $user->email ?? '-' }}</div>
                     @if($user->phone ?? null)
-                        <div style="font-size:13px">
-                            <span class="text-secondary">Phone: </span>{{ $user->phone }}
-                        </div>
+                        <div style="font-size:13px"><span class="text-secondary">Phone: </span>{{ $user->phone }}</div>
+                    @endif
+                @elseif(isset($ezeeBook) && $ezeeBook)
+                    <div class="font-600" style="font-size:15px;margin-bottom:4px">{{ trim(($ezeeBook->FirstName ?? '') . ' ' . ($ezeeBook->LastName ?? '')) }}</div>
+                    @if($ezeeBook->Email)
+                    <div class="text-secondary" style="font-size:13px;margin-bottom:4px">{{ $ezeeBook->Email }}</div>
+                    @endif
+                    @if($ezeeBook->Mobile)
+                    <div style="font-size:13px;margin-bottom:4px"><span class="text-secondary">Phone: </span>{{ $ezeeBook->Mobile }}</div>
+                    @endif
+                    @if($ezeeBook->Country)
+                    <div style="font-size:13px"><span class="text-secondary">Country: </span>{{ $ezeeBook->Country }}</div>
+                    @endif
+                    @if($ezeeBook->SubBookingId)
+                    <div style="font-size:12px;font-family:monospace;margin-top:6px;color:var(--teal)">{{ $ezeeBook->SubBookingId }}{{ $ezeeBook->folio_no ? ' · ' . $ezeeBook->folio_no : '' }}</div>
                     @endif
                 @else
                     <div class="text-secondary" style="font-size:13px">Guest information not available.</div>
