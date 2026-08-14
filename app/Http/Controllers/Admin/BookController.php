@@ -315,7 +315,7 @@ class BookController extends Controller
             // print_r($get_folio_no);
             $postData_F['Authentication'] = [
                 'HotelCode' => 19676,
-                'AuthCode' => '7181420090112972af-41e8-11ec-9',
+                'AuthCode' => '7010306964bf04d4ef-9225-11f1-8',
                 'BookingId' => $get_folio_no->SubBookingId,
             ];
 
@@ -1987,7 +1987,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
         foreach ($ezee_booking_folio as $get_folio_no) {
             $postData_F['Authentication'] = [
                 'HotelCode' => 19676,
-                'AuthCode' => '7181420090112972af-41e8-11ec-9',
+                'AuthCode' => '7010306964bf04d4ef-9225-11f1-8',
                 'BookingId' => $get_folio_no->SubBookingId,
             ];
 

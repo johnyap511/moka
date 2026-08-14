@@ -19,9 +19,24 @@ Route::middleware('lang')->group(function () {
     Route::post('/estimate',    'Auth\WebController@submitEstimate')->name('estimate.submit');
     Route::get('/language/{lang}', 'Auth\HomeController@setLanguage');
 
+    /* ── Public Info Pages ──────────────────────────────────────────── */
+    Route::get('/contact',         'Auth\WebController@contact');
+    Route::post('/contact',        'Auth\WebController@contactStore');
+    Route::get('/policy',          'Auth\WebController@policy');
+    Route::get('/terms',           'Auth\WebController@terms');
+    Route::post('/subscribe',      'Auth\WebController@subscribe');
+    Route::get('/announcement',    'Admin\OwnerController@announcement');
+
     /* ── Property Search & Detail ───────────────────────────────────── */
     Route::get('/location/search', 'Auth\WebController@locationSearch')->name('search');
     Route::get('/listing/{key}',   'Auth\WebController@propertyDetail')->name('listing.detail');
+
+    /* ── Payment ─────────────────────────────────────────────────────── */
+    Route::get('/payment/redirect',   'User\PaymentController@paymentRedirect');
+    Route::post('/payment/callback',  'User\PaymentController@paymentCallback');
+
+    /* ── Email Verification ──────────────────────────────────────────── */
+    Route::get('/register/{code}/activation', 'Auth\WebController@verificationCode');
 
     /* ── Authentication ─────────────────────────────────────────────── */
     Route::middleware('guest')->group(function () {
