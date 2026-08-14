@@ -81,15 +81,15 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
             <tbody id="ezee-tbody">
                 @forelse($books as $i => $b)
                 @php
-                    $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null;
-                    $priceNight   = $linked ? $linked->price_night   : null;
-                    $sst          = $linked ? $linked->sst           : null;
-                    $cleaningFee  = $linked ? $linked->cleaning_fee  : null;
-                    $sstCf        = $linked ? $linked->sst_cf        : null;
-                    $otaFee       = $linked ? $linked->ota_fee       : null;
-                    $total        = $linked ? $linked->price         : ($b->TotalAmountAfterTax ?? null);
-                    $propId       = $linked && $linked->listing ? $linked->listing->id   : null;
-                    $propName     = $linked && $linked->listing ? $linked->listing->name : null;
+                    $breakdown    = $b->breakdown ?? [];
+                    $priceNight   = $breakdown['price_night']  ?? null;
+                    $sst          = $breakdown['sst']          ?? null;
+                    $cleaningFee  = $breakdown['cleaning_fee'] ?? null;
+                    $sstCf        = $breakdown['sst_cf']       ?? null;
+                    $otaFee       = $breakdown['ota_fee']      ?? null;
+                    $total        = $breakdown['total']        ?? ($b->TotalAmountAfterTax ?? null);
+                    $propId       = $b->property_code;
+                    $propName     = $b->property_name;
                 @endphp
                 <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
                     <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>

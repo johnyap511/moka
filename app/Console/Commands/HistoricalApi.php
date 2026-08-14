@@ -72,6 +72,7 @@ class HistoricalApi extends Command
             curl_setopt($ch_f, CURLOPT_POSTFIELDS, $payload_f);
             curl_setopt($ch_f, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
             curl_setopt($ch_f, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch_f, CURLOPT_TIMEOUT, 10);
             $server_output_f = curl_exec($ch_f);
             curl_close($ch_f);
             $res_f = json_decode($server_output_f, true);
@@ -94,7 +95,7 @@ class HistoricalApi extends Command
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
+                CURLOPT_TIMEOUT => 90,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',

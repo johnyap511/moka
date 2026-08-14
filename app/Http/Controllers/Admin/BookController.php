@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
 use App\Role;
+use App\Support\EzeePricing;
 use App\User;
 use Carbon\Carbon;
 use DateTime;
@@ -265,14 +266,57 @@ class BookController extends Controller
             ->orderBy('id', 'desc')->get();
         $listings = Listing::where('status', 1)->get();
 
-        // Build listing name map from linked bookings
-        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
-        $linkedListings = \App\Booking::whereIn('id', $bookIds)
+        $linkedListings = $this->linkedBookings($books);
+        $this->decorateEzeeBookings($books, $linkedListings);
+
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+    }
+
+    /**
+     * Price/fee columns for bookings that have already been assigned live on
+     * the Booking record, so pull those in for the ones that have a link.
+     */
+    private function linkedBookings($books)
+    {
+        return \App\Booking::whereIn('id', $books->whereNotNull('book_id')->pluck('book_id'))
             ->with('listing:id,name')
             ->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])
             ->keyBy('id');
+    }
 
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+    /**
+     * Attaches the EZEE property each booking came from and its price
+     * breakdown. Unassigned bookings have no Booking record to read figures
+     * from, so they get derived from the raw EZEE payload instead — meaning
+     * the table shows the same numbers before and after assignment.
+     */
+    private function decorateEzeeBookings($books, $linkedListings)
+    {
+        $groups = EzeeGroup::all()->keyBy('hotel_code');
+
+        foreach ($books as $b) {
+            // EZEE prefixes the transaction id with the hotel code.
+            $code  = $b->TransactionId ? substr($b->TransactionId, 0, 5) : null;
+            $group = $code ? ($groups[$code] ?? null) : null;
+
+            $b->property_code = $group ? $group->hotel_code : $code;
+            $b->property_name = $group ? $group->name : null;
+
+            $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null;
+
+            $b->breakdown = $linked
+                ? [
+                    'price_night'  => $linked->price_night,
+                    'sst'          => $linked->sst,
+                    'cleaning_fee' => $linked->cleaning_fee,
+                    'sst_cf'       => $linked->sst_cf,
+                    'ota_fee'      => $linked->ota_fee,
+                    'total'        => $linked->price,
+                ]
+                : EzeePricing::breakdown($b);
+        }
+
+        return $books;
     }
 
     public function ezeeBookingsByProperty()
@@ -360,7 +404,7 @@ class BookController extends Controller
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
+                CURLOPT_TIMEOUT => 90,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
@@ -758,8 +802,8 @@ class BookController extends Controller
         // $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->orderBy('id','DESC')->limit(100)->get();
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->get();
         $listings = Listing::where('status', 1)->get();
-        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
-        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])->keyBy('id');
+        $linkedListings = $this->linkedBookings($books);
+        $this->decorateEzeeBookings($books, $linkedListings);
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
@@ -769,8 +813,8 @@ class BookController extends Controller
         $newdate = date("Y-m-d", strtotime('-1 month', strtotime($currentMonth)));
         $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [8])->get();
         $listings = Listing::where('status', 1)->get();
-        $bookIds = $books->whereNotNull('book_id')->pluck('book_id');
-        $linkedListings = \App\Booking::whereIn('id', $bookIds)->with('listing:id,name')->get(['id', 'listing_id', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'price'])->keyBy('id');
+        $linkedListings = $this->linkedBookings($books);
+        $this->decorateEzeeBookings($books, $linkedListings);
         return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
@@ -783,7 +827,9 @@ class BookController extends Controller
         $currentMonth = $date;
         $books = EzeeBooking::where([['status', 5]])->whereDate('created_at', '=', $currentMonth)->get();
         $listings = Listing::where('status', 1)->get();
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings'));
+        $linkedListings = $this->linkedBookings($books);
+        $this->decorateEzeeBookings($books, $linkedListings);
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
     }
 
     /**
@@ -1982,7 +2028,10 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
 
         // $new_date_folio = $request->to_date;
         // // date("Y-m-d", strtotime("-30 days"));
-        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$date_current, $new_date_folio])->get();
+        $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$date_current, $new_date_folio])
+            ->whereNull('folio_no')
+            ->limit(100)
+            ->get();
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
             $postData_F['Authentication'] = [
@@ -1999,6 +2048,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             curl_setopt($ch_f, CURLOPT_POSTFIELDS, $payload_f);
             curl_setopt($ch_f, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
             curl_setopt($ch_f, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch_f, CURLOPT_TIMEOUT, 10);
             $server_output_f = curl_exec($ch_f);
             curl_close($ch_f);
             $res_f = json_decode($server_output_f, true);
@@ -2022,7 +2072,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
+                CURLOPT_TIMEOUT => 90,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
