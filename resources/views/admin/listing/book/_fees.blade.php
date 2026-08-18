@@ -12,14 +12,21 @@
 (function () {
     var RATES = {
         DEFAULT: 0.20, BOOKING_1: 0.18, BOOKING_2: 0.028,
-        AIRBNB: 0.159, AIRBNB_SEP: 0.15, TRAVELOKA: 0.17,
+        AIRBNB: 0.159, TRAVELOKA: 0.17,
         WALK_IN: 0.12, WALK_IN8: 0.08, EXPEDIA: 0.15, CTRIP: 0.15
     };
 
     // ISO dates compare correctly as strings, so no Date parsing needed.
     var CHECK_DATE = '2022-11-30', CHECK_DATE_15 = '2023-02-01',
         CHECK_DATE_NEW = '2023-06-17', CHECK_DATE_NEW8 = '2023-07-01',
-        SEP_DATE = '2024-09-01', SST_DATE = '2024-03-01';
+        SST_DATE = '2024-03-01';
+
+    // Longest first so "Booking.com" wins over "Booking".
+    var KNOWN_SOURCES = [
+        'Long Term Rental', 'Booking.com', 'CTrip.com', 'Ctrip.com', 'Trip.com',
+        'Tiket.com', 'Traveloka', 'Expedia', 'Website', 'Walk-in', 'Walk In',
+        'Booking', 'Airbnb', 'Agoda', 'Ctrip', 'CTrip', 'Owner', 'owner', 'PMS'
+    ];
 
     var BOOKED_ON = @json($bookedOn);
 
@@ -50,9 +57,19 @@
         return Math.round((b - a) / 86400000);
     }
 
-    // EZEE appends references to some source names ("Booking.com-13707539").
+    // EZEE appends a booking reference to some source names
+    // ("Booking.com-13707539", "Traveloka-SEiOXzcRUDcF"). Match on the leading
+    // channel name so the reference cannot push a booking onto the default
+    // rate. Prefix matching rather than splitting on the hyphen, because
+    // "Walk-in" contains one legitimately.
     function normalise(s) {
-        return String(s || '').replace(/[^A-Za-z. ]/g, '').trim();
+        var raw = String(s || '').trim();
+        for (var i = 0; i < KNOWN_SOURCES.length; i++) {
+            if (raw.toLowerCase().indexOf(KNOWN_SOURCES[i].toLowerCase()) === 0) {
+                return KNOWN_SOURCES[i];
+            }
+        }
+        return raw.replace(/[^A-Za-z. ]/g, '').trim();
     }
 
     function otaFee(source, base, baseTaxed) {
@@ -67,9 +84,9 @@
             return floor2(0.20 * base);
         }
 
+        // Rate card: 15.9% excluding tax, so it applies to the untaxed base.
         if (source === 'Airbnb') {
-            if (BOOKED_ON >= SEP_DATE)     return floor2(RATES.AIRBNB_SEP * baseTaxed);
-            if (afterCheck && beforeNew)   return floor2(RATES.DEFAULT * base);
+            if (afterCheck && beforeNew) return floor2(RATES.DEFAULT * base);
             return floor2(RATES.AIRBNB * base);
         }
 
