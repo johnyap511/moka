@@ -19,7 +19,6 @@ class EzeePricing
     private const CHECK_DATE_15   = '2023-02-01';
     private const CHECK_DATE_NEW  = '2023-06-17';
     private const CHECK_DATE_NEW8 = '2023-07-01';
-    private const SEP_DATE        = '2024-09-01';
     private const SST_DATE        = '2024-03-01';
 
     private const RATES = [
@@ -27,7 +26,6 @@ class EzeePricing
         'BOOKING_1'  => 0.18,
         'BOOKING_2'  => 0.028,
         'AIRBNB'     => 0.159,
-        'AIRBNB_SEP' => 0.15,
         'TRAVELOKA'  => 0.17,
         'WALK_IN'    => 0.12,
         'WALK_IN8'   => 0.08,
@@ -73,6 +71,29 @@ class EzeePricing
         ];
     }
 
+    /**
+     * Marketing & administration fee for a single booking.
+     *
+     * Exposed so the assignment and reporting paths compute the fee exactly as
+     * the EZEE list previews it. Each used to carry its own copy of the rate
+     * table, and they had drifted apart — Airbnb was charged at three different
+     * rates depending on which screen you looked at.
+     *
+     * @param string|null $source   Channel name; a booking reference suffix is tolerated.
+     * @param string|null $bookedOn Y-m-d the booking was made. Defaults to today.
+     */
+    public static function marketingFee($source, float $roomTotal, float $cleaningFee, float $sst, float $sstCf, ?string $bookedOn = null): float
+    {
+        return self::otaFee(
+            self::normaliseSource($source),
+            new DateTime($bookedOn ?: date('Y-m-d')),
+            $roomTotal,
+            $cleaningFee,
+            $sst,
+            $sstCf
+        );
+    }
+
     private static function otaFee(string $source, DateTime $bookedOn, float $roomTotal, float $cleaningFee, float $sst, float $sstCf): float
     {
         $base      = $roomTotal + $cleaningFee;   // ota_cal / ota_cal2
@@ -95,10 +116,10 @@ class EzeePricing
             return self::floor2(0.20 * $base);
         }
 
+        // Rate card: Airbnb is 15.9% excluding tax, so it applies to the
+        // untaxed base. Production applies 15% to the taxed base for bookings
+        // after 2024-09-01; the rate card is authoritative.
         if ($source === 'Airbnb') {
-            if ($bookedOn >= new DateTime(self::SEP_DATE)) {
-                return self::floor2(self::RATES['AIRBNB_SEP'] * $baseTaxed);
-            }
             if ($afterCheck && $beforeNew) {
                 return self::floor2(self::RATES['DEFAULT'] * $base);
             }
@@ -163,13 +184,36 @@ class EzeePricing
     }
 
     /**
-     * EZEE appends booking references to some source names
-     * ("Booking.com-13707539"), so strip anything that is not part of the
-     * channel name before matching against the rate table.
+     * Every channel name the rate table branches on, longest first so that
+     * "Booking.com" is preferred over "Booking" and "Trip.com" over "Trip".
+     */
+    private const KNOWN_SOURCES = [
+        'Long Term Rental', 'Booking.com', 'CTrip.com', 'Ctrip.com', 'Trip.com',
+        'Tiket.com', 'Traveloka', 'Expedia', 'Website', 'Walk-in', 'Walk In',
+        'Booking', 'Airbnb', 'Agoda', 'Ctrip', 'CTrip', 'Owner', 'owner', 'PMS',
+    ];
+
+    /**
+     * EZEE appends a booking reference to some source names
+     * ("Booking.com-13707539", "Traveloka-SEiOXzcRUDcF"). Match on the leading
+     * channel name so the reference cannot push a booking onto the default
+     * rate — matching on the whole string silently cost Traveloka bookings the
+     * 17% rate and charged them 20% instead.
+     *
+     * Prefix matching rather than splitting on the hyphen, because "Walk-in"
+     * contains one legitimately.
      */
     private static function normaliseSource($source): string
     {
-        return trim(preg_replace('/[^A-Za-z\. ]/', '', (string) $source));
+        $raw = trim((string) $source);
+
+        foreach (self::KNOWN_SOURCES as $known) {
+            if (stripos($raw, $known) === 0) {
+                return $known;
+            }
+        }
+
+        return trim(preg_replace('/[^A-Za-z\. ]/', '', $raw));
     }
 
     private static function nights($start, $end): int

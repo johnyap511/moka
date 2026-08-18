@@ -6,6 +6,7 @@ use App\Booking;
 use App\Http\Controllers\Controller;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
+use App\Support\EzeePricing;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -53,111 +54,22 @@ class CalendarController extends Controller
                 } else {
                     $todays = '';
                 }
-                $chackdate = '2022-11-30';
-                $chackdate15 = '2023-03-01';
-                $chackdatenew = '2023-06-17';
-                $chackdatenew8 = '2023-07-01';
-                $sep = '2024-09-01';
-                $percentage = 20;
-                $percentage_walkIn12 = 12;
-                $percentage_walkIn15 = 15;
-                $percentageTraveloka = 17;
-                $percentageAirbnb = 15.9;
-                $percentageAirbnb_sep = 15;
-                $percentageTraveloka_sep = 15;
-                $percentageBooking = 19.78;
-                $percentage_walkIn = 12;
-                $percentage_walkIn8 = 8;
-                $tiket = 17;
-                $ota_cal = (($book->price_night * $nights));
-                $new_ota = (($book->price_night * $nights)) + $book->cleaning_fee;
-                $new_ota1 = (($book->price_night * $nights)) + $book->cleaning_fee + $book->sst + $book->sst_cf;
+                // Rates live in EzeePricing so the calendar agrees with the
+                // booking screens. This block previously blended Booking.com
+                // into a single 19.78% and, through an operator-precedence
+                // slip, added the whole cleaning fee to walk-in fees instead
+                // of 8% of it.
                 $sst = $book->sst;
-                // $ota_cal = (($book->price_night * $book->nights));
-                if ($book->source == 'Airbnb') {
-
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew && $todays < $sep) {
-                        $ota = round((($percentageAirbnb / 100) * $new_ota), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew && $todays >= $sep) {
-                        $ota = round((($percentageAirbnb_sep / 100) * $new_ota1), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Booking.com') {
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew) {
-                        $ota = round((($percentageBooking / 100) * $new_ota), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } else if ($book->source == 'Walk-in' || $book->source == 'PMS' || $book->source == 'Walk In' || $book->source == 'Website') {
-                    if ($todays > $chackdate && $todays <= $chackdate15) {
-
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays > $chackdate15 && $todays < $chackdatenew8) {
-                        $ota = round((($percentage_walkIn / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays > $chackdate15 && $todays >= $chackdatenew8) {
-                        $ota = round((($percentage_walkIn8 / 100) * $ota_cal + $book->cleaning_fee), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Agoda') {
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew) {
-                        $ota = 0.00;
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Traveloka') {
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew) {
-                        $ota = round((($percentageTraveloka / 100) * $new_ota1), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Trip.com' || $book->source == 'Ctrip.com' || $book->source == 'CTrip.com' || $book->source == 'Ctrip' || $book->source == 'CTrip') {
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays > $chackdatenew) {
-                        $ota = 0.00;
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Website') {
-                    if ($todays > $chackdate && $todays <= $chackdate15) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate15) {
-                        $ota = round((($percentage_walkIn / 100) * $ota_cal), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Owner') {
-                    $ota = number_format(0.00, 2);
-                } elseif ($book->source == 'Tiket.com') {
-                    $ota = number_format(0.00, 2);
-
-                } elseif ($book->source == 'Expedia') {
-                    if ($todays > $chackdate && $todays < $chackdatenew) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } elseif ($todays > $chackdate && $todays >= $chackdatenew) {
-                        $ota = round((($percentage / 100) * $new_ota1), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
-                } elseif ($book->source == 'Long Term Rental') {
-                    $ota = number_format(0.00, 2);
+                $ota = EzeePricing::marketingFee(
+                    $book->source,
+                    $book->price_night * $nights,
+                    $book->cleaning_fee,
+                    $book->sst,
+                    $book->sst_cf,
+                    $todays ?: null
+                );
+                if ($book->source == 'Long Term Rental') {
                     $sst = 0;
-                } else {
-                    if ($todays > $chackdate) {
-                        $ota = round((($percentage / 100) * $ota_cal), 2);
-                    } else {
-                        $ota = $book->ota_fee;
-                    }
                 }
                 $events[] = [
                     'id' => $book->id,

@@ -1043,125 +1043,17 @@ class BookController extends Controller
 
 
             
-                                    // Date cutoffs matching JS constants exactly
-                                    $CHECK_DATE = '2022-11-30';      // Changed to match JS exactly
-                                    $CHECK_DATE_15 = '2023-02-01';
-                                    $CHECK_DATE_NEW = '2023-06-17';  // Changed to match JS exactly
-                                    $CHECK_DATE_NEW8 = '2023-07-01';
-                                    $SEP_DATE = '2024-09-01';       // Changed to match JS exactly
-
-                //                  
-                                    // Rate constants matching JS RATES object
-                                    $RATES = [
-                                        'DEFAULT' => 0.20,      // Default rate 20%
-                                        'BOOKING_1' => 0.18,    // Booking.com base rate
-                                        'BOOKING_2' => 0.028,   // Booking.com additional rate
-                                        'AIRBNB' => 0.159,      // Airbnb rate before Sep
-                                        'AIRBNB_SEP' => 0.15,   // Airbnb rate after Sep
-                                        'TRAVELOKA' => 0.17,    // Traveloka rate
-                                        'WALK_IN' => 0.12,      // Walk-in rate 12%
-                                        'WALK_IN8' => 0.08,     // Updated Walk-in rate 8%
-                                        'EXPEDIA' => 0.15,      // Expedia rate
-                                        'CTRIP' => 0.15         // CTrip rate
-                                    ];
-
-                                    // Calculate base values exactly like JS
-                                    $ota_cal = ($pricePerNight * $nights) + $cleaning_fee;
-                                    $ota_cal1 = $ota_cal + $tax + $sst_cf;
-                                    $ota_cal2 = $ota_cal;
-
-                                    //  $ota_cal = (($pricePerNight * $nightsThis));
-                                    //  $ota_cal1 = (($pricePerNight * $nightsThis)) + $cleaning_fee;
-                                    //  $ota_cal2 = (($pricePerNight * $nightsThis)) + $cleaning_fee + $tax + $sst_cf;
-                                    if (in_array($request->source, ['Walk-in', 'Walk In', 'PMS', 'Website'])) {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && !$date > new DateTime($CHECK_DATE_15)) {
-                                            // Period: after 2022-11-30 but not after 2023-02-01
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_15) && $date < new DateTime($CHECK_DATE_NEW8)) {
-                                            // Period: after 2023-02-01 but before 2023-07-01
-                                            $ota = floor(($RATES['WALK_IN'] * $ota_cal) * 100) / 100;
-                                        }
-                                         elseif ($date > new DateTime($CHECK_DATE_NEW8) || !$date < new DateTime($CHECK_DATE_NEW8)) {
-                                            // Period: after 2023-07-01 or not before 2023-07-01 (matching JS isAfter || !isBefore)
-                                            $ota = floor(($RATES['WALK_IN8'] * $ota_cal2) * 100) / 100;
-                                        }
-                                         else {
-                                            // Fallback: match JS formula exactly
-                                            $base = $ezee->TotalAmountAfterTax + $cleaning_fee - $tax;
-                                            $ota = floor((0.20 * $base) * 100) / 100;
-                                        }
-                                    } elseif ($request->source == 'Airbnb') {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && $date < new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_NEW) && $date < new DateTime($SEP_DATE)) {
-                                            $ota = floor(($RATES['AIRBNB'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date >= new DateTime($SEP_DATE)) {
-                                            $ota = floor(($RATES['AIRBNB_SEP'] * $ota_cal1) * 100) / 100;
-                                        } else {
-                                            $ota = floor(($RATES['AIRBNB'] * $ota_cal) * 100) / 100;
-                                        }
-                                   
-                                    } elseif (in_array($request->source, ['Booking.com', 'Booking'])) {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && $date < new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_NEW)) {
-                                            $ota1 = floor(($RATES['BOOKING_2'] * $ota_cal1) * 100) / 100;
-                                            $ota2 = floor(($RATES['BOOKING_1'] * $ota_cal2) * 100) / 100;
-                                            $ota = floor(($ota1 + $ota2) * 100) / 100;
-                                        } else {
-                                            $ota = floor((0.205 * $ota_cal) * 100) / 100;
-                                        }
-                                    } elseif ($request->source == 'Agoda') {
-                                        $ota = 0; // Agoda shows 0 OTA fee in JS
-                                    } elseif ($request->source == 'Traveloka') {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && $date < new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = floor(($RATES['TRAVELOKA'] * $ota_cal1) * 100) / 100;
-                                        } else {
-                                            $ota = floor(0.18 * $ota_cal * 100) / 100;
-                                        }
-                                    } elseif (in_array($request->source, ['Trip.com', 'CTrip.com', 'Ctrip.com', 'CTrip', 'Ctrip'])) {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && $date < new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_NEW)) {
-                                            $ota = 0;
-                                        } else {
-                                            $ota = floor(($RATES['CTRIP'] * $ota_cal) * 100) / 100;
-                                        }
-                                    } elseif ($request->source == 'Expedia') {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE_NEW)) {
-                                            // Period: after new check date
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal1) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE)) {
-                                            // Period: after check date
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } else {
-                                            // Default Expedia rate
-                                            $ota = floor(($RATES['EXPEDIA'] * $ota_cal) * 100) / 100;
-                                        }
-                                    } elseif (in_array($request->source, ['Long Term Rental', 'Tiket.com', 'owner', 'Owner', 'Agoda'])) {
-                                        // These sources have no OTA fee
-                                        $ota = 0;
-                                    } else {
-                                        $date = new DateTime($todays);
-                                        if ($date > new DateTime($CHECK_DATE) && $date < new DateTime($CHECK_DATE_NEW)) {
-                                            // Period: after check date but before new check date
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-                                        } elseif ($date > new DateTime($CHECK_DATE_NEW)) {
-                                            // Period: after new check date
-                                            $ota = floor(($RATES['DEFAULT'] * $ota_cal1) * 100) / 100;
-                                        } else {
-                                            // Default 10% rate
-                                            $ota = floor((0.1 * $ota_cal) * 100) / 100;
-                                        }
-                                 }
+                                    // Rates live in EzeePricing so the assignment stores exactly what
+                                    // the EZEE list previews. NOTE: uses the full-stay night count,
+                                    // matching the previous behaviour of this block.
+                                    $ota = EzeePricing::marketingFee(
+                                        $request->source,
+                                        $pricePerNight * $nights,
+                                        $cleaning_fee,
+                                        $tax,
+                                        $sst_cf,
+                                        $todays
+                                    );
                                  
                                               $discount = ($i == 1) ? ($request->discount_fee ?? 0.00) : 0.00;
                                  $total = ($pricePerNight * $nightsThis) + $cleaning_fee + $tax + $sst_cf - $discount;  
@@ -1489,105 +1381,15 @@ class BookController extends Controller
                     $sst_cf = 0.00;
                 }
 
-              // Date constants
-$CHECK_DATE = '2022-11-30';
-$CHECK_DATE_15 = '2023-02-01';
-$CHECK_DATE_NEW = '2023-06-17';
-$CHECK_DATE_NEW8 = '2023-07-01';
-$SEP_DATE = '2024-09-01';
-
-// Rate constants
-$RATES = [
-    'DEFAULT' => 0.20,      // Default rate 20%
-    'BOOKING_1' => 0.18,    // Booking.com base rate
-    'BOOKING_2' => 0.028,   // Booking.com additional rate
-    'AIRBNB' => 0.159,      // Airbnb rate before Sep
-    'AIRBNB_SEP' => 0.15,   // Airbnb rate after Sep
-    'TRAVELOKA' => 0.17,    // Traveloka rate
-    'WALK_IN' => 0.12,      // Walk-in rate 12%
-    'WALK_IN8' => 0.08,     // Updated Walk-in rate 8%
-    'EXPEDIA' => 0.15,      // Expedia rate
-    'CTRIP' => 0.15         // CTrip rate
-];
-
-// Calculate base values
-$ota_cal = ($pricePerNight * $nights) + $ezee->TotalExtraCharge;
-$ota_cal1 = $ota_cal + $tax + $sst_cf;
-$ota_cal2 = $ota_cal;
-
-// Get booking date
-$bookingDate = new DateTime($ezee->created_at->format('Y-m-d'));
-
-// Handle different booking sources
-$source = trim($ezee->Source);
-if (in_array($source, ['Walk-in', 'Walk In', 'PMS', 'Website'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate <= new DateTime($CHECK_DATE_15)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate > new DateTime($CHECK_DATE_15) && $bookingDate < new DateTime($CHECK_DATE_NEW8)) {
-        $ota = floor(($RATES['WALK_IN'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW8)) {
-        $ota = floor(($RATES['WALK_IN8'] * $ota_cal2) * 100) / 100;
-    } else {
-        $base = $ezee->TotalAmountAfterTax + $ezee->TotalExtraCharge - $tax;
-        $ota = floor((0.18 * $base) * 100) / 100;
-    }
-} elseif ($source === 'Airbnb') {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW) && $bookingDate < new DateTime($SEP_DATE)) {
-        $ota = floor(($RATES['AIRBNB'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($SEP_DATE)) {
-        $ota = floor(($RATES['AIRBNB_SEP'] * $ota_cal1) * 100) / 100;
-    } else {
-        $ota = floor(($RATES['AIRBNB'] * $ota_cal) * 100) / 100;
-    }
-} elseif (in_array($source, ['Booking.com', 'Booking'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota1 = floor(($RATES['BOOKING_2'] * $ota_cal1) * 100) / 100;
-        $ota2 = floor(($RATES['BOOKING_1'] * $ota_cal2) * 100) / 100;
-        $ota = floor(($ota1 + $ota2) * 100) / 100;
-    } else {
-        $ota = floor((0.205 * $ota_cal) * 100) / 100;
-    }
-} elseif ($source === 'Agoda') {
-    $ota = 0;
-} elseif ($source === 'Traveloka') {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['TRAVELOKA'] * $ota_cal1) * 100) / 100;
-    } else {
-        $ota = floor((0.18 * $ota_cal) * 100) / 100;
-    }
-} elseif (in_array($source, ['Trip.com', 'CTrip.com', 'Ctrip.com', 'CTrip', 'Ctrip'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = 0;
-    } else {
-        $ota = floor(($RATES['CTRIP'] * $ota_cal) * 100) / 100;
-    }
-} elseif ($source === 'Expedia') {
-    if ($bookingDate > new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal1) * 100) / 100;
-    } elseif ($bookingDate > new DateTime($CHECK_DATE)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } else {
-        $ota = floor(($RATES['EXPEDIA'] * $ota_cal) * 100) / 100;
-    }
-} elseif (in_array($source, ['Long Term Rental', 'Tiket.com', 'owner', 'Owner'])) {
-    $ota = 0;
-} else {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal1) * 100) / 100;
-    } else {
-        $ota = floor((0.1 * $ota_cal) * 100) / 100;
-    }
-}
+// Rates live in EzeePricing so every screen agrees on the fee.
+$ota = EzeePricing::marketingFee(
+    $ezee->Source,
+    $pricePerNight * $nights,
+    $ezee->TotalExtraCharge,
+    $tax,
+    $sst_cf,
+    $ezee->created_at->format('Y-m-d')
+);
 
 // Calculate total
 $total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->TotalDiscount;
@@ -1636,100 +1438,15 @@ $total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->To
             } else {
                 $tax = round(($ezee->TotalAmountBeforeTax * 0.08), 2);
             }
-       // Date constants
-$CHECK_DATE = '2022-11-30';
-$CHECK_DATE_15 = '2023-02-01';
-$CHECK_DATE_NEW = '2023-06-17';
-$CHECK_DATE_NEW8 = '2023-07-01';
-$SEP_DATE = '2024-09-01';
-
-// Rate constants
-$RATES = [
-    'DEFAULT' => 0.20,      // Default rate 20%
-    'BOOKING_1' => 0.18,    // Booking.com base rate
-    'BOOKING_2' => 0.028,   // Booking.com additional rate
-    'AIRBNB' => 0.159,      // Airbnb rate
-    'TRAVELOKA' => 0.17,    // Traveloka rate
-    'WALK_IN' => 0.12,      // Walk-in rate 12%
-    'WALK_IN8' => 0.08,     // Updated Walk-in rate 8%
-    'EXPEDIA' => 0.15,      // Expedia rate
-    'CTRIP' => 0.15         // CTrip rate
-];
-
-// Calculate base values
-$ota_cal = ($pricePerNight * $nights) + $ezee->TotalExtraCharge;
-$ota_cal1 = $ota_cal + $tax + $sst_cf;
-$ota_cal2 = $ota_cal;
-
-// Get booking date
-$bookingDate = new DateTime($ezee->created_at->format('Y-m-d'));
-
-// Handle different booking sources
-$source = trim($ezee->Source);
-if (in_array($source, ['Walk-in', 'Walk In', 'PMS', 'Website'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate <= new DateTime($CHECK_DATE_15)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate > new DateTime($CHECK_DATE_15) && $bookingDate < new DateTime($CHECK_DATE_NEW8)) {
-        $ota = floor(($RATES['WALK_IN'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW8)) {
-        $ota = floor(($RATES['WALK_IN8'] * $ota_cal1) * 100) / 100;
-    } else {
-        $ota = (($pricePerNight * $nights) + $ezee->TotalExtraCharge) * 0.1;
-    }
-} elseif ($source === 'Airbnb') {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['AIRBNB'] * $ota_cal1) * 100) / 100;
-    } else {
-        $ota = ($ezee->TotalAmountBeforeTax + $ezee->TotalExtraCharge) * 0.159;
-    }
-} elseif (in_array($source, ['Booking.com', 'Booking'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota1 = floor(($RATES['BOOKING_1'] * $ota_cal1) * 100) / 100;
-        $ota2 = floor(($RATES['BOOKING_2'] * $ota_cal2) * 100) / 100;
-        $ota = floor(($ota1 + $ota2) * 100) / 100;
-    } else {
-        $base = ($pricePerNight * $nights) + $ezee->TotalExtraCharge;
-        $ota = $base * 0.18 + $base * 0.025 + (($base * 0.18 + $base * 0.025) * 0.06);
-    }
-} elseif ($source === 'Agoda') {
-    $ota = 0;
-} elseif ($source === 'Traveloka') {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['TRAVELOKA'] * $ota_cal2) * 100) / 100;
-    } else {
-        $ota = (($pricePerNight * $nights) + $ezee->TotalExtraCharge) * 0.18;
-    }
-} elseif (in_array($source, ['Trip.com', 'CTrip.com', 'Ctrip.com', 'CTrip', 'Ctrip'])) {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = 0;
-    } else {
-        $ota = floor(($RATES['CTRIP'] * $ota_cal) * 100) / 100;
-    }
-} elseif ($source === 'Expedia') {
-    if ($bookingDate > new DateTime($CHECK_DATE) && $bookingDate < new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } elseif ($bookingDate >= new DateTime($CHECK_DATE_NEW)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal2) * 100) / 100;
-    } else {
-        $ota = 0;
-    }
-} elseif ($source === 'Long Term Rental') {
-    $ota = 0;
-} else {
-    if ($bookingDate > new DateTime($CHECK_DATE)) {
-        $ota = floor(($RATES['DEFAULT'] * $ota_cal) * 100) / 100;
-    } else {
-        $ota = (($pricePerNight * $nights) + $ezee->TotalExtraCharge) * 0.1;
-    }
-}
+// Rates live in EzeePricing so every screen agrees on the fee.
+$ota = EzeePricing::marketingFee(
+    $ezee->Source,
+    $pricePerNight * $nights,
+    $ezee->TotalExtraCharge,
+    $tax,
+    $sst_cf,
+    $ezee->created_at->format('Y-m-d')
+);
 
 // Calculate total (simplified since all conditions were the same)
 $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf - $ezee->TotalDiscount;
