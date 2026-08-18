@@ -48,6 +48,9 @@
     </div>
 </div>
 
+{{-- Recent Bookings removed on request. The controller still provides
+     $recentBookings, so restoring this only needs the comment markers gone. --}}
+{{--
 <div class="card">
     <div class="card-header">
         <h2>Recent Bookings</h2>
@@ -91,4 +94,5 @@
         </table>
     </div>
 </div>
+--}}
 @endsection

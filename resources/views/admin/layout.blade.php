@@ -179,10 +179,11 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
     </a>
     @endif
     @if(admin_can('finance.view'))
-    <a href="/admin/payment/upcoming" class="sidebar-link {{ request()->is('admin/payment*') ? 'active' : '' }}">
+    {{-- Payments hidden on request; the route still works if visited directly. --}}
+    {{-- <a href="/admin/payment/upcoming" class="sidebar-link {{ request()->is('admin/payment*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Payments
-    </a>
+    </a> --}}
     <a href="/admin/listing/chart/report" class="sidebar-link {{ request()->is('admin/listing/chart/report*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Monthly Report
@@ -218,7 +219,10 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
         Historical API
     </a>
     @endif
-    @if(admin_can('bookings.view'))
+    {{-- Listing Approval and Approvals hidden on request; the @if wrapper goes
+         with them since these were its only two entries. Routes still work if
+         visited directly. --}}
+    {{-- @if(admin_can('bookings.view'))
     <a href="/admin/approval/month_wise" class="sidebar-link {{ request()->is('admin/approval/month*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
         Listing Approval
@@ -227,7 +231,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Approvals
     </a>
-    @endif
+    @endif --}}
 
     @if(admin_can('owners.view') || admin_can('users.view') || admin_can('roles.manage'))
     <div class="sidebar-section">People</div>
