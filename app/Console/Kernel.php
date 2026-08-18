@@ -35,6 +35,9 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')
         //          ->hourly();
+        // Runs for several minutes against the EZEE API, so it must never
+        // overlap itself — everyMinute() previously stacked one run per minute
+        // and saturated CPU.
         $schedule->command('hour:update')
                 ->hourly()
                 ->withoutOverlapping(120);
