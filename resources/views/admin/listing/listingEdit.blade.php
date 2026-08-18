@@ -184,7 +184,7 @@
 
             @foreach([['water','waterO','Water'],['internet','internetO','Internet'],['electricity','electricityO','Electricity'],['mfsf','mfsfO','MF + SF']] as [$field, $flag, $label])
                 @php $current = old($field, $listing->{$field}); @endphp
-                <div class="form-row" style="align-items:center">
+                <div class="form-row" style="grid-template-columns:220px 1fr;align-items:center">
                     <div class="form-group" style="margin-bottom:12px">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                             <input type="checkbox" name="{{ $flag }}" value="1"
@@ -210,7 +210,7 @@
             <div class="font-600" style="font-size:14px;margin-bottom:10px">Charges &amp; Deposits</div>
 
             @foreach([['insurance','Insurance'],['promo','Promo Code'],['discount','Discount']] as [$k, $label])
-                <div class="form-row" style="align-items:center">
+                <div class="form-row" style="grid-template-columns:220px 1fr 1fr;align-items:center">
                     <div class="form-group" style="margin-bottom:12px">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                             <input type="checkbox" name="{{ $k }}_has" value="1"
@@ -238,7 +238,7 @@
                 </div>
             @endforeach
 
-            <div class="form-row">
+            <div class="form-row-3">
                 <div class="form-group">
                     <label class="form-label" for="advance_rental">Advance Rental</label>
                     <input type="number" step="0.01" min="0" id="advance_rental" name="advance_rental" class="form-input"
