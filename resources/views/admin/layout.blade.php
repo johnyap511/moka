@@ -106,7 +106,10 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .form-help{font-size:12px;color:var(--text-secondary);margin-top:4px}
 /* Type-ahead combobox (see x-combobox partial) */
 .combo{position:relative}
-.combo-list{display:none;position:absolute;z-index:60;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;max-height:240px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+/* Fixed, not absolute: .card uses overflow:hidden for its rounded corners,
+   which would otherwise clip the dropdown. Position comes from JS. z-index
+   clears the assign modal at 200. */
+.combo-list{display:none;position:fixed;z-index:300;margin:0;padding:4px;list-style:none;max-height:240px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .combo-list.open{display:block}
 .combo-list li{padding:8px 10px;font-size:13px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .combo-list li[aria-selected="true"],.combo-list li:hover{background:#f1f5f9}
@@ -369,6 +372,33 @@ window.makeCombo = function (opts) {
         search.setAttribute('aria-expanded', 'false');
         active = -1;
     }
+
+    // The list is position:fixed to escape ancestor overflow, so it has to be
+    // placed manually, and re-placed while it is open.
+    function place() {
+        var r = search.getBoundingClientRect(),
+            gap = 4,
+            below = window.innerHeight - r.bottom,
+            above = r.top;
+
+        list.style.width = r.width + 'px';
+        list.style.left  = r.left + 'px';
+
+        if (below < 160 && above > below) {          // not enough room: flip up
+            list.style.top       = 'auto';
+            list.style.bottom    = (window.innerHeight - r.top + gap) + 'px';
+            list.style.maxHeight = Math.max(120, Math.min(240, above - 12)) + 'px';
+        } else {
+            list.style.bottom    = 'auto';
+            list.style.top       = (r.bottom + gap) + 'px';
+            list.style.maxHeight = Math.max(120, Math.min(240, below - 12)) + 'px';
+        }
+    }
+
+    function reposition() { if (list.classList.contains('open')) place(); }
+    window.addEventListener('resize', reposition);
+    // Capture phase so scrolling any ancestor container repositions it too.
+    window.addEventListener('scroll', reposition, true);
     function set(item) {
         value.value  = item ? item.id : '';
         search.value = item ? item.name : '';
@@ -410,6 +440,7 @@ window.makeCombo = function (opts) {
         }
         list.classList.add('open');
         search.setAttribute('aria-expanded', 'true');
+        place();
         highlight(matches.length ? 0 : -1);
     }
 
