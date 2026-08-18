@@ -25,8 +25,40 @@
         <h2>Listing Details</h2>
     </div>
     <div class="card-body">
-        <form action="/admin/listing" method="POST">
+        <form action="/admin/listing" method="POST" enctype="multipart/form-data">
             @csrf
+
+            {{-- Without these the listing is created unowned: store() reads
+                 user_id and user_listing, but nothing was sending them. --}}
+            @isset($user)
+                <input type="hidden" name="user_id" value="{{ $user->id }}">
+                <input type="hidden" name="user_listing" value="1">
+            @endisset
+
+            @empty($user)
+            <div class="form-group">
+                <label class="form-label" for="user_id">Owner</label>
+                <select id="user_id" name="user_id" class="form-select">
+                    <option value="">— No owner —</option>
+                    @foreach($owners ?? [] as $o)
+                        <option value="{{ $o->id }}" {{ (string) old('user_id') === (string) $o->id ? 'selected' : '' }}>
+                            {{ $o->email ?: trim($o->name . ' ' . $o->last_name) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endempty
+
+            {{-- Rental category, required by store() via ListingCategory. --}}
+            <div class="form-group">
+                <label class="form-label">Rental Category</label>
+                @foreach(\App\Support\ListingOptions::CATEGORIES as $cid => $label)
+                    <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer">
+                        <input type="radio" name="category" value="{{ $cid }}" {{ (int) old('category', 1) === $cid ? 'checked' : '' }}>
+                        <span>{{ $label }}</span>
+                    </label>
+                @endforeach
+            </div>
 
             {{-- Basic Info --}}
             <div class="form-row">
@@ -100,6 +132,32 @@
                     <label class="form-label" for="cleaning_fee">Cleaning Fee (RM)</label>
                     <input type="number" id="cleaning_fee" name="cleaning_fee" class="form-input"
                            value="{{ old('cleaning_fee') }}" placeholder="0.00" min="0" step="0.01">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="agent_code">Agent Code <span style="color:var(--red)">*</span></label>
+                    <input type="text" id="agent_code" name="agent_code" class="form-input" value="{{ old('agent_code') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="room_type">Room Type</label>
+                    <input type="text" id="room_type" name="room_type" class="form-input" value="{{ old('room_type') }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="tourism_tax_type">Tourism Tax <span style="color:var(--red)">*</span></label>
+                    <select id="tourism_tax_type" name="tourism_tax_type" class="form-select" required>
+                        @foreach(\App\Support\ListingOptions::TOURISM_TAX_TYPES as $v => $label)
+                            <option value="{{ $v }}" {{ old('tourism_tax_type') === $v ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="tourism_tax_amount">Amount <span style="color:var(--red)">*</span></label>
+                    <input type="number" id="tourism_tax_amount" name="tourism_tax_amount" class="form-input" value="{{ old('tourism_tax_amount', '0.00') }}" min="0" step="0.01" required>
                 </div>
             </div>
 

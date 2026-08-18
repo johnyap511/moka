@@ -55,7 +55,21 @@ class ListingController extends Controller
     public function create()
     {
         $groups = Group::all();
-        return view('admin.listing.listingCreate', compact('groups'));
+        $owners = $this->owners();
+        return view('admin.listing.listingCreate', compact('groups', 'owners'));
+    }
+
+    /**
+     * Owners are role 3. The listing forms need them so listings.user_id can be
+     * set — without it a listing is created unowned and cannot be attached to
+     * an owner from the UI at all.
+     */
+    private function owners()
+    {
+        return User::join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->where('role_id', 3)
+            ->orderBy('users.email')
+            ->get(['users.id', 'users.name', 'users.last_name', 'users.email']);
     }
 
     /**
@@ -178,13 +192,15 @@ class ListingController extends Controller
     public function edit($id)
     {
         $groups             = Group::all();
+        $owners             = $this->owners();
         $listing            = Listing::find($id);
         $categories         = ListingCategory::where('listing_id', $id)->pluck('category_id')->toArray();
+        $listingGroup       = ListingGroup::where('listing_id', $id)->first();
         $listingPriceDetail = ListingPriceDetail::where('listing_id', $id)->first();
         if (empty($listingPriceDetail)) {
             $listingPriceDetail = ListingPriceDetail::create(['listing_id' => $id]);
         }
-        return view('admin.listing.listingEdit', compact('listing', 'categories', 'groups', 'listingPriceDetail'));
+        return view('admin.listing.listingEdit', compact('listing', 'categories', 'groups', 'owners', 'listingGroup', 'listingPriceDetail'));
     }
 
     /**

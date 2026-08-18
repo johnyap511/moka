@@ -6,6 +6,8 @@ use App\Announcement;
 use App\Group;
 use App\Listing;
 use App\ListingCategory;
+use App\ListingGroup;
+use App\ListingPriceDetail;
 use App\Role;
 use App\User;
 use Illuminate\Http\Request;
@@ -174,8 +176,19 @@ class OwnerController extends Controller
         $user = User::find($id);
         $listing = Listing::find($listingId);
         $groups = Group::all();
-        $categories = ListingCategory::where('listing_id', $id)->pluck('category_id')->toArray();
-        return view('admin.listing.listingEdit', compact('listing', 'user', 'groups', 'categories'));
+        // Was keyed on $id (the owner) rather than $listingId, so the rental
+        // category never loaded on this route.
+        $categories = ListingCategory::where('listing_id', $listingId)->pluck('category_id')->toArray();
+        $owners = User::join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->where('role_id', 3)
+            ->orderBy('users.email')
+            ->get(['users.id', 'users.name', 'users.last_name', 'users.email']);
+        $listingGroup = ListingGroup::where('listing_id', $listingId)->first();
+        $listingPriceDetail = ListingPriceDetail::where('listing_id', $listingId)->first();
+        if (empty($listingPriceDetail)) {
+            $listingPriceDetail = ListingPriceDetail::create(['listing_id' => $listingId]);
+        }
+        return view('admin.listing.listingEdit', compact('listing', 'user', 'groups', 'categories', 'owners', 'listingGroup', 'listingPriceDetail'));
     }
 
     /**
