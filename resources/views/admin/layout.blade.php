@@ -104,6 +104,14 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .form-help{font-size:12px;color:var(--text-secondary);margin-top:4px}
+/* Type-ahead combobox (see x-combobox partial) */
+.combo{position:relative}
+.combo-list{display:none;position:absolute;z-index:60;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;max-height:240px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.combo-list.open{display:block}
+.combo-list li{padding:8px 10px;font-size:13px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combo-list li[aria-selected="true"],.combo-list li:hover{background:#f1f5f9}
+.combo-list li.empty{color:var(--text-secondary);cursor:default}
+.combo-list li.empty:hover{background:transparent}
 .form-error{font-size:12px;color:var(--red);margin-top:4px}
 /* Search bar */
 .search-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:240px}
@@ -336,6 +344,104 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
     @yield('content')
 </main>
 
+<script>
+/**
+ * Type-ahead select. Renders over a hidden input so the posted value stays the
+ * record id while the visible field is free text.
+ *
+ * opts: { id, items:[{id,name}], required, submitOnSelect }
+ * Returns { reset, close, set } so callers can drive it (the EZEE assign modal
+ * resets it each time it opens).
+ */
+window.makeCombo = function (opts) {
+    var search = document.getElementById(opts.id + '-search'),
+        value  = document.getElementById(opts.id + '-value'),
+        list   = document.getElementById(opts.id + '-list'),
+        error  = document.getElementById(opts.id + '-error'),
+        items  = opts.items || [],
+        form   = search ? search.closest('form') : null,
+        matches = [], active = -1;
+
+    if (!search) return { reset: function () {}, close: function () {}, set: function () {} };
+
+    function close() {
+        list.classList.remove('open');
+        search.setAttribute('aria-expanded', 'false');
+        active = -1;
+    }
+    function set(item) {
+        value.value  = item ? item.id : '';
+        search.value = item ? item.name : '';
+        if (error) error.style.display = 'none';
+    }
+    function reset() { set(null); close(); }
+    function choose(item) {
+        set(item);
+        close();
+        if (opts.submitOnSelect && form) form.submit();
+    }
+    function highlight(i) {
+        active = i;
+        Array.prototype.forEach.call(list.children, function (li, n) {
+            li.setAttribute('aria-selected', n === i ? 'true' : 'false');
+        });
+        if (i >= 0 && list.children[i]) list.children[i].scrollIntoView({ block: 'nearest' });
+    }
+    function render(q) {
+        q = (q || '').toLowerCase().trim();
+        matches = q ? items.filter(function (u) {
+            return (u.name || '').toLowerCase().indexOf(q) !== -1;
+        }) : items.slice();
+
+        list.innerHTML = '';
+        if (!matches.length) {
+            var none = document.createElement('li');
+            none.className = 'empty';
+            none.textContent = 'No match';
+            list.appendChild(none);
+        } else {
+            matches.slice(0, 50).forEach(function (u) {
+                var li = document.createElement('li');
+                li.textContent = u.name;
+                li.setAttribute('role', 'option');
+                li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(u); });
+                list.appendChild(li);
+            });
+        }
+        list.classList.add('open');
+        search.setAttribute('aria-expanded', 'true');
+        highlight(matches.length ? 0 : -1);
+    }
+
+    search.addEventListener('input', function () { value.value = ''; render(this.value); });
+    search.addEventListener('focus', function () { render(''); this.select(); });
+    search.addEventListener('blur',  function () { setTimeout(close, 120); });
+    search.addEventListener('keydown', function (e) {
+        var last = Math.min(matches.length, 50) - 1;
+        if (!list.classList.contains('open') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { render(this.value); return; }
+        if (e.key === 'ArrowDown')    { e.preventDefault(); highlight(Math.min(active + 1, last)); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(Math.max(active - 1, 0)); }
+        else if (e.key === 'Enter' && list.classList.contains('open') && active >= 0 && matches[active]) {
+            e.preventDefault(); choose(matches[active]);
+        }
+        else if (e.key === 'Escape')  { close(); }
+    });
+
+    // Hidden inputs are exempt from browser constraint validation, so a
+    // required combobox has to be checked here.
+    if (opts.required && form) {
+        form.addEventListener('submit', function (e) {
+            if (!value.value) {
+                e.preventDefault();
+                if (error) error.style.display = 'block';
+                search.focus();
+            }
+        });
+    }
+
+    return { reset: reset, close: close, set: set };
+};
+</script>
 @stack('scripts')
 </body>
 </html>

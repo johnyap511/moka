@@ -49,13 +49,15 @@
     <div class="card-body" style="padding:14px 20px">
         <form method="GET" action="/admin/calendar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <label style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">Select Property:</label>
-            <select name="listing_id" class="form-input" style="min-width:280px;max-width:440px" onchange="this.form.submit()">
-                @foreach($allListings as $l)
-                    <option value="{{ $l->id }}" {{ $l->id == ($selectedId ?? '') ? 'selected' : '' }}>
-                        {{ $l->name }}
-                    </option>
-                @endforeach
-            </select>
+            @include('admin.partials.combobox', [
+                'id'             => 'property',
+                'name'           => 'listing_id',
+                'items'          => $allListings,
+                'selected'       => $selectedId ?? null,
+                'placeholder'    => 'Type to search properties…',
+                'style'          => 'min-width:280px;max-width:440px',
+                'submitOnSelect' => true,
+            ])
         </form>
     </div>
 </div>

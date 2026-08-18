@@ -13,6 +13,7 @@ th.sortable .sort-icon { margin-left:4px; opacity:.4; font-style:normal; font-si
 th.sortable.asc .sort-icon::after  { content:'▲'; opacity:1; }
 th.sortable.desc .sort-icon::after { content:'▼'; opacity:1; }
 th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
+
 </style>
 @endpush
 
@@ -165,12 +166,14 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
             @csrf
             <div class="form-group">
                 <label class="form-label">Listing / Unit</label>
-                <select name="listing_id" class="form-input" required>
-                    <option value="">— Select unit —</option>
-                    @foreach($listings as $l)
-                    <option value="{{ $l->id }}">{{ $l->name }}</option>
-                    @endforeach
-                </select>
+                @include('admin.partials.combobox', [
+                    'id'          => 'unit',
+                    'name'        => 'listing_id',
+                    'items'       => $listings,
+                    'placeholder' => 'Type to search units…',
+                    'required'    => true,
+                    'var'         => 'unitCombo',
+                ])
             </div>
             <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div class="form-group">
@@ -208,10 +211,13 @@ function openAssign(id, guest, start, end, bookId) {
     document.getElementById('assign-form').action = route;
     document.getElementById('reassign-wrap').style.display = bookId ? 'block' : 'none';
     document.getElementById('assign-modal').style.display = 'flex';
+    unitCombo.reset();
 }
 function closeAssign() {
     document.getElementById('assign-modal').style.display = 'none';
+    unitCombo.close();
 }
+
 document.getElementById('assign-modal').addEventListener('click', function(e) {
     if (e.target === this) closeAssign();
 });
