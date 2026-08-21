@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('users', 'admin_role')) {
+            return;
+        }
         Schema::table('users', function (Blueprint $table) {
             $table->string('admin_role', 30)->nullable()->after('status');
         });

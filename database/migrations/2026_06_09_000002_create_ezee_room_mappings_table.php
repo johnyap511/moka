@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('ezee_room_mappings')) {
+            return;
+        }
+
         Schema::create('ezee_room_mappings', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('ezee_group_id');

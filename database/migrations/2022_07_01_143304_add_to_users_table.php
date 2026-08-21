@@ -13,6 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
+        // Guarded: production already carries this column while its migrations
+        // table does not record this migration, so an unguarded add fails on
+        // any production import.
+        if (Schema::hasColumn('users', 'ezee_tmp')) {
+            return;
+        }
         Schema::table('users', function (Blueprint $table) {
             $table->boolean('ezee_tmp')->default(0);
         });

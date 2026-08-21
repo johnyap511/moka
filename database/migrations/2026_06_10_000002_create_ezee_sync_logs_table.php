@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('ezee_sync_logs')) {
+            return;
+        }
+
         Schema::create('ezee_sync_logs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->date('from_date');

@@ -9,8 +9,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('ezee_bookings', function (Blueprint $table) {
-            $table->string('RoomName')->nullable()->after('RoomTypeName');
-            $table->unsignedBigInteger('ezee_group_id')->nullable()->after('book_id');
+            if (! Schema::hasColumn('ezee_bookings', 'RoomName')) {
+                $table->string('RoomName')->nullable()->after('RoomTypeName');
+            }
+            if (! Schema::hasColumn('ezee_bookings', 'ezee_group_id')) {
+                $table->unsignedBigInteger('ezee_group_id')->nullable()->after('book_id');
+            }
         });
     }
 

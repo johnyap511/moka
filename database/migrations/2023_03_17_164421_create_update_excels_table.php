@@ -13,6 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('update_excels')) {
+            return;
+        }
+
         Schema::create('update_excels', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('booking_id')->nullable();
