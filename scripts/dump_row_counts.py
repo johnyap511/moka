@@ -3,13 +3,15 @@
 Count the rows each INSERT in a MySQL dump would create, per table.
 
 Compare against the live database to confirm an import captured everything.
-Written for phpMyAdmin's extended-insert format, where one statement carries
-many tuples:
+Handles phpMyAdmin's extended-insert format, where one statement carries many
+tuples:
 
     INSERT INTO `t` (a, b) VALUES (1,'x'),(2,'y'),(3,'z');
 
-Counting tuples needs a real scan rather than a regex, because parentheses,
-commas and escaped quotes all appear inside string values.
+String literals are collapsed first so the tuple scan never has to reason about
+commas, parentheses or escaped quotes appearing inside values. Collapsing with
+a regex keeps the work in C rather than a per-character Python loop, which
+matters on dumps of any size.
 
     python3 scripts/dump_row_counts.py dump.sql [table ...]
 """
@@ -17,37 +19,9 @@ commas and escaped quotes all appear inside string values.
 import sys
 import re
 
-INSERT_RE = re.compile(r'INSERT\s+INTO\s+`([^`]+)`', re.IGNORECASE)
-
-
-def count_tuples(text, start):
-    """Count top-level (...) groups from `start` until the statement ends."""
-    i, n = start, len(text)
-    depth = 0
-    rows = 0
-    in_str = False
-    quote = ''
-    while i < n:
-        c = text[i]
-        if in_str:
-            if c == '\\':
-                i += 2                      # escaped char, skip both
-                continue
-            if c == quote:
-                in_str = False
-        elif c in ("'", '"'):
-            in_str = True
-            quote = c
-        elif c == '(':
-            depth += 1
-        elif c == ')':
-            depth -= 1
-            if depth == 0:
-                rows += 1
-        elif c == ';' and depth == 0:
-            break
-        i += 1
-    return rows, i
+INSERT_RE = re.compile(r'INSERT\s+INTO\s+`([^`]+)`[^;]*?VALUES', re.IGNORECASE)
+# Single- or double-quoted literal, honouring backslash escapes.
+STRING_RE = re.compile(r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"", re.DOTALL)
 
 
 def main():
@@ -61,19 +35,42 @@ def main():
     with open(path, encoding='utf-8', errors='replace') as fh:
         text = fh.read()
 
+    # Collapse every string literal to '' so what remains is pure structure.
+    text = STRING_RE.sub("''", text)
+
     counts = {}
     for m in INSERT_RE.finditer(text):
         table = m.group(1)
         if wanted and table not in wanted:
             continue
-        vpos = text.upper().find('VALUES', m.end())
-        if vpos == -1:
-            continue
-        rows, _ = count_tuples(text, vpos)
+
+        # Walk from VALUES to the statement's semicolon, counting top-level
+        # groups. No quotes survive the collapse, so depth alone is enough.
+        depth = 0
+        rows = 0
+        i = m.end()
+        n = len(text)
+        while i < n:
+            c = text[i]
+            if c == '(':
+                depth += 1
+            elif c == ')':
+                depth -= 1
+                if depth == 0:
+                    rows += 1
+            elif c == ';' and depth == 0:
+                break
+            i += 1
+
         counts[table] = counts.get(table, 0) + rows
 
+    if not counts:
+        print('no matching INSERT statements found')
+        return 1
+
+    width = max(len(t) for t in counts)
     for table in sorted(counts):
-        print("%-30s %d" % (table, counts[table]))
+        print('%-*s %d' % (width, table, counts[table]))
     return 0
 
 
