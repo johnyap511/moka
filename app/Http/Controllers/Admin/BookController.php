@@ -1429,10 +1429,6 @@ $total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->To
             }
         } else {
             $todays = $ezee->created_at->format('Y-m-d');
-            $chackdate = '2022-11-30';
-            $chackdate15 = '2023-02-01';
-            $chackdatenew = '2023-06-17';
-            $chackdatenew8 = '2023-07-01';
             // $cal_rate =  (($pricePerNight / $nights));
             if ($nights != 0) {
                 $cal_rate = (($pricePerNight / $nights));

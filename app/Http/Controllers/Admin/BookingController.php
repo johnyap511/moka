@@ -1083,20 +1083,6 @@ private function getActionButtons($book)
             'Folio No.', 'First Name', 'Last Name', 'Listing Name', 'Arrival', 'Departure', 'Nights', 'Reservation Source', 'Price per Night', 'Cleaning Fee', 'SST(CF)',
             'OTA', 'SST', 'Total', 'Remarks',
         ];
-        $chackdate = '2022-11-30';
-        $chackdate15 = '2023-02-01';
-        $chackdatenew = '2023-06-17';
-        $chackdatenew8 = '2023-07-01';
-        $sep = '2024-09-01';
-        $percentage = 20;
-        $percentageTraveloka = 17;
-        $percentageAirbnb = 15.9;
-        $percentageAirbnb_sep = 15;
-        $percentageBooking1 = 18;
-        $percentageBooking2 = 2.8;
-        $percentage_walkIn = 12;
-        $percentage_walkIn8 = 8;
-        $tiket = 17;
         $x = 2;
         $sst = 0;
         foreach ($bookings as $booking) {
@@ -1273,20 +1259,6 @@ private function getActionButtons($book)
                 'OTA', 'SST', 'Ezee Folio No', 'Total', 'Remarks',
             ];
 
-            $chackdate = '2022-11-30';
-            $chackdate15 = '2023-02-01';
-            $chackdatenew = '2023-06-17';
-            $chackdatenew8 = '2023-07-01';
-            $sep = '2024-09-01';
-            $percentage = 20;
-            $percentageTraveloka = 17;
-            $percentageAirbnb = 15.9;
-            $percentageAirbnb_sep = 15;
-            $percentageBooking1 = 18;
-            $percentageBooking2 = 2.8;
-            $percentage_walkIn = 12;
-            $percentage_walkIn8 = 8;
-            $tiket = 17;
             $x = 2;
             $sst = 0;
             foreach ($bookings as $booking) {
@@ -1395,21 +1367,6 @@ private function getActionButtons($book)
         ];
         // $exportData[1]=['Folio No.','First Name','Last Name','Listing Name','Arrival','Departure','Nights','Reservation Source','Price per Night','Cleaning Fee',
         // 'OTA','SST','Total','Remarks'];
-        $chackdate = '2022-11-30';
-        $chackdate15 = '2023-02-01';
-        $chackdatenew = '2023-06-17';
-        $chackdatenew8 = '2023-07-01';
-        $sep = '2024-09-01';
-        $percentage = 20;
-        $percentageTraveloka = 17;
-        $percentageTraveloka_sep = 15;
-        $percentageAirbnb = 15.9;
-        $percentageAirbnb_sep = 15.9;
-        $percentageBooking1 = 18;
-        $percentageBooking2 = 2.8;
-        $percentage_walkIn = 12;
-        $percentage_walkIn8 = 8;
-        $tiket = 17;
         $x = 2;
         $sst = 0;
         foreach ($bookings as $booking) {

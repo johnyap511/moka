@@ -608,19 +608,6 @@ class ListingController extends Controller
             if ($checkIn != $checkOut && $checkOut <= $thisMonthEnd) {
                 $todays               = $book->created_at->format('Y-m-d');
                 $chackdate            = '2022-11-30';
-                $chackdate15          = '2023-02-01';
-                $chackdatenew         = '2023-06-17';
-                $chackdatenew8        = '2023-07-01';
-                $sep                  = '2024-09-01';
-                $percentage           = 20;
-                $percentageTraveloka  = 17;
-                $percentageAirbnb     = 15.9;
-                $percentageAirbnb_sep = 15;
-                $percentageBooking1   = 18;
-                $percentageBooking2   = 2.8;
-                $percentage_walkIn    = 12;
-                $percentage_walkIn8   = 8;
-                $tiket                = 17;
                 $ota_cal              = (($book->price_night * $nights));
                 $new_ota              = (($book->price_night * $nights)) + $book->cleaning_fee;
                 $new_ota1             = (($book->price_night * $nights)) + $book->cleaning_fee + $book->sst + $book->sst_cf;
@@ -2276,19 +2263,6 @@ class ListingController extends Controller
             if ($checkIn != $checkOut && $checkOut <= $thisMonthEnd) {
                 $todays               = $book->created_at->format('Y-m-d');
                 $chackdate            = '2022-11-30';
-                $chackdate15          = '2023-02-01';
-                $chackdatenew         = '2023-06-17';
-                $chackdatenew8        = '2023-07-01';
-                $sep                  = '2024-09-01';
-                $percentage           = 20;
-                $percentageTraveloka  = 17;
-                $percentageAirbnb     = 15.9;
-                $percentageAirbnb_sep = 15;
-                $percentageBooking1   = 18;
-                $percentageBooking2   = 2.8;
-                $percentage_walkIn    = 12;
-                $percentage_walkIn8   = 8;
-                $tiket                = 17;
                 $ota_cal              = (($book->price_night * $nights));
                 $new_ota              = (($book->price_night * $nights)) + $book->cleaning_fee;
                 $new_ota1             = (($book->price_night * $nights)) + $book->cleaning_fee + $book->sst + $book->sst_cf;
@@ -4706,19 +4680,6 @@ class ListingController extends Controller
             if ($checkIn != $checkOut && $checkOut <= $thisMonthEnd) {
                 $todays               = $book->created_at->format('Y-m-d');
                 $chackdate            = '2022-11-30';
-                $chackdate15          = '2023-02-01';
-                $chackdatenew         = '2023-06-17';
-                $chackdatenew8        = '2023-07-01';
-                $sep                  = '2024-09-01';
-                $percentage           = 20;
-                $percentageTraveloka  = 17;
-                $percentageAirbnb     = 15.9;
-                $percentageAirbnb_sep = 15;
-                $percentageBooking1   = 18;
-                $percentageBooking2   = 2.8;
-                $percentage_walkIn    = 12;
-                $percentage_walkIn8   = 8;
-                $tiket                = 17;
                 $ota_cal              = (($book->price_night * $nights));
                 $new_ota              = (($book->price_night * $nights)) + $book->cleaning_fee;
                 $new_ota1             = (($book->price_night * $nights)) + $book->cleaning_fee + $book->sst + $book->sst_cf;
@@ -5960,19 +5921,6 @@ class ListingController extends Controller
             if ($checkIn != $checkOut && $checkOut <= $thisMonthEnd) {
                 $todays               = $book->created_at->format('Y-m-d');
                 $chackdate            = '2022-11-30';
-                $chackdate15          = '2023-02-01';
-                $chackdatenew         = '2023-06-17';
-                $chackdatenew8        = '2023-07-01';
-                $sep                  = '2024-09-01';
-                $percentage           = 20;
-                $percentageTraveloka  = 17;
-                $percentageAirbnb_sep = 15;
-                $percentageAirbnb     = 15.9;
-                $percentageBooking1   = 18;
-                $percentageBooking2   = 2.8;
-                $percentage_walkIn    = 12;
-                $percentage_walkIn8   = 8;
-                $tiket                = 17;
                 $ota_cal              = (($book->price_night * $nights));
                 $new_ota              = (($book->price_night * $nights)) + $book->cleaning_fee;
                 $new_ota1             = (($book->price_night * $nights)) + $book->cleaning_fee + $book->sst + $book->sst_cf;
