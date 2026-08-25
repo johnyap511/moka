@@ -110,6 +110,16 @@
 
             <div class="form-row">
                 <div class="form-group">
+                    <label class="form-label" for="ezee_room_id">EZEE Room ID</label>
+                    <input type="text" id="ezee_room_id" name="ezee_room_id" class="form-input"
+                           placeholder="e.g. C2-07-10"
+                           value="{{ old('ezee_room_id', $listing->ezee_room_id) }}">
+                    <div class="form-help">EZEE's unit id for this listing. Bookings carrying this id assign here automatically.</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
                     <label class="form-label" for="default_price">Default Price <span style="color:var(--red)">*</span></label>
                     <input type="number" id="default_price" name="default_price" class="form-input"
                            value="{{ old('default_price', $listing->default_price) }}" min="0" step="0.01" required>

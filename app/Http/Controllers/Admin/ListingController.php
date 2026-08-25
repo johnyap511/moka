@@ -227,6 +227,7 @@ class ListingController extends Controller
             'tourism_tax_amount',
             'ezee_hotel_code',
             'ezee_auth_code',
+            'ezee_room_id',
             'room_type'
         );
         $validator = Validator::make($request->all(), [

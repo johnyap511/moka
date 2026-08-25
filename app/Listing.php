@@ -13,7 +13,7 @@ class Listing extends Model
     protected $table = 'listings';
 
     protected $fillable = [
-        'user_id','ezee_hotel_code','ezee_auth_code','name','key','title', 'address', 'profit','video',
+        'user_id','ezee_hotel_code','ezee_auth_code','ezee_room_id','name','key','title', 'address', 'profit','video',
         'agent_code', 'banner', 'type', 'default_price', 'cleaning_fee',
         'tourism_tax_type','tourism_tax_amount','room_type','status','water','internet','electricity','mfsf'
     ];

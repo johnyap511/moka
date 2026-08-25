@@ -173,10 +173,14 @@ class HistoricalApi extends Command
                                             $roomTypeName = $reserve1['BookingTran']['RoomTypeName'];
                                         }
 
-                                        if (isset($reserve1['BookingTran']['RoomName']) && !is_array($reserve1['BookingTran']['RoomName'])) {
+                                        // EZEE identifies the unit as eZeePMSRoomid (e.g. "C2-07-10").
+                                        // RoomName is absent from the booking payload; kept as a fallback
+                                        // in case that changes.
+                                        $roomName = null;
+                                        if (isset($reserve1['BookingTran']['eZeePMSRoomid']) && !is_array($reserve1['BookingTran']['eZeePMSRoomid']) && $reserve1['BookingTran']['eZeePMSRoomid'] !== '') {
+                                            $roomName = $reserve1['BookingTran']['eZeePMSRoomid'];
+                                        } elseif (isset($reserve1['BookingTran']['RoomName']) && !is_array($reserve1['BookingTran']['RoomName']) && $reserve1['BookingTran']['RoomName'] !== '') {
                                             $roomName = $reserve1['BookingTran']['RoomName'];
-                                        } else {
-                                            $roomName = NULL;
                                         }
 
                                         if (is_array($reserve1['BookingTran']['Createdatetime'])) {
@@ -360,10 +364,14 @@ class HistoricalApi extends Command
                                                 $roomTypeName = $reserve_array_value['RoomTypeName'];
                                             }
 
-                                            if (isset($reserve_array_value['RoomName']) && !is_array($reserve_array_value['RoomName'])) {
+                                            // EZEE identifies the unit as eZeePMSRoomid (e.g. "C2-07-10").
+                                            // RoomName is absent from the booking payload; kept as a fallback
+                                            // in case that changes.
+                                            $roomName = null;
+                                            if (isset($reserve_array_value['eZeePMSRoomid']) && !is_array($reserve_array_value['eZeePMSRoomid']) && $reserve_array_value['eZeePMSRoomid'] !== '') {
+                                                $roomName = $reserve_array_value['eZeePMSRoomid'];
+                                            } elseif (isset($reserve_array_value['RoomName']) && !is_array($reserve_array_value['RoomName']) && $reserve_array_value['RoomName'] !== '') {
                                                 $roomName = $reserve_array_value['RoomName'];
-                                            } else {
-                                                $roomName = NULL;
                                             }
 
                                             if (is_array($reserve_array_value['Start'])) {
