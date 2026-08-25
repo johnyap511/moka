@@ -24,6 +24,19 @@ $statusMap = [
         <p>Track and manage all property reservations</p>
     </div>
     <div class="flex gap-2">
+        <a href="/admin/booking/excel/template" class="btn btn-secondary" title="Blank workbook with the columns the import expects">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Download Template
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Import Excel
+        </button>
+        <form method="POST" action="/admin/booking/excel/import" enctype="multipart/form-data" id="import-form" style="display:none">
+            @csrf
+            <input type="file" name="file" id="import-file" accept=".csv,.xlsx,.xls"
+                   onchange="document.getElementById('import-form').submit()">
+        </form>
         <a href="/admin/booking/excel/export" class="btn btn-secondary">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Export Excel
@@ -35,22 +48,33 @@ $statusMap = [
     </div>
 </div>
 
+@isset($excelResult)
+    <div class="alert alert-success" style="margin-bottom:16px">
+        <strong>Import finished.</strong>
+        @if(is_array($excelResult) || is_object($excelResult))
+            <pre style="margin:8px 0 0;font-size:12px;white-space:pre-wrap">{{ json_encode($excelResult, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
+        @else
+            {{ $excelResult }}
+        @endif
+    </div>
+@endisset
+
 {{-- Stats --}}
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="val">{{ $totalBookings }}</div>
+        <div class="val">{{ $totalBookings ?? $books->count() }}</div>
         <div class="lbl">Total Bookings</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--teal)">{{ $confirmedCount }}</div>
+        <div class="val" style="color:var(--teal)">{{ $confirmedCount ?? 0 }}</div>
         <div class="lbl">Confirmed</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--blue)">{{ $pendingCount }}</div>
+        <div class="val" style="color:var(--blue)">{{ $pendingCount ?? 0 }}</div>
         <div class="lbl">Pending</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--text-secondary)">{{ $cancelledCount }}</div>
+        <div class="val" style="color:var(--text-secondary)">{{ $cancelledCount ?? 0 }}</div>
         <div class="lbl">Cancelled</div>
     </div>
 </div>
@@ -61,7 +85,7 @@ $statusMap = [
         <form method="GET" action="{{ request()->url() }}" class="flex gap-2 items-center" style="flex-wrap:wrap">
             <div class="search-bar" style="flex:1;min-width:180px">
                 <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search guest name…">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search booking ID, guest, property or folio no…">
             </div>
             <select name="status" class="form-select" style="width:auto;min-width:150px">
                 <option value="">All Statuses</option>
@@ -83,6 +107,32 @@ $statusMap = [
     </div>
 </div>
 
+{{-- Date-range exports. exportExcelRange switches on `action`: loaddata and
+     loaddatacheckin filter the table, exportreport and the default branch
+     download a workbook. --}}
+<div class="card" style="margin-bottom:16px">
+    <div class="card-body" style="padding:16px 20px;display:grid;gap:12px">
+
+        <form method="POST" action="/admin/booking/excel/export_range" class="flex gap-2 items-center" style="flex-wrap:wrap">
+            @csrf
+            <label class="form-label" style="margin:0;min-width:150px">By check-in date</label>
+            <input type="date" name="checkin_date"   value="{{ $checkin_date ?? '' }}"   class="form-input" style="width:auto" required>
+            <input type="date" name="checkinto_date" value="{{ $checkinto_date ?? '' }}" class="form-input" style="width:auto" required>
+            <button type="submit" name="action" value="loaddatacheckin" class="btn btn-secondary btn-sm">Show</button>
+            <button type="submit" name="action" value="exportreport" class="btn btn-primary btn-sm">Export Excel</button>
+        </form>
+
+        <form method="POST" action="/admin/booking/excel/export_range" class="flex gap-2 items-center" style="flex-wrap:wrap">
+            @csrf
+            <label class="form-label" style="margin:0;min-width:150px">By created date</label>
+            <input type="date" name="from_date" value="{{ $from_date ?? '' }}" class="form-input" style="width:auto" required>
+            <input type="date" name="to_date"   value="{{ $to_date ?? '' }}"   class="form-input" style="width:auto" required>
+            <button type="submit" name="action" value="loaddata" class="btn btn-secondary btn-sm">Show</button>
+            <button type="submit" name="action" value="exportcreated" class="btn btn-primary btn-sm">Export Excel</button>
+        </form>
+
+    </div>
+</div>
 {{-- Bookings Table --}}
 <div class="card">
     <div class="card-header">

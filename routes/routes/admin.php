@@ -82,6 +82,7 @@ Route::post('/listing/{id}/video', 'Admin\ListingImagesController@videoStore');
 Route::resource('/book', 'Admin\BookingController');
 Route::post('/booking/excel/import', 'Admin\BookingController@importExcel');
 Route::get('/booking/excel/export', 'Admin\BookingController@exportExcel');
+Route::get('/booking/excel/template', 'Admin\BookingController@downloadBookingTemplate');
 
 Route::post('/booking/excel/export_range', 'Admin\BookingController@exportExcelRange');
 Route::post('/booking/historical/api', 'Admin\BookController@history_api');

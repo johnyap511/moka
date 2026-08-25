@@ -477,13 +477,24 @@ public function index(Request $request)
         ->where('status', '>=', 3)
         ->orderBy('check_in', 'desc');
 
-    // Search by guest name (q param)
+    // One box covering what production split across three: booking id, guest
+    // name and listing name, plus folio numbers since those get quoted to
+    // guests and are what people paste in.
     if ($request->filled('q')) {
-        $q = $request->q;
+        $q = trim($request->q);
         $query->where(function ($sq) use ($q) {
             $sq->where('name', 'LIKE', "%{$q}%")
+               ->orWhere('folio_no', 'LIKE', "%{$q}%")
+               ->orWhere('server_folio_no', 'LIKE', "%{$q}%")
                ->orWhereHas('user', fn($u) => $u->where('name', 'LIKE', "%{$q}%")
-                   ->orWhere('last_name', 'LIKE', "%{$q}%"));
+                   ->orWhere('last_name', 'LIKE', "%{$q}%")
+                   ->orWhere('email', 'LIKE', "%{$q}%"))
+               ->orWhereHas('listing', fn($l) => $l->where('name', 'LIKE', "%{$q}%")
+                   ->orWhere('title', 'LIKE', "%{$q}%"));
+
+            if (ctype_digit($q)) {
+                $sq->orWhere('id', (int) $q);
+            }
         });
     }
 
@@ -1180,6 +1191,47 @@ private function getActionButtons($book)
         header("Content-Disposition: attachment; filename=\"Bookings.{$extension}\"");
         $writer->save('php://output');
         exit();
+    }
+
+    /**
+     * Blank workbook carrying the columns importExcel expects.
+     *
+     * Defined next to the import so the two cannot drift. BookingImport reads
+     * headings via WithHeadingRow and rejects a row outright when any of
+     * listing_name, user_email, check_in, check_out or price_per_night is
+     * missing, so those five are the ones that matter.
+     */
+    public function downloadBookingTemplate()
+    {
+        $columns = [
+            'listing_name', 'user_email', 'check_in', 'check_out', 'price_per_night',
+            'user_first_name', 'user_last_name', 'user_phone', 'adult', 'infant', 'remark',
+        ];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray($columns, null, 'A1');
+
+        // A filled example row makes the expected date and number formats
+        // obvious; it is deleted before importing.
+        $sheet->fromArray([
+            'Ekocheras J-28-09', 'guest@example.com', date('Y-m-d'),
+            date('Y-m-d', strtotime('+2 days')), '150.00',
+            'Jane', 'Tan', '0123456789', 2, 0, 'Optional note',
+        ], null, 'A2');
+
+        $last = 'K';
+        foreach (range('A', $last) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $sheet->getStyle("A1:{$last}1")->getFont()->setBold(true);
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="booking-import-template.xlsx"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
     }
 
     public function exportExcelRange(Request $request)
