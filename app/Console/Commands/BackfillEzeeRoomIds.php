@@ -67,17 +67,37 @@ class BackfillEzeeRoomIds extends Command
 
             $this->line("  {$group->hotel_code} {$group->name}: {$rows->count()} pending");
 
-            $xml = $this->fetch($group, $from, $to);
-            if ($xml === null) {
-                $this->warn("    request failed — skipped");
+            // EZEE rejects ranges over a year ("Date range should be less then
+            // 365 days"), so ask for it in windows and merge the results.
+            $map = [];
+            $failed = false;
+
+            foreach ($this->windows($from, $to) as [$wFrom, $wTo]) {
+                $xml = $this->fetch($group, $wFrom, $wTo);
+
+                if ($xml === null) {
+                    $this->warn("    {$wFrom}..{$wTo}: request failed");
+                    $failed = true;
+                    continue;
+                }
+
+                if ($error = $this->errorFrom($xml)) {
+                    $this->warn("    {$wFrom}..{$wTo}: EZEE said: {$error}");
+                    $failed = true;
+                    continue;
+                }
+
+                $map += $this->roomIdsBySubBooking($xml);
+            }
+
+            if (!$map) {
+                if (!$failed) {
+                    $this->warn('    response carried no unit ids');
+                }
                 continue;
             }
 
-            $map = $this->roomIdsBySubBooking($xml);
-            if (!$map) {
-                $this->warn('    no unit ids in response — check the auth code');
-                continue;
-            }
+            $this->line('    ' . count($map) . ' unit id(s) returned by EZEE');
 
             foreach ($rows as $row) {
                 $roomId = $map[$row->SubBookingId] ?? null;
@@ -158,5 +178,43 @@ class BackfillEzeeRoomIds extends Command
         }
 
         return $map;
+    }
+
+    /**
+     * Split a date range into windows EZEE will accept.
+     *
+     * @return array<array{0:string,1:string}>
+     */
+    private function windows(string $from, string $to, int $days = 360): array
+    {
+        $windows = [];
+        $start   = strtotime($from);
+        $end     = strtotime($to);
+
+        while ($start <= $end) {
+            $stop = min($end, strtotime("+{$days} days", $start));
+            $windows[] = [date('Y-m-d', $start), date('Y-m-d', $stop)];
+            $start = strtotime('+1 day', $stop);
+        }
+
+        return $windows;
+    }
+
+    /**
+     * EZEE reports problems as either <error> or an Errors block, and returns
+     * HTTP 200 either way — so failures are invisible unless read out.
+     */
+    private function errorFrom(string $xml): ?string
+    {
+        if (preg_match('#<error>([^<]*)</error>#i', $xml, $m)) {
+            return trim($m[1]);
+        }
+        if (preg_match('#"ErrorMessage"\s*:\s*"([^"]*)"#', $xml, $m)) {
+            return trim($m[1]);
+        }
+        if (preg_match('#<ErrorMessage>([^<]*)</ErrorMessage>#', $xml, $m)) {
+            return trim($m[1]);
+        }
+        return null;
     }
 }
