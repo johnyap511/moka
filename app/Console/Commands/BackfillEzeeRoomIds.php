@@ -72,22 +72,30 @@ class BackfillEzeeRoomIds extends Command
             $map = [];
             $failed = false;
 
-            foreach ($this->windows($from, $to) as [$wFrom, $wTo]) {
-                $xml = $this->fetch($group, $wFrom, $wTo);
-
-                if ($xml === null) {
-                    $this->warn("    {$wFrom}..{$wTo}: request failed");
-                    $failed = true;
-                    continue;
+            foreach ($this->windows($from, $to) as $index => [$wFrom, $wTo]) {
+                if ($index > 0) {
+                    sleep(3);   // stay under EZEE's duplicate-request throttle
                 }
 
-                if ($error = $this->errorFrom($xml)) {
+                $xml = $this->fetch($group, $wFrom, $wTo);
+                $error = $xml === null ? 'request failed' : $this->errorFrom($xml);
+
+                if ($this->isThrottled($error)) {
+                    $this->line("    {$wFrom}..{$wTo}: throttled, waiting 60s");
+                    sleep(60);
+                    $xml = $this->fetch($group, $wFrom, $wTo);
+                    $error = $xml === null ? 'request failed' : $this->errorFrom($xml);
+                }
+
+                if ($error !== null) {
                     $this->warn("    {$wFrom}..{$wTo}: EZEE said: {$error}");
                     $failed = true;
                     continue;
                 }
 
-                $map += $this->roomIdsBySubBooking($xml);
+                $found = $this->roomIdsBySubBooking($xml);
+                $this->line('    ' . $wFrom . '..' . $wTo . ': ' . count($found) . ' unit id(s)');
+                $map += $found;
             }
 
             if (!$map) {
@@ -97,7 +105,6 @@ class BackfillEzeeRoomIds extends Command
                 continue;
             }
 
-            $this->line('    ' . count($map) . ' unit id(s) returned by EZEE');
 
             foreach ($rows as $row) {
                 $roomId = $map[$row->SubBookingId] ?? null;
@@ -201,20 +208,38 @@ class BackfillEzeeRoomIds extends Command
     }
 
     /**
-     * EZEE reports problems as either <error> or an Errors block, and returns
-     * HTTP 200 either way — so failures are invisible unless read out.
+     * EZEE reports problems as <error>, an Errors block, or an ErrorMessage
+     * element, and returns HTTP 200 for all of them — so failures are
+     * invisible unless read out.
+     *
+     * A successful response also carries <ErrorMessage>Success</ErrorMessage>,
+     * so the message has to be inspected rather than merely present.
      */
     private function errorFrom(string $xml): ?string
     {
-        if (preg_match('#<error>([^<]*)</error>#i', $xml, $m)) {
-            return trim($m[1]);
+        foreach (['#<error>([^<]*)</error>#i',
+                  '#"ErrorMessage"\s*:\s*"([^"]*)"#',
+                  '#<ErrorMessage>([^<]*)</ErrorMessage>#'] as $pattern) {
+            if (!preg_match($pattern, $xml, $m)) {
+                continue;
+            }
+            $message = trim($m[1]);
+            if ($message === '' || strcasecmp($message, 'Success') === 0) {
+                continue;
+            }
+            return $message;
         }
-        if (preg_match('#"ErrorMessage"\s*:\s*"([^"]*)"#', $xml, $m)) {
-            return trim($m[1]);
-        }
-        if (preg_match('#<ErrorMessage>([^<]*)</ErrorMessage>#', $xml, $m)) {
-            return trim($m[1]);
-        }
+
         return null;
+    }
+
+    /**
+     * EZEE rejects requests that arrive too close together with "Duplicate
+     * request. Please try again after 1 minute.", so space them out and retry
+     * once if it still complains.
+     */
+    private function isThrottled(?string $error): bool
+    {
+        return $error !== null && stripos($error, 'duplicate request') !== false;
     }
 }
