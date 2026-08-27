@@ -7,7 +7,22 @@
 .badge-unassigned { background:#fff7ed; color:#c2410c; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
 .badge-source { background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:500; }
 .assign-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; align-items:center; justify-content:center; }
-th.sortable { cursor:pointer; user-select:none; white-space:nowrap; }
+th.sortable { cursor:pointer; user-select:none; }
+/* Compact enough to fit without horizontal scrolling: headers and long values
+   wrap rather than forcing the table wider than the viewport. */
+.ezee-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.ezee-table th, .ezee-table td { padding:7px 8px; vertical-align:top; word-break:break-word; }
+.ezee-table th {
+    text-align:left; font-size:10.5px; font-weight:600; line-height:1.25;
+    color:var(--text-secondary); text-transform:uppercase; letter-spacing:.3px;
+    border-bottom:1px solid var(--border); white-space:normal;
+}
+.ezee-table td { font-size:12px; border-bottom:1px solid var(--border); }
+.ezee-table .num { text-align:right; white-space:nowrap; }
+.ezee-table .mono { font-family:monospace; font-size:11px; }
+.ezee-table tbody tr:hover { background:#fafafa; }
+.ezee-actions { display:flex; flex-direction:column; gap:4px; align-items:stretch; }
+.ezee-actions .btn { padding:3px 8px; font-size:11px; justify-content:center; }
 th.sortable:hover { color:var(--teal); }
 th.sortable .sort-icon { margin-left:4px; opacity:.4; font-style:normal; font-size:10px; }
 th.sortable.asc .sort-icon::after  { content:'▲'; opacity:1; }
@@ -57,26 +72,44 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
     <div class="card-header">
         <h2>Bookings <span class="badge badge-blue" id="visible-count">{{ count($books) }}</span></h2>
     </div>
-    <div class="table-wrap" style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:1200px" id="ezee-table">
+    <div class="table-wrap">
+        <table class="ezee-table" id="ezee-table">
+            <colgroup>
+                <col style="width:7%">   {{-- Res No --}}
+                <col style="width:6%">   {{-- Folio --}}
+                <col style="width:5%">   {{-- Prop ID --}}
+                <col style="width:10%">   {{-- Property --}}
+                <col style="width:9%">   {{-- Room Type --}}
+                <col style="width:6%">   {{-- Check In --}}
+                <col style="width:6%">   {{-- Check Out --}}
+                <col style="width:8%">   {{-- Source --}}
+                <col style="width:6%">   {{-- Rate/Night --}}
+                <col style="width:5%">   {{-- SST --}}
+                <col style="width:6%">   {{-- Cleaning --}}
+                <col style="width:5%">   {{-- SST(CF) --}}
+                <col style="width:5%">   {{-- M&A --}}
+                <col style="width:6%">   {{-- Total --}}
+                <col style="width:6%">   {{-- Action --}}
+                <col style="width:4%">   {{-- Status --}}
+            </colgroup>
             <thead>
                 <tr>
-                    <th class="sortable" data-col="0"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Reservation No <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="1"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Folio No <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="2"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Property ID <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="3"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Property Name <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="4"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Room Type <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="5"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check In <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="6"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Check Out <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="7"  style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Source <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="8"  style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Price/Night <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="9"  style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">SST <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="10" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Cleaning Fee <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="11" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">SST(CF) <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="12" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">M&amp;A Fee <i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="13" style="padding:10px 14px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Total (MYR) <i class="sort-icon"></i></th>
-                    <th style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Action</th>
-                    <th class="sortable" data-col="15" style="padding:10px 14px;text-align:left;font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)">Status <i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="0">Res No<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="1">Folio<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="2">Prop ID<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="3">Property<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="4">Room Type<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="5">Check In<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="6">Check Out<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="7">Source<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="8">Rate/Night<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="9">SST<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="10">Cleaning<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="11">SST(CF)<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="12">M&amp;A<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="13">Total<i class="sort-icon"></i></th>
+                    <th>Action</th>
+                    <th class="sortable" data-col="15">Status<i class="sort-icon"></i></th>
                 </tr>
             </thead>
             <tbody id="ezee-tbody">
@@ -92,41 +125,41 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     $propId       = $b->property_code;
                     $propName     = $b->property_name;
                 @endphp
-                <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-                    <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:12px;font-family:monospace" data-val="{{ $b->folio_no ?? '' }}">{{ $b->folio_no ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:13px;font-family:monospace" data-val="{{ $propId ?? '' }}">{{ $propId ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($propName ?? '') }}">
+                <tr>
+                    <td class="mono" data-val="{{ $b->SubBookingId ?? '' }}">{{ $b->SubBookingId ?? '—' }}</td>
+                    <td class="mono" data-val="{{ $b->folio_no ?? '' }}">{{ $b->folio_no ?? '—' }}</td>
+                    <td class="mono" data-val="{{ $propId ?? '' }}">{{ $propId ?? '—' }}</td>
+                    <td  data-val="{{ strtolower($propName ?? '') }}">
                         @if($propName)
                             <span style="font-weight:500;color:var(--teal)">{{ $propName }}</span>
                         @else
                             <span style="color:var(--text-secondary)">—</span>
                         @endif
                     </td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->RoomTypeName ?? '') }}">{{ $b->RoomTypeName ?? '—' }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->Start }}">{{ $b->Start }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->End }}">{{ $b->End }}</td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ strtolower($b->Source ?? '') }}"><span class="badge-source">{{ $b->Source ?? '—' }}</span></td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $priceNight ?? '' }}">
+                    <td  data-val="{{ strtolower($b->RoomTypeName ?? '') }}">{{ $b->RoomTypeName ?? '—' }}</td>
+                    <td  data-val="{{ $b->Start }}">{{ $b->Start }}</td>
+                    <td  data-val="{{ $b->End }}">{{ $b->End }}</td>
+                    <td  data-val="{{ strtolower($b->Source ?? '') }}"><span class="badge-source">{{ $b->Source ?? '—' }}</span></td>
+                    <td class="num" data-val="{{ $priceNight ?? '' }}">
                         {{ $priceNight !== null ? number_format($priceNight, 2) : '—' }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $sst ?? '' }}">
+                    <td class="num" data-val="{{ $sst ?? '' }}">
                         {{ $sst !== null ? number_format($sst, 2) : '—' }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $cleaningFee ?? '' }}">
+                    <td class="num" data-val="{{ $cleaningFee ?? '' }}">
                         {{ $cleaningFee !== null ? number_format($cleaningFee, 2) : '—' }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $sstCf ?? '' }}">
+                    <td class="num" data-val="{{ $sstCf ?? '' }}">
                         {{ $sstCf !== null ? number_format($sstCf, 2) : '—' }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right" data-val="{{ $otaFee ?? '' }}">
+                    <td class="num" data-val="{{ $otaFee ?? '' }}">
                         {{ $otaFee !== null ? number_format($otaFee, 2) : '—' }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:600" data-val="{{ $total ?? 0 }}">
+                    <td class="num" style="font-weight:600" data-val="{{ $total ?? 0 }}">
                         RM {{ number_format($total ?? 0, 2) }}
                     </td>
-                    <td style="padding:10px 14px;font-size:13px">
-                        <div style="display:flex;gap:6px;align-items:center">
+                    <td >
+                        <div class="ezee-actions">
                             <button type="button" class="btn btn-primary" style="padding:4px 12px;font-size:12px"
                                 onclick="openAssign({{ $b->id }}, '{{ addslashes($b->FirstName.' '.$b->LastName) }}', '{{ $b->Start }}', '{{ $b->End }}', '{{ $b->book_id }}')">
                                 {{ $b->book_id ? 'Reassign' : 'Assign' }}
@@ -141,7 +174,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                             </form>
                         </div>
                     </td>
-                    <td style="padding:10px 14px;font-size:13px" data-val="{{ $b->book_id ? 'assigned' : 'unassigned' }}">
+                    <td  data-val="{{ $b->book_id ? 'assigned' : 'unassigned' }}">
                         @if($b->book_id)
                             <span class="badge-assigned">Assigned</span>
                         @else
