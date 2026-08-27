@@ -1114,6 +1114,7 @@ class BookController extends Controller
                     'status' => 5,
                     'tourism_tax' => $tax ?? 0.00,
                     'discount_fee' => $request->discount_fee ?? $ezee->TotalDiscount,
+                'category' => $request->category ?? 'Accommodation',
                     'remark' => $request->remark ?? 'Imported from EZEE Booking ID/Source: ' . $ezee->id.'/'.$request->source,
                 ];
 //                 echo "<pre>";

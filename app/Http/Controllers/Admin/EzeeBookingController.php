@@ -41,6 +41,15 @@ class EzeeBookingController extends Controller
             'TotalAmountBeforeTax' => 'required|numeric',
             'TotalExtraCharge' => 'nullable|numeric',
             'TotalDiscount' => 'nullable|numeric',
+            // Correctable without touching how the fee breakdown is derived:
+            // EzeePricing reads TotalAmountBeforeTax, TotalExtraCharge and
+            // TotalDiscount, none of which are added here. RoomName is the EZEE
+            // unit id the auto-assignment matches on, so being able to fix a
+            // wrong one by hand matters.
+            'folio_no' => 'nullable|string|max:50',
+            'RoomName' => 'nullable|string|max:255',
+            'Country' => 'nullable|string|max:100',
+            'TotalAmountAfterTax' => 'nullable|numeric',
         ]);
 
         $booking->update($validatedData);

@@ -9,7 +9,7 @@
                   so editing an old booking must use its original date
 --}}
 <script>
-(function () {
+{!! isset($var) ? 'var ' . $var . ' = ' : '' !!}(function () {
     var RATES = {
         DEFAULT: 0.20, BOOKING_1: 0.18, BOOKING_2: 0.028,
         AIRBNB: 0.159, TRAVELOKA: 0.17,
@@ -141,6 +141,13 @@
     }
 
     function recalc() {
+        // A form may carry the booking's own date; rates changed over time, so
+        // recalculating an older booking must use the date it was made.
+        var bookedOnField = form.querySelector('[name="booked_on"]');
+        if (bookedOnField && bookedOnField.value) {
+            BOOKED_ON = bookedOnField.value;
+        }
+
         var n         = nights(),
             roomTotal = num(elNight) * n,
             cleaning  = num(elClean),
@@ -171,5 +178,12 @@
         overridden = {};
         setTimeout(recalc, 0);
     });
+
+    return {
+        recalc: recalc,
+        // The assign modal is one form reused for every booking, so the
+        // override flags have to be cleared as each one opens.
+        clearOverrides: function () { overridden = {}; }
+    };
 })();
 </script>

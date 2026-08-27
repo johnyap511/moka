@@ -156,8 +156,27 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                     <td >
                         <div class="ezee-actions">
+                            {{-- Thirteen values would be unreadable as positional
+                                 arguments, so the row carries them as data. --}}
                             <button type="button" class="btn btn-primary"
-                                onclick="openAssign({{ $b->id }}, '{{ addslashes($b->FirstName.' '.$b->LastName) }}', '{{ $b->Start }}', '{{ $b->End }}', '{{ $b->book_id }}')">
+                                data-booking="{{ json_encode([
+                                    'id'           => \$b->id,
+                                    'guest'        => trim(\$b->FirstName . ' ' . \$b->LastName),
+                                    'book_id'      => \$b->book_id,
+                                    'folio_no'     => \$b->folio_no,
+                                    'start'        => \$b->Start,
+                                    'end'          => \$b->End,
+                                    'source'       => \$b->Source,
+                                    'booked_on'    => optional(\$b->created_at)->format('Y-m-d'),
+                                    'price_night'  => \$priceNight,
+                                    'cleaning_fee' => \$cleaningFee,
+                                    'ota_fee'      => \$otaFee,
+                                    'sst'          => \$sst,
+                                    'sst_cf'       => \$sstCf,
+                                    'discount'     => \$b->TotalDiscount,
+                                    'total'        => \$total,
+                                ]) }}"
+                                onclick="openAssign(this)">
                                 {{ $b->book_id ? 'Reassign' : 'Assign' }}
                             </button>
                             <a href="{{ route('admin.ezee.booking.edit', $b->id) }}" class="btn btn-secondary">Edit</a>
@@ -180,13 +199,22 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
     </div>
 </div>
 
-{{-- Assign Modal --}}
+{{-- Assign Modal.
+
+     Field names match what ezeeBookingStoreEdit reads. It expects sixteen and
+     the modal previously sent three, so reassigning wrote nulls over the fee
+     columns. Values are pre-filled from the same breakdown the table shows and
+     stay editable, with the fee calculator recomputing as they change. --}}
 <div id="assign-modal" class="assign-modal">
-    <div style="background:#fff;border-radius:16px;padding:28px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="background:#fff;border-radius:16px;padding:24px;width:620px;max-width:94vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
         <h2 style="font-size:17px;font-weight:600;margin-bottom:4px">Assign Booking</h2>
-        <p id="modal-guest" style="font-size:13px;color:var(--text-secondary);margin-bottom:20px"></p>
+        <p id="modal-guest" style="font-size:13px;color:var(--text-secondary);margin-bottom:18px"></p>
+
         <form method="POST" id="assign-form">
             @csrf
+            {{-- Read by the fee calculator; rates changed over time. --}}
+            <input type="hidden" name="booked_on" id="modal-booked-on">
+
             <div class="form-group">
                 <label class="form-label">Listing / Unit</label>
                 @include('admin.partials.combobox', [
@@ -198,7 +226,23 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     'var'         => 'unitCombo',
                 ])
             </div>
-            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Folio No</label>
+                    <input type="text" name="folio_no" id="modal-folio" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reservation Source</label>
+                    <select name="source" id="modal-source" class="form-select">
+                        @foreach(\App\Support\BookingOptions::SOURCES as $s)
+                            <option value="{{ $s }}">{{ $s }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Check In</label>
                     <input type="date" name="check_in" id="modal-checkin" class="form-input">
@@ -208,14 +252,77 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     <input type="date" name="check_out" id="modal-checkout" class="form-input">
                 </div>
             </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label class="form-label">Booking Category</label>
+                    <select name="category" class="form-select">
+                        @foreach(\App\Support\ListingOptions::CATEGORIES as $label)
+                            <option value="{{ $label }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adult</label>
+                    <input type="number" name="adult" id="modal-adult" class="form-input" min="0" value="2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Infant</label>
+                    <input type="number" name="infant" id="modal-infant" class="form-input" min="0" value="0">
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label class="form-label">Price Per Night</label>
+                    <input type="number" step="0.01" name="price_night" id="modal-price-night" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cleaning Fee</label>
+                    <input type="number" step="0.01" name="cleaning_fee" id="modal-cleaning" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">M&amp;A Fee</label>
+                    <input type="number" step="0.01" name="ota_fee" id="modal-ota" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label class="form-label">SST</label>
+                    <input type="number" step="0.01" name="sst" id="modal-sst" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SST(CF)</label>
+                    <input type="number" step="0.01" name="sst_cf" id="modal-sstcf" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Fee</label>
+                    <input type="number" step="0.01" name="discount_fee" id="modal-discount" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Total Price</label>
+                <input type="number" step="0.01" name="price" id="modal-total" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Remark</label>
+                <textarea name="remark" id="modal-remark" class="form-input" rows="2"></textarea>
+            </div>
+
             <div id="reassign-wrap" style="display:none;margin-bottom:12px">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                     <input type="checkbox" name="reassign" value="1"> Reassign (update existing booking)
                 </label>
             </div>
+
             <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
                 <button type="button" class="btn btn-secondary" onclick="closeAssign()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Assignment</button>
+                <button type="submit" class="btn btn-primary">Assign</button>
             </div>
         </form>
     </div>
@@ -226,15 +333,48 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
 @push('scripts')
 <script>
 // ---- Assign modal ----
-function openAssign(id, guest, start, end, bookId) {
-    document.getElementById('modal-guest').textContent = guest + ' · ' + start + ' → ' + end;
-    document.getElementById('modal-checkin').value = start;
-    document.getElementById('modal-checkout').value = end;
-    const route = bookId ? '/admin/ezee/bookingEdit/' + id : '/admin/ezee/booking/' + id;
-    document.getElementById('assign-form').action = route;
-    document.getElementById('reassign-wrap').style.display = bookId ? 'block' : 'none';
-    document.getElementById('assign-modal').style.display = 'flex';
+function openAssign(btn) {
+    var d = JSON.parse(btn.getAttribute("data-booking"));
+
+    function set(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.value = (value === null || value === undefined) ? "" : value;
+    }
+
+    document.getElementById("modal-guest").textContent = d.guest + " · " + d.start + " → " + d.end;
+
+    set("modal-folio",       d.folio_no);
+    set("modal-checkin",     d.start);
+    set("modal-checkout",    d.end);
+    set("modal-price-night", d.price_night);
+    set("modal-cleaning",    d.cleaning_fee);
+    set("modal-ota",         d.ota_fee);
+    set("modal-sst",         d.sst);
+    set("modal-sstcf",       d.sst_cf);
+    set("modal-discount",    d.discount);
+    set("modal-total",       d.total);
+    set("modal-remark",      d.source);
+    set("modal-booked-on",   d.booked_on);
+
+    // EZEE appends booking references to some source names, so keep whatever
+    // it sent rather than silently switching the booking to another channel.
+    var source = document.getElementById("modal-source");
+    if (source && d.source) {
+        var known = Array.prototype.some.call(source.options, function (o) { return o.value === d.source; });
+        if (!known) source.add(new Option(d.source, d.source));
+        source.value = d.source;
+    }
+
+    var form = document.getElementById("assign-form");
+    form.action = d.book_id ? "/admin/ezee/bookingEdit/" + d.id : "/admin/ezee/booking/" + d.id;
+
+    document.getElementById("reassign-wrap").style.display = d.book_id ? "block" : "none";
+    document.getElementById("assign-modal").style.display = "flex";
     unitCombo.reset();
+
+    // Values above were set programmatically, so nothing counts as a manual
+    // override for this booking.
+    if (window.assignFees) assignFees.clearOverrides();
 }
 function closeAssign() {
     document.getElementById('assign-modal').style.display = 'none';
@@ -310,5 +450,8 @@ function sortTable(col, dir) {
 
 // Init count
 document.getElementById('visible-count').textContent = document.querySelectorAll('#ezee-tbody tr').length;
+</script>
+@include('admin.listing.book._fees', ['formId' => 'assign-form', 'bookedOn' => date('Y-m-d'), 'var' => 'assignFees'])
+<script>
 </script>
 @endpush
