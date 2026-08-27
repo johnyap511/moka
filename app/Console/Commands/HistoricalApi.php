@@ -56,11 +56,21 @@ class HistoricalApi extends Command
         $new_date_folio = date("Y-m-d", strtotime("-30 days"));
 
         $ezee_booking_folio = EzeeBooking::whereBetween('Start', [$new_date_folio, $futureDate])->whereNull('folio_no')->orderBy('Start', 'desc')->limit(50)->get();
+        $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
+            // Each booking belongs to whichever property its transaction id is
+            // prefixed with. This was pinned to 19676 with the key inline, so
+            // folio lookups for the other four properties went out under
+            // EkoCheras's credentials, and every key rotation needed a code change.
+            $folioHotelCode = substr((string) $get_folio_no->TransactionId, 0, 5);
+            $folioGroup     = $ezeeGroupsByCode[$folioHotelCode] ?? null;
+            if (! $folioGroup) {
+                continue;
+            }
             $postData_F['Authentication'] = [
-                'HotelCode' => 19676,
-                'AuthCode' => '7010306964bf04d4ef-9225-11f1-8',
+                'HotelCode' => $folioGroup->hotel_code,
+                'AuthCode'  => $folioGroup->auth_key,
                 'BookingId' => $get_folio_no->SubBookingId,
             ];
 

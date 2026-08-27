@@ -353,13 +353,23 @@ class BookController extends Controller
 
         $ezee_booking_folio = EzeeBooking::whereNotNull('book_id')->whereBetween('Start', [$new_date_folio, $date_current])->get();
         // dd($ezee_booking_folio);
+        $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
             // echo '<pre>';
             // print_r($get_folio_no);
+            // Each booking belongs to whichever property its transaction id is
+            // prefixed with. This was pinned to 19676 with the key inline, so
+            // folio lookups for the other four properties went out under
+            // EkoCheras's credentials, and every key rotation needed a code change.
+            $folioHotelCode = substr((string) $get_folio_no->TransactionId, 0, 5);
+            $folioGroup     = $ezeeGroupsByCode[$folioHotelCode] ?? null;
+            if (! $folioGroup) {
+                continue;
+            }
             $postData_F['Authentication'] = [
-                'HotelCode' => 19676,
-                'AuthCode' => '7010306964bf04d4ef-9225-11f1-8',
+                'HotelCode' => $folioGroup->hotel_code,
+                'AuthCode'  => $folioGroup->auth_key,
                 'BookingId' => $get_folio_no->SubBookingId,
             ];
 
@@ -914,6 +924,7 @@ class BookController extends Controller
         // server folio number
         $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)->first();
         if ($ezee_booking_folio) {
+            $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
             $postData_F['Request_Type'] = 'RetrieveListofBills';
             $listings = EzeeGroup::all();
             foreach ($listings as $listing) {
@@ -1263,6 +1274,7 @@ class BookController extends Controller
         // server folio number
         $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)->first();
         if ($ezee_booking_folio) {
+            $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
             $postData_F['Request_Type'] = 'RetrieveListofBills';
             $listings = EzeeGroup::all();
             foreach ($listings as $listing) {
@@ -1753,11 +1765,21 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
             ->whereNull('folio_no')
             ->limit(100)
             ->get();
+        $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
         $postData_F['Request_Type'] = 'RetrieveListofBills';
         foreach ($ezee_booking_folio as $get_folio_no) {
+            // Each booking belongs to whichever property its transaction id is
+            // prefixed with. This was pinned to 19676 with the key inline, so
+            // folio lookups for the other four properties went out under
+            // EkoCheras's credentials, and every key rotation needed a code change.
+            $folioHotelCode = substr((string) $get_folio_no->TransactionId, 0, 5);
+            $folioGroup     = $ezeeGroupsByCode[$folioHotelCode] ?? null;
+            if (! $folioGroup) {
+                continue;
+            }
             $postData_F['Authentication'] = [
-                'HotelCode' => 19676,
-                'AuthCode' => '7010306964bf04d4ef-9225-11f1-8',
+                'HotelCode' => $folioGroup->hotel_code,
+                'AuthCode'  => $folioGroup->auth_key,
                 'BookingId' => $get_folio_no->SubBookingId,
             ];
 

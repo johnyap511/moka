@@ -71,8 +71,8 @@ echo
 # failing again without this.
 echo "==> restoring EZEE auth keys"
 mysql -u "$DBUSER" "$DBNAME" <<'SQL'
-UPDATE ezee_groups SET auth_key='7010306964bf04d4ef-9225-11f1-8' WHERE hotel_code=19676;
-UPDATE ezee_groups SET auth_key='1981057945bf039827-9225-11f1-8' WHERE hotel_code=20317;
+UPDATE ezee_groups SET auth_key='3308876215ba11e9f2-9d27-11f1-8' WHERE hotel_code=19676;
+UPDATE ezee_groups SET auth_key='0221335459bd2ee912-9ba0-11f1-8' WHERE hotel_code=20317;
 UPDATE ezee_groups SET auth_key='9108361293bf05f7ed-9225-11f1-8' WHERE hotel_code=20318;
 UPDATE ezee_groups SET auth_key='4298327690bf012e3e-9225-11f1-8' WHERE hotel_code=20319;
 UPDATE ezee_groups SET auth_key='3170193604beffec5b-9225-11f1-8' WHERE hotel_code=20320;
