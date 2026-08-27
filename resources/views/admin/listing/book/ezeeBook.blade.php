@@ -3,8 +3,6 @@
 
 @push('styles')
 <style>
-.badge-assigned { background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
-.badge-unassigned { background:#fff7ed; color:#c2410c; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:500; }
 .badge-source { background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:500; }
 .assign-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; align-items:center; justify-content:center; }
 th.sortable { cursor:pointer; user-select:none; }
@@ -78,8 +76,8 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                 <col style="width:7%">   {{-- Res No --}}
                 <col style="width:6%">   {{-- Folio --}}
                 <col style="width:5%">   {{-- Prop ID --}}
-                <col style="width:10%">   {{-- Property --}}
-                <col style="width:9%">   {{-- Room Type --}}
+                <col style="width:11%">   {{-- Property --}}
+                <col style="width:10%">   {{-- Room Type --}}
                 <col style="width:6%">   {{-- Check In --}}
                 <col style="width:6%">   {{-- Check Out --}}
                 <col style="width:8%">   {{-- Source --}}
@@ -89,8 +87,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                 <col style="width:5%">   {{-- SST(CF) --}}
                 <col style="width:5%">   {{-- M&A --}}
                 <col style="width:6%">   {{-- Total --}}
-                <col style="width:6%">   {{-- Action --}}
-                <col style="width:4%">   {{-- Status --}}
+                <col style="width:8%">   {{-- Action --}}
             </colgroup>
             <thead>
                 <tr>
@@ -109,7 +106,6 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     <th class="sortable num" data-col="12">M&amp;A<i class="sort-icon"></i></th>
                     <th class="sortable num" data-col="13">Total<i class="sort-icon"></i></th>
                     <th>Action</th>
-                    <th class="sortable" data-col="15">Status<i class="sort-icon"></i></th>
                 </tr>
             </thead>
             <tbody id="ezee-tbody">
@@ -160,30 +156,24 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                     <td >
                         <div class="ezee-actions">
-                            <button type="button" class="btn btn-primary" style="padding:4px 12px;font-size:12px"
+                            <button type="button" class="btn btn-primary"
                                 onclick="openAssign({{ $b->id }}, '{{ addslashes($b->FirstName.' '.$b->LastName) }}', '{{ $b->Start }}', '{{ $b->End }}', '{{ $b->book_id }}')">
                                 {{ $b->book_id ? 'Reassign' : 'Assign' }}
                             </button>
+                            <a href="{{ route('admin.ezee.booking.edit', $b->id) }}" class="btn btn-secondary">Edit</a>
                             <form method="POST" action="/admin/ezee/booking/{{ $b->id }}" style="margin:0"
                                 onsubmit="return confirm('Delete this booking for {{ addslashes($b->FirstName.' '.$b->LastName) }}?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-secondary" style="padding:4px 8px;font-size:12px;color:#dc2626" title="Delete">
+                                <button type="submit" class="btn btn-secondary" style="color:#dc2626" title="Delete">
                                     <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </form>
                         </div>
                     </td>
-                    <td  data-val="{{ $b->book_id ? 'assigned' : 'unassigned' }}">
-                        @if($b->book_id)
-                            <span class="badge-assigned">Assigned</span>
-                        @else
-                            <span class="badge-unassigned">Unassigned</span>
-                        @endif
-                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="16" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
+                <tr><td colspan="15" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
                 @endforelse
             </tbody>
         </table>
