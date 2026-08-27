@@ -160,21 +160,21 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                                  arguments, so the row carries them as data. --}}
                             <button type="button" class="btn btn-primary"
                                 data-booking="{{ json_encode([
-                                    'id'           => \$b->id,
-                                    'guest'        => trim(\$b->FirstName . ' ' . \$b->LastName),
-                                    'book_id'      => \$b->book_id,
-                                    'folio_no'     => \$b->folio_no,
-                                    'start'        => \$b->Start,
-                                    'end'          => \$b->End,
-                                    'source'       => \$b->Source,
-                                    'booked_on'    => optional(\$b->created_at)->format('Y-m-d'),
-                                    'price_night'  => \$priceNight,
-                                    'cleaning_fee' => \$cleaningFee,
-                                    'ota_fee'      => \$otaFee,
-                                    'sst'          => \$sst,
-                                    'sst_cf'       => \$sstCf,
-                                    'discount'     => \$b->TotalDiscount,
-                                    'total'        => \$total,
+                                    'id'           => $b->id,
+                                    'guest'        => trim($b->FirstName . ' ' . $b->LastName),
+                                    'book_id'      => $b->book_id,
+                                    'folio_no'     => $b->folio_no,
+                                    'start'        => $b->Start,
+                                    'end'          => $b->End,
+                                    'source'       => $b->Source,
+                                    'booked_on'    => optional($b->created_at)->format('Y-m-d'),
+                                    'price_night'  => $priceNight,
+                                    'cleaning_fee' => $cleaningFee,
+                                    'ota_fee'      => $otaFee,
+                                    'sst'          => $sst,
+                                    'sst_cf'       => $sstCf,
+                                    'discount'     => $b->TotalDiscount,
+                                    'total'        => $total,
                                 ]) }}"
                                 onclick="openAssign(this)">
                                 {{ $b->book_id ? 'Reassign' : 'Assign' }}
