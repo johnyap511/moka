@@ -68,6 +68,81 @@ class EzeeBookingFeed
         return $map;
     }
 
+    /**
+     * Every unit the property has used in the range, with its room type and
+     * how many reservations referenced it.
+     *
+     * Unlike roomIds(), this is not keyed to a set of bookings we already
+     * hold — it reports what EZEE itself knows about, which is what a room
+     * catalogue needs.
+     *
+     * @return array<string,array{room_type:string,bookings:int}>
+     */
+    public function roomCatalogue(EzeeGroup $group, string $from, string $to): array
+    {
+        $rooms = [];
+
+        foreach ($this->windows($from, $to) as $index => [$wFrom, $wTo]) {
+            if ($index > 0) {
+                sleep(self::PACE_SECONDS);
+            }
+
+            $xml   = $this->fetch($group, $wFrom, $wTo);
+            $error = $xml === null ? 'request failed' : $this->errorFrom($xml);
+
+            if ($error !== null && stripos($error, 'duplicate request') !== false) {
+                $this->log("    {$wFrom}..{$wTo}: throttled, waiting 60s");
+                sleep(60);
+                $xml   = $this->fetch($group, $wFrom, $wTo);
+                $error = $xml === null ? 'request failed' : $this->errorFrom($xml);
+            }
+
+            if ($error !== null) {
+                $this->log("    {$wFrom}..{$wTo}: EZEE said: {$error}");
+                continue;
+            }
+
+            $before = count($rooms);
+            $this->collectRooms($xml, $rooms);
+            $this->log("    {$wFrom}..{$wTo}: " . (count($rooms) - $before) . ' new unit(s), ' . count($rooms) . ' total');
+        }
+
+        ksort($rooms);
+
+        return $rooms;
+    }
+
+    /**
+     * @param array<string,array{room_type:string,bookings:int}> $rooms
+     */
+    private function collectRooms(string $xml, array &$rooms): void
+    {
+        if (!preg_match_all('#<BookingTran>(.*?)</BookingTran>#s', $xml, $blocks)) {
+            return;
+        }
+
+        foreach ($blocks[1] as $block) {
+            if (!preg_match('#<eZeePMSRoomid>([^<]*)</eZeePMSRoomid>#', $block, $room)) {
+                continue;
+            }
+            $roomId = trim($room[1]);
+            if ($roomId === '') {
+                continue;
+            }
+
+            $type = preg_match('#<RoomTypeName>([^<]*)</RoomTypeName>#', $block, $t)
+                ? trim($t[1])
+                : '';
+
+            if (!isset($rooms[$roomId])) {
+                $rooms[$roomId] = ['room_type' => $type, 'bookings' => 0];
+            }
+            if ($rooms[$roomId]['room_type'] === '' && $type !== '') {
+                $rooms[$roomId]['room_type'] = $type;
+            }
+            $rooms[$roomId]['bookings']++;
+        }
+    }
     private function fetch(EzeeGroup $group, string $from, string $to): ?string
     {
         $body = '<RES_Request>'
