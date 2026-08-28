@@ -340,6 +340,12 @@ class BookController extends Controller
 
             $linked = $b->book_id ? ($linkedListings[$b->book_id] ?? null) : null;
 
+            // Which listing unit the booking ended up on. EZEE's own unit
+            // name is the fallback so the column still says something useful
+            // before assignment.
+            $b->assigned_listing_id = $linked ? $linked->listing_id : null;
+            $b->assigned_unit = $linked && $linked->listing ? $linked->listing->name : null;
+
             $b->breakdown = $linked
                 ? [
                     'price_night'  => $linked->price_night,

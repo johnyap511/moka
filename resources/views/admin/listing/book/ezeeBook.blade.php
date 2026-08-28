@@ -80,21 +80,22 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
     <div class="table-wrap">
         <table class="ezee-table" id="ezee-table">
             <colgroup>
-                <col style="width:7%">   {{-- Res No --}}
+                <col style="width:6%">   {{-- Res No --}}
                 <col style="width:6%">   {{-- Folio --}}
-                <col style="width:5%">   {{-- Prop ID --}}
-                <col style="width:11%">   {{-- Property --}}
-                <col style="width:10%">   {{-- Room Type --}}
-                <col style="width:6%">   {{-- Check In --}}
-                <col style="width:6%">   {{-- Check Out --}}
-                <col style="width:8%">   {{-- Source --}}
+                <col style="width:4%">   {{-- Prop ID --}}
+                <col style="width:9%">   {{-- Property --}}
+                <col style="width:10%">  {{-- Assigned Unit --}}
+                <col style="width:8%">   {{-- Room Type --}}
+                <col style="width:5%">   {{-- Check In --}}
+                <col style="width:5%">   {{-- Check Out --}}
+                <col style="width:7%">   {{-- Source --}}
                 <col style="width:6%">   {{-- Rate/Night --}}
                 <col style="width:5%">   {{-- SST --}}
                 <col style="width:6%">   {{-- Cleaning --}}
                 <col style="width:5%">   {{-- SST(CF) --}}
                 <col style="width:5%">   {{-- M&A --}}
                 <col style="width:6%">   {{-- Total --}}
-                <col style="width:8%">   {{-- Action --}}
+                <col style="width:7%">   {{-- Action --}}
             </colgroup>
             <thead>
                 <tr>
@@ -102,16 +103,17 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     <th class="sortable" data-col="1">Folio<i class="sort-icon"></i></th>
                     <th class="sortable" data-col="2">Prop ID<i class="sort-icon"></i></th>
                     <th class="sortable" data-col="3">Property<i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="4">Room Type<i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="5">Check In<i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="6">Check Out<i class="sort-icon"></i></th>
-                    <th class="sortable" data-col="7">Source<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="8">Rate/Night<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="9">SST<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="10">Cleaning<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="11">SST(CF)<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="12">M&amp;A<i class="sort-icon"></i></th>
-                    <th class="sortable num" data-col="13">Total<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="4">Assigned Unit<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="5">Room Type<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="6">Check In<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="7">Check Out<i class="sort-icon"></i></th>
+                    <th class="sortable" data-col="8">Source<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="9">Rate/Night<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="10">SST<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="11">Cleaning<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="12">SST(CF)<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="13">M&amp;A<i class="sort-icon"></i></th>
+                    <th class="sortable num" data-col="14">Total<i class="sort-icon"></i></th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -135,6 +137,17 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     <td  data-val="{{ strtolower($propName ?? '') }}">
                         @if($propName)
                             <span style="font-weight:500;color:var(--teal)">{{ $propName }}</span>
+                        @else
+                            <span style="color:var(--text-secondary)">—</span>
+                        @endif
+                    </td>
+                    <td data-val="{{ strtolower($b->assigned_unit ?? $b->RoomName ?? '') }}">
+                        @if($b->assigned_unit)
+                            <a href="/admin/listing/{{ $b->assigned_listing_id }}/edit"
+                               style="color:var(--teal);font-weight:500">{{ $b->assigned_unit }}</a>
+                        @elseif($b->RoomName)
+                            {{-- Not assigned yet, but EZEE told us the unit. --}}
+                            <span class="mono" style="color:var(--text-secondary)" title="EZEE unit, not yet assigned">{{ $b->RoomName }}</span>
                         @else
                             <span style="color:var(--text-secondary)">—</span>
                         @endif
@@ -199,7 +212,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="15" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
+                <tr><td colspan="16" style="padding:40px;text-align:center;color:var(--text-secondary)">No EZEE bookings found.</td></tr>
                 @endforelse
             </tbody>
         </table>
