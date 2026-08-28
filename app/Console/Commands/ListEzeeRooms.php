@@ -96,6 +96,24 @@ class ListEzeeRooms extends Command
 
         fclose($handle);
 
+        // Every request needs a hotel code and its auth key, so EZEE cannot be
+        // asked what properties exist — this command can only visit groups we
+        // hold. Bookings whose transaction id carries an unknown prefix are the
+        // one hint that a property is missing from ezee_groups entirely.
+        $codes  = EzeeGroup::pluck('hotel_code')->map(fn ($c) => (string) $c)->all();
+        $orphan = EzeeBooking::selectRaw('LEFT(TransactionId, 5) AS prefix, COUNT(*) AS n')
+            ->groupBy('prefix')
+            ->pluck('n', 'prefix')
+            ->reject(fn ($n, $prefix) => in_array((string) $prefix, $codes, true));
+
+        if ($orphan->isNotEmpty()) {
+            $this->newLine();
+            $this->warn('Bookings reference hotel codes with no matching ezee_groups row:');
+            foreach ($orphan as $prefix => $n) {
+                $this->warn("  {$prefix}: {$n} booking(s) — no auth key, so its units cannot be listed");
+            }
+        }
+
         $this->newLine();
         $this->table(
             ['Hotel', 'Property', 'Units in EZEE', 'Known locally', 'Mapped to a listing'],
