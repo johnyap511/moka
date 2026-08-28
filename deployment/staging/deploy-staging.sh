@@ -8,7 +8,7 @@
 # Options:
 #   --skip-migrate    Skip running database migrations
 #   --no-cache        Build Docker images with --no-cache flag
-#   --branch BRANCH   Override git branch to deploy (default: claude/continue-previous-session-QztqY)
+#   --branch BRANCH   Override git branch to deploy (default: staging)
 #   -h, --help        Show this help message
 #
 # Prerequisites (on your LOCAL machine running this script):
@@ -26,8 +26,9 @@ IFS=$'\n\t'
 readonly STAGING_PROJECT="${STAGING_PROJECT:-YOUR_GCP_PROJECT_ID}"
 readonly STAGING_VM_NAME="${STAGING_VM_NAME:-moka-staging-vm}"
 readonly STAGING_VM_ZONE="${STAGING_VM_ZONE:-asia-southeast1-b}"
-readonly DEPLOY_BRANCH="${DEPLOY_BRANCH:-claude/continue-previous-session-QztqY}"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-staging}"
 readonly APP_DIR="${APP_DIR:-/opt/moka}"
+readonly USE_IAP="${USE_IAP:-false}"
 readonly COMPOSE_FILE="deployment/staging/docker-compose.yml"
 readonly ENV_FILE="deployment/staging/.env.staging"
 
@@ -116,9 +117,14 @@ fi
 # Helper: run a command on the remote VM via gcloud ssh
 # ---------------------------------------------------------------------------
 remote() {
+    local -a iap=()
+    if [[ "$USE_IAP" == "true" ]]; then
+        iap=(--tunnel-through-iap)
+    fi
     gcloud compute ssh "$STAGING_VM_NAME" \
         --zone="$STAGING_VM_ZONE" \
         --project="$STAGING_PROJECT" \
+        ${iap[@]+"${iap[@]}"} \
         --command="$1"
 }
 

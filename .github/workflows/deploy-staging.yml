@@ -1,0 +1,92 @@
+name: Deploy to staging
+
+# Deploys to the GCP staging VM on every push to `staging`.
+# Manual runs are available from the Actions tab via workflow_dispatch.
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+    inputs:
+      skip_migrate:
+        description: "Skip database migrations"
+        type: boolean
+        default: false
+      no_cache:
+        description: "Rebuild Docker images with --no-cache"
+        type: boolean
+        default: false
+
+# Never let two deploys touch the VM at once.
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # required for Workload Identity Federation
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      STAGING_PROJECT: ${{ vars.STAGING_PROJECT }}
+      STAGING_VM_NAME: ${{ vars.STAGING_VM_NAME }}
+      STAGING_VM_ZONE: ${{ vars.STAGING_VM_ZONE }}
+      DEPLOY_BRANCH: staging
+      USE_IAP: ${{ vars.USE_IAP }}
+      HAS_WIF: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Preferred: keyless auth. Set the two WIF secrets and no long-lived
+      # credentials ever touch GitHub.
+      - name: Authenticate to Google Cloud (Workload Identity)
+        if: env.HAS_WIF == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # Fallback: service-account JSON key. Simpler to set up, but the key is a
+      # long-lived credential — prefer the Workload Identity path above.
+      - name: Authenticate to Google Cloud (service account key)
+        if: env.HAS_WIF != 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.STAGING_PROJECT }}
+
+      - name: Verify staging VM is reachable
+        run: |
+          gcloud compute instances describe "$STAGING_VM_NAME" \
+            --zone="$STAGING_VM_ZONE" \
+            --project="$STAGING_PROJECT" \
+            --format="get(status)"
+
+      - name: Deploy
+        run: |
+          chmod +x deployment/staging/deploy-staging.sh
+          ARGS=()
+          if [ "${{ inputs.skip_migrate }}" = "true" ]; then ARGS+=(--skip-migrate); fi
+          if [ "${{ inputs.no_cache }}"   = "true" ]; then ARGS+=(--no-cache);     fi
+          ./deployment/staging/deploy-staging.sh "${ARGS[@]+"${ARGS[@]}"}"
+
+      - name: Report staging URL
+        run: |
+          IP=$(gcloud compute instances describe "$STAGING_VM_NAME" \
+                 --zone="$STAGING_VM_ZONE" \
+                 --project="$STAGING_PROJECT" \
+                 --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
+          echo "### Staging deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: http://$IP:8080" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
