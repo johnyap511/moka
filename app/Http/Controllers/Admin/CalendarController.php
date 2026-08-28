@@ -104,15 +104,19 @@ class CalendarController extends Controller
         $selectedId  = $request->listing_id ?? ($allListings->first()->id ?? null);
         $listing     = $selectedId ? Listing::find($selectedId) : null;
 
-        $start = Carbon::now()->startOfMonth()->subMonth();
-        $end   = Carbon::now()->endOfMonth()->addMonths(2);
-
-        $query = Booking::where('status', '>', 1)
-            ->where('check_out', '>=', $start)
-            ->where('check_in', '<=', $end);
+        $query = Booking::where('status', '>', 1);
 
         if ($selectedId) {
+            // Month navigation happens in the browser over the events sent with
+            // the page, so anything filtered out here can never be drawn, in any
+            // month. One listing's whole history is a few hundred rows, so it is
+            // sent in full rather than windowed around today.
             $query->where('listing_id', $selectedId);
+        } else {
+            // Without a listing filter this would be every booking ever, so keep
+            // a window on the unfiltered case only.
+            $query->where('check_out', '>=', Carbon::now()->startOfMonth()->subMonth())
+                  ->where('check_in', '<=', Carbon::now()->endOfMonth()->addMonths(2));
         }
 
         $books  = $query->get();
