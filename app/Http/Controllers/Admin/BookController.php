@@ -258,18 +258,54 @@ class BookController extends Controller
      * Show the form for creating a new resource.
      * @return \Illuminate\Http\Response
      */
-    public function ezeeBookings()
+    /**
+     * Shared query behind the All / Unassigned / Assigned tabs.
+     *
+     * The window defaults to what these pages have always shown — check-outs
+     * from the start of last month — but is now a query parameter, so older
+     * periods can be reached without a code change. Results are paginated:
+     * these lists previously loaded every matching row into one page, which
+     * only stayed workable because the window was narrow.
+     */
+    private function ezeeBookingList(Request $request, array $statuses)
     {
-        $currentMonth = date('Y-m-') . '01';
-        $newdate = date("Y-m-d", strtotime('-1 month', strtotime($currentMonth)));
-        $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5, 8])
-            ->orderBy('id', 'desc')->get();
+        $defaultFrom = date('Y-m-d', strtotime('-1 month', strtotime(date('Y-m-') . '01')));
+
+        $from = $request->input('from', $defaultFrom);
+        $to   = $request->input('to');
+        $q    = trim((string) $request->input('q'));
+
+        $query = EzeeBooking::whereIn('status', $statuses);
+
+        if ($from) {
+            $query->where('End', '>=', $from);
+        }
+        if ($to) {
+            $query->where('Start', '<=', $to);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sq) use ($q) {
+                foreach (['FirstName', 'LastName', 'SubBookingId', 'folio_no',
+                          'RoomName', 'RoomTypeName', 'Source'] as $column) {
+                    $sq->orWhere($column, 'LIKE', "%{$q}%");
+                }
+            });
+        }
+
+        $books = $query->orderBy('Start', 'desc')->paginate(100)->withQueryString();
+
+        // decorate works on models, so hand it the page's collection.
+        $linkedListings = $this->linkedBookings($books->getCollection());
+        $this->decorateEzeeBookings($books->getCollection(), $linkedListings);
+
         $listings = Listing::where('status', 1)->get();
 
-        $linkedListings = $this->linkedBookings($books);
-        $this->decorateEzeeBookings($books, $linkedListings);
-
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings', 'from', 'to', 'q'));
+    }
+    public function ezeeBookings(Request $request)
+    {
+        return $this->ezeeBookingList($request, [5, 8]);
     }
 
     /**
@@ -813,41 +849,37 @@ class BookController extends Controller
         }
     }
 
-    public function ezeeBookingsUnAssigned()
+    public function ezeeBookingsUnAssigned(Request $request)
     {
-        $currentMonth = date('Y-m-') . '01';
-        $newdate = date("Y-m-d", strtotime('-1 month', strtotime($currentMonth)));
-        // $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->orderBy('id','DESC')->limit(100)->get();
-        $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [5])->get();
-        $listings = Listing::where('status', 1)->get();
-        $linkedListings = $this->linkedBookings($books);
-        $this->decorateEzeeBookings($books, $linkedListings);
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+        return $this->ezeeBookingList($request, [5]);
     }
 
-    public function ezeeBookingsAssigned()
+    public function ezeeBookingsAssigned(Request $request)
     {
-        $currentMonth = date('Y-m-') . '01';
-        $newdate = date("Y-m-d", strtotime('-1 month', strtotime($currentMonth)));
-        $books = EzeeBooking::where([['End', '>=', $newdate]])->whereIn('status', [8])->get();
-        $listings = Listing::where('status', 1)->get();
-        $linkedListings = $this->linkedBookings($books);
-        $this->decorateEzeeBookings($books, $linkedListings);
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+        return $this->ezeeBookingList($request, [8]);
     }
 
     /**
      * Show the form for creating a new resource.
      * @return \Illuminate\Http\Response
      */
-    public function ezeeBookingsDate($date)
+    public function ezeeBookingsDate(Request $request, $date)
     {
-        $currentMonth = $date;
-        $books = EzeeBooking::where([['status', 5]])->whereDate('created_at', '=', $currentMonth)->get();
+        // Reached from the EZEE report, which links a day to its bookings.
+        // Paginated like the other lists, since the view now expects it.
+        $books = EzeeBooking::where('status', 5)
+            ->whereDate('created_at', $date)
+            ->orderBy('Start', 'desc')
+            ->paginate(100)
+            ->withQueryString();
+
+        $linkedListings = $this->linkedBookings($books->getCollection());
+        $this->decorateEzeeBookings($books->getCollection(), $linkedListings);
+
         $listings = Listing::where('status', 1)->get();
-        $linkedListings = $this->linkedBookings($books);
-        $this->decorateEzeeBookings($books, $linkedListings);
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings'));
+        $from = $to = $q = null;
+
+        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings', 'from', 'to', 'q'));
     }
 
     /**

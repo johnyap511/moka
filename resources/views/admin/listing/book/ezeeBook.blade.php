@@ -57,18 +57,25 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
             Remove Duplicates
         </button>
     </form>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        <div class="search-bar" style="min-width:280px">
+    <form method="GET" style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        {{-- Server-side now: with 60k bookings the list is paginated, so
+             filtering only the visible page would be misleading. --}}
+        <div class="search-bar" style="min-width:240px">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" id="ezee-search" placeholder="Search guest, room, source…" oninput="filterTable(this.value)">
+            <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Guest, res no, folio, unit, source…">
         </div>
-        <span id="result-count" style="font-size:12px;color:var(--text-secondary);white-space:nowrap"></span>
-    </div>
+        <input type="date" name="from" value="{{ $from ?? '' }}" class="form-input" style="width:auto" title="Check-out on or after">
+        <input type="date" name="to"   value="{{ $to ?? '' }}"   class="form-input" style="width:auto" title="Check-in on or before">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        @if(request()->hasAny(['q','from','to']))
+            <a href="{{ request()->url() }}" class="btn btn-secondary btn-sm">Reset</a>
+        @endif
+    </form>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h2>Bookings <span class="badge badge-blue" id="visible-count">{{ count($books) }}</span></h2>
+        <h2>Bookings <span class="badge badge-blue">{{ number_format($books->total()) }}</span></h2>
     </div>
     <div class="table-wrap">
         <table class="ezee-table" id="ezee-table">
@@ -197,6 +204,35 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
             </tbody>
         </table>
     </div>
+
+    @if($books->lastPage() > 1)
+        <div class="card-body" style="padding-top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <span class="text-sm text-secondary">
+                Showing {{ $books->firstItem() }}–{{ $books->lastItem() }} of {{ number_format($books->total()) }}
+            </span>
+            <div style="display:flex;align-items:center;gap:6px">
+                @if($books->onFirstPage())
+                    <span class="btn btn-secondary btn-sm" style="opacity:.4;cursor:default">← Prev</span>
+                @else
+                    <a href="{{ $books->previousPageUrl() }}" class="btn btn-secondary btn-sm">← Prev</a>
+                @endif
+
+                @foreach($books->getUrlRange(max(1, $books->currentPage() - 2), min($books->lastPage(), $books->currentPage() + 2)) as $page => $url)
+                    @if($page == $books->currentPage())
+                        <span class="btn btn-primary btn-sm">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}" class="btn btn-secondary btn-sm">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($books->hasMorePages())
+                    <a href="{{ $books->nextPageUrl() }}" class="btn btn-secondary btn-sm">Next →</a>
+                @else
+                    <span class="btn btn-secondary btn-sm" style="opacity:.4;cursor:default">Next →</span>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>
 
 {{-- Assign Modal.
@@ -385,21 +421,6 @@ document.getElementById('assign-modal').addEventListener('click', function(e) {
     if (e.target === this) closeAssign();
 });
 
-// ---- Search ----
-function filterTable(q) {
-    q = q.toLowerCase().trim();
-    var rows = document.querySelectorAll('#ezee-tbody tr');
-    var visible = 0;
-    rows.forEach(function(row) {
-        var text = row.innerText.toLowerCase();
-        var show = !q || text.includes(q);
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-    });
-    document.getElementById('visible-count').textContent = visible;
-    document.getElementById('result-count').textContent = q ? ('Showing ' + visible + ' result' + (visible !== 1 ? 's' : '')) : '';
-}
-
 // ---- Sorting ----
 var sortState = { col: null, dir: 0 };
 
@@ -448,8 +469,6 @@ function sortTable(col, dir) {
     rows.forEach(function(r) { tbody.appendChild(r); });
 }
 
-// Init count
-document.getElementById('visible-count').textContent = document.querySelectorAll('#ezee-tbody tr').length;
 </script>
 @include('admin.listing.book._fees', ['formId' => 'assign-form', 'bookedOn' => date('Y-m-d'), 'var' => 'assignFees'])
 <script>
