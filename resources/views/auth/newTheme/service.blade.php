@@ -37,7 +37,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="/login" method="post">
-                        <input type="hidden" name="_token" value="th6AHaoKd7sI2AYTMqsuZt5rRiW71ORmLj9FP5mJ">                        <input type="email" name="email" placeholder="Email or phone number" required>
+                        @csrf                        <input type="email" name="email" placeholder="Email or phone number" required>
                         <input type="password" name="password" placeholder="Enter your password" required>
                         <a href="/service#">
                             <p class="text-danger text-end" data-bs-toggle="modal" data-bs-target="#forgetPasswordModal">Forget Password ?</p>
@@ -78,7 +78,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="/register" method="post">
-                        <input type="hidden" name="_token" value="th6AHaoKd7sI2AYTMqsuZt5rRiW71ORmLj9FP5mJ">                        <div class="phone-input-sec">
+                        @csrf                        <div class="phone-input-sec">
                             <div class="me-select">
                                 <select name="country_code" required>
                                 <option value="60">Malaysia (+60)</option>
@@ -370,7 +370,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="/register/owner" method="post">
-                        <input type="hidden" name="_token" value="th6AHaoKd7sI2AYTMqsuZt5rRiW71ORmLj9FP5mJ">                    <div class="phone-input-sec">
+                        @csrf                    <div class="phone-input-sec">
                         <div class="me-select">
                             <select name="country_code" required>
                                <option value="60">Malaysia (+60)</option>
@@ -647,7 +647,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="/forget/password" method="post">
-                        <input type="hidden" name="_token" value="th6AHaoKd7sI2AYTMqsuZt5rRiW71ORmLj9FP5mJ">                    <input type="text" placeholder="Enter your email" name="email" required>
+                        @csrf                    <input type="text" placeholder="Enter your email" name="email" required>
                     <button type="submit" class="primary-btn w-100 mb-3">Get Reset Link</button>
                     </form>
                 </div>

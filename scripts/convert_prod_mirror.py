@@ -45,6 +45,11 @@ def rewrite(html: str) -> str:
     # Pages nested a directory down (get/estimate) reference assets as ../
     html = re.sub(r'\.\./(?=(?:%s)[\\\\/])' % '|'.join(ASSET_DIRS), '/', html)
 
+    # The mirror is rendered output, so every form carries the CSRF token
+    # that was valid at crawl time. Left in place it never matches the
+    # visitor's session and every POST fails with 419.
+    html = re.sub(r'<input[^>]*name="_token"[^>]*>', '@csrf', html)
+
     for pattern, target in LINKS:
         html = re.sub(pattern, target, html)
 
