@@ -35,6 +35,8 @@ function compileBlade(string $source): string
         'elseif'  => 'elseif %s:',
         'unless'  => 'if (!%s):',
         'isset'   => 'if (isset%s):',
+        'hasSection'     => 'if (_blade%s):',
+        'sectionMissing' => 'if (!_blade%s):',
         'foreach' => 'foreach %s:',
         'for'     => 'for %s:',
         'while'   => 'while %s:',

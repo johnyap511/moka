@@ -85,6 +85,14 @@ class WebController extends Controller
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
+    public function newHomepage()
+    {
+        return view('auth.newTheme.homepage');
+    }
+
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function HomeAbout()
     {
         return view('v2.pages.about');
@@ -95,7 +103,7 @@ class WebController extends Controller
      */
     public function HomeService()
     {
-        return view('v2.pages.service');
+        return view('auth.newTheme.service');
     }
 
     /**

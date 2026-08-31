@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('lang')->group(function () {
 
     /* ── Public Pages ───────────────────────────────────────────────── */
-    Route::get('/',             'Auth\WebController@newHomeNew');
-    Route::get('/homepage',     'Auth\WebController@newHomeNew');
-    Route::get('/about',        'Auth\WebController@HomeAbout');
+    Route::get('/',             'Auth\WebController@newHome');
+    Route::get('/homepage',     'Auth\WebController@newHomepage');
+    Route::get('/about',        'Auth\WebController@newAbout');
     Route::get('/service',      'Auth\WebController@HomeService');
-    Route::get('/get/estimate', 'Auth\WebController@getEstimate');
+    Route::get('/designs',      'Auth\WebController@HomeDesigns');
+    Route::get('/get/estimate', 'Auth\WebController@estimate');
     Route::post('/estimate',    'Auth\WebController@submitEstimate')->name('estimate.submit');
     Route::get('/language/{lang}', 'Auth\HomeController@setLanguage');
 
