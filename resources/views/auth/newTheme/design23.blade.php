@@ -662,7 +662,7 @@
                  </h1>
                  <h4 class="heading-white-1 fs_25 text-center mt-4 px-5">Brought to you by our design team, INN Space</h4>
                  <div class="d-flex flex-column align-items-center justify-content-center mt-4 ml-5">
-                 <img src="/new-theme23\images\Asset&#32;47.png"/>
+                 <img src="{{ asset('new-theme23/images/Asset%2047.png') }}"/>
                  </div>
               </div>
            </div>
@@ -685,7 +685,7 @@
                     </p>
                 </div>
                 <div class="col-md-6 py-3 ps-md-4 ps-lg-5">
-                    <img src="/new-theme23\images\Asset&#32;44.png" alt="" srcset="" data-aos="fade-left" class="w-100 ps-lg-5 aos-init aos-animate">
+                    <img src="{{ asset('new-theme23/images/Asset%2044.png') }}" alt="" srcset="" data-aos="fade-left" class="w-100 ps-lg-5 aos-init aos-animate">
                 </div>
             </div>
         </div>
@@ -695,7 +695,7 @@
       <div class="container my-5 py-5">
         <div class="d-flex flex-column flex-md-row align-items-center">
             <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                <img src="/new-theme23\images\Asset&#32;45.png" alt="" srcset="" data-aos="fade-right" class="w-100 pe-lg-5 aos-init aos-animate">
+                <img src="{{ asset('new-theme23/images/Asset%2045.png') }}" alt="" srcset="" data-aos="fade-right" class="w-100 pe-lg-5 aos-init aos-animate">
             </div>
             <div class="col-md-6 py-3 ps-md-4 ps-lg-5 make-order-first">
                 <h2 class="heading-orange-2 mb-4">
@@ -727,19 +727,19 @@
                 <div class="d-flex flex-wrap orange-card-parent my-">
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom.png" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom.png') }}" alt="" srcset="">
                             <div class="overlay-text">Modern Zen</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;1.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%201.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Contemporary Art</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;2.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%202.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Wooden Serenity</div>
                         </div>
                     </div>
@@ -747,19 +747,19 @@
                 <div class="d-flex flex-wrap orange-card-parent my-">
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;3.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%203.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Contemporary Chic</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;4.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%204.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Industrial Luxe</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;5.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%205.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Chic Woodcraft</div>
                         </div>
                     </div>
@@ -767,19 +767,19 @@
                 <div class="d-flex flex-wrap orange-card-parent my-">
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;6.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%206.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Eclectic Design</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;7.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%207.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Epicurean Elegance</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 col-lg-4 p-3">
                         <div class="orange-card-1">
-                            <img class="img-fluid" src="/new-theme23\images\master&#32;bedroom&#32;9.jpg" alt="" srcset="">
+                            <img class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%209.jpg') }}" alt="" srcset="">
                             <div class="overlay-text">Modern Serenity</div>
                         </div>
                     </div>

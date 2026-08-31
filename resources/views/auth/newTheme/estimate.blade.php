@@ -690,7 +690,7 @@
                     </div>
                 </div>
                 <div class="col-md-6 py-3">
-                    <!-- <img src="new-theme23\images\Asset 1.png" alt="" srcset="" class="w-100 ps-lg-5"> -->
+                    <!-- <img src="{{ asset('new-theme23/images/Asset 1.png') }}" alt="" srcset="" class="w-100 ps-lg-5"> -->
                     <div class="d-flex flex-column flex-sm-row flex-md-column align-items-center gap-3 gap-md-5">
                         <div class="d-flex flex-column align-items-center gap-3">
                             <img src="{{ asset('new-theme/images/iconp1.svg') }}" style="height:70px;" />

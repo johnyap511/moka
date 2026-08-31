@@ -1202,7 +1202,7 @@
             <h1 class="heading-orange-1 text-center">
                 Our Partners
             </h1>
-            <img src="/new-theme23\images\Asset&#32;6.png" alt="" class="mt-5 pt-3 w-100">
+            <img src="{{ asset('new-theme23/images/Asset%206.png') }}" alt="" class="mt-5 pt-3 w-100">
         </div>
     </div>
     <div class="bottom-banner py-5">

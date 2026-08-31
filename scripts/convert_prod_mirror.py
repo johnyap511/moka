@@ -43,7 +43,7 @@ def rewrite(html: str) -> str:
     html = re.sub(r'https?://(www\.)?homemoka\.com/', '/', html)
 
     # Pages nested a directory down (get/estimate) reference assets as ../
-    html = re.sub(r'\.\./(?=(?:%s)/)' % '|'.join(ASSET_DIRS), '/', html)
+    html = re.sub(r'\.\./(?=(?:%s)[\\\\/])' % '|'.join(ASSET_DIRS), '/', html)
 
     for pattern, target in LINKS:
         html = re.sub(pattern, target, html)
@@ -55,12 +55,12 @@ def rewrite(html: str) -> str:
     # the document lives at the web root.
     def to_asset(m):
         quote, path = m.group(1), m.group(2).lstrip('/')
-        path = path.replace('&#32;', '%20')
+        path = path.replace('\\', '/').replace('&#32;', '%20')
         if not path.startswith(ASSET_DIRS):
             return m.group(0)
         return "%s{{ asset('%s') }}%s" % (quote, path, quote)
 
-    html = re.sub(r'(["\'])(/?(?:%s)/[^"\']*)\1' % '|'.join(ASSET_DIRS), to_asset, html)
+    html = re.sub(r'(["\'])(/?(?:%s)[\\\\/][^"\']*)\1' % '|'.join(ASSET_DIRS), to_asset, html)
     return html
 
 

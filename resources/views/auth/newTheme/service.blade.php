@@ -987,11 +987,11 @@
             </h1>
             <div class="d-flex flex-column flex-md-row align-items-center mt-4">
                 <div class="img-tab w-100 h-100 d-flex justify-content-center">
-                    <img src="/new-theme23\images\1.png" alt="" srcset="" class="w-50">
-                    <img src="/new-theme23\images\2.png" alt="" srcset="" class="w-50">
-                    <img src="/new-theme23\images\3.png" alt="" srcset="" class="w-50">
-                    <img src="/new-theme23\images\4.png" alt="" srcset="" class="w-50">
-                    <img src="/new-theme23\images\5.png" alt="" srcset="" class="w-50">
+                    <img src="{{ asset('new-theme23/images/1.png') }}" alt="" srcset="" class="w-50">
+                    <img src="{{ asset('new-theme23/images/2.png') }}" alt="" srcset="" class="w-50">
+                    <img src="{{ asset('new-theme23/images/3.png') }}" alt="" srcset="" class="w-50">
+                    <img src="{{ asset('new-theme23/images/4.png') }}" alt="" srcset="" class="w-50">
+                    <img src="{{ asset('new-theme23/images/5.png') }}" alt="" srcset="" class="w-50">
                 </div>
                 <div class="col-md-6 py-3">
                     <p class="text-green-1">
