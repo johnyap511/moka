@@ -1,10 +1,21 @@
 name: Deploy to staging
 
-# Deploys to the GCP staging VM on every push to `staging`.
-# Manual runs are available from the Actions tab via workflow_dispatch.
+# PARKED — manual-trigger only, and not yet verified against the live VM.
+#
+# The staging VM currently runs the app NATIVELY (nginx 1.24 + php-fpm on
+# port 80, app at /var/www/moka), deployed by deploy.sh. This workflow drives
+# deployment/staging/deploy-staging.sh, which expects the Docker Compose stack
+# (nginx:1.25-alpine on port 8080, app at /opt/moka). Those do not match, so
+# running this today would fail.
+#
+# Before enabling the push trigger:
+#   1. Decide whether staging is native-on-80 or Docker-on-8080.
+#   2. If Docker: install Docker on the VM and open tcp:8080 in the firewall.
+#   3. Grant the CI service account roles/compute.osLogin.
+# Then restore:
+#   push:
+#     branches: [staging]
 on:
-  push:
-    branches: [staging]
   workflow_dispatch:
     inputs:
       skip_migrate:
