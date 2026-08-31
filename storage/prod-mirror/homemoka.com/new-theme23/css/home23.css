@@ -1,0 +1,72 @@
+.home-banner-outer {
+    background-color: var(--orange);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.form-sec {
+    width: 70%;
+}
+
+.banner-form input {
+    width: 100%;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    border: none;
+    outline: none;
+    padding: 9px 15px;
+    font-size: 13px;
+}
+
+.banner-form input::placeholder {
+    color: var(--orange);
+}
+
+.bed-count {
+    display: grid;
+    grid-template-columns: 20% 60% 20%;
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 4px 15px;
+    align-items: center;
+}
+
+
+.bed-count label {
+    color: var(--orange);
+    text-align: center;
+    user-select: none;
+}
+
+.b-count-number {
+    font-size: 13px;
+    line-height: 2;
+}
+
+.home-banner .green-btn {
+    padding: 5.5px 15px !important;
+}
+
+@media (min-width:992px) {
+    .home-banner-outer {
+        padding-top: 90px;
+    }
+}
+
+@media (max-width:991px) {
+    .form-sec {
+        width: 100%;
+    }
+    .home-banner-outer {
+        padding-top: 61px;
+    }
+}

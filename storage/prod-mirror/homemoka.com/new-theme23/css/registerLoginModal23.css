@@ -1,0 +1,46 @@
+.google-btn,
+.facebook-btn {
+    background-color: #fff;
+    padding: 6.2px 15px;
+    border: 1px solid #dfdfdf;
+    border-radius: 100px;
+}
+
+.phone-input-sec {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    grid-template-rows: auto;
+}
+
+@media (max-width:767px) {
+    .phone-input-sec {
+        grid-template-columns: 100%;
+        grid-template-rows: auto auto;
+    }
+
+    .phone-input-sec select {
+        margin-bottom: 0;
+    }
+
+    .phone-input-sec select {
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .phone-input-sec input {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+}
+
+@media (min-width:768px) {
+    .phone-input-sec select {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .phone-input-sec input {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+}

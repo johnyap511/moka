@@ -1,0 +1,48 @@
+.service-banner-outer {
+    min-height: 100vh;
+    background: url("../images/Asset 43.png");
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+}
+
+.service-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.service-banner .text-white-1 {
+    line-height: 37px;
+}
+
+.service-orange-card {
+    border: 1px solid var(--orange);
+    border-radius: 27px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    text-align: center;
+    height: 100%;
+}
+
+.service-orange-card-parent {
+    margin: 0 -8px;
+}
+
+.service-orange-card p {
+    text-align: center;
+}
+
+.service-orange-card span{
+    display: inline-block;
+    width: 100%;
+    min-height: 85px;
+}
+.service-orange-card img {
+    width: 40%;
+    /* height: 25%; */
+}
