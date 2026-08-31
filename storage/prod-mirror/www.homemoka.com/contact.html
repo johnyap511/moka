@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://homemoka.com/images/layouts/fav.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../homemoka.com/images/layout/fav.png">
+    <link rel="icon" type="image/png" href="../homemoka.com/images/layout/fav.png">
+    <title>Moka</title>
+    <link rel="stylesheet" href="../homemoka.com/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../homemoka.com/css/guest.css%3Fv=1523159669.css">
+</head>
+<body>
+<div id="menu4h1m3c">
+    <div class="close4n1jk">
+        <img src="../homemoka.com/images/layout/close.svg" id="closeMenu42m1">
+    </div>
+    <div class="menu4con1n33m2">
+        <div class="menu4sin4m1h213b">
+            <a href="https://homemoka.com/register">Register</a>
+        </div>
+        <div class="menu4sin4m1h213b">
+            <a href="https://homemoka.com/login">Sign In</a>
+        </div>
+        <div class="menu4sin4m1h213b">
+            <a href="contact.html">Contact Us</a>
+        </div>
+    </div>
+</div>
+<div id="background4b3m119"></div>
+        <div class="home-con43h1">
+        <div class="con3m985k">
+            <div class="header4n1m1">
+                <div class="col451">
+                    <div class="logo-con3h1m">
+                        <a href="https://homemoka.com"><img src="../homemoka.com/images/layout/logo-w.svg"></a>
+                    </div>
+                </div><div class="col451">
+                    <div class="menu-con3h1m1h float-right">
+                        <img src="../homemoka.com/images/layout/menu31.svg" id="openMenu4n23n1">
+                    </div>
+                </div>
+            </div>
+            <div class="page34n2k18">
+                <p>Drop us a message if you have any inquiry.</p>
+                <form class="form32m19m5" method="post" action="contact.html">
+                    <input type="hidden" name="_token" value="I7uMisXluLYORU27xSgGZjrmeePAdydKPHv32dr0">                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" name="name" placeholder="Your Name" value="">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" name="phone" placeholder="Your Contact Number" value="">
+                        </div>
+                    </div>
+                    <input type="email" name="email" placeholder="Your Email Address" value="">
+                    <textarea name="message" rows="4" placeholder="Your Message ..."></textarea>
+                    <button class="btn btn-block btn-white">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+<script src="../homemoka.com/js/jquery-3.3.1.min.js"></script>
+<script src="../homemoka.com/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#closeMenu42m1").on("click", function () {
+            $("#menu4h1m3c").css("width", 0);
+            $("#background4b3m119").fadeOut();
+        });
+        $("#openMenu4n23n1").on("click", function () {
+            $("#menu4h1m3c").css("width", 250);
+            $("#background4b3m119").fadeIn();
+        });
+        $("#background4b3m119").on("click", function () {
+            $("#menu4h1m3c").css("width", 0);
+            $("#background4b3m119").fadeOut();
+        });
+    });
+</script>
+</body>
+</html>
