@@ -192,7 +192,15 @@ class EzeeRoomMappingController extends Controller
             $saved++;
         }
 
-        return back()->with('success', "Saved {$saved} room mappings.");
+        $message = 'Saved ' . $saved . ' ' . ($saved === 1 ? 'mapping' : 'mappings') . '.';
+
+        // Answering JSON lets the screen save without reloading, which on a list
+        // this long otherwise throws the reader back to the top every time.
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'count' => $saved, 'message' => $message]);
+        }
+
+        return back()->with('success', $message);
     }
 
     /**

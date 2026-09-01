@@ -223,6 +223,7 @@ function onMappingChange(sel) {
         pill.textContent = hasMapped ? 'Mapped' : 'Unmapped';
     }
     row.className = row.className.replace(/\bis-(mapped|suggested|unmapped)-row\b/g, '') + ' ' + (hasMapped ? 'is-mapped' : 'is-unmapped') + '-row';
+    sel.dataset.dirty = '1';
     changedCount++;
     document.getElementById('changed-count').textContent = changedCount + ' unsaved change(s)';
 }
@@ -385,5 +386,77 @@ async function setArchived(btn, key, archived) {
         btn.disabled = false;
         btn.textContent = archived ? 'Archive' : 'Restore';
     }
+}
+</script>
+
+<script>
+// Saving happens in place. Posting the form reloaded the page and returned the
+// reader to the top, which on 165 rows means finding your place again after
+// every save.
+document.getElementById('mapping-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const changed = Array.from(document.querySelectorAll('.msel[data-dirty="1"]'));
+
+    if (!changed.length) {
+        flashSave('Nothing to save.');
+        return;
+    }
+
+    // Only what actually changed: sending all 165 rows would rewrite mappings
+    // nobody touched.
+    const mappings = {};
+    changed.forEach(sel => {
+        const name = sel.getAttribute('name');           // mappings[<key>]
+        mappings[name.slice('mappings['.length, -1)] = sel.value;
+    });
+
+    const btn = this.querySelector('button[type="submit"]');
+    const label = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ mappings: mappings }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+            throw new Error(data.message || ('Save failed (' + res.status + ')'));
+        }
+
+        changed.forEach(sel => { delete sel.dataset.dirty; });
+        changedCount = 0;
+        document.getElementById('changed-count').textContent = '';
+        flashSave(data.message);
+    } catch (err) {
+        alert('Could not save: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = label;
+    }
+});
+
+function flashSave(text) {
+    let el = document.getElementById('save-flash');
+
+    if (!el) {
+        el = document.createElement('span');
+        el.id = 'save-flash';
+        el.style.cssText = 'font-size:12px;color:#0f7b4f;margin-left:8px';
+        document.getElementById('changed-count').after(el);
+    }
+
+    el.textContent = text;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.textContent = ''; }, 4000);
 }
 </script>
