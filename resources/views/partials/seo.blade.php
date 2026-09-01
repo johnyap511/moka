@@ -11,22 +11,29 @@
     Anything not overridden falls back to the site-wide defaults below.
 --}}
 @php
+    // Laravel escapes inline @section('x', '...') content via e(), so yieldContent()
+    // hands back pre-escaped HTML. Decoding here means Blade's {{ }} escapes exactly
+    // once; without it an ampersand renders as "&amp;amp;".
+    $seoSection = function (string $name) use ($__env) {
+        return html_entity_decode(trim($__env->yieldContent($name)), ENT_QUOTES, 'UTF-8');
+    };
+
     // Legacy section names (title / meta_description / og_*) are still used by the
     // v2 views, so honour them as a fallback before dropping to the site default.
-    $legacyTitle = trim($__env->yieldContent('title'));
-    $legacyDesc  = trim($__env->yieldContent('meta_description'));
+    $legacyTitle = $seoSection('title');
+    $legacyDesc  = $seoSection('meta_description');
 
-    $seoTitle       = trim($__env->yieldContent('seo_title')) ?: $legacyTitle
+    $seoTitle       = $seoSection('seo_title') ?: $legacyTitle
         ?: 'Airbnb & Short-Stay Property Management in Malaysia | MOKA';
-    $seoDescription = trim($__env->yieldContent('seo_description')) ?: $legacyDesc
+    $seoDescription = $seoSection('seo_description') ?: $legacyDesc
         ?: 'MOKA manages your Airbnb and short-stay property end to end — renovation, listing, professional photography, price optimisation, guest vetting and housekeeping. Find out what your property could earn.';
-    $seoCanonical   = trim($__env->yieldContent('seo_canonical')) ?: url()->current();
-    $seoRobots      = trim($__env->yieldContent('seo_robots'))    ?: 'index,follow,max-image-preview:large';
-    $seoImage       = trim($__env->yieldContent('seo_image'))     ?: asset('images/layout/og-cover.jpg');
-    $seoType        = trim($__env->yieldContent('seo_type'))      ?: 'website';
+    $seoCanonical   = $seoSection('seo_canonical') ?: url()->current();
+    $seoRobots      = $seoSection('seo_robots')    ?: 'index,follow,max-image-preview:large';
+    $seoImage       = $seoSection('seo_image')     ?: asset('images/layout/og-cover.jpg');
+    $seoType        = $seoSection('seo_type')      ?: 'website';
 
-    $ogTitle = trim($__env->yieldContent('og_title')) ?: $seoTitle;
-    $ogDesc  = trim($__env->yieldContent('og_description')) ?: $seoDescription;
+    $ogTitle = $seoSection('og_title') ?: $seoTitle;
+    $ogDesc  = $seoSection('og_description') ?: $seoDescription;
 @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
