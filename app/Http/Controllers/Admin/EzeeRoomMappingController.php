@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\EzeeAssignmentLog;
 use App\Booking;
 use App\EzeeGroup;
+use App\EzeeRoom;
 use App\EzeeRoomMapping;
 use App\Http\Controllers\Controller;
 use App\Listing;
@@ -23,13 +24,32 @@ class EzeeRoomMappingController extends Controller
     {
         $listings = Listing::orderBy('name')->get();
 
-        // All distinct RoomName values (specific unit names from EZEE, e.g. "H-09-10")
-        $rooms = EzeeBooking::select('RoomName', 'RoomTypeName')
+        // Every unit EZEE holds for these properties, from ezee_rooms (filled by
+        // `ezee:sync-rooms`). Listing only the units seen in bookings — which is
+        // what this page used to do — hid any unit nobody had stayed in yet, so
+        // those could never be mapped ahead of their first booking.
+        $rooms = EzeeRoom::orderBy('room_name')
+            ->get()
+            ->map(function ($room) {
+                return (object) [
+                    'RoomName'     => $room->room_name,
+                    'RoomTypeName' => $room->room_type_name,
+                ];
+            });
+
+        // Anything seen in a booking but absent from the inventory still belongs
+        // here: it keeps the page working before the first sync, and surfaces
+        // units EZEE has since retired but which still carry bookings.
+        $known = $rooms->pluck('RoomName')->map(fn ($n) => strtolower(trim($n)))->flip();
+
+        $fromBookings = EzeeBooking::select('RoomName', 'RoomTypeName')
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
             ->distinct()
-            ->orderBy('RoomName')
-            ->get();
+            ->get()
+            ->reject(fn ($r) => $known->has(strtolower(trim($r->RoomName))));
+
+        $rooms = $rooms->concat($fromBookings)->sortBy('RoomName')->values();
 
         // Existing mappings keyed by room_name
         $mappings = EzeeRoomMapping::all()->keyBy('room_name');
