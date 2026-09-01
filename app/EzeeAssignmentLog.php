@@ -6,7 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class EzeeAssignmentLog extends Model
 {
-    protected $fillable = ['ezee_booking_id', 'listing_id', 'old_listing_id', 'assigned_by', 'method', 'note'];
+    protected $fillable = [
+        'ezee_booking_id', 'listing_id', 'old_listing_id', 'assigned_by', 'method', 'note',
+        'resolved_at', 'resolved_by', 'resolution_note',
+    ];
+
+    protected $casts = ['resolved_at' => 'datetime'];
+
+    /** Conflicts still waiting on a person. */
+    public function scopeNeedsReview($query)
+    {
+        return $query->where('method', 'conflict')->whereNull('resolved_at');
+    }
 
     public function ezeeBooking()
     {

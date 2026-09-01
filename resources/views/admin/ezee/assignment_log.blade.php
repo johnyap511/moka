@@ -63,6 +63,7 @@
                     <th>Method</th>
                     <th>By</th>
                     <th>Date</th>
+                    <th style="width:210px">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -80,7 +81,7 @@
                     <td>{{ $log->listing->name ?? '—' }}</td>
                     <td>
                         @if($log->old_listing_id)
-                            @php $oldListing = \App\Listing::find($log->old_listing_id); @endphp
+                            @php $oldListing = \App\Listing::withArchived()->find($log->old_listing_id); @endphp
                             <span style="color:var(--text-secondary)">{{ $oldListing->name ?? '#'.$log->old_listing_id }}</span>
                         @else
                             <span style="color:var(--text-secondary)">—</span>
@@ -89,10 +90,36 @@
                     <td><span class="badge {{ $methodColors[$log->method] ?? 'badge-gray' }}">{{ ucfirst($log->method) }}</span></td>
                     <td>{{ $log->assignedBy->name ?? 'System' }}</td>
                     <td style="white-space:nowrap">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }}</td>
+                    <td>
+                        @if($log->method === 'conflict')
+                            <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                {{-- Reassign and Edit reuse the screens the team
+                                     already works in, rather than new ones. --}}
+                                <a href="/admin/ezee/booking?q={{ urlencode($eb->SubBookingId ?? '') }}"
+                                   class="btn btn-secondary btn-sm" title="Find this booking on EZEE Bookings to reassign it">Reassign</a>
+                                <a href="{{ route('admin.ezee.booking.edit', $log->ezee_booking_id) }}"
+                                   class="btn btn-secondary btn-sm">Edit</a>
+                                @if($log->resolved_at)
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            onclick="setResolved(this, {{ $log->id }}, false)">Reopen</button>
+                                @else
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
+                                @endif
+                            </div>
+                            @if($log->resolved_at)
+                                <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">
+                                    Done {{ \Carbon\Carbon::parse($log->resolved_at)->format('d M H:i') }}
+                                </div>
+                            @endif
+                        @else
+                            <span style="color:var(--text-secondary)">—</span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" style="text-align:center;padding:40px;color:var(--text-secondary)">No assignments logged yet.</td>
+                    <td colspan="11" style="text-align:center;padding:40px;color:var(--text-secondary)">No assignments logged yet.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -114,3 +141,48 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Resolving records that a person has dealt with a conflict. It changes no
+// booking; it only takes the row off the queue, and can be reopened.
+async function setResolved(btn, logId, resolved) {
+    var note = null;
+
+    if (resolved) {
+        note = prompt('Mark this conflict as done?\n\nOptional note (what you did):', '');
+        if (note === null) { return; }
+    }
+
+    btn.disabled = true;
+    btn.textContent = resolved ? 'Saving…' : 'Reopening…';
+
+    try {
+        const res = await fetch('/admin/ezee/assignment-log/' + logId + '/resolve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ resolved: resolved, note: note }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+
+        // On the Needs review tab a resolved row no longer belongs; elsewhere
+        // reload so the state and counts are consistent.
+        if (resolved && window.location.search.indexOf('method=conflict') !== -1) {
+            btn.closest('tr').remove();
+        } else {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('Could not update: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = resolved ? 'Mark done' : 'Reopen';
+    }
+}
+</script>
+@endpush

@@ -73,6 +73,7 @@ Route::post('/ezee/room-mapping/auto-assign', 'Admin\EzeeRoomMappingController@a
 Route::post('/ezee/room-mapping/archive', 'Admin\EzeeRoomMappingController@setArchived')->name('admin.ezee.room-mapping.archive');
 Route::post('/ezee/booking/{ezeeBookingId}/reassign', 'Admin\EzeeRoomMappingController@reassign')->name('admin.ezee.reassign');
 Route::get('/ezee/assignment-log', 'Admin\EzeeRoomMappingController@auditLog')->name('admin.ezee.assignment-log');
+Route::post('/ezee/assignment-log/{log}/resolve', 'Admin\EzeeRoomMappingController@resolveConflict')->name('admin.ezee.assignment-log.resolve');
 
 // Images
 Route::get('/listing/{id}/images', 'Admin\ListingImagesController@show');

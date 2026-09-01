@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DataLog;
 use App\EzeeAssignmentLog;
 use App\Booking;
 use App\EzeeGroup;
@@ -281,6 +282,51 @@ class EzeeRoomMappingController extends Controller
         return response()->json(['ok' => true, 'message' => 'Booking reassigned successfully.']);
     }
 
+    /**
+     * Mark a conflict dealt with, or reopen one.
+     *
+     * Resolving does not change any booking — it records that a person has
+     * looked at it. Reopening exists because closing the wrong row should not
+     * be a one-way door.
+     */
+    public function resolveConflict(Request $request, $logId)
+    {
+        $request->validate([
+            'resolved' => 'required|boolean',
+            'note'     => 'nullable|string|max:255',
+        ]);
+
+        $log = EzeeAssignmentLog::findOrFail($logId);
+
+        if ($log->method !== 'conflict') {
+            return response()->json(['ok' => false, 'message' => 'Only conflicts can be resolved.'], 422);
+        }
+
+        $resolved = $request->boolean('resolved');
+
+        $log->update([
+            'resolved_at'     => $resolved ? now() : null,
+            'resolved_by'     => $resolved ? Auth::id() : null,
+            'resolution_note' => $resolved ? ($request->input('note') ?: 'Marked done.') : null,
+        ]);
+
+        DataLog::create([
+            'related_id' => $log->ezee_booking_id,
+            'title'      => $resolved ? 'EZEE conflict resolved' : 'EZEE conflict reopened',
+            'data'       => json_encode([
+                'log'  => $log->id,
+                'note' => $log->resolution_note,
+                'by'   => Auth::id(),
+            ], JSON_UNESCAPED_SLASHES),
+            'status'     => $resolved ? 'done' : 'needs review',
+        ]);
+
+        return response()->json([
+            'ok'      => true,
+            'message' => $resolved ? 'Marked as done.' : 'Reopened for review.',
+        ]);
+    }
+
     public function auditLog(Request $request)
     {
         // Conflicts are the only rows that need a person, so they get their own
@@ -288,7 +334,8 @@ class EzeeRoomMappingController extends Controller
         $method = $request->input('method');
 
         $logs = EzeeAssignmentLog::with(['listing', 'assignedBy'])
-            ->when($method, fn ($q) => $q->where('method', $method))
+            ->when($method === 'conflict', fn ($q) => $q->needsReview())
+            ->when($method && $method !== 'conflict', fn ($q) => $q->where('method', $method))
             ->orderByDesc('created_at')
             ->paginate(50)
             ->withQueryString();
@@ -296,6 +343,10 @@ class EzeeRoomMappingController extends Controller
         $counts = EzeeAssignmentLog::selectRaw('method, COUNT(*) c')
             ->groupBy('method')
             ->pluck('c', 'method');
+
+        // "Needs review" means an outstanding conflict, not every conflict ever
+        // logged — otherwise the count never falls and the queue is useless.
+        $counts['conflict'] = EzeeAssignmentLog::needsReview()->count();
 
         $ezeeIds = $logs->pluck('ezee_booking_id')->unique();
         $ezeeMap = EzeeBooking::whereIn('id', $ezeeIds)

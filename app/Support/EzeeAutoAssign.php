@@ -43,6 +43,7 @@ class EzeeAutoAssign
         'unmapped'  => 0,
         'unchanged' => 0,
         'adopted'   => 0,
+        'resolved'  => 0,
         'failed'    => 0,
     ];
 
@@ -58,6 +59,18 @@ class EzeeAutoAssign
      * @var array<int,true>
      */
     private array $vacated = [];
+
+    /**
+     * Reservations that conflicted during this run. Anything outstanding that is
+     * not in here no longer conflicts and is closed automatically, which is what
+     * keeps the queue short instead of growing forever.
+     *
+     * @var array<int,true>
+     */
+    private array $conflictedNow = [];
+
+    /** @var array<int,true> reservations this run looked at */
+    private array $examined = [];
 
     public function __construct(bool $dryRun = false, ?int $actorId = null)
     {
@@ -95,6 +108,8 @@ class EzeeAutoAssign
         foreach ($candidates as $ezeeBooking) {
             $listing = $units->resolve($ezeeBooking);
 
+            $this->examined[$ezeeBooking->id] = true;
+
             if (!$listing) {
                 $this->tally['unmapped']++;
                 continue;
@@ -118,6 +133,8 @@ class EzeeAutoAssign
         foreach ($pending as [$ezeeBooking, $listing]) {
             $this->guard(fn () => $this->assign($ezeeBooking, $listing), $ezeeBooking);
         }
+
+        $this->closeStaleConflicts();
 
         return $this->summary();
     }
@@ -269,6 +286,38 @@ class EzeeAutoAssign
         ]);
     }
 
+    /**
+     * Close conflicts that no longer apply.
+     *
+     * A reservation this run examined and did not flag is no longer in conflict:
+     * it has been assigned, the blocking booking was cancelled, or the clash was
+     * reported by a bug since fixed. Leaving those open makes the queue grow
+     * without bound and hides the ones that still need a person.
+     */
+    private function closeStaleConflicts(): void
+    {
+        $examined = array_keys($this->examined);
+
+        if (!$examined || $this->dryRun) {
+            return;
+        }
+
+        $stale = EzeeAssignmentLog::needsReview()
+            ->whereIn('ezee_booking_id', $examined)
+            ->whereNotIn('ezee_booking_id', array_keys($this->conflictedNow) ?: [0])
+            ->get();
+
+        foreach ($stale as $log) {
+            $log->update([
+                'resolved_at'     => now(),
+                'resolved_by'     => null,
+                'resolution_note' => 'Closed automatically: this booking no longer conflicts.',
+            ]);
+
+            $this->tally['resolved']++;
+        }
+    }
+
     /** A live booking already recording this exact stay on this unit. */
     private function sameStay(int $listingId, EzeeBooking $ezeeBooking): ?Booking
     {
@@ -370,6 +419,8 @@ class EzeeAutoAssign
 
     private function conflict(EzeeBooking $ezeeBooking, Listing $listing, ?int $fromListingId, Booking $clash, string $intent): void
     {
+        $this->conflictedNow[$ezeeBooking->id] = true;
+
         $this->tally['conflicts']++;
         $this->detail[] = [
             'action'  => 'conflict',
