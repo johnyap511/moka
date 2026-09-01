@@ -387,11 +387,11 @@ window.makeCombo = function (opts) {
         if (below < 160 && above > below) {          // not enough room: flip up
             list.style.top       = 'auto';
             list.style.bottom    = (window.innerHeight - r.top + gap) + 'px';
-            list.style.maxHeight = Math.max(120, Math.min(240, above - 12)) + 'px';
+            list.style.maxHeight = Math.max(120, Math.min(360, above - 12)) + 'px';
         } else {
             list.style.bottom    = 'auto';
             list.style.top       = (r.bottom + gap) + 'px';
-            list.style.maxHeight = Math.max(120, Math.min(240, below - 12)) + 'px';
+            list.style.maxHeight = Math.max(120, Math.min(360, below - 12)) + 'px';
         }
     }
 
@@ -430,7 +430,11 @@ window.makeCombo = function (opts) {
             none.textContent = 'No match';
             list.appendChild(none);
         } else {
-            matches.slice(0, 50).forEach(function (u) {
+            // Every match is rendered, not the first 50. Listings sort
+            // alphabetically and there are more than 50 before EkoCheras begins,
+            // so a cap made most of the estate unreachable without typing. The
+            // list scrolls, and a few hundred items cost nothing.
+            matches.forEach(function (u) {
                 var li = document.createElement('li');
                 li.textContent = u.name;
                 li.setAttribute('role', 'option');
@@ -448,7 +452,7 @@ window.makeCombo = function (opts) {
     search.addEventListener('focus', function () { render(''); this.select(); });
     search.addEventListener('blur',  function () { setTimeout(close, 120); });
     search.addEventListener('keydown', function (e) {
-        var last = Math.min(matches.length, 50) - 1;
+        var last = matches.length - 1;
         if (!list.classList.contains('open') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { render(this.value); return; }
         if (e.key === 'ArrowDown')    { e.preventDefault(); highlight(Math.min(active + 1, last)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(Math.max(active - 1, 0)); }

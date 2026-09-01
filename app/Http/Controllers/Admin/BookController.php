@@ -908,6 +908,23 @@ class BookController extends Controller
         if (empty($ezee)) {
             return back()->with('success', 'Invalid EZEE booking ID!');
         }
+        // Refuse a reservation that is already assigned. Without this, assigning
+        // twice creates a second booking and leaves the first orphaned on the
+        // owner's calendar with nothing behind it — which is what happened when
+        // a manual assignment landed two seconds after the automatic one.
+        if (!$request->reassign && $ezee->book_id) {
+            $already = Booking::where('id', $ezee->book_id)->where('status', '!=', 1)->first();
+
+            if ($already) {
+                $unit = optional(Listing::find($already->listing_id))->name ?: ('listing #' . $already->listing_id);
+
+                return back()->with(
+                    'error',
+                    "This EZEE booking is already assigned to {$unit} (booking #{$already->id}). Use Reassign if you need to move it to a different unit."
+                );
+            }
+        }
+
 
         $ezee->Start = $request->check_in ?? $ezee->Start;
         $ezee->End = $request->check_out ?? $ezee->End;
@@ -1257,6 +1274,23 @@ class BookController extends Controller
         if (empty($ezee)) {
             return back()->with('success', 'Invalid EZEE booking ID!');
         }
+        // Refuse a reservation that is already assigned. Without this, assigning
+        // twice creates a second booking and leaves the first orphaned on the
+        // owner's calendar with nothing behind it — which is what happened when
+        // a manual assignment landed two seconds after the automatic one.
+        if (!$request->reassign && $ezee->book_id) {
+            $already = Booking::where('id', $ezee->book_id)->where('status', '!=', 1)->first();
+
+            if ($already) {
+                $unit = optional(Listing::find($already->listing_id))->name ?: ('listing #' . $already->listing_id);
+
+                return back()->with(
+                    'error',
+                    "This EZEE booking is already assigned to {$unit} (booking #{$already->id}). Use Reassign if you need to move it to a different unit."
+                );
+            }
+        }
+
         $sst_date = Carbon::now()->format('Y-m-d');
         $sst_check = "2024-03-01";
         $start = Carbon::parse($ezee->Start)->format('m');
