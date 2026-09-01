@@ -8,7 +8,7 @@ Route::get('/change_password', 'Owner\HomeController@change_password');
 Route::put('/update/change_password/{id}', 'Owner\HomeController@update');
 
 // Listing
-Route::resource('/listing', 'Owner\ListingController');
+Route::resource('/listing', 'Owner\ListingController')->names('owner.listing');
 Route::get('/performance', 'Owner\ListingController@performance');
 
 // Calendar
