@@ -12,6 +12,13 @@
         <p>Manage all properties in the system</p>
     </div>
     <div class="flex gap-2">
+        @if($showArchived)
+            <a href="{{ route('admin.listing.index') }}" class="btn btn-secondary">&larr; Back to managed</a>
+        @else
+            <a href="{{ route('admin.listing.index', ['archived' => 1]) }}" class="btn btn-secondary">
+                Archived ({{ $archivedCount }})
+            </a>
+        @endif
         <a href="/admin/listing/create" class="btn btn-primary">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Listing
@@ -109,6 +116,14 @@
                             <a href="/admin/listing/{{ $listing->id }}/images" class="btn btn-secondary btn-sm">Images</a>
                             <a href="/admin/listing/{{ $listing->id }}/price" class="btn btn-secondary btn-sm">Pricing</a>
                             <a href="/admin/listing/{{ $listing->id }}/details" class="btn btn-secondary btn-sm">Details</a>
+                            <form action="{{ route('admin.listing.archive', $listing->id) }}" method="POST"
+                                  onsubmit="return confirm('{{ $showArchived ? 'Restore this property?' : 'Archive this property? It will be hidden from this list and will not be assigned new EZEE bookings. Existing bookings are unchanged, and you can restore it from the Archived view.' }}')">
+                                @csrf
+                                <input type="hidden" name="archived" value="{{ $showArchived ? 0 : 1 }}">
+                                <button type="submit" class="btn btn-secondary btn-sm">
+                                    {{ $showArchived ? 'Restore' : 'Archive' }}
+                                </button>
+                            </form>
                             <form action="/admin/listing/{{ $listing->id }}" method="POST"
                                   onsubmit="return confirm('Delete this listing? This cannot be undone.')">
                                 @csrf

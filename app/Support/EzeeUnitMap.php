@@ -105,7 +105,10 @@ class EzeeUnitMap
             return;
         }
 
-        $listings   = Listing::all()->keyBy('id');
+        // Archived properties are no longer managed, so a mapping pointing at
+        // one resolves to nothing rather than putting a booking on the calendar
+        // of an owner whose property we have handed back.
+        $listings   = Listing::active()->get()->keyBy('id');
         $groupCodes = EzeeGroup::pluck('hotel_code', 'id')->map(fn ($c) => (string) $c);
 
         $this->hotelCodes = $groupCodes->values()

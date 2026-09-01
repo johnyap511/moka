@@ -41,10 +41,42 @@ class ListingController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $listings = Listing::all();
-        return view('admin.listing.index', compact('listings'));
+        $showArchived = $request->boolean('archived');
+
+        // Archived properties are ones the business no longer manages. They are
+        // kept, not deleted, so the decision can be reversed and their booking
+        // history stays intact.
+        $listings = $showArchived
+            ? Listing::archived()->get()
+            : Listing::active()->get();
+
+        $archivedCount = Listing::archived()->count();
+
+        return view('admin.listing.index', compact('listings', 'showArchived', 'archivedCount'));
+    }
+
+    /**
+     * Archive or restore a property.
+     *
+     * Archiving does not touch bookings or the unit mapping; it takes the
+     * property off the working lists and stops EZEE assigning new bookings to
+     * it, which is what "we no longer manage this" has to mean in practice.
+     */
+    public function setArchived(Request $request, $id)
+    {
+        $listing = Listing::findOrFail($id);
+
+        $listing->archived_at = $request->boolean('archived') ? now() : null;
+        $listing->save();
+
+        return back()->with(
+            'success',
+            $request->boolean('archived')
+                ? "Archived {$listing->name}. It will not be assigned new bookings."
+                : "Restored {$listing->name}."
+        );
     }
 
     /**

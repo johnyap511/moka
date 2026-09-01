@@ -22,7 +22,9 @@ class EzeeRoomMappingController extends Controller
     {
         $showArchived = $request->boolean('archived');
 
-        $listings = Listing::orderBy('name')->get();
+        // Archived properties are no longer managed, so they are not offered
+        // as somewhere to map a unit.
+        $listings = Listing::active()->orderBy('name')->get();
         $groups   = EzeeGroup::all()->keyBy('id');
 
         // One row per property AND unit. A unit name is only unique within a
