@@ -58,25 +58,55 @@ class ListingController extends Controller
     }
 
     /**
-     * Archive or restore a property.
+     * Archive or restore properties.
      *
-     * Archiving does not touch bookings or the unit mapping; it takes the
-     * property off the working lists and stops EZEE assigning new bookings to
-     * it, which is what "we no longer manage this" has to mean in practice.
+     * Takes a list so the screen can act on a selection in one request, and
+     * answers JSON so rows can be removed in place — a form post reloaded the
+     * page and threw the reader back to the top, which is unusable on a list of
+     * three hundred.
      */
-    public function setArchived(Request $request, $id)
+    public function setArchived(Request $request)
+    {
+        $request->validate([
+            'ids'      => 'required|array|min:1',
+            'ids.*'    => 'integer',
+            'archived' => 'required|boolean',
+        ]);
+
+        $archived = $request->boolean('archived');
+
+        $count = Listing::whereIn('id', $request->input('ids'))
+            ->update(['archived_at' => $archived ? now() : null]);
+
+        $noun = $count === 1 ? 'property' : 'properties';
+
+        return response()->json([
+            'ok'      => true,
+            'count'   => $count,
+            'message' => $archived
+                ? "Archived {$count} {$noun}. They will not be assigned new bookings."
+                : "Restored {$count} {$noun}.",
+        ]);
+    }
+
+    /**
+     * Flip a property between active and inactive.
+     *
+     * Status is the live/not-live switch, separate from archiving. Toggling it
+     * from the badge saves opening the edit form for a one-field change.
+     */
+    public function toggleStatus(Request $request, $id)
     {
         $listing = Listing::findOrFail($id);
 
-        $listing->archived_at = $request->boolean('archived') ? now() : null;
+        $listing->status = (int) $listing->status === 1 ? 0 : 1;
         $listing->save();
 
-        return back()->with(
-            'success',
-            $request->boolean('archived')
-                ? "Archived {$listing->name}. It will not be assigned new bookings."
-                : "Restored {$listing->name}."
-        );
+        return response()->json([
+            'ok'     => true,
+            'status' => (int) $listing->status,
+            'label'  => (int) $listing->status === 1 ? 'Active' : 'Inactive',
+        ]);
     }
 
     /**

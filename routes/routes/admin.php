@@ -19,7 +19,8 @@ Route::get('/owners/{id}/listing/{listingId}/edit', 'Admin\OwnerController@owner
 Route::resource('/admin', 'Admin\AdminController');
 
 // Listing
-Route::post('/listing/{id}/archive', 'Admin\ListingController@setArchived')->name('admin.listing.archive');
+Route::post('/listing/archive', 'Admin\ListingController@setArchived')->name('admin.listing.archive');
+Route::post('/listing/{id}/status', 'Admin\ListingController@toggleStatus')->name('admin.listing.status');
 Route::resource('/listing', 'Admin\ListingController')->names('admin.listing');
 Route::get('/listing/excel/export', 'Admin\ListingController@exportExcel');
 Route::post('/listing/report/{id}', 'Admin\ListingController@reportExport');
