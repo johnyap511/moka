@@ -36,7 +36,31 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
         <h1>EZEE Bookings</h1>
         <p>Imported bookings from EZEE — assign each to a listing unit</p>
     </div>
+    <div class="flex gap-2">
+        @if($conflictTotal > 0)
+            <a href="{{ route('admin.ezee.assignment-log', ['method' => 'conflict']) }}"
+               class="btn btn-secondary" style="border-color:#f59e0b;color:#b45309">
+                {{ $conflictTotal }} need review
+            </a>
+        @endif
+        <button type="button" class="btn btn-primary" id="btn-auto-assign" onclick="runAutoAssign()">
+            Auto-Assign Unassigned
+        </button>
+    </div>
 </div>
+
+{{-- Reservations automatic assignment refused because the unit was already
+     taken. Nothing was changed for these; a person has to decide. --}}
+@if($conflicts->isNotEmpty())
+<div style="margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px">
+    <strong style="font-size:13px">{{ $conflicts->count() }} booking(s) on this page could not be assigned automatically</strong>
+    <div style="font-size:12px;color:#92400e;margin-top:4px">
+        The unit was already occupied over those dates, so nothing was changed. Each is marked
+        <span class="badge" style="background:#fef3c7;color:#92400e">Needs review</span> below — assign it to a
+        different unit, or resolve the clash in EZEE.
+    </div>
+</div>
+@endif
 
 @if(session('success'))
 <div class="alert alert-success" style="margin-bottom:16px">{{ session('success') }}</div>
@@ -148,6 +172,10 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content:'⇅'; }
                         @elseif($b->RoomName)
                             {{-- Not assigned yet, but EZEE told us the unit. --}}
                             <span class="mono" style="color:var(--text-secondary)" title="EZEE unit, not yet assigned">{{ $b->RoomName }}</span>
+                            @if($conflicts->has($b->id))
+                                <div class="badge" style="background:#fef3c7;color:#92400e;margin-top:4px;display:inline-block"
+                                     title="{{ $conflicts[$b->id]->note }}">Needs review</div>
+                            @endif
                         @else
                             <span style="color:var(--text-secondary)">—</span>
                         @endif
@@ -485,5 +513,37 @@ function sortTable(col, dir) {
 </script>
 @include('admin.listing.book._fees', ['formId' => 'assign-form', 'bookedOn' => date('Y-m-d'), 'var' => 'assignFees'])
 <script>
+</script>
+@endpush
+
+@push('scripts')
+<script>
+// Same endpoint the Room Mapping screen uses. This is where the team works
+// through unassigned bookings, so the action belongs here too.
+function runAutoAssign() {
+    if (!confirm('Assign every unassigned EZEE booking that has a mapped unit?\n\nBookings whose unit is already occupied are left alone and flagged for review.')) {
+        return;
+    }
+
+    var btn = document.getElementById('btn-auto-assign');
+    btn.disabled = true;
+    btn.textContent = 'Assigning…';
+
+    fetch('{{ route('admin.ezee.auto-assign') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        alert(res.message || 'Done.');
+        if (res.ok) { window.location.reload(); }
+    })
+    .catch(function (e) { alert('Could not run: ' + e.message); })
+    .finally(function () {
+        btn.disabled = false;
+        btn.textContent = 'Auto-Assign Unassigned';
+    });
+}
 </script>
 @endpush

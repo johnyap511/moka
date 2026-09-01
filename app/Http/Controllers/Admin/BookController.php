@@ -301,7 +301,21 @@ class BookController extends Controller
 
         $listings = Listing::where('status', 1)->get();
 
-        return view('admin.listing.book.ezeeBook', compact('books', 'listings', 'linkedListings', 'from', 'to', 'q'));
+        // Conflicts are the reservations automatic assignment refused because
+        // the unit was already occupied. They need a person, and this is the
+        // screen where that person works, so surface them here rather than only
+        // on the assignment log.
+        $conflicts = \App\EzeeAssignmentLog::where('method', 'conflict')
+            ->whereIn('ezee_booking_id', $books->getCollection()->pluck('id'))
+            ->orderByDesc('id')
+            ->get()
+            ->keyBy('ezee_booking_id');
+
+        $conflictTotal = \App\EzeeAssignmentLog::where('method', 'conflict')->distinct()->count('ezee_booking_id');
+
+        return view('admin.listing.book.ezeeBook', compact(
+            'books', 'listings', 'linkedListings', 'from', 'to', 'q', 'conflicts', 'conflictTotal'
+        ));
     }
     public function ezeeBookings(Request $request)
     {
