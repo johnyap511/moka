@@ -269,8 +269,12 @@ class EzeeAutoAssign
             ->where('status', '!=', 1)
             ->when($ignoreBookingId, fn ($q) => $q->where('id', '!=', $ignoreBookingId))
             ->when($this->vacated, fn ($q) => $q->whereNotIn('id', array_keys($this->vacated)))
-            ->whereDate('check_in', '<', $ezeeBooking->End)
-            ->whereDate('check_out', '>', $ezeeBooking->Start)
+            // Plain comparisons, not whereDate(): check_in and check_out are
+            // DATE columns, so wrapping them in DATE() changes nothing except to
+            // make the index on (listing_id, check_in, check_out) unusable. That
+            // turned each of these into a full scan of the bookings table.
+            ->where('check_in', '<', $ezeeBooking->End)
+            ->where('check_out', '>', $ezeeBooking->Start)
             ->first();
     }
 
