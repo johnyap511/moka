@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 use App\EzeeGroup;
 use App\OtherModel\EzeeBooking;
+use App\Support\EzeeAutoAssign;
+use Illuminate\Support\Facades\Log;
 use App\DataLog;
 use App\Booking;
 use Illuminate\Console\Command;
@@ -542,6 +544,27 @@ class HistoricalApi extends Command
                         }
                     }
                 }
+            }
+        }
+
+        // Second pass. Every RoomName is now current, so assignments can be
+        // reconciled against a settled picture. Running this after the whole
+        // sync rather than per booking is what stops a room move whose vacating
+        // booking arrived later in the same run from looking like a conflict.
+        if (config('ezee.auto_assign')) {
+            try {
+                $result = (new EzeeAutoAssign())->reconcile();
+                $this->info(sprintf(
+                    'auto-assign: %d assigned, %d moved, %d conflict(s), %d unmapped room(s)',
+                    $result['assigned'],
+                    $result['moved'],
+                    $result['conflicts'],
+                    $result['unmapped']
+                ));
+            } catch (\Throwable $e) {
+                // The bookings themselves are already stored; a failure to
+                // assign them must not fail the sync that fetched them.
+                Log::error('EZEE auto-assign failed: ' . $e->getMessage());
             }
         }
     }
