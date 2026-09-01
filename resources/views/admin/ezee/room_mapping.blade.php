@@ -91,11 +91,26 @@ $assignedBooks = $stats->sum('assigned');
         <span id="changed-count" style="font-size:12px;color:var(--text-secondary)"></span>
     </div>
 
+    {{-- Appears only once something is ticked, so it stays out of the way. --}}
+    <div id="bulk-bar" style="display:none;align-items:center;gap:12px;padding:10px 14px;margin-bottom:12px;
+                              background:var(--cream,#faf8f4);border:1px solid var(--border,#e4e0d8);border-radius:8px">
+        <strong id="bulk-count" style="font-size:13px"></strong>
+        <button type="button" class="btn btn-primary" style="padding:5px 14px;font-size:12px"
+                onclick="bulkArchive()">{{ $showArchived ? 'Restore selected' : 'Archive selected' }}</button>
+        <button type="button" class="btn btn-secondary" style="padding:5px 14px;font-size:12px"
+                onclick="clearSelection()">Clear</button>
+        <span style="font-size:12px;color:var(--text-secondary)">Only rows visible under the current filter are selected.</span>
+    </div>
+
     <div class="card">
         <div class="table-wrap">
             <table class="mapping-table" id="mapping-table">
                 <thead>
                     <tr>
+                        <th style="width:34px;text-align:center">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"
+                                   title="Select every row currently visible">
+                        </th>
                         <th style="width:36px">#</th>
                         <th>Property</th>
                         <th>Room Unit (RoomName)</th>
@@ -124,6 +139,9 @@ $assignedBooks = $stats->sum('assigned');
                     @endphp
                     <tr class="room-row {{ $isMapped ? 'is-mapped-row' : ($suggested ? 'is-suggested-row' : 'is-unmapped-row') }}"
                         data-room="{{ strtolower($roomName) }}">
+                        <td style="text-align:center">
+                            <input type="checkbox" class="row-select" value="{{ $roomKey }}" onchange="refreshSelection()">
+                        </td>
                         <td class="mono" style="color:var(--text-secondary)">{{ $i+1 }}</td>
                         <td style="font-size:12px;color:var(--text-secondary)">{{ $room->PropertyName }}</td>
                         <td style="font-weight:600;font-family:monospace">{{ $roomName }}</td>
@@ -168,7 +186,7 @@ $assignedBooks = $stats->sum('assigned');
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" style="text-align:center;padding:60px;color:var(--text-secondary)">
+                        <td colspan="10" style="text-align:center;padding:60px;color:var(--text-secondary)">
                             No EZEE room names found. Import EZEE bookings first.
                         </td>
                     </tr>
@@ -266,8 +284,90 @@ document.getElementById('mapping-form').addEventListener('submit', function() { 
 @endpush
 
 <script>
-// Archiving a unit takes it off the working list and stops anything being
-// assigned to it. It is reversible from the Archived view.
+// Archiving takes a unit off the working list and stops anything being assigned
+// to it. Reversible from the Archived view.
+
+const ARCHIVE_URL = '{{ route('admin.ezee.room-mapping.archive') }}';
+const ARCHIVING   = {{ $showArchived ? 'false' : 'true' }};
+
+function visibleRowSelects() {
+    return Array.from(document.querySelectorAll('.row-select'))
+        .filter(cb => cb.closest('tr').style.display !== 'none');
+}
+
+function selectedKeys() {
+    return visibleRowSelects().filter(cb => cb.checked).map(cb => cb.value);
+}
+
+function toggleSelectAll(checked) {
+    visibleRowSelects().forEach(cb => { cb.checked = checked; });
+    refreshSelection();
+}
+
+function clearSelection() {
+    document.querySelectorAll('.row-select').forEach(cb => { cb.checked = false; });
+    const all = document.getElementById('select-all');
+    if (all) { all.checked = false; }
+    refreshSelection();
+}
+
+function refreshSelection() {
+    const n = selectedKeys().length;
+    const bar = document.getElementById('bulk-bar');
+    bar.style.display = n ? 'flex' : 'none';
+    document.getElementById('bulk-count').textContent =
+        n + ' unit' + (n === 1 ? '' : 's') + ' selected';
+}
+
+async function postArchive(keys, archived) {
+    const res = await fetch(ARCHIVE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ keys: keys, archived: archived }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.ok) {
+        throw new Error(data.message || ('Request failed (' + res.status + ')'));
+    }
+
+    return data;
+}
+
+async function bulkArchive() {
+    const keys = selectedKeys();
+    if (!keys.length) { return; }
+
+    const verb = ARCHIVING ? 'Archive' : 'Restore';
+    const note = ARCHIVING
+        ? '\n\nThey will be hidden from this list and no bookings will be assigned to them. Existing bookings are unchanged, and you can restore them from the Archived view.'
+        : '';
+
+    if (!confirm(verb + ' ' + keys.length + ' unit(s)?' + note)) { return; }
+
+    const btn = document.querySelector('#bulk-bar .btn-primary');
+    btn.disabled = true;
+    btn.textContent = ARCHIVING ? 'Archiving…' : 'Restoring…';
+
+    try {
+        await postArchive(keys, ARCHIVING);
+        // Drop the rows rather than reloading, so any unsaved mapping edits on
+        // other rows survive.
+        visibleRowSelects().filter(cb => cb.checked).forEach(cb => cb.closest('tr').remove());
+        clearSelection();
+    } catch (e) {
+        alert('Could not update those units: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = verb + ' selected';
+    }
+}
+
 async function setArchived(btn, key, archived) {
     if (archived && !confirm('Archive this unit?\n\nIt will be hidden from this list and no bookings will be assigned to it. Existing bookings are not changed. You can restore it from the Archived view.')) {
         return;
@@ -277,23 +377,9 @@ async function setArchived(btn, key, archived) {
     btn.textContent = archived ? 'Archiving…' : 'Restoring…';
 
     try {
-        const res = await fetch('{{ route('admin.ezee.room-mapping.archive') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ key: key, archived: archived }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-            throw new Error(data.message || 'Request failed');
-        }
-
+        await postArchive([key], archived);
         btn.closest('tr').remove();
+        refreshSelection();
     } catch (e) {
         alert('Could not update that unit: ' + e.message);
         btn.disabled = false;

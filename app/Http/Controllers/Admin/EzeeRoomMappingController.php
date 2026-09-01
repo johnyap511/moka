@@ -130,29 +130,44 @@ class EzeeRoomMappingController extends Controller
     public function setArchived(Request $request)
     {
         $request->validate([
-            'key'      => 'required|string',
+            'keys'     => 'required|array|min:1',
+            'keys.*'   => 'string',
             'archived' => 'required|boolean',
         ]);
 
-        [$groupId, $roomName] = array_pad(explode('|', (string) $request->input('key'), 2), 2, null);
+        $archived = $request->boolean('archived');
+        $stamp    = $archived ? now() : null;
+        $done     = 0;
 
-        if ($roomName === null || $roomName === '') {
-            return response()->json(['ok' => false, 'message' => 'Unknown unit.'], 422);
+        foreach ($request->input('keys') as $key) {
+            // Keys are "<ezee_group_id>|<unit>": a unit name only identifies a
+            // unit within one property.
+            [$groupId, $roomName] = array_pad(explode('|', (string) $key, 2), 2, null);
+
+            if ($roomName === null || $roomName === '') {
+                continue;
+            }
+
+            // A mapping row is created if none exists, because a unit can be
+            // archived before anyone has mapped it — which is the common case
+            // when clearing out units that are no longer managed.
+            $mapping = EzeeRoomMapping::firstOrNew([
+                'ezee_group_id' => $groupId !== '' ? $groupId : null,
+                'room_name'     => $roomName,
+            ]);
+
+            $mapping->archived_at = $stamp;
+            $mapping->save();
+
+            $done++;
         }
-
-        $mapping = EzeeRoomMapping::firstOrNew([
-            'ezee_group_id' => $groupId !== '' ? $groupId : null,
-            'room_name'     => $roomName,
-        ]);
-
-        $mapping->archived_at = $request->boolean('archived') ? now() : null;
-        $mapping->save();
 
         return response()->json([
             'ok'      => true,
-            'message' => $request->boolean('archived')
-                ? "Archived {$roomName}. It will not be assigned to."
-                : "Restored {$roomName}.",
+            'count'   => $done,
+            'message' => $archived
+                ? "Archived {$done} unit(s). They will not be assigned to."
+                : "Restored {$done} unit(s).",
         ]);
     }
 
