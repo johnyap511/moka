@@ -28,7 +28,12 @@
     $seoDescription = $seoSection('seo_description') ?: $legacyDesc
         ?: 'MOKA manages your Airbnb and short-stay property end to end — renovation, listing, professional photography, price optimisation, guest vetting and housekeeping. Find out what your property could earn.';
     $seoCanonical   = $seoSection('seo_canonical') ?: url()->current();
-    $seoRobots      = $seoSection('seo_robots')    ?: 'index,follow,max-image-preview:large';
+    // Staging serves the same pages on a public IP. robots.txt already tells
+    // crawlers to stay away there; this makes any page that is reached directly
+    // say so too, since a disallowed page can still be indexed if linked.
+    $seoRobots      = $seoSection('seo_robots') ?: (app()->environment('production')
+        ? 'index,follow,max-image-preview:large'
+        : 'noindex,nofollow');
     $seoImage       = $seoSection('seo_image')     ?: asset('images/layout/og-cover.jpg');
     $seoType        = $seoSection('seo_type')      ?: 'website';
 

@@ -97,7 +97,11 @@ class EZEEGetBookingsCommand extends Command
                                             'IsConfirmed'=>$reserveData['IsConfirmed'],
                                             'RateplanName'=>$reserveData['RateplanName'],
                                             'RoomTypeName'=>$reserveData['RoomTypeName'],
-                                            'RoomName'=>$reserveData['RoomName'] ?? null,
+                                            // EZEE identifies the unit as eZeePMSRoomid (e.g. "C2-07-10")
+                                            // and does not send a RoomName field on bookings. Reading
+                                            // RoomName alone wrote null every time, which is how the
+                                            // unit was lost on every booking this command imported.
+                                            'RoomName'=>$reserveData['eZeePMSRoomid'] ?? ($reserveData['RoomName'] ?? null),
                                             'Start'=>$reserveData['Start'],'End'=>$reserveData['End'],
                                             'CurrencyCode'=>$reserveData['CurrencyCode'],
                                             'TotalAmountAfterTax'=>$reserveData['TotalAmountAfterTax'],

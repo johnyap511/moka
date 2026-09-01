@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 /* ── SEO ─────────────────────────────────────────────────────────── */
-// robots.txt is served straight from public/ by nginx; only the sitemap
-// needs the app, since it enumerates live listings from the database.
+// Both are served by the app rather than as files in public/: the sitemap
+// enumerates live listings, and robots.txt must differ outside production so a
+// staging copy of the site is not indexed alongside it.
 Route::get('/sitemap.xml', 'SitemapController@index')->name('sitemap');
+Route::get('/robots.txt',  'RobotsController')->name('robots');
 
 /* ── Blog ────────────────────────────────────────────────────────── */
 Route::get('/blog',         'BlogController@index')->name('blog.index');
