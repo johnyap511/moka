@@ -36,7 +36,12 @@ class EzeeRoomMappingController extends Controller
             ];
         });
 
-        $known = $rooms->pluck('Key')->flip();
+        // Matched on name, not on property. A unit's historical bookings do not
+        // reliably carry its property: AL-11-08 is an Alinea unit but its
+        // TransactionIds are prefixed with EkoCheras and Bell Suites codes.
+        // Keying this against the property would list the same unit once per
+        // code it has ever appeared under.
+        $knownNames = $rooms->pluck('RoomName')->map(fn ($n) => strtolower(trim($n)))->flip();
 
         // Units seen only in bookings — retired ones, and anything present
         // before the inventory sync. The property comes from the hotel code that
@@ -59,8 +64,8 @@ class EzeeRoomMappingController extends Controller
                     'RoomTypeName' => $row->RoomTypeName,
                 ];
             })
-            ->reject(fn ($r) => $known->has($r->Key))
-            ->unique('Key')
+            ->reject(fn ($r) => $knownNames->has(strtolower(trim($r->RoomName))))
+            ->unique(fn ($r) => strtolower(trim($r->RoomName)))
             ->values();
 
         $rooms = $rooms->concat($fromBookings)
