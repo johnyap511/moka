@@ -11,6 +11,7 @@ use App\Listing;
 use App\OtherModel\EzeeBooking;
 use App\Role;
 use App\Support\EzeePricing;
+use App\Support\EzeeUnitMap;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,15 +107,14 @@ class EzeeRoomMappingController extends Controller
         $from   = $request->input('from', date('Y-m-d'));
         $to     = $request->input('to');
 
-        $listings = Listing::whereNotNull('ezee_room_id')
-            ->where('ezee_room_id', '!=', '')
-            ->get()
-            ->keyBy(fn ($l) => strtolower(trim($l->ezee_room_id)));
+        // Reads the mappings saved on this screen, not just listings.ezee_room_id —
+        // see EzeeUnitMap for why both exist.
+        $listings = EzeeUnitMap::build();
 
         if ($listings->isEmpty()) {
             return response()->json([
                 'ok'      => false,
-                'message' => 'No listing has an EZEE Room ID yet. Set it on the listings first.',
+                'message' => 'No unit is mapped to a listing yet. Map some rooms on this page and save, then try again.',
             ], 422);
         }
 
@@ -136,7 +136,7 @@ class EzeeRoomMappingController extends Controller
         $details   = [];
 
         foreach ($query->orderBy('Start')->get() as $eb) {
-            $listing = $listings[strtolower(trim($eb->RoomName))] ?? null;
+            $listing = $listings[EzeeUnitMap::key($eb->RoomName)] ?? null;
 
             if (!$listing) {
                 $noListing++;
