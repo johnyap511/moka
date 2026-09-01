@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 // needs the app, since it enumerates live listings from the database.
 Route::get('/sitemap.xml', 'SitemapController@index')->name('sitemap');
 
+/* ── Blog ────────────────────────────────────────────────────────── */
+Route::get('/blog',         'BlogController@index')->name('blog.index');
+Route::get('/blog/{slug}',  'BlogController@show')->name('blog.show');
+
 Route::middleware('lang')->group(function () {
 
     /* ── Public Pages ───────────────────────────────────────────────── */

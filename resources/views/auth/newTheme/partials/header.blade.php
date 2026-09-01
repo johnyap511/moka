@@ -21,6 +21,7 @@
                         <li class="nav-item"><a href="/service">Our Services</a></li>
                         <li class="nav-item"><a href="/designs">Our Designs</a></li>
                         <li class="nav-item"><a href="/about">About Us</a></li>
+                        <li class="nav-item"><a href="/blog">Blog</a></li>
                         <!-- <li class="nav-item" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</li> -->
                         <li class="nav-item cursor-pointer" data-bs-toggle="modal" data-bs-target="#loninModal">
                             Log In
