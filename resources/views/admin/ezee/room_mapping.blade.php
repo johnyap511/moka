@@ -28,6 +28,15 @@ select.msel.is-suggested { border-color:#3b82f6; background:#eff6ff; }
         <p>Map each EZEE room name to a listing unit for automatic booking assignment</p>
     </div>
     <div class="flex gap-2">
+        @if($showArchived)
+            <a href="{{ route('admin.ezee.room-mapping') }}" class="btn btn-secondary">
+                &larr; Back to active units
+            </a>
+        @else
+            <a href="{{ route('admin.ezee.room-mapping', ['archived' => 1]) }}" class="btn btn-secondary">
+                Archived ({{ $archivedCount }})
+            </a>
+        @endif
         <a href="/admin/ezee/assignment-log" class="btn btn-secondary">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             Assignment Log
@@ -95,6 +104,7 @@ $assignedBooks = $stats->sum('assigned');
                         <th style="width:80px;text-align:center">Assigned</th>
                         <th style="width:130px;text-align:center">Status</th>
                         <th>Map to Listing Unit ↓</th>
+                        <th style="width:90px;text-align:center">Manage</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,10 +155,20 @@ $assignedBooks = $stats->sum('assigned');
                                 @endforeach
                             </select>
                         </td>
+                        <td style="text-align:center">
+                            @if($showArchived)
+                                <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px"
+                                        onclick="setArchived(this, '{{ $roomKey }}', false)">Restore</button>
+                            @else
+                                <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px"
+                                        onclick="setArchived(this, '{{ $roomKey }}', true)"
+                                        title="Stop managing this unit. It will not be assigned to; existing bookings are untouched.">Archive</button>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" style="text-align:center;padding:60px;color:var(--text-secondary)">
+                        <td colspan="9" style="text-align:center;padding:60px;color:var(--text-secondary)">
                             No EZEE room names found. Import EZEE bookings first.
                         </td>
                     </tr>
@@ -244,3 +264,40 @@ window.addEventListener('beforeunload', function(e) {
 document.getElementById('mapping-form').addEventListener('submit', function() { changedCount = 0; });
 </script>
 @endpush
+
+<script>
+// Archiving a unit takes it off the working list and stops anything being
+// assigned to it. It is reversible from the Archived view.
+async function setArchived(btn, key, archived) {
+    if (archived && !confirm('Archive this unit?\n\nIt will be hidden from this list and no bookings will be assigned to it. Existing bookings are not changed. You can restore it from the Archived view.')) {
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = archived ? 'Archiving…' : 'Restoring…';
+
+    try {
+        const res = await fetch('{{ route('admin.ezee.room-mapping.archive') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ key: key, archived: archived }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+            throw new Error(data.message || 'Request failed');
+        }
+
+        btn.closest('tr').remove();
+    } catch (e) {
+        alert('Could not update that unit: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = archived ? 'Archive' : 'Restore';
+    }
+}
+</script>

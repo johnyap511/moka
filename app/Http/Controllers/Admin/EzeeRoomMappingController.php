@@ -18,8 +18,10 @@ use Illuminate\Support\Facades\DB;
 
 class EzeeRoomMappingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $showArchived = $request->boolean('archived');
+
         $listings = Listing::orderBy('name')->get();
         $groups   = EzeeGroup::all()->keyBy('id');
 
@@ -48,7 +50,7 @@ class EzeeRoomMappingController extends Controller
         // prefixes TransactionId, since ezee_group_id is not set on bookings.
         $codeToGroup = $groups->mapWithKeys(fn ($g) => [(string) $g->hotel_code => $g->id]);
 
-        $fromBookings = EzeeBooking::selectRaw('LEFT(TransactionId, 5) AS code, RoomName, MIN(RoomTypeName) AS RoomTypeName')
+        $fromBookings = EzeeBooking::selectRaw('SUBSTR(TransactionId, 1, 5) AS code, RoomName, MIN(RoomTypeName) AS RoomTypeName')
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
             ->groupBy('code', 'RoomName')
@@ -75,9 +77,19 @@ class EzeeRoomMappingController extends Controller
         $mappings = EzeeRoomMapping::all()
             ->keyBy(fn ($m) => $m->ezee_group_id . '|' . $m->room_name);
 
+        // Archived units are ones no longer managed. They stay in the database
+        // with their mapping intact so the decision is reversible, but they are
+        // kept off the working list.
+        $archivedKeys = $mappings->filter(fn ($m) => $m->archived_at !== null)->keys()->flip();
+        $archivedCount = $archivedKeys->count();
+
+        $rooms = $rooms->filter(
+            fn ($room) => $showArchived ? $archivedKeys->has($room->Key) : ! $archivedKeys->has($room->Key)
+        )->values();
+
         // Booking counts per property and unit, keyed the same way as the rows.
         $stats = EzeeBooking::selectRaw(
-                'LEFT(TransactionId, 5) AS code, RoomName, COUNT(*) as total, SUM(CASE WHEN book_id IS NOT NULL THEN 1 ELSE 0 END) as assigned'
+                'SUBSTR(TransactionId, 1, 5) AS code, RoomName, COUNT(*) as total, SUM(CASE WHEN book_id IS NOT NULL THEN 1 ELSE 0 END) as assigned'
             )
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
@@ -101,7 +113,45 @@ class EzeeRoomMappingController extends Controller
             }
         }
 
-        return view('admin.ezee.room_mapping', compact('listings', 'rooms', 'mappings', 'stats', 'suggestions'));
+        return view('admin.ezee.room_mapping', compact(
+            'listings', 'rooms', 'mappings', 'stats', 'suggestions', 'showArchived', 'archivedCount'
+        ));
+    }
+
+    /**
+     * Archive or restore a unit.
+     *
+     * A mapping row is created if none exists, because a unit can be archived
+     * before anyone has mapped it — retired units carrying old bookings are
+     * exactly the ones most likely to be archived first.
+     */
+    public function setArchived(Request $request)
+    {
+        $request->validate([
+            'key'      => 'required|string',
+            'archived' => 'required|boolean',
+        ]);
+
+        [$groupId, $roomName] = array_pad(explode('|', (string) $request->input('key'), 2), 2, null);
+
+        if ($roomName === null || $roomName === '') {
+            return response()->json(['ok' => false, 'message' => 'Unknown unit.'], 422);
+        }
+
+        $mapping = EzeeRoomMapping::firstOrNew([
+            'ezee_group_id' => $groupId !== '' ? $groupId : null,
+            'room_name'     => $roomName,
+        ]);
+
+        $mapping->archived_at = $request->boolean('archived') ? now() : null;
+        $mapping->save();
+
+        return response()->json([
+            'ok'      => true,
+            'message' => $request->boolean('archived')
+                ? "Archived {$roomName}. It will not be assigned to."
+                : "Restored {$roomName}.",
+        ]);
     }
 
     public function saveAll(Request $request)

@@ -125,9 +125,13 @@ class EzeeUnitMap
             }
         }
 
+        // Archived units are ones the business no longer manages, so nothing
+        // should be assigned to them. Existing bookings already assigned are
+        // left alone; this only stops new ones being created.
         $mappings = EzeeRoomMapping::whereNotNull('listing_id')
             ->whereNotNull('room_name')
             ->where('room_name', '!=', '')
+            ->whereNull('archived_at')
             ->get();
 
         foreach ($mappings as $mapping) {
