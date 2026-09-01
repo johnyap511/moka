@@ -39,15 +39,19 @@ return [
         ],
 
         [
-            'slug'        => 'skyworld-solution-plus-renovation-short-stay',
-            'view'        => 'skyworld-solution-plus-renovation-short-stay',
-            'title'       => 'Renovating a SkyWorld Unit for Short-Stay with Solution+ | MOKA',
-            'heading'     => 'Renovating your SkyWorld unit for short-stay hosting',
-            'description' => 'MOKA is a listed partner on SkyWorld’s Solution+ marketplace. Here is how SkyWorld owners can go from handover to a furnished, guest-ready unit — including MyDeco renovation financing.',
+            'slug'        => 'skyworld-solution-plus-home-renovation',
+            'view'        => 'skyworld-solution-plus-home-renovation',
+            'title'       => 'Renovating Your SkyWorld Home with Solution+ | MOKA Interior Design',
+            'heading'     => 'Renovating your SkyWorld home, from handover to move-in',
+            'description' => 'MOKA is a listed renovation partner on SkyWorld’s Solution+ marketplace. Eight years of renovation experience, custom design and full interior design services — plus how MyDeco financing works.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
             'image'       => 'images/layout/og-cover.jpg',
             'read_time'   => 8,
+            'cta_heading' => 'Planning your renovation?',
+            'cta_body'    => 'Talk to the MOKA design team about a custom design for your home.',
+            'cta_label'   => 'Speak to our designers',
+            'cta_url'     => '/contact',
         ],
 
         [

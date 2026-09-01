@@ -66,10 +66,15 @@
             <div class="blog-body__inner">
                 @yield('article')
 
+                {{-- Posts about renovation need a different call to action from
+                     posts about hosting, so each entry in config/blog.php may
+                     override the three cta_* keys. --}}
                 <div class="blog-cta">
-                    <h2>Find out what your property could earn</h2>
-                    <p>A free, no-obligation estimate from the MOKA team.</p>
-                    <a href="/get/estimate" class="blog-cta__btn">Get a quick estimate</a>
+                    <h2>{{ $post['cta_heading'] ?? 'Find out what your property could earn' }}</h2>
+                    <p>{{ $post['cta_body'] ?? 'A free, no-obligation estimate from the MOKA team.' }}</p>
+                    <a href="{{ $post['cta_url'] ?? '/get/estimate' }}" class="blog-cta__btn">
+                        {{ $post['cta_label'] ?? 'Get a quick estimate' }}
+                    </a>
                 </div>
 
                 @if ($related->isNotEmpty())
