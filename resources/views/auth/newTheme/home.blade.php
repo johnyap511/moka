@@ -1,4 +1,6 @@
 @extends('auth.newTheme.layout')
+@section('seo_title', 'Airbnb & Short-Stay Property Management in Malaysia | MOKA')
+@section('seo_description', 'MOKA manages your Airbnb and short-stay property end to end — renovation, listing, professional photography, price optimisation, guest vetting and housekeeping. Superhost and Preferred Host, rated 4.9/5.')
 
 @section('content')
     <div class="home-banner-outer">

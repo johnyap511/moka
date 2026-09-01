@@ -7,15 +7,7 @@
     <meta name="theme-color" content="#003d3c">
     <meta name="msapplication-TileColor" content="#003d3c">
 
-    <title>@yield('title', 'MOKA — Professional Property Management Malaysia')</title>
-    <meta name="description" content="@yield('meta_description', 'MOKA is Malaysia\'s leading short-stay property management company. We help homeowners earn more through Airbnb, Booking.com and flexible lettings.')">
-
-    {{-- Open Graph --}}
-    <meta property="og:title"       content="@yield('og_title', 'MOKA — Hosting. It\'s what we do.')">
-    <meta property="og:description" content="@yield('og_description', 'Professional short-let management. Together, we\'ll earn more from your property.')">
-    <meta property="og:image"       content="{{ asset('/new-theme23/images/og-image.jpg') }}">
-    <meta property="og:type"        content="website">
-    <meta name="twitter:card"       content="summary_large_image">
+    @include('partials.seo')
 
     {{-- Favicon --}}
     <link rel="shortcut icon"    href="{{ asset('images/layout/fav.png') }}">

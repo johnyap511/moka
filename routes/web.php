@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+/* ── SEO ─────────────────────────────────────────────────────────── */
+// robots.txt is served straight from public/ by nginx; only the sitemap
+// needs the app, since it enumerates live listings from the database.
+Route::get('/sitemap.xml', 'SitemapController@index')->name('sitemap');
+
 Route::middleware('lang')->group(function () {
 
     /* ── Public Pages ───────────────────────────────────────────────── */

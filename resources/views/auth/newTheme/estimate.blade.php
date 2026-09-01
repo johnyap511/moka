@@ -1,4 +1,6 @@
 @extends('auth.newTheme.layout')
+@section('seo_title', 'Free Rental Income Estimate for Your Property | MOKA')
+@section('seo_description', 'Find out how much your property could earn as a short-stay rental in Malaysia. Free, no-obligation estimate from MOKA.')
 
 @section('hide-footer', true)
 

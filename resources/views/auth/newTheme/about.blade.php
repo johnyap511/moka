@@ -1,4 +1,6 @@
 @extends('auth.newTheme.layout')
+@section('seo_title', 'About MOKA | Airbnb Property Management Company in Malaysia')
+@section('seo_description', 'We are MOKA — a Malaysian short-stay hosting team managing properties for owners nationwide. Superhost and Preferred Host, rated 4.9/5 by guests.')
 
 @section('content')
     <div class="about-banner-outer">

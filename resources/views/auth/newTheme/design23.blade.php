@@ -1,4 +1,6 @@
 @extends('auth.newTheme.layout')
+@section('seo_title', 'Our Designs | Property Renovation & Interior Styling | MOKA')
+@section('seo_description', 'See how MOKA renovates and styles Malaysian properties for short-stay hosting — interiors designed to photograph well and earn more.')
 
 @section('content')
     <div class="design-banner-outer">
