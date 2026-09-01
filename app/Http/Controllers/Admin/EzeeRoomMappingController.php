@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\EzeeAssignmentLog;
 use App\Booking;
 use App\EzeeGroup;
+use App\EzeeRoom;
 use App\EzeeRoomMapping;
 use App\Http\Controllers\Controller;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
-use App\Role;
-use App\Support\EzeePricing;
-use App\User;
+use App\Support\EzeeAutoAssign;
+use App\Support\EzeeUnitMap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +22,32 @@ class EzeeRoomMappingController extends Controller
     {
         $listings = Listing::orderBy('name')->get();
 
-        // All distinct RoomName values (specific unit names from EZEE, e.g. "H-09-10")
-        $rooms = EzeeBooking::select('RoomName', 'RoomTypeName')
+        // Every unit EZEE holds for these properties, from ezee_rooms (filled by
+        // `ezee:sync-rooms`). Listing only the units seen in bookings — which is
+        // what this page used to do — hid any unit nobody had stayed in yet, so
+        // those could never be mapped ahead of their first booking.
+        $rooms = EzeeRoom::orderBy('room_name')
+            ->get()
+            ->map(function ($room) {
+                return (object) [
+                    'RoomName'     => $room->room_name,
+                    'RoomTypeName' => $room->room_type_name,
+                ];
+            });
+
+        // Anything seen in a booking but absent from the inventory still belongs
+        // here: it keeps the page working before the first sync, and surfaces
+        // units EZEE has since retired but which still carry bookings.
+        $known = $rooms->pluck('RoomName')->map(fn ($n) => strtolower(trim($n)))->flip();
+
+        $fromBookings = EzeeBooking::select('RoomName', 'RoomTypeName')
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
             ->distinct()
-            ->orderBy('RoomName')
-            ->get();
+            ->get()
+            ->reject(fn ($r) => $known->has(strtolower(trim($r->RoomName))));
+
+        $rooms = $rooms->concat($fromBookings)->sortBy('RoomName')->values();
 
         // Existing mappings keyed by room_name
         $mappings = EzeeRoomMapping::all()->keyBy('room_name');
@@ -83,166 +102,39 @@ class EzeeRoomMappingController extends Controller
     }
 
     /**
-     * Assign EZEE bookings to listings by matching EZEE's unit id.
+     * Assign EZEE bookings to listings, and follow room moves.
      *
-     * EZEE sends the unit on every booking as eZeePMSRoomid (e.g. "C2-07-10"),
-     * stored here as RoomName. A listing carrying the same value in
-     * ezee_room_id is that unit, so the pairing is exact rather than inferred.
-     *
-     * Bookings are created through EzeePricing so the fee breakdown matches what
-     * the EZEE list previews and what a manual assignment would store. An
-     * earlier version wrote only listing_id, dates and a raw total, which left
-     * every generated booking with no SST or marketing fee.
-     *
-     * Defaults to stays that have not yet ended; assigning historical stays
-     * creates owner-report entries for periods already settled. Pass dry_run to
-     * preview.
+     * The work itself lives in EzeeAutoAssign so this button and the hourly
+     * sync cannot drift apart — both must create bookings with the same pricing
+     * and statuses, and refuse a move the same way.
      */
     public function autoAssign(Request $request)
     {
         set_time_limit(0);
 
-        $dryRun = $request->boolean('dry_run');
-        $from   = $request->input('from', date('Y-m-d'));
-        $to     = $request->input('to');
+        $result = (new EzeeAutoAssign($request->boolean('dry_run'), Auth::id()))
+            ->reconcile($request->input('from'));
 
-        $listings = Listing::whereNotNull('ezee_room_id')
-            ->where('ezee_room_id', '!=', '')
-            ->get()
-            ->keyBy(fn ($l) => strtolower(trim($l->ezee_room_id)));
-
-        if ($listings->isEmpty()) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'No listing has an EZEE Room ID yet. Set it on the listings first.',
-            ], 422);
-        }
-
-        $query = EzeeBooking::query()
-            ->where(function ($q) {
-                $q->whereNull('book_id')->orWhere('book_id', 0);
-            })
-            ->whereNotNull('RoomName')
-            ->where('RoomName', '!=', '')
-            ->where('End', '>=', $from);
-
-        if ($to) {
-            $query->where('Start', '<=', $to);
-        }
-
-        $assigned = 0;
-        $noListing = 0;
-        $conflicts = [];
-        $details   = [];
-
-        foreach ($query->orderBy('Start')->get() as $eb) {
-            $listing = $listings[strtolower(trim($eb->RoomName))] ?? null;
-
-            if (!$listing) {
-                $noListing++;
-                continue;
-            }
-
-            // Same overlap rule the manual assign uses: an existing booking
-            // blocks the unit when it starts before this one ends and ends
-            // after it starts. Cancelled bookings (status 1) do not block.
-            $clash = Booking::where('listing_id', $listing->id)
-                ->where('status', '!=', 1)
-                ->whereDate('check_in', '<', $eb->End)
-                ->whereDate('check_out', '>', $eb->Start)
-                ->first();
-
-            if ($clash) {
-                $conflicts[] = [
-                    'sub_booking_id' => $eb->SubBookingId,
-                    'room'           => $eb->RoomName,
-                    'listing'        => $listing->name,
-                    'dates'          => $eb->Start . ' → ' . $eb->End,
-                    'clashes_with'   => $clash->id,
-                ];
-                continue;
-            }
-
-            $breakdown = EzeePricing::breakdown($eb);
-
-            $details[] = [
-                'sub_booking_id' => $eb->SubBookingId,
-                'room'           => $eb->RoomName,
-                'listing'        => $listing->name,
-                'dates'          => $eb->Start . ' → ' . $eb->End,
-                'total'          => round($breakdown['total'], 2),
-            ];
-
-            if ($dryRun) {
-                $assigned++;
-                continue;
-            }
-
-            DB::transaction(function () use ($eb, $listing, $breakdown, &$assigned) {
-                $user = User::create([
-                    'name'       => $eb->FirstName,
-                    'last_name'  => $eb->LastName,
-                    'phone'      => $eb->Mobile,
-                    'email'      => $eb->Email,
-                    'ezee_tmp'   => 1,
-                ]);
-                if ($role = Role::find(2)) {
-                    $user->attachRole($role);
-                }
-
-                $booking = Booking::create([
-                    'listing_id'   => $listing->id,
-                    'user_id'      => $user->id,
-                    'folio_no'     => $eb->folio_no ?: 'FN' . substr((string) $eb->TransactionId, -4),
-                    'check_in'     => $eb->Start,
-                    'check_out'    => $eb->End,
-                    'adult'        => 2,
-                    'infant'       => 0,
-                    'nights'       => $breakdown['nights'],
-                    'price_night'  => $breakdown['price_night'],
-                    'cleaning_fee' => $breakdown['cleaning_fee'],
-                    'ota_fee'      => $breakdown['ota_fee'],
-                    'sst'          => $breakdown['sst'],
-                    'sst_cf'       => $breakdown['sst_cf'],
-                    'price'        => $breakdown['total'],
-                    'tourism_tax'  => $breakdown['sst'],
-                    'discount_fee' => $eb->TotalDiscount ?? 0,
-                    'source'       => preg_replace('/[^A-Za-z\. ]/', '', (string) $eb->Source),
-                    'status'       => 5,
-                    'remark'       => 'Auto-assigned from EZEE room ' . $eb->RoomName,
-                ]);
-
-                // status 8 marks the EZEE record assigned; without it the list
-                // still shows "Unassigned" despite book_id being set.
-                EzeeBooking::where('id', $eb->id)->update([
-                    'book_id' => $booking->id,
-                    'status'  => 8,
-                ]);
-
-                EzeeAssignmentLog::create([
-                    'ezee_booking_id' => $eb->id,
-                    'listing_id'      => $listing->id,
-                    'old_listing_id'  => null,
-                    'assigned_by'     => Auth::id(),
-                    'method'          => 'auto',
-                    'note'            => 'Matched on EZEE room id ' . $eb->RoomName,
-                ]);
-
-                $assigned++;
-            });
+        if ($result['message'] !== null) {
+            return response()->json(['ok' => false, 'message' => $result['message']], 422);
         }
 
         return response()->json([
             'ok'         => true,
-            'dry_run'    => $dryRun,
-            'assigned'   => $assigned,
-            'no_listing' => $noListing,
-            'conflicts'  => count($conflicts),
-            'message'    => ($dryRun ? 'Would assign ' : 'Assigned ') . $assigned
-                            . " booking(s). {$noListing} had no listing for their room id, "
-                            . count($conflicts) . ' clashed with an existing booking.',
-            'conflict_detail' => array_slice($conflicts, 0, 50),
-            'detail'          => array_slice($details, 0, 50),
+            'dry_run'    => $result['dry_run'],
+            'assigned'   => $result['assigned'],
+            'moved'      => $result['moved'],
+            'conflicts'  => $result['conflicts'],
+            'no_listing' => $result['unmapped'],
+            'message'    => sprintf(
+                '%s %d booking(s); %d room move(s) followed; %d conflict(s) left for review; %d had no mapped unit.',
+                $result['dry_run'] ? 'Would assign' : 'Assigned',
+                $result['assigned'],
+                $result['moved'],
+                $result['conflicts'],
+                $result['unmapped']
+            ),
+            'detail'     => $result['detail'],
         ]);
     }
 
