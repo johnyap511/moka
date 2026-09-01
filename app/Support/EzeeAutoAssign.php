@@ -72,10 +72,17 @@ class EzeeAutoAssign
     /** @var array<int,true> reservations this run looked at */
     private array $examined = [];
 
-    public function __construct(bool $dryRun = false, ?int $actorId = null)
+    /**
+     * Closing a conflict that no longer applies is housekeeping, not an
+     * assignment, so it can be done while assignment itself is switched off.
+     */
+    private bool $closeStale;
+
+    public function __construct(bool $dryRun = false, ?int $actorId = null, bool $closeStale = false)
     {
-        $this->dryRun  = $dryRun;
-        $this->actorId = $actorId;
+        $this->dryRun     = $dryRun;
+        $this->actorId    = $actorId;
+        $this->closeStale = $closeStale;
     }
 
     /**
@@ -298,7 +305,7 @@ class EzeeAutoAssign
     {
         $examined = array_keys($this->examined);
 
-        if (!$examined || $this->dryRun) {
+        if (!$examined || ($this->dryRun && !$this->closeStale)) {
             return;
         }
 

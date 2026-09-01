@@ -9,7 +9,8 @@ class EzeeAutoAssignCommand extends Command
 {
     protected $signature = 'ezee:auto-assign
                             {--dry-run : report what would change without writing}
-                            {--from= : earliest check-out to consider (default: today)}';
+                            {--from= : earliest check-out to consider (default: today)}
+                            {--close-stale : close conflicts that no longer apply, without assigning anything}';
 
     protected $description = 'Assign EZEE bookings to listings from the room mapping, and follow room moves';
 
@@ -24,7 +25,13 @@ class EzeeAutoAssignCommand extends Command
             $dryRun = true;
         }
 
-        $result = (new EzeeAutoAssign($dryRun))->reconcile($this->option('from'));
+        $closeStale = (bool) $this->option('close-stale');
+
+        if ($closeStale) {
+            $this->info('Closing conflicts that no longer apply. No bookings will be assigned.');
+        }
+
+        $result = (new EzeeAutoAssign($dryRun, null, $closeStale))->reconcile($this->option('from'));
 
         if ($result['message']) {
             $this->warn($result['message']);
@@ -46,7 +53,9 @@ class EzeeAutoAssignCommand extends Command
         }
 
         if ($dryRun) {
-            $this->comment('Dry run — nothing was written.');
+            $this->comment($closeStale
+                ? "Dry run for assignment; {$result['resolved']} stale conflict(s) closed."
+                : 'Dry run — nothing was written.');
         }
 
         return 0;
