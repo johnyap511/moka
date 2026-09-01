@@ -22,7 +22,10 @@ class EzeeRoomMapping extends Model
 
     public function listing()
     {
-        return $this->belongsTo(Listing::class);
+        // withoutGlobalScope: an archived property disappears from lists and
+        // pickers, but a record already pointing at one must still resolve it —
+        // history should stay readable after a property is handed back.
+        return $this->belongsTo(Listing::class)->withoutGlobalScope('notArchived');
     }
 
     public function ezeeGroup()

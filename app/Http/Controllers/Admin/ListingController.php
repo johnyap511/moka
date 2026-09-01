@@ -75,7 +75,9 @@ class ListingController extends Controller
 
         $archived = $request->boolean('archived');
 
-        $count = Listing::whereIn('id', $request->input('ids'))
+        // withArchived: restoring has to reach rows the global scope hides.
+        $count = Listing::withArchived()
+            ->whereIn('id', $request->input('ids'))
             ->update(['archived_at' => $archived ? now() : null]);
 
         $noun = $count === 1 ? 'property' : 'properties';

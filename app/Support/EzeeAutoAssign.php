@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Booking;
+use App\DataLog;
 use App\EzeeAssignmentLog;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
@@ -41,6 +42,7 @@ class EzeeAutoAssign
         'conflicts' => 0,
         'unmapped'  => 0,
         'unchanged' => 0,
+        'adopted'   => 0,
         'failed'    => 0,
     ];
 
@@ -141,6 +143,16 @@ class EzeeAutoAssign
 
     private function assign(EzeeBooking $ezeeBooking, Listing $listing): void
     {
+        // A booking for this exact stay may already exist — assigned by hand on
+        // the EZEE Bookings screen without the link being recorded. That is the
+        // same reservation, not a clash with a different guest, so it is adopted
+        // rather than reported as a conflict for someone to puzzle over.
+        if ($existing = $this->sameStay($listing->id, $ezeeBooking)) {
+            $this->adopt($ezeeBooking, $listing, $existing);
+
+            return;
+        }
+
         if ($clash = $this->clash($listing->id, $ezeeBooking)) {
             $this->conflict($ezeeBooking, $listing, null, $clash, 'assign');
 
@@ -163,6 +175,17 @@ class EzeeAutoAssign
         $actorId   = $this->actorId;
 
         DB::transaction(function () use ($ezeeBooking, $listing, $breakdown, $actorId) {
+            // Someone assigning the same reservation by hand on the EZEE
+            // Bookings screen races this. Re-read under a lock: if that has
+            // happened since the candidate list was built, the reservation is
+            // already assigned and creating another booking would leave a
+            // phantom stay on an owner's calendar with nothing behind it.
+            $fresh = EzeeBooking::where('id', $ezeeBooking->id)->lockForUpdate()->first();
+
+            if (!$fresh || $fresh->book_id) {
+                return;
+            }
+
             $user = User::create([
                 // EZEE does not always send a name, and users.name is NOT NULL.
                 'name'      => $ezeeBooking->FirstName ?: 'EZEE Guest',
@@ -205,14 +228,87 @@ class EzeeAutoAssign
                 'status'  => 8,
             ]);
 
-            EzeeAssignmentLog::create([
-                'ezee_booking_id' => $ezeeBooking->id,
-                'listing_id'      => $listing->id,
-                'old_listing_id'  => null,
-                'assigned_by'     => $actorId,
-                'method'          => 'auto',
-                'note'            => 'Matched on EZEE room ' . $ezeeBooking->RoomName,
+            $this->record($ezeeBooking->fresh(), $listing, null, 'auto',
+                'Matched on EZEE room ' . $ezeeBooking->RoomName . ', created booking #' . $booking->id);
+        });
+    }
+
+    /**
+     * Record an action in both trails.
+     *
+     * ezee_assignment_logs is the detailed, per-booking record the assignment
+     * log screen reads. DataLog is the system-wide log, so an assignment shows
+     * up alongside everything else that happened without having to know which
+     * screen to look at.
+     */
+    private function record(EzeeBooking $ezeeBooking, Listing $listing, ?int $oldListingId, string $method, string $note): void
+    {
+        EzeeAssignmentLog::create([
+            'ezee_booking_id' => $ezeeBooking->id,
+            'listing_id'      => $listing->id,
+            'old_listing_id'  => $oldListingId,
+            'assigned_by'     => $this->actorId,
+            'method'          => $method,
+            'note'            => $note,
+        ]);
+
+        DataLog::create([
+            'related_id' => $ezeeBooking->book_id ?: $ezeeBooking->id,
+            'title'      => 'EZEE ' . $method,
+            'data'       => json_encode([
+                'sub_booking_id' => $ezeeBooking->SubBookingId,
+                'room'           => $ezeeBooking->RoomName,
+                'listing'        => $listing->name,
+                'listing_id'     => $listing->id,
+                'from_listing'   => $oldListingId,
+                'stay'           => $ezeeBooking->Start . ' to ' . $ezeeBooking->End,
+                'note'           => $note,
+                'by'             => $this->actorId ? 'user #' . $this->actorId : 'scheduled sync',
+            ], JSON_UNESCAPED_SLASHES),
+            'status'     => $method === 'conflict' ? 'needs review' : 'done',
+        ]);
+    }
+
+    /** A live booking already recording this exact stay on this unit. */
+    private function sameStay(int $listingId, EzeeBooking $ezeeBooking): ?Booking
+    {
+        return Booking::where('listing_id', $listingId)
+            ->where('status', '!=', 1)
+            ->where('check_in', $ezeeBooking->Start)
+            ->where('check_out', $ezeeBooking->End)
+            ->first();
+    }
+
+    /** Link the reservation to a booking that already exists for it. */
+    private function adopt(EzeeBooking $ezeeBooking, Listing $listing, Booking $existing): void
+    {
+        $this->tally['adopted']++;
+        $this->detail[] = [
+            'action'  => 'adopt',
+            'room'    => $ezeeBooking->RoomName,
+            'listing' => $listing->name,
+            'dates'   => $ezeeBooking->Start . ' → ' . $ezeeBooking->End,
+            'booking' => $existing->id,
+        ];
+
+        if ($this->dryRun) {
+            return;
+        }
+
+        DB::transaction(function () use ($ezeeBooking, $listing, $existing) {
+            $fresh = EzeeBooking::where('id', $ezeeBooking->id)->lockForUpdate()->first();
+
+            if (!$fresh || $fresh->book_id) {
+                return;
+            }
+
+            EzeeBooking::where('id', $ezeeBooking->id)->update([
+                'book_id' => $existing->id,
+                'status'  => 8,
             ]);
+
+            $this->record($ezeeBooking->fresh(), $listing, null, 'auto',
+                'Linked to existing booking #' . $existing->id . ' for the same stay');
         });
     }
 
@@ -247,14 +343,8 @@ class EzeeAutoAssign
             $booking->listing_id = $listing->id;
             $booking->save();
 
-            EzeeAssignmentLog::create([
-                'ezee_booking_id' => $ezeeBooking->id,
-                'listing_id'      => $listing->id,
-                'old_listing_id'  => $from,
-                'assigned_by'     => $actorId,
-                'method'          => 'move',
-                'note'            => 'EZEE moved this booking to room ' . $ezeeBooking->RoomName,
-            ]);
+            $this->record($ezeeBooking, $listing, $from, 'move',
+                'EZEE moved this booking to room ' . $ezeeBooking->RoomName . ' (booking #' . $booking->id . ')');
         });
     }
 
@@ -305,21 +395,14 @@ class EzeeAutoAssign
             return;
         }
 
-        EzeeAssignmentLog::create([
-            'ezee_booking_id' => $ezeeBooking->id,
-            'listing_id'      => $listing->id,
-            'old_listing_id'  => $fromListingId,
-            'assigned_by'     => $this->actorId,
-            'method'          => 'conflict',
-            'note'            => sprintf(
+        $this->record($ezeeBooking, $listing, $fromListingId, 'conflict', sprintf(
                 'Could not %s to %s for %s → %s: booking #%d already occupies it. Left unchanged for review.',
                 $intent,
                 $ezeeBooking->RoomName,
                 $ezeeBooking->Start,
                 $ezeeBooking->End,
-                $clash->id
-            ),
-        ]);
+            $clash->id
+        ));
     }
 
     /** @return array<string,mixed> */

@@ -11,6 +11,37 @@
     <a href="/admin/ezee/room-mapping" class="btn btn-secondary">← Back to Room Mapping</a>
 </div>
 
+{{-- Conflicts are the rows that need a person; everything else is a record of
+     what already happened. --}}
+@php
+    $tabs = [
+        null        => 'All',
+        'conflict'  => 'Needs review',
+        'auto'      => 'Auto-assigned',
+        'move'      => 'Room moves',
+        'manual'    => 'Manual',
+        'reassign'  => 'Reassigned',
+    ];
+@endphp
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    @foreach($tabs as $value => $label)
+        @php $count = $value ? ($counts[$value] ?? 0) : $counts->sum(); @endphp
+        <a href="{{ route('admin.ezee.assignment-log', $value ? ['method' => $value] : []) }}"
+           class="btn {{ $method === $value ? 'btn-primary' : 'btn-secondary' }}"
+           style="padding:5px 14px;font-size:12px{{ $value === 'conflict' && $count > 0 && $method !== 'conflict' ? ';border-color:#f59e0b;color:#b45309' : '' }}">
+            {{ $label }} ({{ $count }})
+        </a>
+    @endforeach
+</div>
+
+@if($method === 'conflict')
+<div class="alert" style="margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:13px">
+    These bookings could not be assigned because the unit was already occupied over those dates.
+    Nothing was changed — the existing assignment was left alone. Resolve each in EZEE or reassign
+    manually from EZEE Bookings.
+</div>
+@endif
+
 <div class="card">
     <div class="card-header">
         <h2>All Assignments</h2>

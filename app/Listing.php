@@ -20,15 +20,40 @@ class Listing extends Model
 
     protected $casts = ['archived_at' => 'datetime'];
 
-    /** Properties the business still manages. */
-    public function scopeActive($query)
+    /**
+     * Archived properties are excluded from every query by default.
+     *
+     * Applied globally rather than at each call site because a listing appears
+     * in calendars, booking pickers, reports, the sitemap and the public site,
+     * and archiving has to mean gone from all of them. Filtering them out one
+     * query at a time would leave a property the business no longer manages
+     * showing up wherever a query was missed.
+     *
+     * Use withArchived() or archived() to see them.
+     */
+    protected static function booted()
     {
-        return $query->whereNull('archived_at');
+        static::addGlobalScope('notArchived', function ($query) {
+            $query->whereNull($query->getQuery()->from . '.archived_at');
+        });
     }
 
+    /** Properties the business still manages. The default. */
+    public function scopeActive($query)
+    {
+        return $query;
+    }
+
+    /** Only archived properties. */
     public function scopeArchived($query)
     {
-        return $query->whereNotNull('archived_at');
+        return $query->withoutGlobalScope('notArchived')->whereNotNull('archived_at');
+    }
+
+    /** Both, for screens and actions that must reach an archived property. */
+    public function scopeWithArchived($query)
+    {
+        return $query->withoutGlobalScope('notArchived');
     }
 
     public function zoneIds()

@@ -48,7 +48,10 @@ class Booking extends Model
      */
     public function listing(): BelongsTo
     {
-        return $this->belongsTo(Listing::class, 'listing_id', 'id');
+        // withoutGlobalScope: an archived property disappears from lists and
+        // pickers, but a record already pointing at one must still resolve it —
+        // history should stay readable after a property is handed back.
+        return $this->belongsTo(Listing::class, 'listing_id', 'id')->withoutGlobalScope('notArchived');
     }
 
     /**

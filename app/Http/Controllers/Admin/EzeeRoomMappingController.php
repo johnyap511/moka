@@ -283,15 +283,25 @@ class EzeeRoomMappingController extends Controller
 
     public function auditLog(Request $request)
     {
+        // Conflicts are the only rows that need a person, so they get their own
+        // filter rather than being buried among the successful assignments.
+        $method = $request->input('method');
+
         $logs = EzeeAssignmentLog::with(['listing', 'assignedBy'])
+            ->when($method, fn ($q) => $q->where('method', $method))
             ->orderByDesc('created_at')
-            ->paginate(50);
+            ->paginate(50)
+            ->withQueryString();
+
+        $counts = EzeeAssignmentLog::selectRaw('method, COUNT(*) c')
+            ->groupBy('method')
+            ->pluck('c', 'method');
 
         $ezeeIds = $logs->pluck('ezee_booking_id')->unique();
         $ezeeMap = EzeeBooking::whereIn('id', $ezeeIds)
             ->get(['id', 'FirstName', 'LastName', 'RoomName', 'RoomTypeName', 'Start', 'End'])
             ->keyBy('id');
 
-        return view('admin.ezee.assignment_log', compact('logs', 'ezeeMap'));
+        return view('admin.ezee.assignment_log', compact('logs', 'ezeeMap', 'method', 'counts'));
     }
 }
