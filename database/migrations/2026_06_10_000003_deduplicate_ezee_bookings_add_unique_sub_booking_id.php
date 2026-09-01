@@ -29,7 +29,10 @@ return new class extends Migration
         $exists = self::hasUniqueIndex();
         if (!$exists) {
             Schema::table('ezee_bookings', function (Blueprint $table) {
-                $table->unique('SubBookingId', 'ezee_bookings_sub_booking_id_unique');
+                // EZEE numbers reservations per property, so SubBookingId alone is not
+                // unique: RES6103 exists at EkoCheras, Bell Suites and Forum as three
+                // different bookings. The reservation is identified by the pair.
+                $table->unique(['SubBookingId', 'TransactionId'], 'ezee_bookings_sub_booking_id_unique');
             });
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\EzeeGroup;
+use App\EzeeRoom;
 use App\EzeeRoomMapping;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
@@ -38,6 +39,9 @@ class EzeeUnitMap
     /** @var Collection<int,string>|null hotel codes, longest first */
     private ?Collection $hotelCodes = null;
 
+    /** @var Collection<string,Collection<int,string>>|null unit name => hotel codes owning it */
+    private ?Collection $unitOwners = null;
+
     public static function make(): self
     {
         return new self();
@@ -64,6 +68,17 @@ class EzeeUnitMap
 
             if ($match) {
                 return $match;
+            }
+
+            // The booking's property is known, and EZEE says this unit belongs to
+            // a different one. Falling back to the name would move a guest across
+            // properties: RS-35-12 is a Forum unit, but RES6103 at Bell Suites
+            // carries that name too, and matching on the name alone proposed
+            // moving a Bell Suites booking into Forum.
+            $owners = $this->unitOwners->get($unit);
+
+            if ($owners && !$owners->contains($hotelCode)) {
+                return null;
             }
         }
 
@@ -165,6 +180,13 @@ class EzeeUnitMap
                 $byNameOnly[$unit] = $distinct->first();
             }
         }
+
+        // Which property each unit name actually belongs to, per EZEE's own
+        // inventory. Used to refuse a name-only match that would cross
+        // properties.
+        $this->unitOwners = EzeeRoom::get(['room_name', 'hotel_code'])
+            ->groupBy(fn ($room) => self::key($room->room_name))
+            ->map(fn ($rooms) => $rooms->pluck('hotel_code')->map(fn ($c) => (string) $c)->unique()->values());
 
         $this->byProperty = collect($byProperty);
         $this->byNameOnly = collect($byNameOnly);
