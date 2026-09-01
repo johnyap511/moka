@@ -21,68 +21,78 @@ class EzeeRoomMappingController extends Controller
     public function index()
     {
         $listings = Listing::orderBy('name')->get();
+        $groups   = EzeeGroup::all()->keyBy('id');
 
-        // Every unit EZEE holds for these properties, from ezee_rooms (filled by
-        // `ezee:sync-rooms`). Listing only the units seen in bookings — which is
-        // what this page used to do — hid any unit nobody had stayed in yet, so
-        // those could never be mapped ahead of their first booking.
-        $rooms = EzeeRoom::orderBy('room_name')
-            ->get()
-            ->map(function ($room) {
-                return (object) [
-                    'RoomName'     => $room->room_name,
-                    'RoomTypeName' => $room->room_type_name,
-                ];
-            });
+        // One row per property AND unit. A unit name is only unique within a
+        // property — "Extra Room 1" exists in four of them — so a single row per
+        // name would offer one mapping where four are needed.
+        $rooms = EzeeRoom::orderBy('room_name')->get()->map(function ($room) use ($groups) {
+            return (object) [
+                'Key'          => $room->ezee_group_id . '|' . $room->room_name,
+                'GroupId'      => $room->ezee_group_id,
+                'PropertyName' => optional($groups->get($room->ezee_group_id))->name ?? '—',
+                'RoomName'     => $room->room_name,
+                'RoomTypeName' => $room->room_type_name,
+            ];
+        });
 
-        // Anything seen in a booking but absent from the inventory still belongs
-        // here: it keeps the page working before the first sync, and surfaces
-        // units EZEE has since retired but which still carry bookings.
-        $known = $rooms->pluck('RoomName')->map(fn ($n) => strtolower(trim($n)))->flip();
+        $known = $rooms->pluck('Key')->flip();
 
-        // distinct() here covers the RoomName/RoomTypeName pair, so a unit EZEE
-        // has recorded under more than one room type came back once per type and
-        // was listed twice — "Extra Room 1" appeared seven times. A unit must
-        // appear once, or it can be mapped twice to different listings.
-        $fromBookings = EzeeBooking::select('RoomName', 'RoomTypeName')
+        // Units seen only in bookings — retired ones, and anything present
+        // before the inventory sync. The property comes from the hotel code that
+        // prefixes TransactionId, since ezee_group_id is not set on bookings.
+        $codeToGroup = $groups->mapWithKeys(fn ($g) => [(string) $g->hotel_code => $g->id]);
+
+        $fromBookings = EzeeBooking::selectRaw('LEFT(TransactionId, 5) AS code, RoomName, MIN(RoomTypeName) AS RoomTypeName')
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
-            ->distinct()
+            ->groupBy('code', 'RoomName')
             ->get()
-            ->reject(fn ($r) => $known->has(strtolower(trim($r->RoomName))))
-            ->unique(fn ($r) => strtolower(trim($r->RoomName)))
+            ->map(function ($row) use ($codeToGroup, $groups) {
+                $groupId = $codeToGroup[(string) $row->code] ?? null;
+
+                return (object) [
+                    'Key'          => $groupId . '|' . $row->RoomName,
+                    'GroupId'      => $groupId,
+                    'PropertyName' => optional($groups->get($groupId))->name ?? '—',
+                    'RoomName'     => $row->RoomName,
+                    'RoomTypeName' => $row->RoomTypeName,
+                ];
+            })
+            ->reject(fn ($r) => $known->has($r->Key))
+            ->unique('Key')
             ->values();
 
-        $rooms = $rooms->concat($fromBookings)->sortBy('RoomName')->values();
+        $rooms = $rooms->concat($fromBookings)
+            ->sortBy([['PropertyName', 'asc'], ['RoomName', 'asc']])
+            ->values();
 
-        // Existing mappings keyed by room_name
-        $mappings = EzeeRoomMapping::all()->keyBy('room_name');
+        $mappings = EzeeRoomMapping::all()
+            ->keyBy(fn ($m) => $m->ezee_group_id . '|' . $m->room_name);
 
-        // Booking counts per room name
-        $stats = EzeeBooking::select(
-                'RoomName',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('SUM(CASE WHEN book_id IS NOT NULL THEN 1 ELSE 0 END) as assigned')
+        // Booking counts per property and unit, keyed the same way as the rows.
+        $stats = EzeeBooking::selectRaw(
+                'LEFT(TransactionId, 5) AS code, RoomName, COUNT(*) as total, SUM(CASE WHEN book_id IS NOT NULL THEN 1 ELSE 0 END) as assigned'
             )
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
-            ->groupBy('RoomName')
+            ->groupBy('code', 'RoomName')
             ->get()
-            ->keyBy('RoomName');
+            ->keyBy(fn ($row) => ($codeToGroup[(string) $row->code] ?? null) . '|' . $row->RoomName);
 
-        // Build auto-match suggestions: compare RoomName against listing names
-        $listingMap = $listings->keyBy('name');
+        // Suggest a listing whose name matches the unit exactly.
+        $byName      = $listings->keyBy(fn ($l) => strtolower(trim($l->name)));
         $suggestions = [];
+
         foreach ($rooms as $room) {
-            $roomName = $room->RoomName;
-            if (isset($mappings[$roomName]) && $mappings[$roomName]->listing_id) continue;
-            if (isset($listingMap[$roomName])) {
-                $suggestions[$roomName] = $listingMap[$roomName]->id;
+            $existing = $mappings[$room->Key] ?? null;
+
+            if ($existing && $existing->listing_id) {
                 continue;
             }
-            $match = $listings->first(fn($l) => strtolower($l->name) === strtolower($roomName));
-            if ($match) {
-                $suggestions[$roomName] = $match->id;
+
+            if ($match = $byName->get(strtolower(trim($room->RoomName)))) {
+                $suggestions[$room->Key] = $match->id;
             }
         }
 
@@ -94,12 +104,18 @@ class EzeeRoomMappingController extends Controller
         $data  = $request->input('mappings', []);
         $saved = 0;
 
-        foreach ($data as $roomName => $listingId) {
-            if (empty($roomName)) continue;
+        foreach ($data as $key => $listingId) {
+            // Keys arrive as "<ezee_group_id>|<unit>", because a unit name only
+            // identifies a unit within one property.
+            [$groupId, $roomName] = array_pad(explode('|', (string) $key, 2), 2, null);
+
+            if ($roomName === null || $roomName === '') {
+                continue;
+            }
 
             EzeeRoomMapping::updateOrCreate(
-                ['room_name' => $roomName],
-                ['listing_id' => $listingId ?: null, 'ezee_group_id' => null]
+                ['ezee_group_id' => $groupId !== '' ? $groupId : null, 'room_name' => $roomName],
+                ['listing_id' => $listingId ?: null]
             );
             $saved++;
         }

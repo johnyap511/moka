@@ -46,13 +46,13 @@ select.msel.is-suggested { border-color:#3b82f6; background:#eff6ff; }
 {{-- Stats --}}
 @php
 $totalRooms    = count($rooms);
-$mappedRooms   = $rooms->filter(fn($r) => isset($mappings[$r->RoomName]) && $mappings[$r->RoomName]->listing_id)->count();
+$mappedRooms   = $rooms->filter(fn($r) => isset($mappings[$r->Key]) && $mappings[$r->Key]->listing_id)->count();
 $suggestedCount= count($suggestions);
 $totalBooks    = $stats->sum('total');
 $assignedBooks = $stats->sum('assigned');
 @endphp
 <div class="stats-grid" style="margin-bottom:20px">
-    <div class="stat-card"><div class="val">{{ $totalRooms }}</div><div class="lbl">Room Names</div></div>
+    <div class="stat-card"><div class="val">{{ $totalRooms }}</div><div class="lbl">Units</div></div>
     <div class="stat-card"><div class="val" style="color:var(--teal)">{{ $mappedRooms }}</div><div class="lbl">Mapped</div></div>
     <div class="stat-card"><div class="val" style="color:#3b82f6">{{ $suggestedCount }}</div><div class="lbl">Auto-Matched</div></div>
     <div class="stat-card"><div class="val" style="color:#f59e0b">{{ $totalRooms - $mappedRooms - $suggestedCount }}</div><div class="lbl">Need Manual Map</div></div>
@@ -88,6 +88,7 @@ $assignedBooks = $stats->sum('assigned');
                 <thead>
                     <tr>
                         <th style="width:36px">#</th>
+                        <th>Property</th>
                         <th>Room Unit (RoomName)</th>
                         <th>Room Category (RoomTypeName)</th>
                         <th style="width:80px;text-align:center">Bookings</th>
@@ -99,18 +100,22 @@ $assignedBooks = $stats->sum('assigned');
                 <tbody>
                     @forelse($rooms as $i => $room)
                     @php
+                        // Keyed on property + unit: the same unit name exists in
+                        // several properties and each needs its own mapping.
+                        $roomKey      = $room->Key;
                         $roomName     = $room->RoomName;
                         $roomTypeName = $room->RoomTypeName;
-                        $mapping      = $mappings[$roomName] ?? null;
-                        $statRow      = $stats[$roomName]    ?? null;
+                        $mapping      = $mappings[$roomKey] ?? null;
+                        $statRow      = $stats[$roomKey]    ?? null;
                         $isMapped     = $mapping && $mapping->listing_id;
-                        $suggested    = !$isMapped && isset($suggestions[$roomName]) ? $suggestions[$roomName] : null;
+                        $suggested    = !$isMapped && isset($suggestions[$roomKey]) ? $suggestions[$roomKey] : null;
                         $total        = $statRow->total    ?? 0;
                         $assigned     = $statRow->assigned ?? 0;
                     @endphp
                     <tr class="room-row {{ $isMapped ? 'is-mapped-row' : ($suggested ? 'is-suggested-row' : 'is-unmapped-row') }}"
                         data-room="{{ strtolower($roomName) }}">
                         <td class="mono" style="color:var(--text-secondary)">{{ $i+1 }}</td>
+                        <td style="font-size:12px;color:var(--text-secondary)">{{ $room->PropertyName }}</td>
                         <td style="font-weight:600;font-family:monospace">{{ $roomName }}</td>
                         <td style="font-size:12px;color:var(--text-secondary)">{{ $roomTypeName ?? '—' }}</td>
                         <td style="text-align:center;font-weight:600">{{ $total }}</td>
@@ -127,7 +132,7 @@ $assignedBooks = $stats->sum('assigned');
                             @endif
                         </td>
                         <td>
-                            <select name="mappings[{{ $roomName }}]"
+                            <select name="mappings[{{ $roomKey }}]"
                                     data-suggested="{{ $suggested }}"
                                     class="msel {{ $isMapped ? 'is-mapped' : ($suggested ? 'is-suggested' : '') }}"
                                     onchange="onMappingChange(this)">
@@ -143,7 +148,7 @@ $assignedBooks = $stats->sum('assigned');
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align:center;padding:60px;color:var(--text-secondary)">
+                        <td colspan="8" style="text-align:center;padding:60px;color:var(--text-secondary)">
                             No EZEE room names found. Import EZEE bookings first.
                         </td>
                     </tr>

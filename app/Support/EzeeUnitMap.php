@@ -2,39 +2,126 @@
 
 namespace App\Support;
 
+use App\EzeeGroup;
 use App\EzeeRoomMapping;
 use App\Listing;
+use App\OtherModel\EzeeBooking;
 use Illuminate\Support\Collection;
 
 /**
  * Resolves an EZEE unit to the listing that represents it.
  *
- * EZEE identifies the unit on every booking as eZeePMSRoomid (e.g. "AL-11-08"),
+ * EZEE identifies the unit on a booking as eZeePMSRoomid (e.g. "AL-11-08"),
  * stored locally as EzeeBooking.RoomName.
  *
- * Two sources of that pairing exist for historical reasons:
+ * A unit name is only unique *within* a property. "Extra Room 1" through
+ * "Extra Room 5" each exist in four different properties, so resolving on the
+ * name alone would send every one of their bookings to a single listing and put
+ * guests on the wrong owner's calendar. The property therefore forms part of
+ * the key wherever it is known.
  *
- *   ezee_room_mappings   written by the room mapping screen — what the team maintains
- *   listings.ezee_room_id  set by hand on individual listings
+ * Bookings do not carry ezee_group_id — it is null on all of them — but
+ * TransactionId is prefixed with the hotel code, which identifies the property.
  *
- * Auto-assignment previously read only the second, which no listing had set, so
- * the mappings the team entered on the screen were never used. The screen is
- * authoritative here; the listing column is kept as a lower-precedence fallback
- * so anything already relying on it keeps working.
+ * Mappings saved before this distinction existed have no property recorded.
+ * Those still resolve by name alone, but only for names that belong to exactly
+ * one property, so an ambiguous unit can never be matched by accident.
  */
 class EzeeUnitMap
 {
-    /**
-     * @return Collection<string,Listing> keyed by normalised unit name
-     */
-    public static function build(): Collection
-    {
-        $listings = Listing::all()->keyBy('id');
-        $map      = [];
+    /** @var Collection<string,Listing>|null keyed by "hotelcode|unit" */
+    private ?Collection $byProperty = null;
 
+    /** @var Collection<string,Listing>|null keyed by unit, unambiguous names only */
+    private ?Collection $byNameOnly = null;
+
+    /** @var Collection<int,string>|null hotel codes, longest first */
+    private ?Collection $hotelCodes = null;
+
+    public static function make(): self
+    {
+        return new self();
+    }
+
+    /**
+     * The listing for this booking's unit, or null when it is unmapped or the
+     * name is ambiguous and no property-specific mapping exists.
+     */
+    public function resolve(EzeeBooking $booking): ?Listing
+    {
+        $this->load();
+
+        $unit = self::key($booking->RoomName);
+
+        if ($unit === '') {
+            return null;
+        }
+
+        $hotelCode = $this->hotelCodeFor($booking);
+
+        if ($hotelCode !== null) {
+            $match = $this->byProperty->get($hotelCode . '|' . $unit);
+
+            if ($match) {
+                return $match;
+            }
+        }
+
+        return $this->byNameOnly->get($unit);
+    }
+
+    /** The property a booking belongs to, read from its TransactionId prefix. */
+    public function hotelCodeFor(EzeeBooking $booking): ?string
+    {
+        $this->load();
+
+        $transaction = (string) $booking->TransactionId;
+
+        foreach ($this->hotelCodes as $code) {
+            if ($code !== '' && str_starts_with($transaction, $code)) {
+                return $code;
+            }
+        }
+
+        return null;
+    }
+
+    public function isEmpty(): bool
+    {
+        $this->load();
+
+        return $this->byProperty->isEmpty() && $this->byNameOnly->isEmpty();
+    }
+
+    /** Unit names are compared case- and whitespace-insensitively. */
+    public static function key(?string $roomName): string
+    {
+        return strtolower(trim((string) $roomName));
+    }
+
+    private function load(): void
+    {
+        if ($this->byProperty !== null) {
+            return;
+        }
+
+        $listings   = Listing::all()->keyBy('id');
+        $groupCodes = EzeeGroup::pluck('hotel_code', 'id')->map(fn ($c) => (string) $c);
+
+        $this->hotelCodes = $groupCodes->values()
+            ->filter()
+            ->unique()
+            ->sortByDesc(fn ($c) => strlen($c))
+            ->values();
+
+        $byProperty = [];
+        $candidates = [];
+
+        // Lowest precedence: a unit id set directly on a listing. It carries no
+        // property, so it can only ever be a name-only candidate.
         foreach ($listings as $listing) {
             if (filled($listing->ezee_room_id)) {
-                $map[self::key($listing->ezee_room_id)] = $listing;
+                $candidates[self::key($listing->ezee_room_id)][] = $listing;
             }
         }
 
@@ -44,17 +131,35 @@ class EzeeUnitMap
             ->get();
 
         foreach ($mappings as $mapping) {
-            if ($listing = $listings->get($mapping->listing_id)) {
-                $map[self::key($mapping->room_name)] = $listing;
+            $listing = $listings->get($mapping->listing_id);
+
+            if (!$listing) {
+                continue;
+            }
+
+            $unit = self::key($mapping->room_name);
+            $code = $mapping->ezee_group_id ? ($groupCodes[$mapping->ezee_group_id] ?? null) : null;
+
+            if ($code) {
+                $byProperty[$code . '|' . $unit] = $listing;
+            }
+
+            $candidates[$unit][] = $listing;
+        }
+
+        // A name-only mapping is safe only where the name means one thing. Where
+        // several listings claim the same name, the property must decide.
+        $byNameOnly = [];
+
+        foreach ($candidates as $unit => $matches) {
+            $distinct = collect($matches)->unique('id');
+
+            if ($distinct->count() === 1) {
+                $byNameOnly[$unit] = $distinct->first();
             }
         }
 
-        return collect($map);
-    }
-
-    /** Unit names are compared case- and whitespace-insensitively. */
-    public static function key(?string $roomName): string
-    {
-        return strtolower(trim((string) $roomName));
+        $this->byProperty = collect($byProperty);
+        $this->byNameOnly = collect($byNameOnly);
     }
 }

@@ -69,7 +69,7 @@ class EzeeAutoAssign
      */
     public function reconcile(?string $from = null): array
     {
-        $units = EzeeUnitMap::build();
+        $units = EzeeUnitMap::make();
 
         if ($units->isEmpty()) {
             return $this->summary('No unit is mapped to a listing yet.');
@@ -91,7 +91,7 @@ class EzeeAutoAssign
         // the outgoing booking still in place and report a conflict that
         // resolves itself moments later.
         foreach ($candidates as $ezeeBooking) {
-            $listing = $units[EzeeUnitMap::key($ezeeBooking->RoomName)] ?? null;
+            $listing = $units->resolve($ezeeBooking);
 
             if (!$listing) {
                 $this->tally['unmapped']++;
