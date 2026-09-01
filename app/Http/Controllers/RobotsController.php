@@ -15,11 +15,30 @@ class RobotsController extends Controller
      */
     public function __invoke()
     {
-        $body = app()->environment('production')
+        $body = self::isCanonicalHost()
             ? $this->production()
             : $this->nonProduction();
 
         return response($body)->header('Content-Type', 'text/plain; charset=UTF-8');
+    }
+
+    /**
+     * Whether this request is being served by the real site.
+     *
+     * Host, not APP_ENV: staging runs with APP_ENV=production, so the
+     * environment name cannot tell them apart.
+     */
+    public static function isCanonicalHost(): bool
+    {
+        $canonical = strtolower(trim((string) config('seo.canonical_host')));
+
+        if ($canonical === '') {
+            return true;
+        }
+
+        $host = strtolower((string) request()->getHost());
+
+        return $host === $canonical || $host === 'www.' . $canonical;
     }
 
     private function nonProduction(): string

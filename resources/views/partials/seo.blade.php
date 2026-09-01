@@ -31,7 +31,7 @@
     // Staging serves the same pages on a public IP. robots.txt already tells
     // crawlers to stay away there; this makes any page that is reached directly
     // say so too, since a disallowed page can still be indexed if linked.
-    $seoRobots      = $seoSection('seo_robots') ?: (app()->environment('production')
+    $seoRobots      = $seoSection('seo_robots') ?: (\App\Http\Controllers\RobotsController::isCanonicalHost()
         ? 'index,follow,max-image-preview:large'
         : 'noindex,nofollow');
     $seoImage       = $seoSection('seo_image')     ?: asset('images/layout/og-cover.jpg');
