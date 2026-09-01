@@ -40,12 +40,18 @@ class EzeeRoomMappingController extends Controller
         // units EZEE has since retired but which still carry bookings.
         $known = $rooms->pluck('RoomName')->map(fn ($n) => strtolower(trim($n)))->flip();
 
+        // distinct() here covers the RoomName/RoomTypeName pair, so a unit EZEE
+        // has recorded under more than one room type came back once per type and
+        // was listed twice — "Extra Room 1" appeared seven times. A unit must
+        // appear once, or it can be mapped twice to different listings.
         $fromBookings = EzeeBooking::select('RoomName', 'RoomTypeName')
             ->whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
             ->distinct()
             ->get()
-            ->reject(fn ($r) => $known->has(strtolower(trim($r->RoomName))));
+            ->reject(fn ($r) => $known->has(strtolower(trim($r->RoomName))))
+            ->unique(fn ($r) => strtolower(trim($r->RoomName)))
+            ->values();
 
         $rooms = $rooms->concat($fromBookings)->sortBy('RoomName')->values();
 
