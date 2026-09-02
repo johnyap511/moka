@@ -261,7 +261,19 @@ class BookingController extends Controller
                                             }
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update([
+                                                        'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
+                                                        'Start' => $start,
+                                                        'End' => $end,
+                                                        'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                        'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                        'TotalDiscount' => $totalDiscount,
+                                                        'TotalExtraCharge' => $totalExtraCharge,
+                                                        'TotalPayment' => $totalPayment,
+                                                        'TACommision' => $tACommision,
+                                                    ]);
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -433,7 +445,19 @@ class BookingController extends Controller
                                                 }
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update([
+                                                            'RoomTypeName' => $roomTypeName,
+                                                            'RoomName' => $roomName,
+                                                            'Start' => $start,
+                                                            'End' => $end,
+                                                            'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                            'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                            'TotalDiscount' => $totalDiscount,
+                                                            'TotalExtraCharge' => $totalExtraCharge,
+                                                            'TotalPayment' => $totalPayment,
+                                                            'TACommision' => $tACommision,
+                                                        ]);
                                             }
                                         }
                                     }

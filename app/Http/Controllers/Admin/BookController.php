@@ -653,7 +653,7 @@ class BookController extends Controller
                                             $source = $reserve1['BookingTran']['BookedBy'];
                                         }
 
-                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
+                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)    ->where('TransactionId', $transaction_id)->first();
                                         if (empty($exist)) {
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
@@ -683,7 +683,19 @@ class BookController extends Controller
                                             }
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update([
+                                                        'RoomTypeName' => $roomTypeName,
+                                                        'RoomName' => $roomName,
+                                                        'Start' => $start,
+                                                        'End' => $end,
+                                                        'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                        'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                        'TotalDiscount' => $totalDiscount,
+                                                        'TotalExtraCharge' => $totalExtraCharge,
+                                                        'TotalPayment' => $totalPayment,
+                                                        'TACommision' => $tACommision,
+                                                    ]);
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -824,7 +836,7 @@ class BookController extends Controller
                                                 $created_at = $reserve_array_value['Createdatetime'];
                                             }
 
-                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
+                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)    ->where('TransactionId', $transaction_id)->first();
 
                                             if (empty($exist)) {
                                                 if ($sub_booking_id) {
@@ -856,7 +868,19 @@ class BookController extends Controller
                                                 }
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->update(["TotalExtraCharge" => $totalExtraCharge]);
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update([
+                                                            'RoomTypeName' => $roomTypeName,
+                                                            'RoomName' => $roomName,
+                                                            'Start' => $start,
+                                                            'End' => $end,
+                                                            'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                            'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                            'TotalDiscount' => $totalDiscount,
+                                                            'TotalExtraCharge' => $totalExtraCharge,
+                                                            'TotalPayment' => $totalPayment,
+                                                            'TACommision' => $tACommision,
+                                                        ]);
                                             }
                                         }
                                     }
@@ -992,7 +1016,9 @@ class BookController extends Controller
             }
         }
         // server folio number
-        $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)->first();
+        $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)
+            ->where('TransactionId', $ezee->TransactionId)
+            ->first();
         if ($ezee_booking_folio) {
             $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
             $postData_F['Request_Type'] = 'RetrieveListofBills';
@@ -1361,7 +1387,9 @@ class BookController extends Controller
             }
         }
         // server folio number
-        $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)->first();
+        $ezee_booking_folio = EzeeBooking::where('SubBookingId', $ezee->SubBookingId)
+            ->where('TransactionId', $ezee->TransactionId)
+            ->first();
         if ($ezee_booking_folio) {
             $ezeeGroupsByCode = EzeeGroup::all()->keyBy('hotel_code');
             $postData_F['Request_Type'] = 'RetrieveListofBills';
@@ -2088,7 +2116,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             $source = $reserve1['BookedBy'];
                                         }
 
-                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
+                                        $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)    ->where('TransactionId', $transaction_id)->first();
                                         if (empty($exist)) {
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
@@ -2127,6 +2155,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
 
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                ->where("TransactionId", $transaction_id)
                                                 ->update([
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
@@ -2282,7 +2311,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 $created_at = $reserve_array_value['Createdatetime'];
                                             }
 
-                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
+                                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)    ->where('TransactionId', $transaction_id)->first();
 
                                             if (empty($exist)) {
                                                 if ($sub_booking_id) {
@@ -2321,6 +2350,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
 
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
                                                     ->update([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
