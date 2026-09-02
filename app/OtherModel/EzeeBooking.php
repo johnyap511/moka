@@ -49,6 +49,25 @@ class EzeeBooking extends Model
         'created_at'
     ];
 
+    /**
+     * EZEE returns several nodes for the same reservation in one response — one
+     * per amendment — in no guaranteed order, and 57 of 100 reservations in a
+     * sample came back more than once. Taking whichever arrived last made the
+     * stored timestamp flip-flop, so every sync looked like an amendment and
+     * raised 96 review items in a run minutes after the previous one. Only ever
+     * move this forward.
+     */
+    public function setEzeeModifiedAtAttribute($value): void
+    {
+        $current = $this->attributes['ezee_modified_at'] ?? null;
+
+        if ($current && $value && $value < $current) {
+            return;
+        }
+
+        $this->attributes['ezee_modified_at'] = $value;
+    }
+
     protected static function booted()
     {
         // EZEE reports only the final room on a reservation, so a guest moved
