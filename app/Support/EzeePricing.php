@@ -57,11 +57,19 @@ class EzeePricing
      * with the bank-payout-verified formula where they overlap, and stops
      * charging a payment fee on the bookings that never incurred one.
      */
-    private const REPORTS_COMMISSION = ['Airbnb', 'Expedia', 'Traveloka', 'Booking.com', 'Booking'];
+    private const REPORTS_COMMISSION = ['Airbnb', 'Expedia', 'Booking.com', 'Booking'];
 
     /**
      * Channels whose reported commission is stated before SST. Airbnb's and
      * Expedia's already include it — their invoices say so in as many words.
+     *
+     * Traveloka is deliberately not in REPORTS_COMMISSION. Its reported figure
+     * does not reconcile with a Traveloka booking confirmation: EZEE recorded
+     * 577.78 room and a 106.08 commission where the document shows a 517.92
+     * subtotal and "Total you will receive 509.43" — a deduction of 8.49, not
+     * 106.08. The figure sits on a flat 17% x 1.08 across the estate, which
+     * reads as a rate configured in EZEE rather than one reported by the
+     * channel. It keeps the existing formula until the arrangement is settled.
      */
     private const COMMISSION_EXCLUDES_SST = ['Booking.com', 'Booking'];
 
