@@ -333,11 +333,18 @@ class HistoricalApi extends Command
                                             }
                                         } else {
                                             EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                ->where("TransactionId", $transaction_id)
                                                 ->update([
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
+                                                    'Start' => $start,
+                                                    'End' => $end,
                                                     'TotalExtraCharge' => $totalExtraCharge,
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                    'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                    'TotalDiscount' => $totalDiscount,
+                                                    'TotalPayment' => $totalPayment,
+                                                    'TACommision' => $tACommision,
                                                 ]);
                                             if ($sub_booking_id && !$exist->folio_no) {
                                                 $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
@@ -526,11 +533,18 @@ class HistoricalApi extends Command
                                                 }
                                             } else {
                                                 EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
                                                     ->update([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
+                                                        'Start' => $start,
+                                                        'End' => $end,
                                                         'TotalExtraCharge' => $totalExtraCharge,
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
+                                                        'TotalAmountBeforeTax' => $totalAmountBeforeTax,
+                                                        'TotalDiscount' => $totalDiscount,
+                                                        'TotalPayment' => $totalPayment,
+                                                        'TACommision' => $tACommision,
                                                     ]);
                                                 if ($sub_booking_id && !$exist->folio_no) {
                                                     $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
@@ -593,7 +607,11 @@ class HistoricalApi extends Command
         $res = json_decode($response, true);
         if (isset($res['Success']['FolioList'][0]['foliono'])) {
             $folioNo = $res['Success']['FolioList'][0]['foliono'];
-            $booking = EzeeBooking::where('SubBookingId', $subBookingId)->first();
+            // A reservation number is unique per property, not globally, so the
+            // hotel code has to narrow it or the folio lands on another property's booking.
+            $booking = EzeeBooking::where('SubBookingId', $subBookingId)
+                ->where('TransactionId', 'LIKE', $hotelCode . '%')
+                ->first();
             if ($booking) {
                 $booking->update(['folio_no' => $folioNo]);
                 if ($booking->book_id) {
