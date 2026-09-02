@@ -682,9 +682,10 @@ class BookController extends Controller
                                                 ]);
                                             }
                                         } else {
-                                            EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->where("TransactionId", $transaction_id)
-                                                    ->update([
+                                            // EZEE omits the unit on some reservations. Writing that blank back
+                                            // would wipe a unit we already hold, so only refresh what actually
+                                            // arrived.
+                                            $refresh = array_filter([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -695,7 +696,13 @@ class BookController extends Controller
                                                         'TotalExtraCharge' => $totalExtraCharge,
                                                         'TotalPayment' => $totalPayment,
                                                         'TACommision' => $tACommision,
-                                                    ]);
+                                            ], fn ($v) => $v !== null && $v !== '');
+
+                                            if ($refresh) {
+                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update($refresh);
+                                            }
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -867,9 +874,10 @@ class BookController extends Controller
                                                     ]);
                                                 }
                                             } else {
-                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                        ->where("TransactionId", $transaction_id)
-                                                        ->update([
+                                                // EZEE omits the unit on some reservations. Writing that blank back
+                                                // would wipe a unit we already hold, so only refresh what actually
+                                                // arrived.
+                                                $refresh = array_filter([
                                                             'RoomTypeName' => $roomTypeName,
                                                             'RoomName' => $roomName,
                                                             'Start' => $start,
@@ -880,7 +888,13 @@ class BookController extends Controller
                                                             'TotalExtraCharge' => $totalExtraCharge,
                                                             'TotalPayment' => $totalPayment,
                                                             'TACommision' => $tACommision,
-                                                        ]);
+                                                ], fn ($v) => $v !== null && $v !== '');
+
+                                                if ($refresh) {
+                                                    EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update($refresh);
+                                                }
                                             }
                                         }
                                     }
@@ -2154,9 +2168,10 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             if ($exist->End !== $end) $changes['check_out'] = ['from' => $exist->End, 'to' => $end];
                                             if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
 
-                                            EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                ->where("TransactionId", $transaction_id)
-                                                ->update([
+                                            // EZEE omits the unit on some reservations. Writing that blank back
+                                            // would wipe a unit we already hold, so only refresh what actually
+                                            // arrived.
+                                            $refresh = array_filter([
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
@@ -2164,7 +2179,13 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                     "TotalExtraCharge" => $totalExtraCharge,
                                                     "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                     "TotalAmountBeforeTax" => $totalAmountBeforeTax,
-                                                ]);
+                                            ], fn ($v) => $v !== null && $v !== '');
+
+                                            if ($refresh) {
+                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update($refresh);
+                                            }
                                             if (count($changes)) {
                                                 $updatedCount++;
                                                 $details[] = ['action' => 'updated', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax, 'changes' => $changes];
@@ -2349,9 +2370,10 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 if ($exist->End !== $end) $changes['check_out'] = ['from' => $exist->End, 'to' => $end];
                                                 if ((float)$exist->TotalAmountAfterTax !== (float)$totalAmountAfterTax) $changes['amount'] = ['from' => $exist->TotalAmountAfterTax, 'to' => $totalAmountAfterTax];
 
-                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->where("TransactionId", $transaction_id)
-                                                    ->update([
+                                                // EZEE omits the unit on some reservations. Writing that blank back
+                                                // would wipe a unit we already hold, so only refresh what actually
+                                                // arrived.
+                                                $refresh = array_filter([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -2359,7 +2381,13 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                         "TotalExtraCharge" => $totalExtraCharge,
                                                         "TotalAmountAfterTax" => $totalAmountAfterTax,
                                                         "TotalAmountBeforeTax" => $totalAmountBeforeTax,
-                                                    ]);
+                                                ], fn ($v) => $v !== null && $v !== '');
+
+                                                if ($refresh) {
+                                                    EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update($refresh);
+                                                }
                                                 if (count($changes)) {
                                                     $updatedCount++;
                                                     $details[] = ['action' => 'updated', 'sub_booking_id' => $sub_booking_id, 'guest' => trim($first_name . ' ' . $last_name), 'room' => $roomName ?? $roomTypeName, 'check_in' => $start, 'check_out' => $end, 'amount' => $totalAmountAfterTax, 'changes' => $changes];

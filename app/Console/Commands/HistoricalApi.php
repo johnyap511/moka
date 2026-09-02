@@ -332,9 +332,10 @@ class HistoricalApi extends Command
                                                 $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                             }
                                         } else {
-                                            EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                ->where("TransactionId", $transaction_id)
-                                                ->update([
+                                            // EZEE omits the unit on some reservations. Writing that blank back
+                                            // would wipe a unit we already hold, so only refresh what actually
+                                            // arrived.
+                                            $refresh = array_filter([
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
@@ -345,7 +346,13 @@ class HistoricalApi extends Command
                                                     'TotalDiscount' => $totalDiscount,
                                                     'TotalPayment' => $totalPayment,
                                                     'TACommision' => $tACommision,
-                                                ]);
+                                            ], fn ($v) => $v !== null && $v !== '');
+
+                                            if ($refresh) {
+                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update($refresh);
+                                            }
                                             if ($sub_booking_id && !$exist->folio_no) {
                                                 $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                             }
@@ -532,9 +539,10 @@ class HistoricalApi extends Command
                                                     $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                                 }
                                             } else {
-                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->where("TransactionId", $transaction_id)
-                                                    ->update([
+                                                // EZEE omits the unit on some reservations. Writing that blank back
+                                                // would wipe a unit we already hold, so only refresh what actually
+                                                // arrived.
+                                                $refresh = array_filter([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -545,7 +553,13 @@ class HistoricalApi extends Command
                                                         'TotalDiscount' => $totalDiscount,
                                                         'TotalPayment' => $totalPayment,
                                                         'TACommision' => $tACommision,
-                                                    ]);
+                                                ], fn ($v) => $v !== null && $v !== '');
+
+                                                if ($refresh) {
+                                                    EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update($refresh);
+                                                }
                                                 if ($sub_booking_id && !$exist->folio_no) {
                                                     $this->fetchFolioForBooking($sub_booking_id, $listing->hotel_code, $listing->auth_key);
                                                 }

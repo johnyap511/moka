@@ -260,9 +260,10 @@ class BookingController extends Controller
                                                 ]);
                                             }
                                         } else {
-                                            EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->where("TransactionId", $transaction_id)
-                                                    ->update([
+                                            // EZEE omits the unit on some reservations. Writing that blank back
+                                            // would wipe a unit we already hold, so only refresh what actually
+                                            // arrived.
+                                            $refresh = array_filter([
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -273,7 +274,13 @@ class BookingController extends Controller
                                                         'TotalExtraCharge' => $totalExtraCharge,
                                                         'TotalPayment' => $totalPayment,
                                                         'TACommision' => $tACommision,
-                                                    ]);
+                                            ], fn ($v) => $v !== null && $v !== '');
+
+                                            if ($refresh) {
+                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                    ->where("TransactionId", $transaction_id)
+                                                    ->update($refresh);
+                                            }
                                         }
                                     } else {
                                         foreach ($reserve1['BookingTran'] as $reserve_array_value) {
@@ -444,9 +451,10 @@ class BookingController extends Controller
                                                     ]);
                                                 }
                                             } else {
-                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                        ->where("TransactionId", $transaction_id)
-                                                        ->update([
+                                                // EZEE omits the unit on some reservations. Writing that blank back
+                                                // would wipe a unit we already hold, so only refresh what actually
+                                                // arrived.
+                                                $refresh = array_filter([
                                                             'RoomTypeName' => $roomTypeName,
                                                             'RoomName' => $roomName,
                                                             'Start' => $start,
@@ -457,7 +465,13 @@ class BookingController extends Controller
                                                             'TotalExtraCharge' => $totalExtraCharge,
                                                             'TotalPayment' => $totalPayment,
                                                             'TACommision' => $tACommision,
-                                                        ]);
+                                                ], fn ($v) => $v !== null && $v !== '');
+
+                                                if ($refresh) {
+                                                    EzeeBooking::where("SubBookingId", $sub_booking_id)
+                                                        ->where("TransactionId", $transaction_id)
+                                                        ->update($refresh);
+                                                }
                                             }
                                         }
                                     }
