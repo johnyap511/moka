@@ -49,14 +49,21 @@ class EzeePricing
      * (15.5% + VAT)" = 117.18, which is what EZEE reports). Expedia's is
      * inclusive of commission, tax on commission and the accelerator.
      *
-     * Booking.com is deliberately absent. Its reported figure spikes at exactly
-     * 18.00% of base across 3,626 rows — a bare commission, with neither SST
-     * nor the 2.8% payment fee in it — so adopting it would drop both and
-     * leave us absorbing the payment fee. The v6 formula below was verified
-     * against a bank payout, so it stays until a Booking.com remittance
-     * statement says otherwise.
+     * Booking.com reports commission plus the 2.8% payment fee when it took
+     * the money, and commission alone when the guest paid us — the payload's
+     * PayAtHotel flag. Both are the real charge, so the figure is right either
+     * way; what it never carries is SST. On the rows that include the payment
+     * fee it equals the v6 formula's pre-SST subtotal exactly, so this agrees
+     * with the bank-payout-verified formula where they overlap, and stops
+     * charging a payment fee on the bookings that never incurred one.
      */
-    private const REPORTS_COMMISSION = ['Airbnb', 'Expedia', 'Traveloka'];
+    private const REPORTS_COMMISSION = ['Airbnb', 'Expedia', 'Traveloka', 'Booking.com', 'Booking'];
+
+    /**
+     * Channels whose reported commission is stated before SST. Airbnb's and
+     * Expedia's already include it — their invoices say so in as many words.
+     */
+    private const COMMISSION_EXCLUDES_SST = ['Booking.com', 'Booking'];
 
     /**
      * Channels that remit net: their commission is already out of the figures
@@ -186,6 +193,10 @@ class EzeePricing
             // reach here, so the fee is charged against the invoice's room
             // rate rather than one already net of it. Zeroing it here as well
             // would credit the owner the fee twice over.
+            if (in_array($source, self::COMMISSION_EXCLUDES_SST, true)) {
+                return self::round2($actualCommission * ($bookedOn < new DateTime(self::SST_DATE) ? 1.06 : 1.08));
+            }
+
             return self::round2($actualCommission);
         }
 
