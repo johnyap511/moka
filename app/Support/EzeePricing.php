@@ -202,7 +202,12 @@ class EzeePricing
             // rate rather than one already net of it. Zeroing it here as well
             // would credit the owner the fee twice over.
             if (in_array($source, self::COMMISSION_EXCLUDES_SST, true)) {
-                return self::round2($actualCommission * ($bookedOn < new DateTime(self::SST_DATE) ? 1.06 : 1.08));
+                return self::round2($actualCommission + self::bookingComVat(
+                    $actualCommission,
+                    $roomTotal + $cleaningFee + $sstCf,
+                    $baseTaxed,
+                    $bookedOn < new DateTime(self::SST_DATE) ? 0.06 : 0.08
+                ));
             }
 
             return self::round2($actualCommission);
@@ -361,6 +366,34 @@ class EzeePricing
         }
 
         return trim(preg_replace('/[^A-Za-z\. ]/', '', $raw));
+    }
+
+    /**
+     * Booking.com charges VAT on the commission and on the payments service
+     * fee as two separately rounded amounts, then sums them — so 8% of the two
+     * combined can be a sen out. Verified against the August 2026 payout
+     * statement: on 6105742553 it bills 5.43 + 0.90 = 6.33, where 8% of the
+     * combined 79.19 rounds to 6.34 and would leave the payout a sen short.
+     *
+     * Where the guest paid at the property no service fee is charged and the
+     * reported figure is the commission alone, so there is nothing to split.
+     */
+    private static function bookingComVat(float $reported, float $commissionable, float $totalPrice, float $rate): float
+    {
+        foreach ([0.15, 0.18] as $commissionRate) {
+            if (abs($reported - self::round2($commissionRate * $commissionable)) < 0.03) {
+                return self::round2($rate * $reported);
+            }
+        }
+
+        $serviceFee = self::round2(0.028 * $totalPrice);
+        $commission = self::round2($reported - $serviceFee);
+
+        if ($commission <= 0 || $serviceFee <= 0) {
+            return self::round2($rate * $reported);
+        }
+
+        return self::round2($rate * $commission) + self::round2($rate * $serviceFee);
     }
 
     /**
