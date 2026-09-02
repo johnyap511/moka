@@ -442,11 +442,15 @@ class EzeeAutoAssign
         }
 
         // An unresolved conflict is seen again on every hourly run. Logging it
-        // each time would bury the review queue in duplicates of one problem,
-        // so it is recorded once and only re-recorded if something changes.
+        // each time would bury the review queue in duplicates of one problem.
+        //
+        // Keyed on the booking alone, not the booking and listing: the unit a
+        // reservation resolves to changes as EZEE data is refreshed, and keying
+        // on both raised a second row for the same problem every time it did.
+        // One open item per booking is what a person needs to work from.
         $alreadyLogged = EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)
             ->where('method', 'conflict')
-            ->where('listing_id', $listing->id)
+            ->whereNull('resolved_at')
             ->exists();
 
         if ($alreadyLogged) {
