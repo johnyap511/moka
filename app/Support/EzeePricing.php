@@ -80,7 +80,7 @@ class EzeePricing
     {
         $nights = self::nights($ezee->Start, $ezee->End);
 
-        $priceNight  = $nights > 0 ? ($ezee->TotalAmountBeforeTax / $nights) : 0.0;
+        $priceNight  = $nights > 0 ? (self::grossRoomTotal($ezee) / $nights) : 0.0;
         $roomTotal   = $priceNight * $nights;
         $cleaningFee = (float) ($ezee->TotalExtraCharge ?? 0);
         $discount    = (float) ($ezee->TotalDiscount ?? 0);
@@ -110,6 +110,36 @@ class EzeePricing
             'ota_fee'      => $otaFee,
             'total'        => $roomTotal + $cleaningFee + $sst + $sstCf - $discount,
         ];
+    }
+
+    /**
+     * The room revenue before the channel's fee.
+     *
+     * Airbnb sends the room rate already net of its host service fee on some
+     * bookings. Left alone, the owner sees a rate RM117 below the one on
+     * Airbnb's own invoice, and the SST is short too. Adding the fee back
+     * reproduces the invoice exactly — 540.84 + 117.18 = 658.02 room, and 8%
+     * of (658.02 + 42.00) = the 56.00 of tax Airbnb states. The owner's payout
+     * is unchanged either way; this is what makes it agree with the invoice.
+     */
+    public static function grossRoomTotal($ezee): float
+    {
+        $room       = (float) ($ezee->TotalAmountBeforeTax ?? 0);
+        $commission = (float) ($ezee->TACommision ?? 0);
+
+        if ($commission <= 0 || $room <= 0) {
+            return $room;
+        }
+
+        $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
+
+        if ($bookedOn < self::CUTOVER_V6 || self::normaliseSource($ezee->Source) !== 'Airbnb') {
+            return $room;
+        }
+
+        return self::storedNetOfFee($room + (float) ($ezee->TotalExtraCharge ?? 0), $commission)
+            ? self::round2($room + $commission)
+            : $room;
     }
 
     /**
@@ -152,16 +182,10 @@ class EzeePricing
             && $actualCommission > 0
             && in_array($source, self::REPORTS_COMMISSION, true)) {
 
-            // Airbnb sends the room rate net of its host service fee on some
-            // bookings and gross on others — confirmed against an Airbnb payout
-            // where 540.84 + 117.18 came to the invoice's 658.02. On a net row
-            // the fee has already been taken, so charging it again bills the
-            // owner twice. Exactly one of the two readings lands on a real
-            // Airbnb rate, and that is what decides it.
-            if ($source === 'Airbnb' && self::storedNetOfFee($roomTotal + $cleaningFee, $actualCommission)) {
-                return 0.0;
-            }
-
+            // Airbnb net rows are grossed up by grossRoomTotal() before they
+            // reach here, so the fee is charged against the invoice's room
+            // rate rather than one already net of it. Zeroing it here as well
+            // would credit the owner the fee twice over.
             return self::round2($actualCommission);
         }
 

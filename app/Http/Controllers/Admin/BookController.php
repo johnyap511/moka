@@ -1070,7 +1070,7 @@ class BookController extends Controller
         // echo $nights;dd("ok");
 
         if ($nights != 0) {
-            $pricePerNight = round($ezee->TotalAmountBeforeTax / $nights, 2);
+            $pricePerNight = round(EzeePricing::grossRoomTotal($ezee) / $nights, 2);
         } else {
             $pricePerNight = 0;
         }
@@ -1437,7 +1437,7 @@ class BookController extends Controller
         // echo $nights;dd("ok");
 
         if ($nights != 0) {
-            $pricePerNight = round($ezee->TotalAmountBeforeTax / $nights, 2);
+            $pricePerNight = round(EzeePricing::grossRoomTotal($ezee) / $nights, 2);
         } else {
             $pricePerNight = 0;
         }
@@ -1542,7 +1542,7 @@ $total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->To
             if ($todays < $sst_check) {
                 $tax = $ezee->TotalAmountAfterTax - $ezee->TotalAmountBeforeTax;
             } else {
-                $tax = round(($ezee->TotalAmountBeforeTax * 0.08), 2);
+                $tax = round((EzeePricing::grossRoomTotal($ezee) * 0.08), 2);
             }
 // Rates live in EzeePricing so every screen agrees on the fee.
 $ota = EzeePricing::marketingFee(
