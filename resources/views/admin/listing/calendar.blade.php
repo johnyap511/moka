@@ -84,6 +84,8 @@
 <div id="cal-popup" class="cal-popup" style="display:none">
     <span class="cal-popup-close" onclick="closePopup()">×</span>
     <h4 id="pp-name"></h4>
+    <div class="row"><span class="lbl">Booking ID</span><span id="pp-booking-id" class="mono"></span></div>
+    <div class="row"><span class="lbl">EZEE Res No</span><span id="pp-ezee-res" class="mono"></span></div>
     <div class="row"><span class="lbl">Check In</span><span id="pp-start"></span></div>
     <div class="row"><span class="lbl">Check Out</span><span id="pp-end"></span></div>
     <div class="row"><span class="lbl">Nights</span><span id="pp-nights"></span></div>
@@ -135,6 +137,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var ext = e.extendedProps;
             var fmt = function(v) { return (v !== null && v !== undefined && v !== '') ? 'RM ' + parseFloat(v).toFixed(2) : '—'; };
             document.getElementById('pp-name').textContent        = e.title || 'Guest';
+            document.getElementById('pp-booking-id').textContent  = '#' + (ext.booking_id || e.id);
+            document.getElementById('pp-ezee-res').textContent    = ext.ezee_res || '—';
             document.getElementById('pp-start').textContent       = e.startStr;
             document.getElementById('pp-end').textContent         = e.endStr;
             document.getElementById('pp-nights').textContent      = ext.nights || calcNights(e.startStr, e.endStr);

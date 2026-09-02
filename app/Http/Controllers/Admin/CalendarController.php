@@ -23,9 +23,15 @@ class CalendarController extends Controller
         $listing = Listing::find($id);
         $books = Booking::where([['listing_id', $id], ['status', '>', 1]])->get();
         $events = [];
+
+        // Preloaded: this loop queried once per booking.
+        $ezeeByBooking = EzeeBooking::whereIn('book_id', $books->pluck('id'))
+            ->get(['book_id', 'SubBookingId', 'FirstName', 'LastName'])
+            ->keyBy('book_id');
+
         foreach ($books as $book) {
             $name = '';
-            $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
+            $ezeeBook = $ezeeByBooking->get($book->id);
             if (!empty($ezeeBook)) {
                 $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
             }
@@ -54,25 +60,24 @@ class CalendarController extends Controller
                 } else {
                     $todays = '';
                 }
-                // Rates live in EzeePricing so the calendar agrees with the
-                // booking screens. This block previously blended Booking.com
-                // into a single 19.78% and, through an operator-precedence
-                // slip, added the whole cleaning fee to walk-in fees instead
-                // of 8% of it.
+                // Stored figures, never recalculated. This block used to
+                // recompute the fee from the current rate table on every page
+                // load, so 40% of bookings showed one number here and another on
+                // the booking screen — and a rate change would have silently
+                // rewritten every historical figure on this calendar.
+                //
+                // The stored value is the one stamped when the booking was
+                // assigned. Where it is wrong, that is a data question to fix in
+                // the record, not something to paper over at display time.
                 $sst = $book->sst;
-                $ota = EzeePricing::marketingFee(
-                    $book->source,
-                    $book->price_night * $nights,
-                    $book->cleaning_fee,
-                    $book->sst,
-                    $book->sst_cf,
-                    $todays ?: null
-                );
+                $ota = $book->ota_fee;
                 if ($book->source == 'Long Term Rental') {
                     $sst = 0;
                 }
                 $events[] = [
                     'id' => $book->id,
+                    'booking_id' => $book->id,
+                    'ezee_res'   => $ezeeBook->SubBookingId ?? null,
                     'title' => $name,
                     'start' => $book->check_in,
                     'end' => $book->check_out,
@@ -122,9 +127,16 @@ class CalendarController extends Controller
         $books  = $query->get();
         $events = [];
 
+        // Preloaded rather than queried per booking — this loop ran one query
+        // per row, so a listing with a few hundred bookings issued a few hundred
+        // queries to draw one month.
+        $ezeeByBooking = EzeeBooking::whereIn('book_id', $books->pluck('id'))
+            ->get(['book_id', 'SubBookingId', 'FirstName', 'LastName'])
+            ->keyBy('book_id');
+
         foreach ($books as $book) {
             $name = '';
-            $ezeeBook = EzeeBooking::where('book_id', $book->id)->first();
+            $ezeeBook = $ezeeByBooking->get($book->id);
             if (!empty($ezeeBook)) {
                 $name = $ezeeBook->FirstName . ' ' . $ezeeBook->LastName;
             }
@@ -138,6 +150,11 @@ class CalendarController extends Controller
             $guest = ($book->adult ?? 0) . ' adults, ' . ($book->infant ?? 0) . ' children';
             $events[] = [
                 'id'           => $book->id,
+                // Staff cross-reference against EZEE, so both identifiers are
+                // shown: ours and the channel's reservation number.
+                'booking_id'   => $book->id,
+                'ezee_res'     => $ezeeBook->SubBookingId ?? null,
+                'source'       => $book->source,
                 'title'        => $name ?: 'Guest',
                 'start'        => $book->check_in,
                 'end'          => $book->check_out,
