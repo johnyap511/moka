@@ -138,7 +138,12 @@ class BackfillEzeeFolioNo extends Command
                                 'Source'               => isset($t['BookedBy'])          && !is_array($t['BookedBy'])          ? preg_replace('/[^A-Za-z\. ]/', '', $t['BookedBy']) : null,
                             ];
 
-                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)->first();
+                            $exist = EzeeBooking::where('SubBookingId', $sub_booking_id)
+                                    // Reservation numbers run per property, so the
+                                    // hotel has to narrow it or this matches another
+                                    // property's booking of the same number.
+                                    ->where('TransactionId', 'LIKE', $listing->hotel_code . '%')
+                                    ->first();
 
                             if (!$exist) {
                                 EzeeBooking::create(array_merge(['SubBookingId' => $sub_booking_id, 'created_at' => $t['Createdatetime'] ?? null], $data));
@@ -191,7 +196,9 @@ class BackfillEzeeFolioNo extends Command
 
         if (isset($res['Success']['FolioList'][0]['foliono'])) {
             $folioNo = $res['Success']['FolioList'][0]['foliono'];
-            $booking = EzeeBooking::where('SubBookingId', $subBookingId)->first();
+            $booking = EzeeBooking::where('SubBookingId', $subBookingId)
+                    ->where('TransactionId', 'LIKE', $hotelCode . '%')
+                    ->first();
             if ($booking) {
                 $booking->update(['folio_no' => $folioNo]);
                 if ($booking->book_id) {
