@@ -17,6 +17,7 @@
     $tabs = [
         null        => 'All',
         'conflict'  => 'Needs review',
+        'modified'  => 'Changed in eZee',
         'auto'      => 'Auto-assigned',
         'move'      => 'Room moves',
         'manual'    => 'Manual',

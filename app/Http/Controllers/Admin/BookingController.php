@@ -103,6 +103,11 @@ class BookingController extends Controller
 
                                         // The channel's own reference — the number on an OTA statement.
                                         $voucher_no = is_array($reserve1['BookingTran']['VoucherNo'] ?? null) ? null : ($reserve1['BookingTran']['VoucherNo'] ?? null);
+                                        // EZEE flags an amended reservation and when it changed. The booking API
+                                        // reports only the final room, so a mid-stay move is otherwise invisible.
+                                        $ezee_status = is_array($reserve1['BookingTran']['Status'] ?? null) ? null : ($reserve1['BookingTran']['Status'] ?? null);
+                                        $ezee_current_status = is_array($reserve1['BookingTran']['CurrentStatus'] ?? null) ? null : ($reserve1['BookingTran']['CurrentStatus'] ?? null);
+                                        $ezee_modified_at = is_array($reserve1['BookingTran']['Modifydatetime'] ?? null) ? null : ($reserve1['BookingTran']['Modifydatetime'] ?? null);
 
                                         if (is_array($reserve1['BookingTran']['TransactionId'])) {
                                             $transaction_id = null;
@@ -241,6 +246,9 @@ class BookingController extends Controller
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
+                                                    'ezee_status' => $ezee_status,
+                                                    'ezee_current_status' => $ezee_current_status,
+                                                    'ezee_modified_at' => $ezee_modified_at,
                                                     'VoucherNo' => $voucher_no,
                                                     'TransactionId' => $transaction_id,
                                                     'IsConfirmed' => $is_confirmed,
@@ -269,6 +277,9 @@ class BookingController extends Controller
                                             // would wipe a unit we already hold, so only refresh what actually
                                             // arrived.
                                             $refresh = array_filter([
+                                                'ezee_status' => $ezee_status,
+                                                'ezee_current_status' => $ezee_current_status,
+                                                'ezee_modified_at' => $ezee_modified_at,
                                                         'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
@@ -283,9 +294,9 @@ class BookingController extends Controller
                                             ], fn ($v) => $v !== null && $v !== '');
 
                                             if ($refresh) {
-                                                EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                    ->where("TransactionId", $transaction_id)
-                                                    ->update($refresh);
+                                                // save() rather than a query-builder update: a builder update skips
+                                                // model events, and the amendment hook has to see the change.
+                                                $exist->fill($refresh)->save();
                                             }
                                         }
                                     } else {
@@ -299,6 +310,11 @@ class BookingController extends Controller
 
                                             // The channel's own reference — the number on an OTA statement.
                                             $voucher_no = is_array($reserve_array_value['VoucherNo'] ?? null) ? null : ($reserve_array_value['VoucherNo'] ?? null);
+                                            // EZEE flags an amended reservation and when it changed. The booking API
+                                            // reports only the final room, so a mid-stay move is otherwise invisible.
+                                            $ezee_status = is_array($reserve_array_value['Status'] ?? null) ? null : ($reserve_array_value['Status'] ?? null);
+                                            $ezee_current_status = is_array($reserve_array_value['CurrentStatus'] ?? null) ? null : ($reserve_array_value['CurrentStatus'] ?? null);
+                                            $ezee_modified_at = is_array($reserve_array_value['Modifydatetime'] ?? null) ? null : ($reserve_array_value['Modifydatetime'] ?? null);
 
                                             if (is_array($reserve_array_value['TransactionId'])) {
                                                 $transaction_id = null;
@@ -438,6 +454,9 @@ class BookingController extends Controller
 
                                                     $exist = EzeeBooking::create([
                                                         'SubBookingId' => $sub_booking_id,
+                                                        'ezee_status' => $ezee_status,
+                                                        'ezee_current_status' => $ezee_current_status,
+                                                        'ezee_modified_at' => $ezee_modified_at,
                                                         'VoucherNo' => $voucher_no,
                                                         'TransactionId' => $transaction_id,
                                                         'IsConfirmed' => $is_confirmed,
@@ -466,6 +485,9 @@ class BookingController extends Controller
                                                 // would wipe a unit we already hold, so only refresh what actually
                                                 // arrived.
                                                 $refresh = array_filter([
+                                                    'ezee_status' => $ezee_status,
+                                                    'ezee_current_status' => $ezee_current_status,
+                                                    'ezee_modified_at' => $ezee_modified_at,
                                                             'VoucherNo' => $voucher_no,
                                                             'RoomTypeName' => $roomTypeName,
                                                             'RoomName' => $roomName,
@@ -480,9 +502,9 @@ class BookingController extends Controller
                                                 ], fn ($v) => $v !== null && $v !== '');
 
                                                 if ($refresh) {
-                                                    EzeeBooking::where("SubBookingId", $sub_booking_id)
-                                                        ->where("TransactionId", $transaction_id)
-                                                        ->update($refresh);
+                                                    // save() rather than a query-builder update: a builder update skips
+                                                    // model events, and the amendment hook has to see the change.
+                                                    $exist->fill($refresh)->save();
                                                 }
                                             }
                                         }
