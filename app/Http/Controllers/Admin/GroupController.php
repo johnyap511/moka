@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Group;
+use Illuminate\Support\Facades\DB;
+use App\Listing;
 use App\OtherModel\GroupType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -18,7 +20,16 @@ class GroupController extends Controller
     public function index()
     {
         $groups = Group::all();
-        return view('admin.listing.group.index', compact('groups'));
+
+        // How many units sit in each group. Membership lives in listing_groups
+        // and was not surfaced anywhere, so a group's contents could not be seen
+        // at all from this screen.
+        $counts = DB::table('listing_groups')
+            ->selectRaw('group_id, COUNT(DISTINCT listing_id) c')
+            ->groupBy('group_id')
+            ->pluck('c', 'group_id');
+
+        return view('admin.listing.group.index', compact('groups', 'counts'));
     }
 
     /**
@@ -69,9 +80,34 @@ class GroupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    /**
+     * The units in a group.
+     *
+     * Archived properties are included: a group's history should still show what
+     * was in it, and hiding them would make the count on the index disagree with
+     * the list here.
+     */
     public function show($id)
     {
-        //
+        $group = Group::findOrFail($id);
+
+        $listingIds = DB::table('listing_groups')
+            ->where('group_id', $group->id)
+            ->pluck('listing_id')
+            ->unique();
+
+        $listings = Listing::withArchived()
+            ->whereIn('id', $listingIds)
+            ->orderBy('name')
+            ->get();
+
+        $types = GroupType::where('group_id', $group->id)->get();
+
+        // Preloaded rather than one query per row.
+        $owners = \App\User::whereIn('id', $listings->pluck('user_id')->filter())
+            ->pluck('name', 'id');
+
+        return view('admin.listing.group.show', compact('group', 'listings', 'types', 'owners'));
     }
 
     /**

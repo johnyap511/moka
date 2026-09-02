@@ -38,6 +38,7 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th>Formula</th>
+                        <th style="text-align:center">Units</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -48,7 +49,16 @@
                         <td>{{ $group->name }}</td>
                         <td>{{ $group->description ?? '—' }}</td>
                         <td>{{ $group->formula ?? '—' }}</td>
+                        <td style="text-align:center">
+                            @php $unitCount = $counts[$group->id] ?? 0; @endphp
+                            @if($unitCount)
+                                <a href="/admin/group/{{ $group->id }}" style="font-weight:600;color:var(--teal)">{{ $unitCount }}</a>
+                            @else
+                                <span style="color:var(--text-secondary)">0</span>
+                            @endif
+                        </td>
                         <td class="actions">
+                            <a href="/admin/group/{{ $group->id }}" class="btn btn-secondary btn-sm">View Units</a>
                             <a href="/admin/group/{{ $group->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
                             <form action="/admin/group/{{ $group->id }}" method="POST" style="display:inline">
                                 @csrf
