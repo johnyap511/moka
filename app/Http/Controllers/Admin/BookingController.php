@@ -1111,7 +1111,13 @@ private function getActionButtons($book)
      */
     public function exportExcel()
     {
-        $bookings = Booking::where('status', '>=', 3)->get();
+        // listing() drops the archived scope: a booking on a property we have
+        // handed back still belongs in the export, and Listing::find() resolved
+        // it to null, so 10,498 rows exported with a blank listing name.
+        // lazyById keeps the query chunked — this runs over 65,000 bookings.
+        $bookings = Booking::where('status', '>=', 3)
+            ->with(['user', 'listing'])
+            ->lazyById(500);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->mergeCells('A1:N1');
@@ -1154,8 +1160,8 @@ private function getActionButtons($book)
 
             $total_charges = $booking->price_night * $booking->nights;
             $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
-            $user = User::find($booking->user_id);
-            $listing = Listing::find($booking->listing_id);
+            $user = $booking->user;
+            $listing = $booking->listing;
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
                     $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
@@ -1281,7 +1287,12 @@ private function getActionButtons($book)
 
         if ($request->input('action') == "exportreport") {
             // $bookings = Booking::where('status', '>=', 3)->whereBetween('created_at', [$request->from_date, $request->to_date])->get();
-            $bookings = Booking::where('status', '>=', 3)->whereBetween('check_in', [$request->checkin_date, $request->checkinto_date])->get();
+            // See exportExcel(): the archived scope blanked the listing name, and the
+            // unfiltered query loaded every row at once.
+            $bookings = Booking::where('status', '>=', 3)
+                ->whereBetween('check_in', [$request->checkin_date, $request->checkinto_date])
+                ->with(['user', 'listing', 'ezeeBooking'])
+                ->lazyById(500);
 
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
@@ -1322,10 +1333,10 @@ private function getActionButtons($book)
                 } else {
                     $folio_no = $booking->folio_no;
                 }
-                $user = User::find($booking->user_id);
-                $listing = Listing::find($booking->listing_id);
+                $user = $booking->user;
+                $listing = $booking->listing;
                 // echo $booking->id."<br/>";
-                $ezee = EzeeBooking::where('book_id', $booking->id)->first();
+                $ezee = $booking->ezeeBooking;
                 $total_charges = $booking->price_night * $booking->nights;
                 $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
                 if ($booking->source == 'Long Term Rental') {
@@ -1384,7 +1395,11 @@ private function getActionButtons($book)
             exit();
         }
 
-        $bookings = Booking::where('status', '>=', 3)->whereBetween('created_at', [$request->from_date, $request->to_date])->get();
+        // See exportExcel(): archived listings blanked, and every row loaded at once.
+        $bookings = Booking::where('status', '>=', 3)
+            ->whereBetween('created_at', [$request->from_date, $request->to_date])
+            ->with(['user', 'listing', 'ezeeBooking'])
+            ->lazyById(500);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -1432,9 +1447,9 @@ private function getActionButtons($book)
             } else {
                 $folio_no = $booking->folio_no;
             }
-            $user = User::find($booking->user_id);
-            $listing = Listing::find($booking->listing_id);
-            $ezee = EzeeBooking::where('book_id', $booking->id)->first();
+            $user = $booking->user;
+            $listing = $booking->listing;
+            $ezee = $booking->ezeeBooking;
             $total_charges = $booking->price_night * $booking->nights;
             $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
             if ($booking->source == 'Long Term Rental') {
