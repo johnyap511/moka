@@ -1141,7 +1141,8 @@ class BookController extends Controller
                                         $cleaning_fee,
                                         $tax,
                                         $sst_cf,
-                                        $todays
+                                        $todays,
+                                        $ezee->TACommision
                                     );
                                  
                                               $discount = ($i == 1) ? ($request->discount_fee ?? 0.00) : 0.00;
@@ -1496,7 +1497,8 @@ $ota = EzeePricing::marketingFee(
     $ezee->TotalExtraCharge,
     $tax,
     $sst_cf,
-    $ezee->created_at->format('Y-m-d')
+    $ezee->created_at->format('Y-m-d'),
+    $ezee->TACommision
 );
 
 // Calculate total
@@ -1549,7 +1551,8 @@ $ota = EzeePricing::marketingFee(
     $ezee->TotalExtraCharge,
     $tax,
     $sst_cf,
-    $ezee->created_at->format('Y-m-d')
+    $ezee->created_at->format('Y-m-d'),
+    $ezee->TACommision
 );
 
 // Calculate total (simplified since all conditions were the same)
