@@ -40,13 +40,62 @@ class EzeePricing
     ];
 
     /**
+     * Channels that report what they actually charged, in TACommision. From the
+     * cutover that figure is the fee — it ties to Airbnb's and Expedia's own
+     * remittance statements to the cent, and no rate table can reproduce
+     * Expedia, whose accelerator and promotions move every booking.
+     *
+     * Airbnb's figure is inclusive of VAT (invoice reads "Host service fee
+     * (15.5% + VAT)" = 117.18, which is what EZEE reports). Expedia's is
+     * inclusive of commission, tax on commission and the accelerator.
+     *
+     * Booking.com reports commission plus the 2.8% payment fee when it took
+     * the money, and commission alone when the guest paid us — the payload's
+     * PayAtHotel flag. Both are the real charge, so the figure is right either
+     * way; what it never carries is SST. On the rows that include the payment
+     * fee it equals the v6 formula's pre-SST subtotal exactly, so this agrees
+     * with the bank-payout-verified formula where they overlap, and stops
+     * charging a payment fee on the bookings that never incurred one.
+     */
+    private const REPORTS_COMMISSION = ['Airbnb', 'Expedia', 'Booking.com', 'Booking'];
+
+    /**
+     * Channels whose reported commission is stated before SST. Airbnb's and
+     * Expedia's already include it — their invoices say so in as many words.
+     *
+     * Traveloka is deliberately not in REPORTS_COMMISSION. Its reported figure
+     * does not reconcile with a Traveloka booking confirmation: EZEE recorded
+     * 577.78 room and a 106.08 commission where the document shows a 517.92
+     * subtotal and "Total you will receive 509.43" — a deduction of 8.49, not
+     * 106.08. The figure sits on a flat 17% x 1.08 across the estate, which
+     * reads as a rate configured in EZEE rather than one reported by the
+     * channel. It keeps the existing formula until the arrangement is settled.
+     */
+    private const COMMISSION_EXCLUDES_SST = ['Booking.com', 'Booking'];
+
+    /**
+     * Channels that remit net: their commission is already out of the figures
+     * EZEE sends us, so charging it again would bill the owner twice.
+     */
+    /**
+     * Airbnb host service fee rates, as a percentage of the gross base and
+     * inclusive of SST at the rate of the day (15.5%/15%/3% x 1.08 or x 1.06).
+     * Used only to tell whether EZEE sent us a gross or a net room rate.
+     */
+    private const AIRBNB_RATES = [16.74, 16.43, 16.2, 15.9, 3.24, 3.18];
+
+    private const NET_REMITTANCE = [
+        'Agoda', 'Tiket.com', 'Trip.com', 'CTrip.com', 'Ctrip.com', 'CTrip', 'Ctrip',
+    ];
+
+    /**
      * @return array{price_night:float,sst:float,cleaning_fee:float,sst_cf:float,ota_fee:float,total:float,nights:int}
      */
     public static function breakdown($ezee): array
     {
         $nights = self::nights($ezee->Start, $ezee->End);
 
-        $priceNight  = $nights > 0 ? ($ezee->TotalAmountBeforeTax / $nights) : 0.0;
+        $priceNight  = $nights > 0 ? (self::grossRoomTotal($ezee) / $nights) : 0.0;
         $roomTotal   = $priceNight * $nights;
         $cleaningFee = (float) ($ezee->TotalExtraCharge ?? 0);
         $discount    = (float) ($ezee->TotalDiscount ?? 0);
@@ -63,7 +112,8 @@ class EzeePricing
             $roomTotal,
             $cleaningFee,
             $sst,
-            $sstCf
+            $sstCf,
+            isset($ezee->TACommision) ? (float) $ezee->TACommision : null
         );
 
         return [
@@ -78,6 +128,36 @@ class EzeePricing
     }
 
     /**
+     * The room revenue before the channel's fee.
+     *
+     * Airbnb sends the room rate already net of its host service fee on some
+     * bookings. Left alone, the owner sees a rate RM117 below the one on
+     * Airbnb's own invoice, and the SST is short too. Adding the fee back
+     * reproduces the invoice exactly — 540.84 + 117.18 = 658.02 room, and 8%
+     * of (658.02 + 42.00) = the 56.00 of tax Airbnb states. The owner's payout
+     * is unchanged either way; this is what makes it agree with the invoice.
+     */
+    public static function grossRoomTotal($ezee): float
+    {
+        $room       = (float) ($ezee->TotalAmountBeforeTax ?? 0);
+        $commission = (float) ($ezee->TACommision ?? 0);
+
+        if ($commission <= 0 || $room <= 0) {
+            return $room;
+        }
+
+        $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
+
+        if ($bookedOn < self::CUTOVER_V6 || self::normaliseSource($ezee->Source) !== 'Airbnb') {
+            return $room;
+        }
+
+        return self::storedNetOfFee($room + (float) ($ezee->TotalExtraCharge ?? 0), $commission)
+            ? self::round2($room + $commission)
+            : $room;
+    }
+
+    /**
      * Marketing & administration fee for a single booking.
      *
      * Exposed so the assignment and reporting paths compute the fee exactly as
@@ -88,7 +168,7 @@ class EzeePricing
      * @param string|null $source   Channel name; a booking reference suffix is tolerated.
      * @param string|null $bookedOn Y-m-d the booking was made. Defaults to today.
      */
-    public static function marketingFee($source, float $roomTotal, float $cleaningFee, float $sst, float $sstCf, ?string $bookedOn = null): float
+    public static function marketingFee($source, float $roomTotal, float $cleaningFee, float $sst, float $sstCf, ?string $bookedOn = null, ?float $actualCommission = null): float
     {
         return self::otaFee(
             self::normaliseSource($source),
@@ -96,14 +176,46 @@ class EzeePricing
             $roomTotal,
             $cleaningFee,
             $sst,
-            $sstCf
+            $sstCf,
+            $actualCommission
         );
     }
 
-    private static function otaFee(string $source, DateTime $bookedOn, float $roomTotal, float $cleaningFee, float $sst, float $sstCf): float
+    private static function otaFee(string $source, DateTime $bookedOn, float $roomTotal, float $cleaningFee, float $sst, float $sstCf, ?float $actualCommission = null): float
     {
         $base      = $roomTotal + $cleaningFee;   // ota_cal / ota_cal2
         $baseTaxed = $base + $sst + $sstCf;       // ota_cal1
+
+        $afterCutover = $bookedOn >= new DateTime(self::CUTOVER_V6);
+
+        // The M&A fee is a pass-through of what the channel charged, so prefer
+        // the channel's own figure over any rate table. Restricted to the
+        // channels known to report it, so that re-sourcing a booking by hand
+        // cannot pick up a commission belonging to a different channel.
+        if ($afterCutover
+            && $actualCommission !== null
+            && $actualCommission > 0
+            && in_array($source, self::REPORTS_COMMISSION, true)) {
+
+            // Airbnb net rows are grossed up by grossRoomTotal() before they
+            // reach here, so the fee is charged against the invoice's room
+            // rate rather than one already net of it. Zeroing it here as well
+            // would credit the owner the fee twice over.
+            if (in_array($source, self::COMMISSION_EXCLUDES_SST, true)) {
+                return self::round2($actualCommission + self::bookingComVat(
+                    $actualCommission,
+                    $roomTotal + $cleaningFee + $sstCf,
+                    $baseTaxed,
+                    $bookedOn < new DateTime(self::SST_DATE) ? 0.06 : 0.08
+                ));
+            }
+
+            return self::round2($actualCommission);
+        }
+
+        if ($afterCutover && in_array($source, self::NET_REMITTANCE, true)) {
+            return 0.0;
+        }
 
         $afterCheck  = $bookedOn > new DateTime(self::CHECK_DATE);
         $afterNew    = $bookedOn > new DateTime(self::CHECK_DATE_NEW);
@@ -254,6 +366,62 @@ class EzeePricing
         }
 
         return trim(preg_replace('/[^A-Za-z\. ]/', '', $raw));
+    }
+
+    /**
+     * Booking.com charges VAT on the commission and on the payments service
+     * fee as two separately rounded amounts, then sums them — so 8% of the two
+     * combined can be a sen out. Verified against the August 2026 payout
+     * statement: on 6105742553 it bills 5.43 + 0.90 = 6.33, where 8% of the
+     * combined 79.19 rounds to 6.34 and would leave the payout a sen short.
+     *
+     * Where the guest paid at the property no service fee is charged and the
+     * reported figure is the commission alone, so there is nothing to split.
+     */
+    private static function bookingComVat(float $reported, float $commissionable, float $totalPrice, float $rate): float
+    {
+        foreach ([0.15, 0.18] as $commissionRate) {
+            if (abs($reported - self::round2($commissionRate * $commissionable)) < 0.03) {
+                return self::round2($rate * $reported);
+            }
+        }
+
+        $serviceFee = self::round2(0.028 * $totalPrice);
+        $commission = self::round2($reported - $serviceFee);
+
+        if ($commission <= 0 || $serviceFee <= 0) {
+            return self::round2($rate * $reported);
+        }
+
+        return self::round2($rate * $commission) + self::round2($rate * $serviceFee);
+    }
+
+    /**
+     * True when the commission reconstructs a real Airbnb rate only if the
+     * stored base is read as already net of it.
+     */
+    private static function storedNetOfFee(float $base, float $commission): bool
+    {
+        if ($base <= 0 || $commission <= 0) {
+            return false;
+        }
+
+        $asGross = $commission / $base * 100;
+        $asNet   = $commission / ($base + $commission) * 100;
+
+        $grossFits = $netFits = false;
+        foreach (self::AIRBNB_RATES as $rate) {
+            if (abs($asGross - $rate) < 0.15) {
+                $grossFits = true;
+            }
+            if (abs($asNet - $rate) < 0.15) {
+                $netFits = true;
+            }
+        }
+
+        // Ambiguous or unrecognised rates fall through to the gross reading,
+        // which is the business's stated default.
+        return $netFits && !$grossFits;
     }
 
     private static function nights($start, $end): int
