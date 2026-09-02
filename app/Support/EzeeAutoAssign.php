@@ -102,6 +102,11 @@ class EzeeAutoAssign
         $candidates = EzeeBooking::whereNotNull('RoomName')
             ->where('RoomName', '!=', '')
             ->where('End', '>=', $from)
+            // Skip reservations EZEE has dropped. Without this the weekly sweep
+            // retires a cancelled booking and the daily assignment puts it
+            // straight back, so the two scheduled jobs undo each other and a
+            // cancelled guest reappears on an owner calendar.
+            ->where('status', '<>', 1)
             ->orderBy('Start')
             ->get();
 
