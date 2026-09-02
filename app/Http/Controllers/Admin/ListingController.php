@@ -13,7 +13,6 @@ use App\ListingGroup;
 use App\ListingPrice;
 use App\ListingPriceDetail;
 use App\ListingReport;
-use App\Support\EzeePricing;
 use App\Mail\MonthlyReport;
 use App\update_excel;
 use App\User;
@@ -683,15 +682,11 @@ class ListingController extends Controller
                 }
                 $createdMonth    = $book->created_at->format('m');
                 $create_check_in = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $book->created_at)->format('Y-m-d');
-                // Rates live in EzeePricing so every screen agrees on the fee.
-                $ota = EzeePricing::marketingFee(
-                    $book->source,
-                    $book->price_night * $nights,
-                    $book->cleaning_fee,
-                    $book->sst,
-                    $book->sst_cf,
-                    $todays ?: null
-                );
+                // Stored, not recalculated: the fee stamped when the booking was
+                // assigned. Recomputing here applied today's rates to historical
+                // bookings, so the same export run twice either side of a rate
+                // change produced two different documents.
+                $ota = $book->ota_fee;
                 $totalPrice = round($nights * $book->price_night, 2);
                 $bookedDays = $bookedDays + $nights;
 
@@ -2338,15 +2333,11 @@ class ListingController extends Controller
                 }
                 $createdMonth    = $book->created_at->format('m');
                 $create_check_in = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $book->created_at)->format('Y-m-d');
-                // Rates live in EzeePricing so every screen agrees on the fee.
-                $ota = EzeePricing::marketingFee(
-                    $book->source,
-                    $book->price_night * $nights,
-                    $book->cleaning_fee,
-                    $book->sst,
-                    $book->sst_cf,
-                    $todays ?: null
-                );
+                // Stored, not recalculated: the fee stamped when the booking was
+                // assigned. Recomputing here applied today's rates to historical
+                // bookings, so the same export run twice either side of a rate
+                // change produced two different documents.
+                $ota = $book->ota_fee;
 
                 $totalPrice = round($nights * $book->price_night, 2);
                 $bookedDays = $bookedDays + $nights;
@@ -4755,15 +4746,11 @@ class ListingController extends Controller
                 }
                 $createdMonth    = $book->created_at->format('m');
                 $create_check_in = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $book->created_at)->format('Y-m-d');
-                // Rates live in EzeePricing so every screen agrees on the fee.
-                $ota = EzeePricing::marketingFee(
-                    $book->source,
-                    $book->price_night * $nights,
-                    $book->cleaning_fee,
-                    $book->sst,
-                    $book->sst_cf,
-                    $todays ?: null
-                );
+                // Stored, not recalculated: the fee stamped when the booking was
+                // assigned. Recomputing here applied today's rates to historical
+                // bookings, so the same export run twice either side of a rate
+                // change produced two different documents.
+                $ota = $book->ota_fee;
 
                 $totalPrice = round($nights * $book->price_night, 2);
                 $bookedDays = $bookedDays + $nights;
@@ -5997,15 +5984,11 @@ class ListingController extends Controller
                 $createdMonth    = $book->created_at->format('m');
                 $create_check_in = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $book->created_at)->format('Y-m-d');
 
-                // Rates live in EzeePricing so every screen agrees on the fee.
-                $ota = EzeePricing::marketingFee(
-                    $book->source,
-                    $book->price_night * $nights,
-                    $book->cleaning_fee,
-                    $book->sst,
-                    $book->sst_cf,
-                    $todays ?: null
-                );
+                // Stored, not recalculated: the fee stamped when the booking was
+                // assigned. Recomputing here applied today's rates to historical
+                // bookings, so the same export run twice either side of a rate
+                // change produced two different documents.
+                $ota = $book->ota_fee;
 
                 $totalPrice = round($nights * $book->price_night, 2);
                 $bookedDays = $bookedDays + $nights;

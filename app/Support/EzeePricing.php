@@ -21,6 +21,12 @@ class EzeePricing
     private const CHECK_DATE_NEW8 = '2023-07-01';
     private const SST_DATE        = '2024-03-01';
 
+    /**
+     * Everything below this date is the historical record of what was actually
+     * charged and must never change. Corrections apply from here forward only.
+     */
+    private const CUTOVER_V6      = '2026-09-01';
+
     private const RATES = [
         'DEFAULT'    => 0.20,
         'BOOKING_1'  => 0.18,
@@ -104,6 +110,12 @@ class EzeePricing
         $beforeNew   = $bookedOn < new DateTime(self::CHECK_DATE_NEW);
 
         if (in_array($source, ['Walk-in', 'Walk In', 'PMS', 'Website'], true)) {
+            // From the cutover these round half-up like the rest of the 8%
+            // group; otherwise Website and WEB — the same rule under two names —
+            // differ by a sen.
+            if ($bookedOn >= new DateTime(self::CUTOVER_V6)) {
+                return self::round2(self::RATES['WALK_IN8'] * $base);
+            }
             if ($bookedOn >= new DateTime(self::CHECK_DATE_NEW8)) {
                 return self::floor2(self::RATES['WALK_IN8'] * $base);
             }
@@ -127,6 +139,18 @@ class EzeePricing
         }
 
         if (in_array($source, ['Booking.com', 'Booking'], true)) {
+            // From the cutover: the commissionable base includes cleaning SST,
+            // and Booking.com adds its own 8% on the whole fee. Both were
+            // missing, which is why historical records run ~RM6 per booking
+            // short. Verified against a bank payout — see spec v5 §3.
+            if ($bookedOn >= new DateTime(self::CUTOVER_V6)) {
+                $commissionable = $roomTotal + $cleaningFee + $sstCf;
+                $commission     = self::round2(self::RATES['BOOKING_1'] * $commissionable);
+                $psf            = self::round2(self::RATES['BOOKING_2'] * $baseTaxed);
+
+                return self::round2(($commission + $psf) * 1.08);
+            }
+
             if ($afterCheck && $beforeNew) {
                 return self::floor2(self::RATES['DEFAULT'] * $base);
             }
@@ -174,6 +198,20 @@ class EzeePricing
             return 0.0;
         }
 
+        // Confirmed by the business: no marketing fee. Applied from the cutover
+        // so historical records keep whatever was charged at the time.
+        if ($bookedOn >= new DateTime(self::CUTOVER_V6)
+            && in_array($source, ['Monthly Rental', 'Ruiying'], true)) {
+            return 0.0;
+        }
+
+        // These are the website rate under different names. Without this they
+        // fell through to the 20% default.
+        if ($bookedOn >= new DateTime(self::CUTOVER_V6)
+            && in_array($source, ['Book On Google', 'WEB', 'Internet Booking Engine', 'Homemoka'], true)) {
+            return self::round2(self::RATES['WALK_IN8'] * $base);
+        }
+
         if ($afterCheck && $beforeNew) {
             return self::floor2(self::RATES['DEFAULT'] * $base);
         }
@@ -191,6 +229,8 @@ class EzeePricing
         'Long Term Rental', 'Booking.com', 'CTrip.com', 'Ctrip.com', 'Trip.com',
         'Tiket.com', 'Traveloka', 'Expedia', 'Website', 'Walk-in', 'Walk In',
         'Booking', 'Airbnb', 'Agoda', 'Ctrip', 'CTrip', 'Owner', 'owner', 'PMS',
+        'Internet Booking Engine', 'Book On Google', 'Monthly Rental', 'Ruiying',
+        'Homemoka', 'WEB',
     ];
 
     /**
@@ -232,5 +272,14 @@ class EzeePricing
     private static function floor2(float $value): float
     {
         return floor($value * 100) / 100;
+    }
+
+    /**
+     * ROUND_HALF_UP, per spec v5 §8. floor2 remains for the historical branches:
+     * changing how an old booking rounds would rewrite the record.
+     */
+    private static function round2(float $value): float
+    {
+        return round($value, 2);
     }
 }

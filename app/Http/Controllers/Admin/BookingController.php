@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Import\BookingImport;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
-use App\Support\EzeePricing;
 use App\Role;
 use App\User;
 use Illuminate\Http\Request;
@@ -1091,15 +1090,11 @@ private function getActionButtons($book)
             $new_ota = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee;
             $new_ota1 = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee + $booking->sst + $booking->sst_cf;
             $ota = '';
-            // Rates live in EzeePricing so every screen agrees on the fee.
-            $ota = EzeePricing::marketingFee(
-                $booking->source,
-                $booking->price_night * $booking->nights,
-                $booking->cleaning_fee,
-                $booking->sst,
-                $booking->sst_cf,
-                $todays ?: null
-            );
+            // Stored, not recalculated: the fee stamped when the booking was
+            // assigned. Recomputing here applied today's rates to historical
+            // bookings, so the same export run twice either side of a rate
+            // change produced two different documents.
+            $ota = $booking->ota_fee;
             if ($booking->source == 'Long Term Rental') {
                 $sst = 0;
             }
@@ -1267,15 +1262,11 @@ private function getActionButtons($book)
                 $new_ota = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee;
                 $new_ota1 = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee + $booking->sst + $booking->sst_cf;
                 $ota = '';
-                // Rates live in EzeePricing so every screen agrees on the fee.
-                $ota = EzeePricing::marketingFee(
-                    $booking->source,
-                    $booking->price_night * $booking->nights,
-                    $booking->cleaning_fee,
-                    $booking->sst,
-                    $booking->sst_cf,
-                    $todays ?: null
-                );
+                // Stored, not recalculated: the fee stamped when the booking was
+                // assigned. Recomputing here applied today's rates to historical
+                // bookings, so the same export run twice either side of a rate
+                // change produced two different documents.
+                $ota = $booking->ota_fee;
                 if ($booking->source == 'Long Term Rental') {
                     $sst = 0;
                 }
@@ -1375,15 +1366,11 @@ private function getActionButtons($book)
             $new_ota = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee;
             $new_ota1 = (($booking->price_night * $booking->nights)) + $booking->cleaning_fee + $booking->sst + $booking->sst_cf;
             $ota = '';
-            // Rates live in EzeePricing so every screen agrees on the fee.
-            $ota = EzeePricing::marketingFee(
-                $booking->source,
-                $booking->price_night * $booking->nights,
-                $booking->cleaning_fee,
-                $booking->sst,
-                $booking->sst_cf,
-                $todays ?: null
-            );
+            // Stored, not recalculated: the fee stamped when the booking was
+            // assigned. Recomputing here applied today's rates to historical
+            // bookings, so the same export run twice either side of a rate
+            // change produced two different documents.
+            $ota = $booking->ota_fee;
             if ($booking->source == 'Long Term Rental') {
                 $sst = 0;
             }
