@@ -17,7 +17,7 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $authId      = Auth::user()->id;
-        $allListings = Listing::where('user_id', $authId)->where('status', 1)->get();
+        $allListings = Listing::withArchived()->where('user_id', $authId)->where('status', 1)->get();
 
         // Selected listing
         $id      = $request->listing_id ?? ($allListings->first()->id ?? null);

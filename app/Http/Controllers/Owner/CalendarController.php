@@ -26,11 +26,11 @@ class CalendarController extends Controller
     public function allBooks(Request $request)
     {
         $authId      = Auth::user()->id;
-        $allListings = Listing::where('user_id', $authId)->where('status', 1)->get();
+        $allListings = Listing::withArchived()->where('user_id', $authId)->where('status', 1)->get();
 
         // Selected listing
         $selectedId = $request->listing_id ?? ($allListings->first()->id ?? null);
-        $listing    = $selectedId ? Listing::where('user_id', $authId)->find($selectedId) : null;
+        $listing    = $selectedId ? Listing::withArchived()->where('user_id', $authId)->find($selectedId) : null;
 
         // Selected month for initial calendar date
         $selDate    = $request->date
@@ -97,7 +97,7 @@ class CalendarController extends Controller
         $dif = 6 - $weekDay + (($week - 1) * 7);
         $end = Carbon::now()->modify('+' . $dif . ' days');
 
-        $listings = Listing::where('user_id', Auth::user()->id)->where('status', 1)->get();
+        $listings = Listing::withArchived()->where('user_id', Auth::user()->id)->where('status', 1)->get();
         $alphabet = range('A', 'Z');
         $alphas = range('A', 'Z');
 

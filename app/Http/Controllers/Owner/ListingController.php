@@ -21,7 +21,7 @@ class ListingController extends Controller
      */
     public function index()
     {
-        $listings = Listing::where('user_id', Auth::user()->id)->get();
+        $listings = Listing::withArchived()->where('user_id', Auth::user()->id)->get();
         return view('owner.listing.index', compact('listings'));
     }
 
@@ -33,18 +33,18 @@ class ListingController extends Controller
      */
     public function report(Request $request)
     {
-        $listingData = Listing::where('user_id', Auth::id())->where('status', 1)->first();
+        $listingData = Listing::withArchived()->where('user_id', Auth::id())->where('status', 1)->first();
         $id = $listingData->id ?? '';
         if (empty($id)) {
-            $listing = Listing::where('user_id', Auth::id())->where('status', 1)->first();
+            $listing = Listing::withArchived()->where('user_id', Auth::id())->where('status', 1)->first();
             $id = $listing->id ?? '';
         } else {
-            $listing = Listing::where('user_id', Auth::id())->find($id);
+            $listing = Listing::withArchived()->where('user_id', Auth::id())->find($id);
             if (empty($listing)) {
-                $listing = Listing::where('user_id', Auth::id())->find($listingData->id);
+                $listing = Listing::withArchived()->where('user_id', Auth::id())->find($listingData->id);
             }
         }
-        $allListings = Listing::where('user_id', Auth::id())->where('status', 1)->get();
+        $allListings = Listing::withArchived()->where('user_id', Auth::id())->where('status', 1)->get();
         $selDate = $request->date;
         if (empty($selDate)) {
             $selDate = Carbon::now();

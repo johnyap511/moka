@@ -19,7 +19,7 @@ class ReportController extends Controller
         $listingId = $request->listing_id;
         $year = $request->year;
         if(empty($listingId)){
-            $listingIds = Listing::where('user_id', $authId)->pluck('id')->toArray();
+            $listingIds = Listing::withArchived()->where('user_id', $authId)->pluck('id')->toArray();
         }else{
             $listingIds[] = $listingId;
         }
@@ -43,7 +43,7 @@ class ReportController extends Controller
         $listingId = $request->listing_id;
         $year = $request->year;
         if(empty($listingId)){
-            $listingIds = Listing::where('user_id', $authId)->pluck('id')->toArray();
+            $listingIds = Listing::withArchived()->where('user_id', $authId)->pluck('id')->toArray();
         }else{
             $listingIds[] = $listingId;
         }
