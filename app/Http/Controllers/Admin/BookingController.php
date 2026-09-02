@@ -1193,7 +1193,11 @@ private function getActionButtons($book)
             }
 
             $total_charges = $booking->price_night * $booking->nights;
-            $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
+            // The stored total, the same figure the calendar and the owner portal show.
+            // Recomputing it from price_night x nights understated August by RM354,563:
+            // a monthly rental holds its contract value here against a nominal
+            // nightly rate — 103.79 x 31 nights on a booking actually worth 38,036.
+            $total = round((float) $booking->price, 2);
             $user = $booking->user;
             $listing = $booking->listing;
             if ($booking->source == 'Long Term Rental') {
@@ -1372,7 +1376,11 @@ private function getActionButtons($book)
                 // echo $booking->id."<br/>";
                 $ezee = $booking->ezeeBooking;
                 $total_charges = $booking->price_night * $booking->nights;
-                $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
+                // The stored total, the same figure the calendar and the owner portal show.
+                // Recomputing it from price_night x nights understated August by RM354,563:
+                // a monthly rental holds its contract value here against a nominal
+                // nightly rate — 103.79 x 31 nights on a booking actually worth 38,036.
+                $total = round((float) $booking->price, 2);
                 if ($booking->source == 'Long Term Rental') {
                     $exportData[$x] = [
                         $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
@@ -1485,7 +1493,11 @@ private function getActionButtons($book)
             $listing = $booking->listing;
             $ezee = $booking->ezeeBooking;
             $total_charges = $booking->price_night * $booking->nights;
-            $total = round(($total_charges + $booking->cleaning_fee + $booking->sst_cf + $booking->sst) - $booking->discount_fee, 2);
+            // The stored total, the same figure the calendar and the owner portal show.
+            // Recomputing it from price_night x nights understated August by RM354,563:
+            // a monthly rental holds its contract value here against a nominal
+            // nightly rate — 103.79 x 31 nights on a booking actually worth 38,036.
+            $total = round((float) $booking->price, 2);
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
                     $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
