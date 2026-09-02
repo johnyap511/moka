@@ -38,6 +38,23 @@ class Kernel extends ConsoleKernel
         // Runs for several minutes against the EZEE API, so it must never
         // overlap itself — everyMinute() previously stacked one run per minute
         // and saturated CPU.
+        // Assignment runs on a rolling fortnight rather than from today, so a
+        // missed day heals itself on the next run instead of leaving those
+        // bookings unassigned for ever — which is how August came to have 506
+        // outstanding. It does not rescan history, so it stays cheap.
+        $schedule->command('ezee:auto-assign', ['--from' => now()->subDays(14)->toDateString()])
+            ->dailyAt('06:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // EZEE never reports a cancellation; a cancelled reservation just stops
+        // appearing. Without this sweep they accumulate silently, occupying
+        // units and blocking real bookings.
+        $schedule->command('ezee:sweep-cancelled')
+            ->weeklyOn(1, '05:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
         $schedule->command('hour:update')
                 ->hourly()
                 ->withoutOverlapping(120);

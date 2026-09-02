@@ -55,6 +55,8 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    {{-- The reservation number is what staff search eZee by. --}}
+                    <th>Reservation</th>
                     <th>Guest</th>
                     <th>Room Unit</th>
                     <th>Check In</th>
@@ -75,6 +77,7 @@
                 @endphp
                 <tr>
                     <td class="mono">#{{ $log->ezee_booking_id }}</td>
+                    <td class="text-nowrap"><code>{{ $eb->SubBookingId ?? '—' }}</code></td>
                     <td>{{ $eb ? $eb->FirstName.' '.$eb->LastName : '—' }}</td>
                     <td>{{ $eb->RoomName ?? ($eb->RoomTypeName ?? '—') }}</td>
                     <td>{{ $eb->Start ?? '—' }}</td>

@@ -13,6 +13,7 @@ use App\Listing;
 use App\OtherModel\EzeeBooking;
 use App\Support\EzeeAutoAssign;
 use App\Support\EzeeUnitMap;
+use App\Support\BookingSplitter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -241,6 +242,47 @@ class EzeeRoomMappingController extends Controller
         ]);
     }
 
+    /**
+     * Split one stay across two units.
+     *
+     * Distinct from reassign, which moves a whole booking. A guest who changed
+     * room mid-stay occupied two units, and EZEE reports only the last one, so
+     * the division has to be entered by someone who can see its calendar.
+     */
+    public function split(Request $request, $bookingId, BookingSplitter $splitter)
+    {
+        $request->validate([
+            'split_date' => 'required|date_format:Y-m-d',
+            'moves'      => 'required|in:before,after',
+            'listing_id' => 'required|exists:listings,id',
+        ]);
+
+        $booking = \App\Booking::findOrFail($bookingId);
+
+        try {
+            [$first, $second] = $splitter->split(
+                $booking,
+                $request->input('split_date'),
+                $request->input('moves'),
+                (int) $request->input('listing_id'),
+                Auth::id()
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        } catch (\App\Exceptions\OverlappingBookingException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => sprintf(
+                'Split into %s (%s to %s) and %s (%s to %s).',
+                optional($first->listing)->name ?? 'unit', $first->check_in, $first->check_out,
+                optional($second->listing)->name ?? 'unit', $second->check_in, $second->check_out
+            ),
+        ]);
+    }
+
     public function reassign(Request $request, $ezeeBookingId)
     {
         $request->validate(['listing_id' => 'required|exists:listings,id']);
@@ -350,7 +392,7 @@ class EzeeRoomMappingController extends Controller
 
         $ezeeIds = $logs->pluck('ezee_booking_id')->unique();
         $ezeeMap = EzeeBooking::whereIn('id', $ezeeIds)
-            ->get(['id', 'FirstName', 'LastName', 'RoomName', 'RoomTypeName', 'Start', 'End'])
+            ->get(['id', 'SubBookingId', 'VoucherNo', 'FirstName', 'LastName', 'RoomName', 'RoomTypeName', 'Start', 'End'])
             ->keyBy('id');
 
         return view('admin.ezee.assignment_log', compact('logs', 'ezeeMap', 'method', 'counts'));
