@@ -101,6 +101,9 @@ class BookingController extends Controller
                                             $sub_booking_id = $reserve1['BookingTran']['SubBookingId'];
                                         }
 
+                                        // The channel's own reference — the number on an OTA statement.
+                                        $voucher_no = is_array($reserve1['BookingTran']['VoucherNo'] ?? null) ? null : ($reserve1['BookingTran']['VoucherNo'] ?? null);
+
                                         if (is_array($reserve1['BookingTran']['TransactionId'])) {
                                             $transaction_id = null;
                                         } else {
@@ -238,9 +241,11 @@ class BookingController extends Controller
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
+                                                    'VoucherNo' => $voucher_no,
                                                     'TransactionId' => $transaction_id,
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
+                                                    'VoucherNo' => $voucher_no,
                                                     'RoomTypeName' => $roomTypeName,
                                                     'Start' => $start, 'End' => $end,
                                                     'CurrencyCode' => $currencyCode,
@@ -264,6 +269,7 @@ class BookingController extends Controller
                                             // would wipe a unit we already hold, so only refresh what actually
                                             // arrived.
                                             $refresh = array_filter([
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -290,6 +296,9 @@ class BookingController extends Controller
                                             } else {
                                                 $sub_booking_id = $reserve_array_value['SubBookingId'];
                                             }
+
+                                            // The channel's own reference — the number on an OTA statement.
+                                            $voucher_no = is_array($reserve_array_value['VoucherNo'] ?? null) ? null : ($reserve_array_value['VoucherNo'] ?? null);
 
                                             if (is_array($reserve_array_value['TransactionId'])) {
                                                 $transaction_id = null;
@@ -429,9 +438,11 @@ class BookingController extends Controller
 
                                                     $exist = EzeeBooking::create([
                                                         'SubBookingId' => $sub_booking_id,
+                                                        'VoucherNo' => $voucher_no,
                                                         'TransactionId' => $transaction_id,
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'Start' => $start, 'End' => $end,
                                                         'CurrencyCode' => $currencyCode,
@@ -455,6 +466,7 @@ class BookingController extends Controller
                                                 // would wipe a unit we already hold, so only refresh what actually
                                                 // arrived.
                                                 $refresh = array_filter([
+                                                            'VoucherNo' => $voucher_no,
                                                             'RoomTypeName' => $roomTypeName,
                                                             'RoomName' => $roomName,
                                                             'Start' => $start,

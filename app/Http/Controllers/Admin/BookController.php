@@ -523,6 +523,9 @@ class BookController extends Controller
                                             $sub_booking_id = $reserve1['BookingTran']['SubBookingId'];
                                         }
 
+                                        // The channel's own reference — the number on an OTA statement.
+                                        $voucher_no = is_array($reserve1['BookingTran']['VoucherNo'] ?? null) ? null : ($reserve1['BookingTran']['VoucherNo'] ?? null);
+
                                         if (is_array($reserve1['BookingTran']['TransactionId'])) {
                                             $transaction_id = null;
                                         } else {
@@ -658,9 +661,11 @@ class BookController extends Controller
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
+                                                    'VoucherNo' => $voucher_no,
                                                     'TransactionId' => $transaction_id,
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
+                                                    'VoucherNo' => $voucher_no,
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
@@ -686,6 +691,7 @@ class BookController extends Controller
                                             // would wipe a unit we already hold, so only refresh what actually
                                             // arrived.
                                             $refresh = array_filter([
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -712,6 +718,9 @@ class BookController extends Controller
                                             } else {
                                                 $sub_booking_id = $reserve_array_value['SubBookingId'];
                                             }
+
+                                            // The channel's own reference — the number on an OTA statement.
+                                            $voucher_no = is_array($reserve_array_value['VoucherNo'] ?? null) ? null : ($reserve_array_value['VoucherNo'] ?? null);
 
                                             if (is_array($reserve_array_value['TransactionId'])) {
                                                 $transaction_id = null;
@@ -850,9 +859,11 @@ class BookController extends Controller
 
                                                     $exist = EzeeBooking::create([
                                                         'SubBookingId' => $sub_booking_id,
+                                                        'VoucherNo' => $voucher_no,
                                                         'TransactionId' => $transaction_id,
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -878,6 +889,7 @@ class BookController extends Controller
                                                 // would wipe a unit we already hold, so only refresh what actually
                                                 // arrived.
                                                 $refresh = array_filter([
+                                                            'VoucherNo' => $voucher_no,
                                                             'RoomTypeName' => $roomTypeName,
                                                             'RoomName' => $roomName,
                                                             'Start' => $start,
@@ -2000,6 +2012,9 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             $sub_booking_id = $reserve1['BookingTran']['SubBookingId'];
                                         }
 
+                                        // The channel's own reference — the number on an OTA statement.
+                                        $voucher_no = is_array($reserve1['BookingTran']['VoucherNo'] ?? null) ? null : ($reserve1['BookingTran']['VoucherNo'] ?? null);
+
                                         if (is_array($reserve1['BookingTran']['TransactionId'])) {
                                             $transaction_id = null;
                                         } else {
@@ -2135,9 +2150,11 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             if ($sub_booking_id) {
                                                 $exist = EzeeBooking::create([
                                                     'SubBookingId' => $sub_booking_id,
+                                                    'VoucherNo' => $voucher_no,
                                                     'TransactionId' => $transaction_id,
                                                     'IsConfirmed' => $is_confirmed,
                                                     'RateplanName' => $rateplanName,
+                                                    'VoucherNo' => $voucher_no,
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
@@ -2172,6 +2189,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             // would wipe a unit we already hold, so only refresh what actually
                                             // arrived.
                                             $refresh = array_filter([
+                                                    'VoucherNo' => $voucher_no,
                                                     'RoomTypeName' => $roomTypeName,
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
@@ -2201,6 +2219,9 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                             } else {
                                                 $sub_booking_id = $reserve_array_value['SubBookingId'];
                                             }
+
+                                            // The channel's own reference — the number on an OTA statement.
+                                            $voucher_no = is_array($reserve_array_value['VoucherNo'] ?? null) ? null : ($reserve_array_value['VoucherNo'] ?? null);
 
                                             if (is_array($reserve_array_value['TransactionId'])) {
                                                 $transaction_id = null;
@@ -2338,9 +2359,11 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 if ($sub_booking_id) {
                                                     $exist = EzeeBooking::create([
                                                         'SubBookingId' => $sub_booking_id,
+                                                        'VoucherNo' => $voucher_no,
                                                         'TransactionId' => $transaction_id,
                                                         'IsConfirmed' => $is_confirmed,
                                                         'RateplanName' => $rateplanName,
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
@@ -2374,6 +2397,7 @@ $total = ($pricePerNight * $nights) + $ezee->TotalExtraCharge + $tax + $sst_cf -
                                                 // would wipe a unit we already hold, so only refresh what actually
                                                 // arrived.
                                                 $refresh = array_filter([
+                                                        'VoucherNo' => $voucher_no,
                                                         'RoomTypeName' => $roomTypeName,
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
