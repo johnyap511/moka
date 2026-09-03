@@ -240,18 +240,9 @@ class EzeeRevenueExport
      */
     private function stayRows(Booking $pointer, string $hotel, string $start, string $end)
     {
-        $lo = date('Y-m-d', strtotime($start . ' -1 day'));
-        $hi = date('Y-m-d', strtotime($end . ' +1 day'));
-        $rows = [$pointer->id => $pointer];
-        foreach ($this->byFolio[$pointer->folio_no] ?? [] as $b) {
-            if ($b->check_out > $lo && $b->check_in < $hi
-                && ($b->listing_id === $pointer->listing_id || self::hotelOfListing($b->listing->name ?? '') === $hotel)) {
-                $rows[$b->id] = $b;
-            }
-        }
-        usort($rows, fn ($a, $b) => strcmp($a->check_in, $b->check_in));
-
-        return collect(array_values($rows));
+        // Same rule as the assigner: rows that butt directly against the stay
+        // on this property, never a same-folio row that merely falls nearby.
+        return BookingSplitter::stayChain($pointer, $hotel);
     }
 
     /**

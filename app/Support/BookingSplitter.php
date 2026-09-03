@@ -396,6 +396,48 @@ class BookingSplitter
         });
     }
 
+    /**
+     * The live rows that make up one stay, found by walking outward from the
+     * linked booking along rows that share its folio at the same property and
+     * butt directly against it: a month segment ends the day the next begins,
+     * and a room move does the same across units. Folio numbers repeat and,
+     * at Alinea, drift, so a same-folio row that merely falls nearby is
+     * another guest and is never included. Nineteen of them were once
+     * cancelled as "outside the stay" on the strength of a shared number.
+     *
+     * @return \Illuminate\Support\Collection<int,Booking> in date order
+     */
+    public static function stayChain(Booking $anchor, ?string $hotel = null)
+    {
+        $chain = [$anchor->id => $anchor];
+
+        if ($anchor->folio_no === null || $anchor->folio_no === '') {
+            return collect([$anchor]);
+        }
+
+        $pool = Booking::with('listing')->where('status', '!=', 1)
+            ->where('folio_no', $anchor->folio_no)->where('id', '!=', $anchor->id)
+            ->get()
+            ->filter(fn ($b) => $hotel === null || $b->listing_id === $anchor->listing_id
+                || EzeeRevenueExport::hotelOfListing($b->listing->name ?? '') === $hotel)
+            ->keyBy('id')->all();
+
+        do {
+            $grew = false;
+            $lo = min(array_map(fn ($b) => (string) $b->check_in, $chain));
+            $hi = max(array_map(fn ($b) => (string) $b->check_out, $chain));
+            foreach ($pool as $id => $b) {
+                if ((string) $b->check_in === $hi || (string) $b->check_out === $lo) {
+                    $chain[$id] = $b;
+                    unset($pool[$id]);
+                    $grew = true;
+                }
+            }
+        } while ($grew && $pool);
+
+        return collect(array_values($chain))->sortBy('check_in')->values();
+    }
+
     private static function occupied(int $listingId, string $from, string $to, int $ignoreId): ?Booking
     {
         return Booking::where('listing_id', $listingId)

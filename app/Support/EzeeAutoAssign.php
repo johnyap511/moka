@@ -838,18 +838,7 @@ class EzeeAutoAssign
      */
     private function stayRows(EzeeBooking $ezeeBooking, Booking $anchor)
     {
-        $hotel = substr((string) $ezeeBooking->TransactionId, 0, 5);
-        $lo    = date('Y-m-d', strtotime($ezeeBooking->Start . ' -40 days'));
-        $hi    = date('Y-m-d', strtotime($ezeeBooking->End . ' +40 days'));
-
-        return Booking::with('listing')->where('status', '!=', 1)
-            ->where(fn ($q) => $q->where('id', $anchor->id)
-                ->orWhere(fn ($w) => $w->where('folio_no', $anchor->folio_no)->where('folio_no', '<>', '')
-                    ->where('check_out', '>', $lo)->where('check_in', '<', $hi)))
-            ->orderBy('check_in')->get()
-            ->filter(fn ($b) => $b->id === $anchor->id || $b->listing_id === $anchor->listing_id
-                || EzeeRevenueExport::hotelOfListing($b->listing->name ?? '') === $hotel)
-            ->values();
+        return BookingSplitter::stayChain($anchor, substr((string) $ezeeBooking->TransactionId, 0, 5));
     }
 
     /**
