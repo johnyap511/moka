@@ -10,8 +10,15 @@
     $totalGuests    = \App\User::whereHas('roles', fn($q) => $q->where('name','user'))->count();
     $totalBookings  = \App\Booking::count();
     $activeBookings = \App\Booking::where('status', '>=', 3)->where('status', '<', 9)->count();
-    $revenue        = \App\Booking::where('status', '>=', 5)->sum('price');
-    $thisMonth      = \App\Booking::where('status', '>=', 5)->whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->sum('price');
+    // Revenue is counted by the month the stay checks in (bookings are split at
+    // month ends, so a row belongs to one calendar month), never by the date the
+    // row was created: imports and repairs create rows in bulk.
+    $monthStart     = date('Y-m-01');
+    $monthEnd       = date('Y-m-01', strtotime('+1 month'));
+    $lastStart      = date('Y-m-01', strtotime('-1 month'));
+    $showRevenue    = admin_can('dashboard.revenue');
+    $thisMonth      = $showRevenue ? \App\Booking::where('status', '>=', 5)->where('check_in', '>=', $monthStart)->where('check_in', '<', $monthEnd)->sum('price') : 0;
+    $lastMonth      = $showRevenue ? \App\Booking::where('status', '>=', 5)->where('check_in', '>=', $lastStart)->where('check_in', '<', $monthStart)->sum('price') : 0;
     $recentBookings = \App\Booking::with(['listing'])->orderBy('created_at','desc')->limit(8)->get();
 @endphp
 
@@ -37,11 +44,13 @@
         <div class="lbl">Active Bookings</div>
         <div class="text-sm text-secondary mt-1">{{ $totalBookings }} total</div>
     </div>
+    @if($showRevenue)
     <div class="stat-card">
         <div class="val">RM {{ number_format($thisMonth) }}</div>
-        <div class="lbl">Revenue This Month</div>
-        <div class="text-sm text-secondary mt-1">RM {{ number_format($revenue) }} all time</div>
+        <div class="lbl">Revenue {{ date('M Y') }}, stays checking in</div>
+        <div class="text-sm text-secondary mt-1">{{ date('M Y', strtotime('-1 month')) }}: RM {{ number_format($lastMonth) }}</div>
     </div>
+    @endif
     <div class="stat-card">
         <div class="val">{{ $totalGuests }}</div>
         <div class="lbl">Registered Guests</div>

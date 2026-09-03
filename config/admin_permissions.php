@@ -3,7 +3,8 @@
 return [
     'groups' => [
         'Dashboard' => [
-            'dashboard.view' => 'View Dashboard',
+            'dashboard.view'    => 'View Dashboard',
+            'dashboard.revenue' => 'View revenue figures on the dashboard',
         ],
         'Users' => [
             'users.view'   => 'View Users',
@@ -65,7 +66,7 @@ return [
             'label'       => 'Finance',
             'description' => 'Access payments and revenue reports',
             'permissions' => [
-                'dashboard.view',
+                'dashboard.view', 'dashboard.revenue',
                 'owners.view',
                 'listings.view',
                 'bookings.view',
