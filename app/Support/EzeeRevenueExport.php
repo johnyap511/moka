@@ -151,7 +151,9 @@ class EzeeRevenueExport
             // A row whose dates were overwritten by another hotel's reservation
             // can carry an End inside the month while the stay it is linked to
             // ended long before. The stay decides, not the row.
-            if ($segments->isNotEmpty() && !$segments->contains(fn ($b) => $b->check_out > $this->from && $b->check_in < $this->to)) {
+            // A departure on the 1st still belongs here: EZEE books commission
+            // and late charges in the departure month.
+            if ($segments->isNotEmpty() && ($segments->max('check_out') < $this->from || $segments->min('check_in') >= $this->to)) {
                 continue;
             }
             $figures  = $this->figures($segments, $e->Start, $e->End);
