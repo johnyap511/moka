@@ -330,7 +330,9 @@ class EzeeRevenueExport
     private function mokaStateOf(string $hotel, string $res, string $folio): string
     {
         $q = DB::table('ezee_bookings')->where('TransactionId', 'like', $hotel . '%');
-        $q = $res !== '' ? $q->where('SubBookingId', $res) : $q->where('folio_no', $folio);
+        $digits = ltrim(preg_replace('/\D/', '', $folio), '0');
+        $q = $res !== '' ? $q->where('SubBookingId', $res)
+            : $q->where(fn ($w) => $w->where('folio_no', $folio)->orWhere('TransactionId', 'like', $hotel . '%' . $digits));
         $row = $q->orderByDesc('id')->first(['status', 'book_id']);
         if (!$row) {
             return 'not received from EZEE';
@@ -653,11 +655,31 @@ class EzeeRevenueExport
             if ($r['other'] > 0) {
                 return sprintf('Extras posted in EZEE (Other RM %.2f), company revenue', $r['other']);
             }
+            // Same room charge: the difference is in cleaning, deposit or an
+            // extra. Name which, in the way finance describes it.
             $ezeeCleaning = (float) ($l['ezee_cleaning'] ?: 0);
-            if ($diff < 0 && $ezeeCleaning > 0 && abs(abs($diff) - $ezeeCleaning) <= 2) {
+            $mokaCleaning = (float) ($l['cleaning'] ?: 0);          // incl. its SST
+            $extras       = (float) ($l['ezee_extras'] ?: 0);
+            $deposit      = (float) ($l['ezee_deposit'] ?: 0);
+            $near = fn (float $a, float $b) => abs($a - $b) <= 2.5;
+            if ($diff < 0 && $ezeeCleaning > 0 && $near(abs($diff), $ezeeCleaning)) {
                 return $arrivedEarlier
                     ? sprintf('Cross-month stay: EZEE posted the cleaning fee RM %.2f this month; MOKA booked it in the arrival month', $ezeeCleaning)
                     : sprintf('EZEE posted a cleaning fee of RM %.2f that MOKA does not carry', $ezeeCleaning);
+            }
+            if ($deposit > 0 && ($near($diff, $deposit * 1.08) || $near($diff, $deposit))) {
+                return sprintf('Damage deposit RM %.2f keyed into the MOKA cleaning fee; a deposit is refundable, not revenue', $deposit);
+            }
+            if ($extras > 0 && $near($diff, $mokaCleaning - $ezeeCleaning - $extras + $extras) && $near($mokaCleaning, $ezeeCleaning + $extras)) {
+                return sprintf('Company extra (%s) keyed into the MOKA cleaning fee; owner amounts agree', trim((string) $l['ezee_extras_detail']) ?: sprintf('RM %.2f', $extras));
+            }
+            if ($diff > 0 && $ezeeCleaning <= 0 && $mokaCleaning > 0 && ($near($diff, $mokaCleaning) || $near($diff, $mokaCleaning * 1.08))) {
+                return sprintf('MOKA carries a cleaning fee of RM %.2f; EZEE has none posted on this folio this month', $mokaCleaning);
+            }
+            if ($mokaCleaning > 0 && $ezeeCleaning > 0 && $near($diff, $mokaCleaning - $ezeeCleaning)) {
+                return abs($diff) < 5
+                    ? sprintf('Cleaning fee rounding: MOKA RM %.2f, EZEE RM %.2f', $mokaCleaning, $ezeeCleaning)
+                    : sprintf('Cleaning fee differs: MOKA RM %.2f, EZEE RM %.2f', $mokaCleaning, $ezeeCleaning);
             }
             return sprintf('Room charge matches; other charges differ by RM %.2f (cleaning, deposit or extras)', abs($diff));
         }
@@ -695,6 +717,11 @@ class EzeeRevenueExport
             str_starts_with($note, 'Nights in month differ')                      => 'Check the dates',
             str_starts_with($note, 'Rate changed') || str_starts_with($note, 'Rate differs') => 'Rate decision',
             str_starts_with($note, 'EZEE posted a cleaning fee')                  => 'Check cleaning fee',
+            str_starts_with($note, 'Damage deposit')                              => 'Fix: deposit keyed as cleaning fee',
+            str_starts_with($note, 'Company extra (')                             => 'None (extra keyed as cleaning; company revenue either way)',
+            str_starts_with($note, 'MOKA carries a cleaning fee')                 => 'Check cleaning fee (not in EZEE)',
+            str_starts_with($note, 'Cleaning fee rounding')                       => 'None (rounding)',
+            str_starts_with($note, 'Cleaning fee differs')                        => 'Check cleaning fee',
             str_starts_with($note, 'Room charge matches')                         => 'Check other charges',
             str_starts_with($note, 'Link cancelled')                              => 'Restore or reassign',
             default                                                               => 'Check',
