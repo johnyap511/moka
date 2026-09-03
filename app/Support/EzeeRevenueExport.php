@@ -44,7 +44,8 @@ class EzeeRevenueExport
     {
         $this->from   = $month . '-01';
         $this->to     = date('Y-m-01', strtotime($this->from . ' +1 month'));
-        $this->hotels = $hotel && isset(self::HOTELS[$hotel]) ? [$hotel] : array_keys(self::HOTELS);
+        // PHP turns the numeric hotel codes into int keys; the codes are compared as strings everywhere.
+        $this->hotels = $hotel && isset(self::HOTELS[$hotel]) ? [(string) $hotel] : array_map('strval', array_keys(self::HOTELS));
     }
 
     /** @return string[] */
@@ -380,6 +381,21 @@ class EzeeRevenueExport
                 $hits = array_filter($hits);
                 if (count($hits) === 1) {
                     $cands = reset($hits);
+                }
+            }
+            // A tenancy EZEE sends without a reservation number is keyed on its
+            // folio, but staff sometimes key a different folio by hand. Fall back
+            // to the same unit with the same arrival and departure.
+            if (!$cands && $r['hotel'] !== '' && $r['res'] === '') {
+                foreach ($lines as $i => $l) {
+                    if (in_array($i, $used, true) || $l['hotel'] !== $r['hotel'] || $l['arrival'] !== $r['arrival'] || $l['dept'] !== $r['dept']) {
+                        continue;
+                    }
+                    $unit = self::unitKey($l['ezee_row']->RoomName ?? $l['room']);
+                    if ($unit !== '' && str_starts_with(self::unitKey($r['room']), $unit)) {
+                        $cands = [$i];
+                        break;
+                    }
                 }
             }
             $pick = null;
