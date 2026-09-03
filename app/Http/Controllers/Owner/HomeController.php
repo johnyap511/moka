@@ -33,6 +33,9 @@ class HomeController extends Controller
 
         $monthStart  = $selDate->copy()->startOfMonth()->toDateString();
         $monthEnd    = $selDate->copy()->endOfMonth()->toDateString();
+        // Exclusive upper bound. Clipping a stay to endOfMonth loses its last
+        // night whenever it runs into the following month.
+        $monthEndEx  = $selDate->copy()->addMonth()->startOfMonth()->toDateString();
         $yearStart   = $selDate->copy()->startOfYear()->toDateString();
         $yearEnd     = $selDate->copy()->endOfYear()->addDay()->toDateString();
         $daysInMonth = $selDate->daysInMonth;
@@ -62,7 +65,7 @@ class HomeController extends Controller
             $totalRevenue = 0;
             foreach ($monthBooks as $b) {
                 $cin  = max($b->check_in, $monthStart);
-                $cout = min($b->check_out, $monthEnd);
+                $cout = min($b->check_out, $monthEndEx);
                 $n    = max(0, (int) Carbon::parse($cin)->diffInDays(Carbon::parse($cout)));
                 $bookedDays   += $n;
                 $totalRevenue += ($b->price_night ?? 0) * $n;
@@ -74,38 +77,52 @@ class HomeController extends Controller
             $avgDailyRate    = $bookedDays > 0 ? round($monthRevenue / $bookedDays, 2) : 0;
             $avgLengthOfStay = $bookingCount > 0 ? round($bookedDays / $bookingCount) : 0;
 
-            // Accumulated sales for the year
-            $yearBooks = Booking::where('listing_id', $id)
-                ->where('status', '>=', 5)
-                ->where('check_in', '>=', $yearStart)
-                ->where('check_in', '<', $yearEnd)
-                ->get();
-            $accumulatedSales = $yearBooks->sum('price');
+            // Accumulated sales: each month of the year up to and including the
+            // selected one, measured the same way as the monthly revenue.
+            for ($m = 1; $m <= $selDate->month; $m++) {
+                $mDate  = $selDate->copy()->month($m)->startOfMonth();
+                $mStart = $mDate->toDateString();
+                $mEndEx = $mDate->copy()->addMonth()->startOfMonth()->toDateString();
 
-            // Source breakdown (month)
-            $total       = max($bookingCount, 1);
-            $knownSrc    = ['Airbnb', 'Website', 'Booking.com', 'Expedia', 'Agoda', 'Traveloka'];
-            $usedSrc     = [];
-            foreach ($knownSrc as $src) {
-                $cnt = $monthBooks->filter(fn($b) => ($b->source ?? '') === $src)->count();
-                $sourceBreakdown[$src] = ['count' => $cnt, 'pct' => round($cnt / $total * 100, 1)];
-                if ($cnt) $usedSrc[] = $src;
+                $mBooks = Booking::where('listing_id', $id)
+                    ->where('status', '>=', 5)
+                    ->where('check_out', '>', $mStart)
+                    ->where('check_in', '<', $mEndEx)
+                    ->get();
+
+                foreach ($mBooks as $b) {
+                    $cin  = max($b->check_in, $mStart);
+                    $cout = min($b->check_out, $mEndEx);
+                    $n    = max(0, (int) Carbon::parse($cin)->diffInDays(Carbon::parse($cout)));
+                    $accumulatedSales += ($b->price_night ?? 0) * $n;
+                }
             }
-            // Group PMS / Walk-in / Owner / Others
-            $otherSrc = $monthBooks->filter(fn($b) => !in_array($b->source ?? '', $knownSrc))->count();
-            $sourceBreakdown['Others'] = ['count' => $otherSrc, 'pct' => round($otherSrc / $total * 100, 1)];
+            $accumulatedSales = round($accumulatedSales, 2);
 
-            // Category breakdown (month)
+            // Source breakdown (month). Matched case-insensitively: sources
+            // arrive from EZEE with inconsistent capitalisation, and an exact
+            // comparison drops those bookings out of their real channel.
+            $total    = max($bookingCount, 1);
+            $knownSrc = ['Airbnb', 'Website', 'Booking', 'Expedia', 'Agoda', 'Traveloka'];
+            foreach ($knownSrc as $src) {
+                $cnt = $monthBooks->filter(
+                    fn ($b) => strcasecmp(trim((string) ($b->source ?? '')), $src) === 0
+                )->count();
+                $sourceBreakdown[$src] = ['count' => $cnt, 'pct' => round($cnt / $total * 100, 2)];
+            }
+
+            // Category breakdown (month). A booking with no category is a
+            // vacation stay, which is the default the booking forms apply.
             $knownCats = ['Vacation', 'Co-living', 'Event', 'Tours', 'Business', 'Others'];
             foreach ($knownCats as $cat) {
-                $cnt = $monthBooks->filter(fn($b) => ($b->category ?? '') === $cat)->count();
-                $categoryBreakdown[$cat] = ['count' => $cnt, 'pct' => round($cnt / $total * 100, 1)];
-            }
-            // Uncategorized → add to Others
-            $uncatCnt = $monthBooks->filter(fn($b) => empty($b->category))->count();
-            if ($uncatCnt) {
-                $categoryBreakdown['Others']['count'] = ($categoryBreakdown['Others']['count'] ?? 0) + $uncatCnt;
-                $categoryBreakdown['Others']['pct']   = round($categoryBreakdown['Others']['count'] / $total * 100, 1);
+                $cnt = $monthBooks->filter(function ($b) use ($cat) {
+                    $value = trim((string) ($b->category ?? ''));
+                    if ($value === '') {
+                        return $cat === 'Vacation';
+                    }
+                    return strcasecmp($value, $cat) === 0;
+                })->count();
+                $categoryBreakdown[$cat] = ['count' => $cnt, 'pct' => round($cnt / $total * 100, 2)];
             }
 
             // 6-month trend ending at selected month
@@ -113,6 +130,7 @@ class HomeController extends Controller
                 $m      = $selDate->copy()->subMonths($i);
                 $mStart = $m->copy()->startOfMonth()->toDateString();
                 $mEnd   = $m->copy()->endOfMonth()->toDateString();
+                $mEndEx = $m->copy()->addMonth()->startOfMonth()->toDateString();
                 $mDays  = $m->daysInMonth;
 
                 $mBooks = Booking::where('listing_id', $id)
@@ -124,7 +142,7 @@ class HomeController extends Controller
                 $mBooked = 0; $mRev = 0;
                 foreach ($mBooks as $b) {
                     $cin  = max($b->check_in, $mStart);
-                    $cout = min($b->check_out, $mEnd);
+                    $cout = min($b->check_out, $mEndEx);
                     $n    = max(0, (int) Carbon::parse($cin)->diffInDays(Carbon::parse($cout)));
                     $mBooked += $n;
                     $mRev    += ($b->price_night ?? 0) * $n;
