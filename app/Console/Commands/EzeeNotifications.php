@@ -74,14 +74,11 @@ class EzeeNotifications extends Command
                 if ($ev['status'] === 'Cancel' || $this->getOutput()->isVerbose()) {
                     $this->line(sprintf('   %-7s %-12s %s  %s', $ev['status'], $ev['res'], substr((string) $ev['at'], 0, 16), $note));
                 }
-                // EZEE identifies the booking by its transaction number, not the RES
-                // number; a cancellation carries only the RES, so the number comes
-                // from our own row.
-                $tid = $ev['payload']['TransactionId'] ?? EzeeBooking::where('TransactionId', 'like', $g->hotel_code . '%')
-                    ->where('SubBookingId', $ev['res'])->value('TransactionId');
-                if ($tid) {
-                    $ack[] = ['BookingId' => (string) $tid, 'PMS_BookingId' => $ev['res'], 'Status' => $ev['status']];
-                }
+                // The acknowledgement pairs EZEE's reservation number with the id
+                // the booking has on our side, the pairing the original queue
+                // reader used. Responses are recorded to settle what EZEE expects.
+                $ours = EzeeBooking::where('TransactionId', 'like', $g->hotel_code . '%')->where('SubBookingId', $ev['res'])->value('id');
+                $ack[] = ['BookingId' => $ev['res'], 'PMS_BookingId' => (string) ($ours ?: $ev['res']), 'Status' => $ev['status']];
             }
 
             if ($ack && !$dry && !$this->option('no-ack')) {
