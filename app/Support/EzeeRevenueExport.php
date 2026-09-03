@@ -457,12 +457,10 @@ class EzeeRevenueExport
         return $out;
     }
 
-    /** EZEE's report names the room like "C2-30-01-AC - Mixed 2BR"; the unit is the first token. */
+    /** EZEE's report labels the room with the unit and room type run together; the unit map finds the unit. */
     private static function hotelOfReportRoom(string $room, EzeeUnitMap $map): ?string
     {
-        $unit = trim(explode(' - ', $room)[0]);
-        $unit = preg_replace('/-(AC|QV|FR|KLG)$/i', '', $unit);
-        $listing = $map->listingForUnitName($unit);
+        $listing = $map->listingForReportRoom($room);
 
         return $listing ? self::hotelOfListing($listing->name) : null;
     }
@@ -482,7 +480,7 @@ class EzeeRevenueExport
 
     private static function unitKey(string $s): string
     {
-        return strtolower(preg_replace('/\s+|\(.*?\)/', '', explode(' - ', $s)[0]));
+        return EzeeUnitMap::compact(preg_replace('/\(.*?\)/', '', $s));
     }
 
     /** The channel as finance names it, without the account suffixes EZEE appends. */

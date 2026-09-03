@@ -251,46 +251,37 @@ class EzeeAutoAssign
     }
 
     /**
-     * Assign a reservation whose guest changed unit part-way through the stay.
+     * Assign a reservation whose guest spent part of the stay in another unit
+     * or in an extra-guest room. EZEE reports only the final room; the person
+     * reading the EZEE calendar supplies the nights spent elsewhere and where.
+     * The booking is created from EZEE's amounts on the reported unit and the
+     * nights are carved out, so each unit carries exactly the nights it had.
      *
-     * EZEE reports only the final room, so on an overbooked night the guest is
-     * shown in the final unit for a night they actually spent elsewhere, and
-     * the reservation that genuinely held the final unit that night blocks it
-     * as a conflict. The room history is visible only on EZEE's calendar, so
-     * the person reading it supplies the night the guest moved and the unit
-     * the earlier part was in. The booking is created on the final unit and
-     * split, so each unit carries the nights it really had.
-     *
-     * @param  string  $splitDate       the night the guest moved to the final unit (Y-m-d)
-     * @param  int     $firstListingId  the unit the stay began in
-     * @return array{0:Booking,1:Booking} the earlier segment, then the later one
+     * @param  int|null  $otherListingId  the unit those nights were in; null for an extra room
+     * @return Booking[] every piece of the stay, in date order
      */
-    public function assignSplit(EzeeBooking $ezeeBooking, Listing $final, string $splitDate, ?int $firstListingId): array
+    public function assignSplit(EzeeBooking $ezeeBooking, Listing $final, string $from, string $to, ?int $otherListingId): array
     {
         if ($ezeeBooking->book_id) {
             throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is already assigned to booking #{$ezeeBooking->book_id}.");
         }
 
-        // Only the part that stays on the final unit has to be free there; the
-        // splitter checks the first unit for the nights that move to it.
-        $clash = Booking::where('listing_id', $final->id)
-            ->where('status', '!=', 1)
-            ->where('check_in', '<', $ezeeBooking->End)
-            ->where('check_out', '>', $splitDate)
-            ->first();
+        $start = substr((string) $ezeeBooking->Start, 0, 10);
+        $end   = substr((string) $ezeeBooking->End, 0, 10);
 
-        if ($clash) {
-            throw new \InvalidArgumentException("{$final->name} already has booking #{$clash->id} from {$splitDate}.");
+        // The nights that stay on the reported unit must be free there.
+        foreach ([[$start, $from], [$to, $end]] as [$a, $b]) {
+            if ($a >= $b) {
+                continue;
+            }
+            $clash = Booking::where('listing_id', $final->id)->where('status', '!=', 1)
+                ->where('check_in', '<', $b)->where('check_out', '>', $a)->first();
+            if ($clash) {
+                throw new \InvalidArgumentException("{$final->name} already has booking #{$clash->id} over {$a} to {$b}.");
+            }
         }
 
-        return DB::transaction(function () use ($ezeeBooking, $final, $splitDate, $firstListingId) {
-            // The whole stay lands on the final unit for a moment before the
-            // split takes the earlier nights away again. Those nights are the
-            // very ones another guest held, so the model's overlap rule would
-            // refuse the intermediate row; it is checked again, segment by
-            // segment, when the split saves them.
-            // Created whole and cut by unit first, then by month: the unit split
-            // must see the entire stay, and each part is month-split below.
+        return DB::transaction(function () use ($ezeeBooking, $final, $from, $to, $otherListingId) {
             $booking = Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $final,
                 'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand', false));
 
@@ -298,25 +289,36 @@ class EzeeAutoAssign
                 throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");
             }
 
-            $splitter = new BookingSplitter;
-
-            // No first unit means the guest was in an extra-guest room until
-            // the split date: those nights belong to no unit, so the booking
-            // simply starts when the guest reached a real one.
-            if ($firstListingId === null) {
-                $segments = $splitter->retime($booking, $splitDate, $ezeeBooking->End, $this->actorId);
-
-                return [$segments[0], end($segments)];
-            }
-
-            [$first, $second] = $splitter->split($booking, $splitDate, 'before', $firstListingId, $this->actorId);
-
-            // Either part may itself cross a month end.
-            $splitter->splitByMonth($first, $this->actorId);
-            $splitter->splitByMonth($second, $this->actorId);
-
-            return [$first->fresh(), $second->fresh()];
+            return (new BookingSplitter)->carve($booking, $from, $to, $otherListingId, $this->actorId);
         });
+    }
+
+    /**
+     * Bring back a booking that was cancelled on our side while EZEE still
+     * reports the stay. Refused if another live booking now holds the unit.
+     */
+    public function restoreLinked(EzeeBooking $ezeeBooking): Booking
+    {
+        $booking = $ezeeBooking->book_id ? Booking::find($ezeeBooking->book_id) : null;
+
+        if (!$booking || (int) $booking->status !== 1) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} has no cancelled booking to restore.");
+        }
+
+        if ($clash = $this->clash($booking->listing_id, $ezeeBooking, $booking->id)) {
+            throw new \InvalidArgumentException(sprintf('Booking #%d (%s to %s, %s) now holds the unit. Decide which stay is real on the EZEE calendar, then reassign or cancel the other.',
+                $clash->id, $clash->check_in, $clash->check_out, $clash->source));
+        }
+
+        $booking->status = 5;
+        $booking->remark = trim(($booking->remark ?? '') . ' | restored ' . date('Y-m-d'));
+        $booking->save();
+
+        if ($listing = Listing::withoutGlobalScope('notArchived')->find($booking->listing_id)) {
+            $this->record($ezeeBooking, $listing, null, 'manual', "Restored booking #{$booking->id}: EZEE still reports the stay.");
+        }
+
+        return $booking;
     }
 
     /**

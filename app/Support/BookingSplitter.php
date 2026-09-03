@@ -230,6 +230,126 @@ class BookingSplitter
     }
 
     /**
+     * Cut any range of nights out of a stay and put them on another unit, or
+     * on no unit at all (an extra-guest room). The range may be the first
+     * nights, the last, or a stretch in the middle; the pieces left on the
+     * original unit keep their figures at the stamped rate, cleaning stays
+     * with the earliest piece, the channel fee is apportioned by night, and
+     * every piece is then cut by calendar month. The original row keeps the
+     * earliest piece that stays on its unit, so the EZEE link is preserved.
+     *
+     * @param  int|null  $listingId  the unit the nights were in; null means no unit
+     * @return Booking[] every live piece of the stay afterwards, in date order
+     */
+    public function carve(Booking $booking, string $from, string $to, ?int $listingId, ?int $userId = null): array
+    {
+        $checkIn  = substr((string) $booking->check_in, 0, 10);
+        $checkOut = substr((string) $booking->check_out, 0, 10);
+
+        if ($from < $checkIn || $to > $checkOut || $from >= $to) {
+            throw new InvalidArgumentException("The nights to move must lie inside the stay, between {$checkIn} and {$checkOut}.");
+        }
+        if ($from === $checkIn && $to === $checkOut) {
+            throw new InvalidArgumentException($listingId ? 'The whole stay moves: use Reassign instead.' : 'The whole stay was in an extra room: use No unit instead.');
+        }
+
+        $target = null;
+        if ($listingId !== null) {
+            $target = Listing::withoutGlobalScope('notArchived')->find($listingId);
+            if (!$target) {
+                throw new InvalidArgumentException('That unit no longer exists.');
+            }
+            if ($clash = self::occupied($listingId, $from, $to, $booking->id)) {
+                throw new InvalidArgumentException("{$target->name} already has booking #{$clash->id} over {$from} to {$to}.");
+            }
+        }
+
+        $totalN   = max(1, (int) $booking->nights);
+        $template = collect($booking->getAttributes())->except(['id', 'created_at', 'updated_at'])->all();
+        $pieces   = [];                       // [from, to, listing_id|null, isFirst]
+        if ($from > $checkIn) {
+            $pieces[] = [$checkIn, $from, (int) $booking->listing_id, true];
+        }
+        $pieces[] = [$from, $to, $listingId, $from === $checkIn];
+        if ($to < $checkOut) {
+            $pieces[] = [$to, $checkOut, (int) $booking->listing_id, false];
+        }
+
+        return DB::transaction(function () use ($booking, $pieces, $template, $totalN, $target, $from, $to, $userId) {
+            $result   = [];
+            $original = null;
+
+            foreach ($pieces as [$a, $b, $lid, $isFirst]) {
+                if ($lid === null) {
+                    continue;                  // an extra-guest room: those nights belong to no unit
+                }
+                $figures = self::shape($booking, $totalN, self::nights($a, $b), $isFirst);
+
+                if ($original === null && $lid === (int) $booking->listing_id) {
+                    $booking->check_in  = $a;
+                    $booking->check_out = $b;
+                    foreach ($figures as $field => $value) {
+                        $booking->$field = $value;
+                    }
+                    $booking->remark = trim(($booking->remark ?? '') . " | split stay: {$a} to {$b}");
+                    $booking->save();
+                    $original = $booking;
+                    $result[] = $booking;
+                    continue;
+                }
+
+                $row = array_merge($template, $figures, [
+                    'listing_id' => $lid,
+                    'check_in'   => $a,
+                    'check_out'  => $b,
+                    'remark'     => trim(($template['remark'] ?? '') . " | split stay: {$a} to {$b}" . ($lid !== (int) $booking->listing_id ? ' in ' . ($target->name ?? $lid) : '')),
+                    'created_at' => $booking->created_at,
+                    'updated_at' => now(),
+                ]);
+                $result[] = Booking::find(DB::table('bookings')->insertGetId($row));
+            }
+
+            if ($original === null) {
+                // Nothing stays on the original unit (the first nights moved and
+                // the rest were in an extra room, or the reverse). The link
+                // must survive, so the original row becomes the first piece.
+                $first = array_shift($result);
+                $booking->listing_id = $first->listing_id;
+                $booking->check_in   = $first->check_in;
+                $booking->check_out  = $first->check_out;
+                foreach (['nights', 'price_night', 'cleaning_fee', 'sst', 'sst_cf', 'discount_fee', 'ota_fee', 'price'] as $f) {
+                    $booking->$f = $first->$f;
+                }
+                Booking::withoutOverlapCheck(fn () => $booking->save());
+                DB::table('bookings')->where('id', $first->id)->delete();
+                array_unshift($result, $booking);
+            }
+
+            if ($ezee = EzeeBooking::where('book_id', $booking->id)->first()) {
+                EzeeAssignmentLog::create([
+                    'ezee_booking_id' => $ezee->id,
+                    'listing_id'      => $target->id ?? $booking->listing_id,
+                    'old_listing_id'  => $booking->listing_id,
+                    'assigned_by'     => $userId,
+                    'method'          => 'manual',
+                    'note'            => sprintf('Nights %s to %s moved to %s; the rest of the stay stays where it was. EZEE reports one room per reservation, so a move has to be recorded here.',
+                        $from, $to, $target->name ?? 'an extra room (no unit)'),
+                ]);
+            }
+
+            $final = [];
+            foreach ($result as $piece) {
+                foreach ($this->splitByMonth($piece, $userId) as $seg) {
+                    $final[] = $seg;
+                }
+            }
+            usort($final, fn ($x, $y) => strcmp($x->check_in, $y->check_in));
+
+            return $final;
+        });
+    }
+
+    /**
      * Move a segment's dates to a new range and reprice its nights at the
      * stamped nightly rate. Used when EZEE shortens or extends a stay: the
      * rate the owner has already seen stands, the amount follows the nights,

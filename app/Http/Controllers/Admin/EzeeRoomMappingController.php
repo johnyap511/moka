@@ -252,34 +252,23 @@ class EzeeRoomMappingController extends Controller
     public function split(Request $request, $bookingId, BookingSplitter $splitter)
     {
         $request->validate([
-            'split_date' => 'required|date_format:Y-m-d',
-            'moves'      => 'required|in:before,after',
-            'listing_id' => 'required|exists:listings,id',
+            'from'       => 'required|date_format:Y-m-d',
+            'to'         => 'required|date_format:Y-m-d|after:from',
+            'listing_id' => 'nullable|exists:listings,id',
         ]);
 
-        $booking = \App\Booking::findOrFail($bookingId);
+        $booking = Booking::findOrFail($bookingId);
 
         try {
-            [$first, $second] = $splitter->split(
-                $booking,
-                $request->input('split_date'),
-                $request->input('moves'),
-                (int) $request->input('listing_id'),
-                Auth::id()
-            );
-        } catch (\InvalidArgumentException $e) {
-            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
-        } catch (\App\Exceptions\OverlappingBookingException $e) {
+            $pieces = $splitter->carve($booking, $request->input('from'), $request->input('to'),
+                $request->input('listing_id') ? (int) $request->input('listing_id') : null, Auth::id());
+        } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }
 
         return response()->json([
             'ok'      => true,
-            'message' => sprintf(
-                'Split into %s (%s to %s) and %s (%s to %s).',
-                optional($first->listing)->name ?? 'unit', $first->check_in, $first->check_out,
-                optional($second->listing)->name ?? 'unit', $second->check_in, $second->check_out
-            ),
+            'message' => 'Stay is now: ' . collect($pieces)->map(fn ($p) => sprintf('%s %s to %s', optional($p->listing)->name ?? 'unit', $p->check_in, $p->check_out))->implode('; ') . '.',
         ]);
     }
 
@@ -328,8 +317,9 @@ class EzeeRoomMappingController extends Controller
     public function assignHistory(Request $request, $ezeeBookingId)
     {
         $request->validate([
-            'split_date'       => 'required|date_format:Y-m-d',
-            'first_listing_id' => 'nullable|exists:listings,id',
+            'from'             => 'required|date_format:Y-m-d',
+            'to'               => 'required|date_format:Y-m-d|after:from',
+            'other_listing_id' => 'nullable|exists:listings,id',
         ]);
 
         $eb    = EzeeBooking::findOrFail($ezeeBookingId);
@@ -340,16 +330,31 @@ class EzeeRoomMappingController extends Controller
         }
 
         try {
-            [$first, $last] = (new EzeeAutoAssign(false, Auth::id()))
-                ->assignSplit($eb, $final, $request->input('split_date'), $request->input('first_listing_id') ? (int) $request->input('first_listing_id') : null);
+            $pieces = (new EzeeAutoAssign(false, Auth::id()))->assignSplit($eb, $final, $request->input('from'), $request->input('to'),
+                $request->input('other_listing_id') ? (int) $request->input('other_listing_id') : null);
         } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }
 
-        $this->closeConflictsFor($eb, 'Assigned with room history from ' . $request->input('split_date'));
+        $this->closeConflictsFor($eb, sprintf('Assigned with room history: %s to %s elsewhere', $request->input('from'), $request->input('to')));
 
-        return response()->json(['ok' => true, 'message' => sprintf('Assigned: %s from %s, then %s to %s.',
-            optional($first->listing)->name ?? 'unit', $first->check_in, optional($last->listing)->name ?? 'unit', $last->check_out)]);
+        return response()->json(['ok' => true, 'message' => 'Assigned: ' . collect($pieces)->map(fn ($p) => sprintf('%s %s to %s', optional($p->listing)->name ?? 'unit', $p->check_in, $p->check_out))->implode('; ') . '.']);
+    }
+
+    /** A booking cancelled on our side while EZEE still reports the stay comes back. */
+    public function restore(Request $request, $ezeeBookingId)
+    {
+        $eb = EzeeBooking::findOrFail($ezeeBookingId);
+
+        try {
+            $booking = (new EzeeAutoAssign(false, Auth::id()))->restoreLinked($eb);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $this->closeConflictsFor($eb, "Restored booking #{$booking->id}");
+
+        return response()->json(['ok' => true, 'message' => sprintf('Booking #%d restored: %s to %s.', $booking->id, $booking->check_in, $booking->check_out)]);
     }
 
     /** The reservation was an extra-guest room: it needs no unit of its own. */

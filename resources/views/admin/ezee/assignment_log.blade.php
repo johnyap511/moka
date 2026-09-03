@@ -100,7 +100,7 @@
                         @if($log->method === 'conflict')
                             @php
                                 $ours = $eb && $eb->book_id ? ($bookingMap[$eb->book_id] ?? null) : null;
-                                $blockId = preg_match('/booking #(\d+)/', (string) $log->note, $bm) ? (int) $bm[1] : null;
+                                $blockId = preg_match_all('/[Bb]ooking #(\d+)/', (string) $log->note, $bm) ? (int) end($bm[1]) : null;
                                 $blocker = $blockId ? ($bookingMap[$blockId] ?? null) : null;
                             @endphp
                             <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5">
@@ -118,23 +118,30 @@
                                 @endif
                             </div>
                             @if(!$log->resolved_at)
+                            @php $linkDead = $eb && $eb->book_id && !$ours; @endphp
                             <div style="display:flex;gap:4px;flex-wrap:wrap">
-                                @if(!$ours)
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="First nights were in another unit or an extra room">Room history</button>
+                                @if($linkDead)
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
+                                @elseif(!$ours)
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Part of the stay was in another unit or an extra room">Room history</button>
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
                                 @else
                                     @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
                                     @endif
                                 @endif
-                                <a href="/admin/ezee/booking?q={{ urlencode($eb->SubBookingId ?? '') }}" class="btn btn-secondary btn-sm" title="Move the whole booking to another unit">Reassign</a>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')" title="Move the whole booking to another unit">Reassign</button>
                                 <button type="button" class="btn btn-primary btn-sm" onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
                             </div>
-                            <div id="hist-{{ $log->id }}" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--border, #e5e7eb);border-radius:6px;background:var(--bg-secondary, #f9fafb)">
-                                <div style="font-size:11px;margin-bottom:6px">Night the guest reached <b>{{ $eb->RoomName }}</b>:</div>
-                                <input type="date" id="hist-date-{{ $log->id }}" value="{{ $eb->Start }}" min="{{ $eb->Start }}" max="{{ $eb->End }}" style="font-size:12px;padding:4px 6px;margin-bottom:6px">
-                                <div style="font-size:11px;margin-bottom:6px">Before that, the guest was in:</div>
-                                <select id="hist-unit-{{ $log->id }}" style="font-size:12px;padding:4px 6px;max-width:220px;margin-bottom:8px">
+                            <div id="hist-{{ $log->id }}" class="review-panel" style="display:none">
+                                <div class="review-panel-title">Nights the guest was <b>not</b> in {{ $eb->RoomName }}</div>
+                                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                                    <input type="date" id="hist-from-{{ $log->id }}" value="{{ $eb->Start }}" min="{{ $eb->Start }}" max="{{ $eb->End }}">
+                                    <span>to</span>
+                                    <input type="date" id="hist-to-{{ $log->id }}" value="{{ \Carbon\Carbon::parse($eb->Start)->addDay()->format('Y-m-d') }}" min="{{ $eb->Start }}" max="{{ $eb->End }}">
+                                </div>
+                                <div class="review-panel-title">Where the guest was on those nights</div>
+                                <select id="hist-unit-{{ $log->id }}" style="max-width:240px;margin-bottom:8px">
                                     <option value="">Extra room (no unit)</option>
                                     @foreach($listings as $l)
                                         <option value="{{ $l->id }}">{{ $l->name }}</option>
@@ -143,6 +150,18 @@
                                 <div style="display:flex;gap:4px">
                                     <button type="button" class="btn btn-primary btn-sm" onclick="assignHistory(this, {{ $log->id }}, {{ $log->ezee_booking_id }})">Assign</button>
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')">Cancel</button>
+                                </div>
+                            </div>
+                            <div id="reassign-{{ $log->id }}" class="review-panel" style="display:none">
+                                <div class="review-panel-title">Move the whole stay to</div>
+                                <select id="reassign-unit-{{ $log->id }}" style="max-width:240px;margin-bottom:8px">
+                                    @foreach($listings as $l)
+                                        <option value="{{ $l->id }}">{{ $l->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div style="display:flex;gap:4px">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="reassignTo(this, {{ $log->id }}, {{ $log->ezee_booking_id }})">Reassign</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')">Cancel</button>
                                 </div>
                             </div>
                             @else
@@ -184,6 +203,11 @@
 @endsection
 
 @push('scripts')
+<style>
+.review-panel { margin-top:8px; padding:10px; border:1px solid var(--border, #e5e7eb); border-radius:6px; background:var(--bg-secondary, #f9fafb); font-size:12px; }
+.review-panel-title { font-size:11px; margin-bottom:6px; }
+.review-panel input, .review-panel select { font-size:12px; padding:4px 6px; }
+</style>
 <script>
 // Resolving records that a person has dealt with a conflict. It changes no
 // booking; it only takes the row off the queue, and can be reopened.
@@ -255,10 +279,22 @@ async function postAction(btn, url, body, doneLabel) {
 }
 
 function assignHistory(btn, logId, ezeeId) {
-    var date = document.getElementById('hist-date-' + logId).value;
+    var from = document.getElementById('hist-from-' + logId).value;
+    var to   = document.getElementById('hist-to-' + logId).value;
     var unit = document.getElementById('hist-unit-' + logId).value;
-    if (!date) { alert('Pick the night the guest reached the final unit.'); return; }
-    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/assign-history', { split_date: date, first_listing_id: unit || null }, 'Assigned.');
+    if (!from || !to || to <= from) { alert('Pick the nights the guest was elsewhere: the first night and the morning they moved back.'); return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/assign-history', { from: from, to: to, other_listing_id: unit || null }, 'Assigned.');
+}
+
+function reassignTo(btn, logId, ezeeId) {
+    var unit = document.getElementById('reassign-unit-' + logId).value;
+    if (!unit) { alert('Pick the unit.'); return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/reassign', { listing_id: unit, note: 'Reassigned from the review row' }, 'Reassigned.');
+}
+
+function restoreBooking(btn, ezeeId) {
+    if (!confirm('Restore the cancelled booking? EZEE still reports this stay.')) { return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/restore', {}, 'Restored.');
 }
 
 function noUnit(btn, ezeeId) {

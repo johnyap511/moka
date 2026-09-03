@@ -147,4 +147,64 @@
     </div>
 </div>
 
+@php
+    $linked = $booking->book_id ? \App\Booking::withoutGlobalScopes()->with('listing')->find($booking->book_id) : null;
+    $segments = $linked ? \App\Booking::withoutGlobalScopes()->with('listing')->where('status', '<>', 1)
+        ->where(fn ($q) => $q->where('id', $linked->id)->orWhere(fn ($w) => $w->where('folio_no', $linked->folio_no)->where('folio_no', '<>', '')->where('listing_id', $linked->listing_id)))
+        ->orderBy('check_in')->get() : collect();
+    $units = \App\Listing::orderBy('name')->get(['id', 'name']);
+@endphp
+@if($linked)
+<div class="card" style="margin-top:16px">
+    <div class="card-header"><h2>Split Stay</h2></div>
+    <div class="card-body" style="font-size:13px">
+        <p style="margin:0 0 10px;color:var(--text-secondary)">EZEE reports one room for the whole reservation. If the guest spent some nights in another unit or an extra room, move those nights here. Amounts are re-derived from the stamped nightly rate; cleaning stays with the first night; the channel fee follows the nights.</p>
+        <table style="font-size:12px;margin-bottom:12px">
+            <thead><tr><th>Booking</th><th>Unit</th><th>Check in</th><th>Check out</th><th>Nights</th><th>Total</th></tr></thead>
+            <tbody>
+            @foreach($segments as $s)
+                <tr><td>#{{ $s->id }}</td><td>{{ $s->listing->name ?? '' }}</td><td>{{ $s->check_in }}</td><td>{{ $s->check_out }}</td><td>{{ $s->nights }}</td><td>RM {{ number_format($s->price, 2) }}</td></tr>
+            @endforeach
+            </tbody>
+        </table>
+        <div style="display:grid;grid-template-columns:repeat(4,max-content) auto;gap:10px;align-items:end">
+            <label style="display:grid;gap:4px">Segment
+                <select id="split-booking">
+                    @foreach($segments as $s)<option value="{{ $s->id }}" data-in="{{ $s->check_in }}" data-out="{{ $s->check_out }}">#{{ $s->id }} {{ $s->check_in }} → {{ $s->check_out }}</option>@endforeach
+                </select>
+            </label>
+            <label style="display:grid;gap:4px">First night elsewhere <input type="date" id="split-from" value="{{ $segments->first()->check_in ?? '' }}"></label>
+            <label style="display:grid;gap:4px">Morning back <input type="date" id="split-to" value="{{ $segments->first() ? \Carbon\Carbon::parse($segments->first()->check_in)->addDay()->format('Y-m-d') : '' }}"></label>
+            <label style="display:grid;gap:4px">Where
+                <select id="split-unit" style="max-width:260px">
+                    <option value="">Extra room (no unit)</option>
+                    @foreach($units as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
+                </select>
+            </label>
+            <div><button type="button" class="btn btn-primary" onclick="splitStay(this)">Move those nights</button></div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
+
+@push('scripts')
+<script>
+async function splitStay(btn) {
+    var id   = document.getElementById('split-booking').value;
+    var from = document.getElementById('split-from').value;
+    var to   = document.getElementById('split-to').value;
+    var unit = document.getElementById('split-unit').value;
+    if (!from || !to || to <= from) { alert('Pick the first night elsewhere and the morning the guest came back.'); return; }
+    if (!confirm('Move ' + from + ' to ' + to + ' to ' + (unit ? document.querySelector('#split-unit option:checked').textContent : 'an extra room (no unit)') + '?')) { return; }
+    btn.disabled = true;
+    try {
+        const res = await fetch('/admin/booking/' + id + '/split', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ from: from, to: to, listing_id: unit || null }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+        alert(data.message); window.location.reload();
+    } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
+</script>
+@endpush
+

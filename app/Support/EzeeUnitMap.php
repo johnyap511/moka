@@ -114,6 +114,37 @@ class EzeeUnitMap
         return $unit === '' ? null : $this->byNameOnly->get($unit);
     }
 
+    /**
+     * The listing behind a room label from EZEE's own report, which runs the
+     * unit and the room type together with no fixed separator ("AL-12-13-Deluxe
+     * Room", "BS 05-15-Superior Studio", "C2-30-01-AC - Mixed 2BR"). The
+     * longest mapped unit name the label starts with wins, so "H-05-06" is not
+     * taken for "H-05-06 (No Monthly)" and vice versa.
+     */
+    public function listingForReportRoom(string $label): ?Listing
+    {
+        $this->load();
+        $norm = self::compact($label);
+        if ($norm === '') {
+            return null;
+        }
+        $best = null; $bestLen = 0;
+        foreach ($this->byNameOnly as $unit => $listing) {
+            $u = self::compact($unit);
+            if ($u !== '' && strlen($u) > $bestLen && str_starts_with($norm, $u)) {
+                $best = $listing; $bestLen = strlen($u);
+            }
+        }
+
+        return $best;
+    }
+
+    /** letters and digits only, lowercase: "AL-12-13 (Rental Unit)" and "AL-12-13-Deluxe" share a prefix. */
+    public static function compact(string $s): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9]/i', '', $s));
+    }
+
     public function isEmpty(): bool
     {
         $this->load();

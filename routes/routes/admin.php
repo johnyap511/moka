@@ -76,6 +76,7 @@ Route::post('/ezee/room-mapping/archive', 'Admin\EzeeRoomMappingController@setAr
 Route::post('/ezee/booking/{ezeeBookingId}/reassign', 'Admin\EzeeRoomMappingController@reassign')->name('admin.ezee.reassign');
 Route::post('/ezee/booking/{ezeeBookingId}/assign-history', 'Admin\EzeeRoomMappingController@assignHistory')->name('admin.ezee.assign-history');
 Route::post('/ezee/booking/{ezeeBookingId}/no-unit', 'Admin\EzeeRoomMappingController@noUnit')->name('admin.ezee.no-unit');
+Route::post('/ezee/booking/{ezeeBookingId}/restore', 'Admin\EzeeRoomMappingController@restore')->name('admin.ezee.restore');
 Route::post('/ezee/booking/{ezeeBookingId}/accept-dates', 'Admin\EzeeRoomMappingController@acceptDates')->name('admin.ezee.accept-dates');
 // Split divides one stay across two units; reassign moves a whole booking.
 Route::post('/booking/{bookingId}/split', 'Admin\EzeeRoomMappingController@split')->name('admin.booking.split');
