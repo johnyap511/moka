@@ -438,6 +438,12 @@ class BookingSplitter
             $lo = min(array_map(fn ($b) => (string) $b->check_in, $chain));
             $hi = max(array_map(fn ($b) => (string) $b->check_out, $chain));
             foreach ($pool as $id => $b) {
+                // Crossing to another unit is a room move, and a room move is
+                // the same guest. A different guest on an adjacent night who
+                // happens to share the folio number is not part of the stay.
+                if ((int) $b->listing_id !== (int) $anchor->listing_id && (int) $b->user_id !== (int) $anchor->user_id) {
+                    continue;
+                }
                 if ((string) $b->check_in === $hi || (string) $b->check_out === $lo) {
                     $chain[$id] = $b;
                     unset($pool[$id]);
