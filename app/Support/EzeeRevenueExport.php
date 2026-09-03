@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Booking;
 use App\OtherModel\EzeeBooking;
+use App\Listing;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -597,7 +598,9 @@ class EzeeRevenueExport
             // The report names extra rooms without the property; the room map needs it.
             $label = (['19676' => 'EkoCheras', '20317' => 'Bell Suites', '20318' => 'Forum', '20319' => 'Arte Cheras', '20320' => 'Alinea'][$r['hotel']] ?? '') . ' ' . preg_replace('/-.*$/', '', $label);
         }
-        $reported = self::unitMap()->listingForReportRoom($label);
+        $reported = stripos((string) $r['room'], 'extra room') === 0
+            ? Listing::withoutGlobalScope('notArchived')->whereRaw('LOWER(name) = ?', [strtolower(trim($label))])->first()
+            : self::unitMap()->listingForReportRoom($label);
         $final    = trim((string) preg_replace('/^.*→\s*/u', '', (string) $l['room']));
         $final    = trim((string) preg_replace('/\s*\(.*$/', '', $final));
         $bothExtra = stripos((string) $r['room'], 'extra room') !== false && stripos($final, 'extra room') !== false;
