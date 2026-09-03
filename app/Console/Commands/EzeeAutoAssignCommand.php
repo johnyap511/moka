@@ -62,6 +62,10 @@ class EzeeAutoAssignCommand extends Command
                 $this->error("  failed: {$row['room']} — {$row['error']}");
             }
 
+            if ($row['action'] === 'review') {
+                $this->warn("  review: {$row['room']} → {$row['listing']} ({$row['dates']}) {$row['note']}");
+            }
+
             if ($row['action'] === 'conflict') {
                 $this->warn("  conflict: {$row['room']} → {$row['listing']} ({$row['dates']}) blocked by booking #{$row['blocked_by']}");
             }

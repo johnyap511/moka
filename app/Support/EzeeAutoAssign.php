@@ -152,7 +152,26 @@ class EzeeAutoAssign
                 continue;
             }
 
+            // A reservation whose booking has been cancelled on our side is not
+            // assigned, whatever the pointer says. It is neither recreated (the
+            // cancellation may have been deliberate) nor counted as correct
+            // (76 such rows silently dropped RM53k of September revenue once).
+            if ((int) $booking->status === 1) {
+                $this->review($ezeeBooking, $listing, sprintf(
+                    'Linked booking #%d (%s to %s) is cancelled on our side but EZEE still reports the stay for %s to %s. Restore it, or reassign.',
+                    $booking->id, $booking->check_in, $booking->check_out, $ezeeBooking->Start, $ezeeBooking->End));
+                continue;
+            }
+
             if ((int) $booking->listing_id === (int) $listing->id) {
+                // EZEE may have shortened or extended the stay since we captured
+                // it. Our dates never follow silently: the drift is raised for a
+                // person, who accepts it from the review row.
+                if ($drift = $this->dateDrift($ezeeBooking, $booking)) {
+                    $this->review($ezeeBooking, $listing, $drift);
+                    continue;
+                }
+
                 $this->tally['unchanged']++;
                 continue;
             }
@@ -773,6 +792,59 @@ class EzeeAutoAssign
                 $ezeeBooking->End,
             $clash->id
         ));
+    }
+
+    /**
+     * The span our live rows cover for this stay: the linked booking and its
+     * same-folio siblings on the same unit. Returns a note when EZEE's dates
+     * differ from it, null when they agree.
+     */
+    private function dateDrift(EzeeBooking $ezeeBooking, Booking $booking): ?string
+    {
+        $span = Booking::where('status', '!=', 1)
+            ->where(fn ($q) => $q->where('id', $booking->id)
+                ->orWhere(fn ($w) => $w->where('folio_no', $booking->folio_no)->where('folio_no', '<>', '')->where('listing_id', $booking->listing_id)
+                    ->where('check_out', '>', date('Y-m-d', strtotime($ezeeBooking->Start . ' -40 days')))
+                    ->where('check_in', '<', date('Y-m-d', strtotime($ezeeBooking->End . ' +40 days')))))
+            ->selectRaw('MIN(check_in) a, MAX(check_out) z')->first();
+
+        $start = substr((string) $ezeeBooking->Start, 0, 10);
+        $end   = substr((string) $ezeeBooking->End, 0, 10);
+
+        if (!$span || !$span->a || ($span->a === $start && $span->z === $end)) {
+            return null;
+        }
+
+        return sprintf('Dates changed in EZEE: ours %s to %s, EZEE now %s to %s. Accept EZEE dates from the review row, or correct EZEE.',
+            $span->a, $span->z, $start, $end);
+    }
+
+    /**
+     * Raise a review item that is not a unit clash: the same dedup and log
+     * path as a conflict, with a note that says what a person must decide.
+     */
+    private function review(EzeeBooking $ezeeBooking, Listing $listing, string $note): void
+    {
+        $this->conflictedNow[$ezeeBooking->id] = true;
+        $this->tally['conflicts']++;
+        $this->detail[] = [
+            'action'  => 'review',
+            'room'    => $ezeeBooking->RoomName,
+            'listing' => $listing->name,
+            'dates'   => $ezeeBooking->Start . ' → ' . $ezeeBooking->End,
+            'note'    => $note,
+        ];
+
+        if ($this->dryRun) {
+            return;
+        }
+
+        $alreadyLogged = EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)
+            ->where('method', 'conflict')->whereNull('resolved_at')->exists();
+
+        if (!$alreadyLogged) {
+            $this->record($ezeeBooking, $listing, null, 'conflict', $note);
+        }
     }
 
     /** @return array<string,mixed> */
