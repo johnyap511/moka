@@ -301,6 +301,26 @@ class EzeeRevenueExport
      * @param  string[]  $files
      * @return array<int,array<string,mixed>>
      */
+    /** What MOKA holds for an EZEE folio that has no export line this month. */
+    private function mokaStateOf(string $hotel, string $res, string $folio): string
+    {
+        $q = DB::table('ezee_bookings')->where('TransactionId', 'like', $hotel . '%');
+        $q = $res !== '' ? $q->where('SubBookingId', $res) : $q->where('folio_no', $folio);
+        $row = $q->orderByDesc('id')->first(['status', 'book_id']);
+        if (!$row) {
+            return 'not received from EZEE';
+        }
+        if ((int) $row->status === 1) {
+            return 'cancelled';
+        }
+        $b = $row->book_id ? DB::table('bookings')->where('id', $row->book_id)->first(['id', 'status', 'check_in', 'check_out']) : null;
+        if (!$b) {
+            return (int) $row->status === 7 ? 'marked no unit' : 'unassigned';
+        }
+
+        return ((int) $b->status === 1 ? 'cancelled booking' : 'live booking') . " #{$b->id} {$b->check_in} to {$b->check_out}";
+    }
+
     private function compare(array $lines, array $files): array
     {
         $ezee = []; $extras = []; $loose = [];
@@ -377,14 +397,20 @@ class EzeeRevenueExport
             }
 
             if ($pick === null) {
+                // EZEE prints a line for every folio it touched in the month, including
+                // ones that earned nothing: cancelled, no-show, or re-booked under another
+                // reservation. Those are not gaps in MOKA, so they are labelled apart.
+                $zero  = abs($r['total']) < 0.005 && abs($r['deposit']) < 0.005;
+                $ours  = $this->mokaStateOf($r['hotel'], $r['res'], $r['folio']);
                 $lines[] = array_merge([
                     'hotel' => $r['hotel'], 'property' => self::HOTELS[$r['hotel']] ?? $r['hotel'], 'res' => $r['res'], 'folio' => $r['folio'],
                     'guest' => $r['guest'], 'source' => $r['source'], 'arrival' => $r['arrival'], 'dept' => $r['dept'], 'nights' => $r['nights'],
-                    'room' => $r['room'], 'voucher' => '', 'ids' => '', 'status' => 'EZEE only', 'ezee_row' => null,
+                    'room' => $r['room'], 'voucher' => '', 'ids' => '', 'status' => $zero ? 'EZEE zero line' : 'EZEE only', 'ezee_row' => null,
                     'nights_in' => '', 'room_charge' => '', 'cleaning' => '', 'extras' => '', 'deposit' => '', 'rate' => '', 'sst' => '',
                     'discount' => '', 'total' => '', 'commission' => '', 'revenue' => '',
                 ], ['ezee_total' => $r['total'], 'ezee_commission' => $r['commission'], 'ezee_deposit' => $r['deposit'], 'ezee_cleaning' => '', 'ezee_extras' => '', 'ezee_extras_detail' => '',
-                    'difference' => round(-($r['total'] - $r['deposit']), 2), 'note' => 'Not in MOKA export for this month']);
+                    'difference' => round(-($r['total'] - $r['deposit']), 2),
+                    'note' => ($zero ? 'EZEE reports RM 0 for this folio (cancelled, no-show or re-booked under another reservation)' : 'EZEE has revenue here but MOKA has no line this month: check the booking') . ($ours ? "; MOKA: $ours" : '')]);
                 continue;
             }
 
