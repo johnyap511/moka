@@ -59,7 +59,7 @@ class EzeeRevenueExport
 
         if ($compared) {
             $h = array_merge($h, ['EZEE Total (RM) (Incl. Tax)', 'EZEE Commission (RM)', 'EZEE Damage Deposit (RM)',
-                'EZEE Cleaning (RM) (Incl. Tax)', 'EZEE Extras - Company (RM) (Incl. Tax)', 'EZEE Extras detail', 'Difference (RM)', 'Note']);
+                'EZEE Cleaning (RM) (Incl. Tax)', 'EZEE Extras - Company (RM) (Incl. Tax)', 'EZEE Extras detail', 'Difference (RM)', 'Note', 'Action']);
         }
 
         return $h;
@@ -183,6 +183,11 @@ class EzeeRevenueExport
                 'ids'      => $segments->pluck('id')->implode(' '),
                 'status'   => $status,
                 'ezee_row' => $e,
+                // Whole-stay figures the notes need: the cleaning fee sits on
+                // the first segment, so a month that only holds later nights
+                // sees none of it.
+                'stay_cleaning' => round($segments->sum(fn ($b) => (float) $b->cleaning_fee + (float) $b->sst_cf), 2),
+                'stay_arrival'  => $segments->isNotEmpty() ? substr((string) $segments->min('check_in'), 0, 10) : substr((string) $e->Start, 0, 10),
             ], $figures);
         }
 
@@ -371,6 +376,11 @@ class EzeeRevenueExport
                 $byKey[$keyOf($l['hotel'], $l['res'], (string) $l['folio'])][] = $i;
             }
         }
+
+        foreach ($lines as &$l) {
+            $l['month_from'] = $this->from;
+        }
+        unset($l);
 
         $used = [];
         foreach ($ezee as $r) {
@@ -627,10 +637,61 @@ class EzeeRevenueExport
         if ((int) $l['nights_in'] !== (int) $r['nights_in'] && $r['nights_in'] !== null) {
             return sprintf('Nights in month differ: MOKA %d, EZEE %d', $l['nights_in'], $r['nights_in']);
         }
-        if (abs((float) $l['room_charge'] - $r['room_excl']) <= max(2, 0.015 * max($r['room_excl'], 1))) {
-            return $r['other'] > 0 ? sprintf('Extras posted in EZEE (Other RM %.2f), company revenue', $r['other']) : 'Room charge matches; cleaning or extra charges differ';
+
+        $roomMatches = abs((float) $l['room_charge'] - $r['room_excl']) <= max(2, 0.015 * max($r['room_excl'], 1));
+        if ($roomMatches) {
+            // Same room charge, different total: name the charge that explains it.
+            $stayCleaning = (float) ($l['stay_cleaning'] ?? 0);
+            $monthCleaning = round((float) ($l['cleaning'] ?? 0) * 1.08, 2);
+            $arrivedEarlier = ($l['stay_arrival'] ?? $l['arrival']) < substr((string) ($l['month_from'] ?? ''), 0, 10);
+            if ($diff < 0 && $stayCleaning > 0 && $arrivedEarlier && abs(abs($diff) - $stayCleaning) <= 2) {
+                return sprintf('Cross-month stay: cleaning fee RM %.2f is booked in the arrival month in MOKA and in the departure month in EZEE', $stayCleaning);
+            }
+            if ($diff > 0 && $monthCleaning > 0 && abs($diff - $monthCleaning) <= 2) {
+                return sprintf('Room charge matches; MOKA carries a cleaning fee of RM %.2f that EZEE has not posted', $monthCleaning);
+            }
+            if ($r['other'] > 0) {
+                return sprintf('Extras posted in EZEE (Other RM %.2f), company revenue', $r['other']);
+            }
+            return sprintf('Room charge matches; other charges differ by RM %.2f (cleaning, deposit or extras)', abs($diff));
         }
-        return (float) $l['room_charge'] < $r['room_excl'] ? 'Rate changed in EZEE after booking (MOKA lower)' : 'Rate differs (MOKA higher)';
+
+        $n = max(1, (int) $l['nights_in']);
+        $mokaRate = (float) $l['room_charge'] / $n;
+        $ezeeRate = $r['room_excl'] / $n;
+        $gap = (float) $l['room_charge'] - $r['room_excl'];
+
+        return sprintf('%s: MOKA RM %.2f/night, EZEE RM %.2f/night over %d night(s), MOKA %s by RM %.2f (excl. tax)',
+            $gap < 0 ? 'Rate changed in EZEE after booking' : 'Rate differs',
+            $mokaRate, $ezeeRate, $n, $gap < 0 ? 'lower' : 'higher', abs($gap));
+    }
+
+    /**
+     * What a person has to do with the line, so the file can be filtered to
+     * the rows that need a decision. Everything else is explained by a rule.
+     */
+    public static function actionFor(array $l): string
+    {
+        $note = (string) ($l['note'] ?? '');
+        $status = (string) ($l['status'] ?? '');
+
+        return match (true) {
+            str_starts_with($note, 'OK')                                          => 'None',
+            str_starts_with($note, 'Cross-month stay')                            => 'None (timing of cleaning fee)',
+            str_starts_with($note, 'Extras posted in EZEE')                       => 'None (company revenue)',
+            $status === 'EZEE extra charge (company)'                             => 'None (company revenue)',
+            $status === 'EZEE zero line'                                          => str_contains($note, 'MOKA: cancelled') || str_contains($note, 'MOKA: not received') ? 'None (cancelled)' : 'Cancel in MOKA?',
+            $status === 'EZEE only'                                               => 'Assign in MOKA',
+            $status === 'Unassigned' || $status === 'No unit'                     => $note === 'Not on the EZEE file supplied' ? 'Retire (not in EZEE)' : 'Assign or map the unit',
+            $status === 'MOKA only (manual)'                                      => 'Check: should this be in EZEE?',
+            str_starts_with($note, 'Not on the EZEE file')                        => 'Check EZEE: cancelled?',
+            str_starts_with($note, 'Unit differs')                                => 'Fix the unit (Room history)',
+            str_starts_with($note, 'Nights in month differ')                      => 'Check the dates',
+            str_starts_with($note, 'Rate changed') || str_starts_with($note, 'Rate differs') => 'Rate decision',
+            str_starts_with($note, 'Room charge matches')                         => 'Check other charges',
+            str_starts_with($note, 'Link cancelled')                              => 'Restore or reassign',
+            default                                                               => 'Check',
+        };
     }
 
     /** @return array<int,array<string,mixed>> */
@@ -739,7 +800,7 @@ class EzeeRevenueExport
             $l['total'], $l['commission'], $l['revenue'], $l['ids'], $l['status']];
 
         if ($compared) {
-            $r = array_merge($r, [$l['ezee_total'], $l['ezee_commission'], $l['ezee_deposit'], $l['ezee_cleaning'] ?? '', $l['ezee_extras'] ?? '', $l['ezee_extras_detail'] ?? '', $l['difference'], $l['note']]);
+            $r = array_merge($r, [$l['ezee_total'], $l['ezee_commission'], $l['ezee_deposit'], $l['ezee_cleaning'] ?? '', $l['ezee_extras'] ?? '', $l['ezee_extras_detail'] ?? '', $l['difference'], $l['note'], $l['action'] ?? self::actionFor($l)]);
         }
 
         return $r;
