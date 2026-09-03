@@ -1192,9 +1192,8 @@ class BookController extends Controller
             }
         }
 
-        if ($request->source == 'Long Term Rental') {
-            $tax = 0.00;
-        }
+        // SST applies to tenancies too: EZEE charges 8% on every Long Term
+        // Rental and the export has to tally with it line for line.
 
         // Calculate SST for cleaning fee (only first month)
         if ($i == 1 && $cleaning_fee > 0) {
