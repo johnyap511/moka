@@ -103,6 +103,12 @@ class ReplayRepairs extends Command
         ['19676', 'FN0300', 'monthly-rental', 'EkoCheras H-09-21'],
         // A row with no room name whose End was overwritten pointed at another guest's Alinea booking.
         ['20319', 'RES3895', 'unlink-if-shared'],
+        // Settled from evidence on the evening of 3 Sep 2026.
+        ['20320', 'RES4097', 'cancel'],                                                      // absent from EZEE's August revenue report
+        ['19676', 'RES30627', 'last-night', 'EkoCheras Extra Room 2'],                      // EZEE final room Extra Room 2; J-23A-02 taken from 16 Aug
+        ['20318', 'RES6075', 'chain-guest'],                                                 // hand-keyed second piece, same EZEE folio
+        ['20318', 'RES6317', 'chain-guest'],
+        ['19676', 'RES31197', 'carve', '2026-09-04', '2026-09-09', 'EkoCheras H-30-3A'],    // EZEE moved rooms on arrival day, ended on H-30-3A
     ];
 
     public function handle()
@@ -449,6 +455,52 @@ class ReplayRepairs extends Command
                         } else {
                             $this->line("$tag fine ($state)");
                         }
+                        break;
+
+                    case 'last-night':
+                        // The stay's last night was in an extra room (EZEE's final room); MOKA's
+                        // chain stops a night short. Create that night from EZEE's rate.
+                        $extra = $this->listing($d[3]);
+                        if (!$booking || (int) $booking->status === 1) { $this->line("$tag no live booking ($state)"); break; }
+                        $chain = collect((new BookingSplitter)->stayChain($booking, $hotel))->values()->all();
+                        $last = end($chain); $end = substr((string) $e->End, 0, 10);
+                        if ($last->check_out >= $end) { $this->line("$tag already runs to $end"); break; }
+                        if (strtotime($end) - strtotime($last->check_out) !== 86400) { $this->warn("$tag gap is not one night; left for staff ($state)"); break; }
+                        $nights = max(1, (int) ((strtotime($end) - strtotime(substr((string) $e->Start, 0, 10))) / 86400));
+                        $rate = round((float) $e->TotalAmountBeforeTax / $nights, 2); $sst = round($rate * 0.08, 2);
+                        $this->line("$tag CREATE night {$last->check_out}..$end on {$extra->name} at RM $rate + SST | $state");
+                        $this->write('F-decision', 'bookings', 'new', 'night', '', "{$last->check_out}..$end", "$res last night on {$extra->name}", function () use ($last, $extra, $end, $rate, $sst, $res) {
+                            $row = DB::table('bookings')->where('id', $last->id)->first(); $row = (array) $row; unset($row['id']);
+                            DB::table('bookings')->insert(array_merge($row, ['listing_id' => $extra->id, 'check_in' => $last->check_out, 'check_out' => $end, 'nights' => 1, 'price_night' => $rate,
+                                'sst' => $sst, 'tourism_tax' => $sst, 'cleaning_fee' => 0, 'sst_cf' => 0, 'ota_fee' => 0, 'discount_fee' => 0, 'price' => round($rate + $sst, 2), 'status' => 5,
+                                'remark' => "Room move: last night in {$extra->name} (EZEE final room) for $res", 'created_at' => now(), 'updated_at' => now()]));
+                        });
+                        break;
+
+                    case 'chain-guest':
+                        // A staff-keyed "split booking" piece carries the EZEE folio but sits under
+                        // the shared staff account, so the stay does not chain. Give it the guest.
+                        if (!$booking || (int) $booking->status === 1) { $this->line("$tag no live booking ($state)"); break; }
+                        $pieces = DB::table('bookings')->where('folio_no', $booking->folio_no)->where('status', '<>', 1)->where('id', '<>', $booking->id)
+                            ->where('user_id', '<>', $booking->user_id)->where('check_in', '>=', substr((string) $e->Start, 0, 10))->where('check_out', '<=', substr((string) $e->End, 0, 10))->get(['id', 'user_id', 'listing_id']);
+                        if ($pieces->isEmpty()) { $this->line("$tag already chained"); break; }
+                        foreach ($pieces as $pc) {
+                            $this->line("$tag piece #{$pc->id}: guest {$pc->user_id} -> {$booking->user_id} | $state");
+                            $this->write('F-decision', 'bookings', $pc->id, 'user_id', $pc->user_id, $booking->user_id, "$res split booking chained",
+                                fn () => DB::table('bookings')->where('id', $pc->id)->update(['user_id' => $booking->user_id, 'updated_at' => now()]));
+                        }
+                        break;
+
+                    case 'carve':
+                        [$from, $to, $unit] = [$d[3], $d[4], $this->listing($d[5])];
+                        if (!$booking || (int) $booking->status === 1) { $this->line("$tag no live booking ($state)"); break; }
+                        $chain = collect((new BookingSplitter)->stayChain($booking, $hotel))->values()->all();
+                        if (collect($chain)->contains(fn ($s) => (int) $s->listing_id === (int) $unit->id && $s->check_in <= $from && $s->check_out >= $to)) { $this->line("$tag already on {$unit->name} for $from..$to"); break; }
+                        $target = collect($chain)->first(fn ($s) => $s->check_in <= $from && $s->check_out >= $to);
+                        if (!$target) { $this->warn("$tag no single segment covers $from..$to; left for staff ($state)"); break; }
+                        $this->line("$tag CARVE $from..$to from #{$target->id} to {$unit->name} | $state");
+                        $this->write('F-decision', 'bookings', $target->id, 'range', "$from..$to", $unit->name, "$res room history per EZEE moves",
+                            fn () => (new BookingSplitter)->carve(Booking::find($target->id), $from, $to, $unit->id, null));
                         break;
 
                     case 'no-unit':
