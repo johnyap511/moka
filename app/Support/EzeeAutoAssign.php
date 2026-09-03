@@ -265,8 +265,13 @@ class EzeeAutoAssign
         }
 
         return DB::transaction(function () use ($ezeeBooking, $final, $splitDate, $firstListingId) {
-            $booking = $this->create($ezeeBooking, $final,
-                'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand');
+            // The whole stay lands on the final unit for a moment before the
+            // split takes the earlier nights away again. Those nights are the
+            // very ones another guest held, so the model's overlap rule would
+            // refuse the intermediate row; it is checked again, segment by
+            // segment, when the split saves them.
+            $booking = Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $final,
+                'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand'));
 
             if (!$booking) {
                 throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");
