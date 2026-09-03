@@ -451,10 +451,17 @@ class EzeeRevenueExport
 
             $used[] = $pick;
             $l      = &$lines[$pick];
-            $xk     = $r['hotel'] . '|' . preg_replace('/\D/', '', $r['folio']);
-            $x      = $extras[$xk] ?? null;
-            if ($x) {
-                $extrasUsed[$xk] = true;
+            // The charge is keyed on the hotel the report room resolved to. An
+            // extra room resolves to no hotel, so fall back to the matched
+            // line's own property, then to a hotel-less key.
+            $fn = preg_replace('/\D/', '', $r['folio']);
+            $x  = null;
+            foreach (array_unique([$r['hotel'], $l['hotel'], '']) as $h) {
+                if (isset($extras[$h . '|' . $fn])) {
+                    $x = $extras[$h . '|' . $fn];
+                    $extrasUsed[$h . '|' . $fn] = true;
+                    break;
+                }
             }
             $companyExtras = $x ? $x['extras'] : 0.0;
             $target = $r['total'] - max($r['deposit'], $x['deposit'] ?? 0.0) - $companyExtras;
