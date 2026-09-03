@@ -393,10 +393,7 @@ class EzeeAutoAssign
         $start = substr((string) $ezeeBooking->Start, 0, 10);
         $end   = substr((string) $ezeeBooking->End, 0, 10);
 
-        $segments = Booking::where('status', '!=', 1)
-            ->where(fn ($q) => $q->where('id', $anchor->id)
-                ->orWhere(fn ($w) => $w->where('folio_no', $anchor->folio_no)->where('folio_no', '<>', '')->where('listing_id', $anchor->listing_id)))
-            ->orderBy('check_in')->get();
+        $segments = $this->stayRows($ezeeBooking, $anchor);
 
         $splitter = new BookingSplitter;
 
@@ -422,6 +419,15 @@ class EzeeAutoAssign
             }
 
             usort($kept, fn ($a, $b) => strcmp($a->check_in, $b->check_in));
+
+            // Every segment fell outside the new range (a check-in keyed on
+            // the wrong day): bring the first one back and retime it.
+            if (!$kept) {
+                $first = $segments->first();
+                $first->status = 5;
+                $first->save();
+                $kept = $splitter->retime($first, $start, $end, $this->actorId);
+            }
 
             // Nights EZEE added beyond what any segment covered.
             $last = end($kept);
@@ -803,12 +809,8 @@ class EzeeAutoAssign
      */
     private function dateDrift(EzeeBooking $ezeeBooking, Booking $booking): ?string
     {
-        $span = Booking::where('status', '!=', 1)
-            ->where(fn ($q) => $q->where('id', $booking->id)
-                ->orWhere(fn ($w) => $w->where('folio_no', $booking->folio_no)->where('folio_no', '<>', '')->where('listing_id', $booking->listing_id)
-                    ->where('check_out', '>', date('Y-m-d', strtotime($ezeeBooking->Start . ' -40 days')))
-                    ->where('check_in', '<', date('Y-m-d', strtotime($ezeeBooking->End . ' +40 days')))))
-            ->selectRaw('MIN(check_in) a, MAX(check_out) z')->first();
+        $rows = $this->stayRows($ezeeBooking, $booking);
+        $span = (object) ['a' => $rows->min('check_in'), 'z' => $rows->max('check_out')];
 
         $start = substr((string) $ezeeBooking->Start, 0, 10);
         $end   = substr((string) $ezeeBooking->End, 0, 10);
@@ -819,6 +821,28 @@ class EzeeAutoAssign
 
         return sprintf('Dates changed in EZEE: ours %s to %s, EZEE now %s to %s. Accept EZEE dates from the review row, or correct EZEE.',
             $span->a, $span->z, $start, $end);
+    }
+
+    /**
+     * Every live row of the stay: the linked booking and the same-folio rows
+     * on any unit of the same property within the stay's dates, so a mid-stay
+     * room move counts as one stay. Another property's guest sharing the
+     * folio number is excluded by the date window and the property.
+     */
+    private function stayRows(EzeeBooking $ezeeBooking, Booking $anchor)
+    {
+        $hotel = substr((string) $ezeeBooking->TransactionId, 0, 5);
+        $lo    = date('Y-m-d', strtotime($ezeeBooking->Start . ' -40 days'));
+        $hi    = date('Y-m-d', strtotime($ezeeBooking->End . ' +40 days'));
+
+        return Booking::with('listing')->where('status', '!=', 1)
+            ->where(fn ($q) => $q->where('id', $anchor->id)
+                ->orWhere(fn ($w) => $w->where('folio_no', $anchor->folio_no)->where('folio_no', '<>', '')
+                    ->where('check_out', '>', $lo)->where('check_in', '<', $hi)))
+            ->orderBy('check_in')->get()
+            ->filter(fn ($b) => $b->id === $anchor->id || $b->listing_id === $anchor->listing_id
+                || EzeeRevenueExport::hotelOfListing($b->listing->name ?? '') === $hotel)
+            ->values();
     }
 
     /**
