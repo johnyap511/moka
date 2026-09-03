@@ -74,7 +74,14 @@ class EzeeNotifications extends Command
                 if ($ev['status'] === 'Cancel' || $this->getOutput()->isVerbose()) {
                     $this->line(sprintf('   %-7s %-12s %s  %s', $ev['status'], $ev['res'], substr((string) $ev['at'], 0, 16), $note));
                 }
-                $ack[] = ['BookingId' => $ev['res'], 'PMS_BookingId' => $ev['res'], 'Status' => $ev['status']];
+                // EZEE identifies the booking by its transaction number, not the RES
+                // number; a cancellation carries only the RES, so the number comes
+                // from our own row.
+                $tid = $ev['payload']['TransactionId'] ?? EzeeBooking::where('TransactionId', 'like', $g->hotel_code . '%')
+                    ->where('SubBookingId', $ev['res'])->value('TransactionId');
+                if ($tid) {
+                    $ack[] = ['BookingId' => (string) $tid, 'PMS_BookingId' => $ev['res'], 'Status' => $ev['status']];
+                }
             }
 
             if ($ack && !$dry && !$this->option('no-ack')) {
@@ -212,7 +219,9 @@ class EzeeNotifications extends Command
     {
         $out = $this->post(['RES_Request' => ['Request_Type' => 'BookingRecdNotification', 'Authentication' => ['HotelCode' => $hotel, 'AuthCode' => $auth], 'Bookings' => ['Booking' => $ack]]]);
 
-        return $out !== null && stripos($out, 'error') === false;
+        // A clean acknowledgement comes back empty or as a Success block; a
+        // 501 "Bookings not exists" means the identifiers were not recognised.
+        return $out !== null && stripos($out, '"ErrorCode"') === false;
     }
 
     private function post(array $body): ?string

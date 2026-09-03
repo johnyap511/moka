@@ -609,9 +609,13 @@ class EzeeAutoAssign
             return;
         }
 
+        // Only items this reconcile raises are its to close. A cancellation the
+        // notification queue put up for review is not "no longer conflicting"
+        // just because the unit is free.
         $stale = EzeeAssignmentLog::needsReview()
             ->whereIn('ezee_booking_id', $examined)
             ->whereNotIn('ezee_booking_id', array_keys($this->conflictedNow) ?: [0])
+            ->where(fn ($q) => $q->where('note', 'like', 'Could not %')->orWhere('note', 'like', 'Dates changed%')->orWhere('note', 'like', 'Linked booking%'))
             ->get();
 
         foreach ($stale as $log) {
