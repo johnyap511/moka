@@ -54,7 +54,7 @@ class EzeeRevenueExport
     {
         $h = ['Sr. No', 'Property', 'Reservation No', 'Folio No', 'Guest Name', 'Source', 'Arrival', 'Dept.', 'Nights', 'Nights in Month',
             'Room', 'Vouc. No', 'Room Charges (RM) (Excl. Tax)', 'Rate/Night (RM) (Excl. Tax)', 'Cleaning Fee (RM) (Excl. Tax)', 'Extras - Company (RM) (Excl. Tax)',
-            'Damage Deposit (RM)', 'Room Rate (RM) (Incl. Tax)', 'SST (RM)', 'Discount (RM)', 'Total (RM) (Incl. Tax)', 'OTA Fee (RM)',
+            'Damage Deposit (RM)', 'Room Rate (RM) (Incl. Tax)', 'SST (RM)', 'Discount (RM)', 'Total (RM) (Incl. Tax)', 'Commission (RM)',
             'Revenue at Property (RM) (Incl. Tax)', 'MOKA Booking IDs', 'MOKA Status'];
 
         if ($compared) {
@@ -844,83 +844,6 @@ class EzeeRevenueExport
         }
 
         return round((float) $l['room_charge'] / $n, 2);
-    }
-
-    /**
-     * The Bookings format: the nineteen columns finance has always shared, one
-     * row per booking and unit, followed by the eZee comparison on the first
-     * row of each reservation. Nothing from the old export is renamed or moved.
-     */
-    public const BOOKING_COLUMNS = ['Booking Id', 'RES', 'Folio No.', 'First Name', 'Last Name', 'Listing Name', 'Arrival', 'Departure', 'Nights',
-        'Reservation Source', 'Price per Night', 'Discount', 'Cleaning Fee', 'SST(CF)', 'OTA', 'SST', 'Ezee Folio No', 'Total', 'Remarks'];
-
-    public function bookingHeaders(bool $compared): array
-    {
-        $h = array_merge(self::BOOKING_COLUMNS, ['MOKA Status']);
-        if ($compared) {
-            $h = array_merge($h, ['EZEE Total (RM) (Incl. Tax)', 'EZEE Commission (RM)', 'EZEE Damage Deposit (RM)',
-                'EZEE Cleaning (RM) (Incl. Tax)', 'EZEE Extras - Company (RM) (Incl. Tax)', 'EZEE Extras detail', 'Difference (RM)', 'Note', 'Action']);
-        }
-
-        return $h;
-    }
-
-    /** @return array<int,array<int,mixed>> */
-    public function bookingRows(array $lines, bool $compared): array
-    {
-        $this->load();
-        $rows = [];
-        foreach ($lines as $l) {
-            $ids = array_values(array_filter(explode(' ', trim((string) $l['ids']))));
-            $tail = $compared
-                ? [$l['ezee_total'] ?? '', $l['ezee_commission'] ?? '', $l['ezee_deposit'] ?? '', $l['ezee_cleaning'] ?? '', $l['ezee_extras'] ?? '',
-                    $l['ezee_extras_detail'] ?? '', $l['difference'] ?? '', $l['note'] ?? '', $l['action'] ?? self::actionFor($l)]
-                : [];
-            $blankTail = $compared ? array_fill(0, count($tail), '') : [];
-            $e = $l['ezee_row'] ?? null;
-
-            if (!$ids) {
-                // eZee lines with no booking behind them: kept so the file still
-                // reconciles to eZee, with the booking columns empty.
-                $rows[] = array_merge(['', $l['res'], $l['folio'], $l['guest'], '', $l['room'], $l['arrival'], $l['dept'], $l['nights'], $l['source'],
-                    '', '', '', '', '', '', $e->folio_no ?? '', '', ''], [$l['status']], $tail);
-                continue;
-            }
-
-            $first = true;
-            $segments = collect($ids)->map(fn ($id) => $this->byId[(int) $id] ?? Booking::withoutGlobalScopes()->with('listing', 'user')->find((int) $id))
-                ->filter()->filter(fn ($b) => (string) $b->check_out > $this->from && (string) $b->check_in < $this->to)->sortBy('check_in');
-            foreach ($segments as $b) {
-                $inMonth = (string) $b->check_in >= $this->from;
-                $n = max(0, (int) ((strtotime(min((string) $b->check_out, $this->to)) - strtotime(max((string) $b->check_in, $this->from))) / 86400));
-                $share = $inMonth ? 1.0 : ($n / max(1, (int) $b->nights));
-                $rows[] = array_merge([
-                    $b->id,
-                    $e->SubBookingId ?? $l['res'],
-                    $b->folio_no,
-                    $b->user->name ?? '',
-                    $b->user->last_name ?? '',
-                    $b->listing->name ?? '',
-                    $inMonth ? substr((string) $b->check_in, 0, 10) : $this->from,
-                    $inMonth ? substr((string) $b->check_out, 0, 10) : min(substr((string) $b->check_out, 0, 10), $this->to),
-                    $inMonth ? (int) $b->nights : $n,
-                    (string) $b->source,
-                    round((float) $b->price_night, 2),
-                    round((float) $b->discount_fee * ($inMonth ? 1 : 0), 2),
-                    round((float) $b->cleaning_fee * ($inMonth ? 1 : 0), 2),
-                    round((float) $b->sst_cf * ($inMonth ? 1 : 0), 2),
-                    round((float) $b->ota_fee * $share, 2),
-                    round((float) $b->sst * $share, 2),
-                    $e->folio_no ?? '',
-                    $inMonth ? round((float) $b->price, 2) : round((float) $b->price_night * $n + (float) $b->sst * $share, 2),
-                    (string) $b->remark . ($inMonth ? '' : ' | share of a stay that started ' . substr((string) $b->check_in, 0, 10)),
-                ], [$l['status']], $first ? $tail : $blankTail);
-                $first = false;
-            }
-        }
-        usort($rows, fn ($a, $b) => [$a[0] === '' ? PHP_INT_MAX : (int) $a[0], $a[1]] <=> [$b[0] === '' ? PHP_INT_MAX : (int) $b[0], $b[1]]);
-
-        return $rows;
     }
 
     public function row(array $l, bool $compared): array

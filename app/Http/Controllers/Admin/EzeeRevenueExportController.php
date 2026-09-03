@@ -41,23 +41,15 @@ class EzeeRevenueExportController extends Controller
         $export   = new EzeeRevenueExport($request->input('month'), $request->input('hotel') ?: null);
         $compared = count($files) > 0;
         $lines    = $export->lines($files);
-        $format   = $request->input('format', 'bookings') === 'lines' ? 'lines' : 'bookings';
-        $name     = sprintf('moka-%s-%s%s%s.csv', $format === 'lines' ? 'revenue' : 'bookings', $request->input('month'),
+        $name     = sprintf('moka-revenue-%s%s%s.csv', $request->input('month'),
             $request->input('hotel') ? '-' . $request->input('hotel') : '', $compared ? '-vs-ezee' : '');
 
-        return response()->streamDownload(function () use ($export, $lines, $compared, $format) {
+        return response()->streamDownload(function () use ($export, $lines, $compared) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
-            if ($format === 'bookings') {
-                fputcsv($out, $export->bookingHeaders($compared));
-                foreach ($export->bookingRows($lines, $compared) as $r) {
-                    fputcsv($out, $r);
-                }
-            } else {
-                fputcsv($out, $export->headers($compared));
-                foreach ($lines as $l) {
-                    fputcsv($out, $export->row($l, $compared));
-                }
+            fputcsv($out, $export->headers($compared));
+            foreach ($lines as $l) {
+                fputcsv($out, $export->row($l, $compared));
             }
             fclose($out);
         }, $name, ['Content-Type' => 'text/csv; charset=UTF-8']);

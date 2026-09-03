@@ -31,12 +31,6 @@
             </div>
             <label style="display:grid;gap:6px;font-size:13px">
                 <span>EZEE report files (optional, CSV): the Detail Revenue Report and the Daily Extra Charge report, one of each per property</span>
-                <label style="display:block;margin:10px 0 4px;font-weight:600">Format</label>
-                <select name="format" style="padding:8px;font-size:14px">
-                    <option value="bookings" {{ ($format ?? 'bookings') === 'bookings' ? 'selected' : '' }}>Bookings (one row per booking and unit, the usual columns)</option>
-                    <option value="lines" {{ ($format ?? '') === 'lines' ? 'selected' : '' }}>Reservation lines (eZee's shape, one line per folio)</option>
-                </select>
-                <label style="display:block;margin:10px 0 4px;font-weight:600">eZee files</label>
                 <input type="file" name="ezee_files[]" accept=".csv,text/csv" multiple style="font-size:13px">
                 <span style="color:var(--text-secondary);font-size:12px">With the revenue reports attached, each line gains EZEE's total, commission and deposit, the difference, and the reason. With the extra-charge reports attached as well, cleaning fees are compared, deposits separated, and late check-out, early check-in, extra cleaning, utilities and other charges land in the company column before the difference is taken. Lines on EZEE's files with no MOKA counterpart are appended.</span>
             </label>
