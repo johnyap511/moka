@@ -109,6 +109,10 @@ class ReplayRepairs extends Command
         ['20318', 'RES6075', 'chain-guest'],                                                 // hand-keyed second piece, same EZEE folio
         ['20318', 'RES6317', 'chain-guest'],
         ['19676', 'RES31197', 'carve', '2026-09-04', '2026-09-09', 'EkoCheras H-30-3A'],    // EZEE moved rooms on arrival day, ended on H-30-3A
+        // Night of 3 Sep 2026, settled from EZEE's final rooms.
+        ['19676', 'RES31171', 'move-to', 'EkoCheras H-30-16', 'EkoCheras H-30-3A'],         // final room H-30-16 for the whole stay
+        ['19676', 'RES31197', 'move-to', 'EkoCheras H-30-3A', 'EkoCheras J-23A-02'],        // final room H-30-3A, arrived
+        ['19676', 'RES31203', 'assign', 'EkoCheras J-23A-02'],
     ];
 
     public function handle()
