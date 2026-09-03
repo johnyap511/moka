@@ -101,6 +101,19 @@ class EzeeUnitMap
         return null;
     }
 
+    /**
+     * The listing a bare unit name maps to, at whichever property owns that
+     * name. Used to place a line of EZEE's own report, which names the room
+     * but not the property.
+     */
+    public function listingForUnitName(string $unitName): ?Listing
+    {
+        $this->load();
+        $unit = self::key($unitName);
+
+        return $unit === '' ? null : $this->byNameOnly->get($unit);
+    }
+
     public function isEmpty(): bool
     {
         $this->load();
