@@ -53,7 +53,7 @@
         <span class="text-sm text-secondary">{{ number_format($logs->total()) }} records</span>
         @endif
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap wide">
         <table>
             <thead>
                 <tr>
@@ -201,6 +201,7 @@
 
 @push('scripts')
 <style>
+.table-wrap.wide td{vertical-align:top}
 .review-panel { margin-top:8px; padding:10px; border:1px solid var(--border, #e5e7eb); border-radius:6px; background:var(--bg-secondary, #f9fafb); font-size:12px; }
 .review-panel-title { font-size:11px; margin-bottom:6px; }
 .review-panel input, .review-panel select { font-size:12px; padding:4px 6px; }

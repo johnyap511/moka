@@ -91,13 +91,37 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 /* Utility */
 .text-sm{font-size:12.5px}.text-secondary{color:var(--text-secondary)}.font-600{font-weight:600}
 .actions{display:flex;gap:6px;align-items:center}
+/* ---- Responsive: tablet and phone ---- */
+.mobile-bar{display:none;position:sticky;top:0;z-index:98;height:52px;background:#fff;border-bottom:1px solid var(--border);align-items:center;gap:12px;padding:0 14px;margin:-28px -28px 16px}
+.mobile-bar .menu-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)}
+.mobile-bar .menu-btn svg{width:18px;height:18px}
+.mobile-bar .brand{font-weight:700;font-size:16px;color:var(--orange)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:99}
+.sidebar-overlay.show{display:block}
+.table-wrap{-webkit-overflow-scrolling:touch}
+.table-wrap table{min-width:560px}
+@media (max-width:1024px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease}
+  .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
+  .content{margin-left:0;padding:16px}
+  .mobile-bar{display:flex;margin:-16px -16px 16px}
+  .card-header{flex-wrap:wrap}
+  .card-body{padding:16px}
+  [style*="width:760px"],[style*="width:420px"]{width:100%!important;max-width:100%!important}
+}
+@media (max-width:700px){
+  .btn{min-height:38px}
+  td,thead th{padding:10px 10px}
+  .content{padding:12px}
+  .mobile-bar{margin:-12px -12px 12px}
+}
 </style>
 @stack('styles')
 </head>
 <body>
 
 {{-- SIDEBAR --}}
-<aside class="sidebar">
+<aside class="sidebar" id="ownerSidebar">
     <div class="sidebar-brand">
         <div class="logo-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -164,7 +188,14 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 </aside>
 
 {{-- MAIN CONTENT --}}
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 <main class="content">
+    <div class="mobile-bar">
+        <button type="button" class="menu-btn" aria-label="Open menu" aria-controls="ownerSidebar" aria-expanded="false" onclick="toggleSidebar()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="brand">Moka</span>
+    </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -180,6 +211,22 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
     @yield('content')
 </main>
 
+<script>
+// Off-canvas sidebar for tablet and phone. Closes on overlay tap, Escape, or
+// when a link is followed, so the page underneath is never left covered.
+function toggleSidebar(open) {
+    var sb = document.getElementById('ownerSidebar'), ov = document.getElementById('sidebarOverlay'), btn = document.querySelector('.menu-btn');
+    if (!sb) return;
+    var isOpen = typeof open === 'boolean' ? open : !sb.classList.contains('open');
+    sb.classList.toggle('open', isOpen);
+    if (ov) ov.classList.toggle('show', isOpen);
+    if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    document.body.style.overflow = isOpen && window.innerWidth <= 1024 ? 'hidden' : '';
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleSidebar(false); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#ownerSidebar a')) toggleSidebar(false); });
+window.addEventListener('resize', function () { if (window.innerWidth > 1024) toggleSidebar(false); });
+</script>
 @stack('scripts')
 </body>
 </html>

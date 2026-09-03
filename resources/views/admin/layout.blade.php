@@ -143,13 +143,54 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .sidebar-sub .sidebar-link{font-size:13px;padding:7px 12px}
 /* Action cell */
 .actions{display:flex;gap:6px;align-items:center}
+/* ---- Responsive: tablet and phone ---------------------------------------
+   The sidebar slides in over the page below 1024px; a menu button in the top
+   bar opens it. Tables keep their columns and scroll sideways inside .table-wrap
+   instead of squeezing every cell into a tall sliver. */
+.menu-btn{display:none;width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text)}
+.menu-btn svg{width:18px;height:18px}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:99}
+.sidebar-overlay.show{display:block}
+.table-wrap{-webkit-overflow-scrolling:touch}
+.table-wrap table{min-width:640px}
+.table-wrap.wide table{min-width:1100px}
+@media (max-width:1024px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:none}
+  .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
+  .topbar{left:0;padding:0 16px}
+  .menu-btn{display:inline-flex}
+  .content{margin-left:0;padding:16px}
+  .page-header{flex-direction:column;align-items:stretch;gap:10px}
+  .page-header h1{font-size:20px}
+  .card-header{flex-wrap:wrap}
+  .card-body{padding:16px}
+  .search-bar{min-width:0;width:100%}
+  .pagination{flex-wrap:wrap;justify-content:center}
+  .stat-card .val{font-size:26px}
+}
+@media (max-width:700px){
+  .topbar-badge{display:none}
+  .topbar-user span{display:none}
+  .form-row,.form-row-3{grid-template-columns:1fr}
+  .btn{min-height:38px}
+  .btn-sm{min-height:32px}
+  .actions{flex-wrap:wrap}
+  td,thead th{padding:10px 10px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .content{padding:12px}
+  .card{border-radius:10px}
+  [style*="width:760px"],[style*="width:640px"],[style*="width: 900px"],[style*="width:900px"],[style*="width:420px"]{width:100%!important;max-width:100%!important}
+}
+@media (max-width:420px){
+  .stats-grid{grid-template-columns:1fr}
+}
 </style>
 @stack('styles')
 </head>
 <body>
 
 {{-- SIDEBAR --}}
-<aside class="sidebar">
+<aside class="sidebar" id="adminSidebar">
     <div class="sidebar-brand">
         <span>MOKA</span><small>Admin</small>
     </div>
@@ -322,7 +363,11 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 </aside>
 
 {{-- TOPBAR --}}
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 <header class="topbar">
+    <button type="button" class="menu-btn" aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false" onclick="toggleSidebar()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
     <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
     <span class="topbar-badge">{{ date('D, d M Y') }}</span>
     <div class="topbar-user">
@@ -484,6 +529,22 @@ window.makeCombo = function (opts) {
 
     return { reset: reset, close: close, set: set };
 };
+</script>
+<script>
+// Off-canvas sidebar for tablet and phone. Closes on overlay tap, Escape, or
+// when a link is followed, so the page underneath is never left covered.
+function toggleSidebar(open) {
+    var sb = document.getElementById('adminSidebar'), ov = document.getElementById('sidebarOverlay'), btn = document.querySelector('.menu-btn');
+    if (!sb) return;
+    var isOpen = typeof open === 'boolean' ? open : !sb.classList.contains('open');
+    sb.classList.toggle('open', isOpen);
+    if (ov) ov.classList.toggle('show', isOpen);
+    if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    document.body.style.overflow = isOpen && window.innerWidth <= 1024 ? 'hidden' : '';
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleSidebar(false); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#adminSidebar a')) toggleSidebar(false); });
+window.addEventListener('resize', function () { if (window.innerWidth > 1024) toggleSidebar(false); });
 </script>
 @stack('scripts')
 </body>
