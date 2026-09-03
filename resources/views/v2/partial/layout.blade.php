@@ -4,14 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#003d3c">
     <meta name="msapplication-TileColor" content="#003d3c">
 
     @include('partials.seo')
+    @include('partials.favicon')
 
-    {{-- Favicon --}}
-    <link rel="shortcut icon"    href="{{ asset('images/layout/fav.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/layout/logo3.svg') }}">
 
     {{-- Font Preconnect (must come before stylesheet) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

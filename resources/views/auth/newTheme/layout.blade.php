@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     @include('partials.seo')
+    @include('partials.favicon')
 
-    <link rel="shortcut icon" href="{{ asset('images/layout/fav.png') }}">
-    <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('images/layout/logo3.svg') }}">
-    <link rel="icon" type="image/png" href="{{ asset('images/layout/logo3.svg') }}">
 
     <!-- <link rel="stylesheet" href="{{ asset('css/star-rating-svg.css') }}" type="text/css"> -->
 
