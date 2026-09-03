@@ -116,6 +116,10 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
   .content{padding:12px}
   .mobile-bar{margin:-12px -12px 12px}
 }
+/* Date and month fields: the whole field opens the picker, not just the icon,
+   and the icon itself is a comfortable tap target. */
+input[type="month"],input[type="date"]{cursor:pointer;min-height:40px}
+input[type="month"]::-webkit-calendar-picker-indicator,input[type="date"]::-webkit-calendar-picker-indicator{width:22px;height:22px;padding:6px;cursor:pointer;opacity:.8}
 </style>
 @stack('styles')
 </head>
@@ -227,6 +231,15 @@ function toggleSidebar(open) {
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleSidebar(false); });
 document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#ownerSidebar a')) toggleSidebar(false); });
 window.addEventListener('resize', function () { if (window.innerWidth > 1024) toggleSidebar(false); });
+</script>
+<script>
+// Chrome opens a date or month picker only from its small icon. showPicker()
+// opens it from a tap anywhere on the field; browsers without it keep the icon.
+document.addEventListener('click', function (e) {
+    var el = e.target;
+    if (!(el instanceof HTMLInputElement) || (el.type !== 'month' && el.type !== 'date')) return;
+    if (typeof el.showPicker === 'function') { try { el.showPicker(); } catch (err) {} }
+});
 </script>
 @stack('scripts')
 </body>
