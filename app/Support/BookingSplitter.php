@@ -169,8 +169,10 @@ class BookingSplitter
             return [$booking];
         }
 
+        // Step from the first of check-in's month, never from check-in itself:
+        // "31 August + 1 month" overflows to 1 October and would skip September.
         $bounds = [];
-        for ($d = date('Y-m-01', strtotime($checkIn . ' +1 month')); $d < $checkOut; $d = date('Y-m-01', strtotime($d . ' +1 month'))) {
+        for ($d = date('Y-m-01', strtotime(substr($checkIn, 0, 7) . '-01 +1 month')); $d < $checkOut; $d = date('Y-m-01', strtotime($d . ' +1 month'))) {
             $bounds[] = $d;
         }
         $edges  = array_merge([$checkIn], $bounds, [$checkOut]);
