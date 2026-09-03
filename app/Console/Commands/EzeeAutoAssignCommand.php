@@ -38,8 +38,8 @@ class EzeeAutoAssignCommand extends Command
         }
 
         $this->table(
-            ['Assigned', 'Adopted', 'Moved', 'Conflicts', 'Unmapped room', 'Already correct', 'Failed'],
-            [[$result['assigned'], $result['adopted'], $result['moved'], $result['conflicts'], $result['unmapped'], $result['unchanged'], $result['failed']]]
+            ['Assigned', 'Adopted', 'Moved', 'Conflicts', 'Unmapped room', 'Overwritten row', 'Already correct', 'Failed'],
+            [[$result['assigned'], $result['adopted'], $result['moved'], $result['conflicts'], $result['unmapped'], $result['overwritten'], $result['unchanged'], $result['failed']]]
         );
 
         foreach ($result['detail'] as $row) {

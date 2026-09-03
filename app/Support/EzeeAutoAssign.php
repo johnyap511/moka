@@ -41,6 +41,7 @@ class EzeeAutoAssign
         'moved'     => 0,
         'conflicts' => 0,
         'unmapped'  => 0,
+        'overwritten' => 0,
         'unchanged' => 0,
         'adopted'   => 0,
         'resolved'  => 0,
@@ -124,6 +125,11 @@ class EzeeAutoAssign
 
             if (!$listing) {
                 $this->tally['unmapped']++;
+                continue;
+            }
+
+            if ($this->overwrittenByOtherHotel($ezeeBooking)) {
+                $this->tally['overwritten']++;
                 continue;
             }
 
@@ -361,13 +367,50 @@ class EzeeAutoAssign
             ->exists();
     }
 
+    /**
+     * Unit and dates alone are not identity: two properties share reservation
+     * numbers, and back-to-back one-night guests on one unit share dates
+     * with nobody but still produced a wrong link when a different
+     * reservation was adopted onto their booking and the two then fought
+     * over it on every run. A booking is the same stay only when its folio
+     * agrees (where the reservation carries one) and no other live
+     * reservation already owns it.
+     */
     private function sameStay(int $listingId, EzeeBooking $ezeeBooking): ?Booking
     {
         return Booking::where('listing_id', $listingId)
             ->where('status', '!=', 1)
             ->where('check_in', $ezeeBooking->Start)
             ->where('check_out', $ezeeBooking->End)
+            ->when($ezeeBooking->folio_no, fn ($q, $folio) => $q->where('folio_no', $folio))
+            ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('ezee_bookings')
+                ->whereColumn('ezee_bookings.book_id', 'bookings.id')
+                ->where('ezee_bookings.status', '<>', 1)
+                ->where('ezee_bookings.id', '<>', $ezeeBooking->id))
             ->first();
+    }
+
+    /**
+     * Before lookups were scoped by property, a pull for one hotel overwrote
+     * the End and RoomName of every other hotel's row carrying the same
+     * reservation number. Those rows now describe another property's stay
+     * and would be assigned, moved or reported as conflicts on every run.
+     * The row with the latest Start is the one the values belong to; the
+     * rest are left out of the reconcile.
+     */
+    private function overwrittenByOtherHotel(EzeeBooking $ezeeBooking): bool
+    {
+        if (!$ezeeBooking->SubBookingId) {
+            return false;
+        }
+
+        return EzeeBooking::where('SubBookingId', $ezeeBooking->SubBookingId)
+            ->where('id', '<>', $ezeeBooking->id)
+            ->whereRaw('SUBSTR(TransactionId, 1, 5) <> ?', [substr((string) $ezeeBooking->TransactionId, 0, 5)])
+            ->where('End', $ezeeBooking->End)
+            ->where('RoomName', $ezeeBooking->RoomName)
+            ->where('Start', '>', $ezeeBooking->Start)
+            ->exists();
     }
 
     /** Link the reservation to a booking that already exists for it. */
