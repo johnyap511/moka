@@ -163,6 +163,15 @@ class EzeeAutoAssign
                 continue;
             }
 
+            // An extra-guest room is not a place a real stay moves to, and one
+            // extra room is as good as another: a booking already on a real
+            // unit stays there, and one already on any extra room of the
+            // property stays where it is.
+            if (self::isExtraRoom($listing) && (int) $booking->listing_id !== (int) $listing->id) {
+                $this->tally['unchanged']++;
+                continue;
+            }
+
             if ((int) $booking->listing_id === (int) $listing->id) {
                 // EZEE may have shortened or extended the stay since we captured
                 // it. Our dates never follow silently: the drift is raised for a
@@ -230,9 +239,15 @@ class EzeeAutoAssign
         }
 
         if ($clash = $this->clash($listing->id, $ezeeBooking)) {
-            $this->conflict($ezeeBooking, $listing, null, $clash, 'assign');
+            // EZEE lets two guests share "Extra Room 1" on one night; a listing
+            // cannot. Any free extra room of the same property will do.
+            $spill = self::isExtraRoom($listing) ? $this->freeExtraRoom($listing, $ezeeBooking) : null;
+            if (!$spill) {
+                $this->conflict($ezeeBooking, $listing, null, $clash, 'assign');
 
-            return;
+                return;
+            }
+            $listing = $spill;
         }
 
         $this->tally['assigned']++;
@@ -839,6 +854,24 @@ class EzeeAutoAssign
     private function stayRows(EzeeBooking $ezeeBooking, Booking $anchor)
     {
         return BookingSplitter::stayChain($anchor, substr((string) $ezeeBooking->TransactionId, 0, 5));
+    }
+
+    private static function isExtraRoom(Listing $listing): bool
+    {
+        return stripos((string) $listing->name, 'Extra Room') !== false;
+    }
+
+    /** Another extra-room listing of the same property with these nights free, if any. */
+    private function freeExtraRoom(Listing $listing, EzeeBooking $ezeeBooking): ?Listing
+    {
+        $prefix = trim(preg_replace('/Extra Room.*$/i', '', (string) $listing->name));
+        foreach (Listing::where('name', 'like', $prefix . ' Extra Room %')->where('id', '<>', $listing->id)->orderBy('name')->get() as $other) {
+            if (!$this->clash($other->id, $ezeeBooking)) {
+                return $other;
+            }
+        }
+
+        return null;
     }
 
     /**
