@@ -883,7 +883,7 @@ class EzeeRevenueExport
                 // eZee lines with no booking behind them: kept so the file still
                 // reconciles to eZee, with the booking columns empty.
                 $rows[] = array_merge(['', $l['res'], $l['folio'], $l['guest'], '', $l['room'], $l['arrival'], $l['dept'], $l['nights'], $l['source'],
-                    '', '', '', '', '', '', '', '', ''], [$l['status']], $tail);
+                    '', '', '', '', '', '', $e->folio_no ?? '', '', ''], [$l['status']], $tail);
                 continue;
             }
 
@@ -894,33 +894,24 @@ class EzeeRevenueExport
                 $inMonth = (string) $b->check_in >= $this->from;
                 $n = max(0, (int) ((strtotime(min((string) $b->check_out, $this->to)) - strtotime(max((string) $b->check_in, $this->from))) / 86400));
                 $share = $inMonth ? 1.0 : ($n / max(1, (int) $b->nights));
-                // Same rules as the Bookings page export: the eZee folio when the
-                // booking carries one, else MOKA's; the channel named the way
-                // finance reads it. SST is the stored figure (a tenancy now
-                // carries its SST; the old export zeroed it).
-                $source = match (true) {
-                    (string) $b->source === 'Booking' => 'Booking.com',
-                    in_array((string) $b->source, ['PMS', 'Walk-in', 'Walk In'], true) => 'Walk In',
-                    default => (string) $b->source,
-                };
                 $rows[] = array_merge([
                     $b->id,
                     $e->SubBookingId ?? $l['res'],
-                    $b->server_folio_no ?: $b->folio_no,
+                    $b->folio_no,
                     $b->user->name ?? '',
                     $b->user->last_name ?? '',
                     $b->listing->name ?? '',
                     $inMonth ? substr((string) $b->check_in, 0, 10) : $this->from,
                     $inMonth ? substr((string) $b->check_out, 0, 10) : min(substr((string) $b->check_out, 0, 10), $this->to),
                     $inMonth ? (int) $b->nights : $n,
-                    $source,
+                    (string) $b->source,
                     round((float) $b->price_night, 2),
                     round((float) $b->discount_fee * ($inMonth ? 1 : 0), 2),
                     round((float) $b->cleaning_fee * ($inMonth ? 1 : 0), 2),
                     round((float) $b->sst_cf * ($inMonth ? 1 : 0), 2),
                     round((float) $b->ota_fee * $share, 2),
                     round((float) $b->sst * $share, 2),
-                    (string) ($b->server_folio_no ?? ''),
+                    $e->folio_no ?? '',
                     $inMonth ? round((float) $b->price, 2) : round((float) $b->price_night * $n + (float) $b->sst * $share, 2),
                     (string) $b->remark . ($inMonth ? '' : ' | share of a stay that started ' . substr((string) $b->check_in, 0, 10)),
                 ], [$l['status']], $first ? $tail : $blankTail);
