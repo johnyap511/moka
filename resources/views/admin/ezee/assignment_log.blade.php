@@ -120,17 +120,13 @@
                             @if(!$log->resolved_at)
                             @php $linkDead = $eb && $eb->book_id && (!$ours || (int) $ours->status === 1); @endphp
                             <div style="display:flex;gap:4px;flex-wrap:wrap">
-                                @if($linkDead)
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
-                                @elseif(!$ours)
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Part of the stay was in another unit or an extra room">Room history</button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
-                                @else
-                                    @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
-                                    @endif
-                                @endif
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Some nights were in another unit or an extra room">Room history</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')" title="Move the whole booking to another unit">Reassign</button>
+                                @if($linkDead)
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
+                                @endif
                                 <button type="button" class="btn btn-primary btn-sm" onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
                             </div>
                             <div id="hist-{{ $log->id }}" class="review-panel" style="display:none">

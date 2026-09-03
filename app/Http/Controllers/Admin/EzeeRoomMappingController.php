@@ -324,14 +324,20 @@ class EzeeRoomMappingController extends Controller
 
         $eb    = EzeeBooking::findOrFail($ezeeBookingId);
         $final = EzeeUnitMap::make()->resolve($eb);
-
-        if (!$final) {
-            return response()->json(['ok' => false, 'message' => "No unit is mapped to EZEE room {$eb->RoomName}."], 422);
-        }
+        $other = $request->input('other_listing_id') ? (int) $request->input('other_listing_id') : null;
 
         try {
-            $pieces = (new EzeeAutoAssign(false, Auth::id()))->assignSplit($eb, $final, $request->input('from'), $request->input('to'),
-                $request->input('other_listing_id') ? (int) $request->input('other_listing_id') : null);
+            $linked = $eb->book_id ? Booking::find($eb->book_id) : null;
+
+            if ($linked && (int) $linked->status !== 1) {
+                // Already assigned: the same cut applied to the booking it has.
+                $pieces = (new BookingSplitter)->carve($linked, $request->input('from'), $request->input('to'), $other, Auth::id());
+            } else {
+                if (!$final) {
+                    return response()->json(['ok' => false, 'message' => "No unit is mapped to EZEE room {$eb->RoomName}."], 422);
+                }
+                $pieces = (new EzeeAutoAssign(false, Auth::id()))->assignSplit($eb, $final, $request->input('from'), $request->input('to'), $other);
+            }
         } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }
