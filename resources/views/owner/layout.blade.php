@@ -28,6 +28,9 @@ a{color:inherit;text-decoration:none}
 .sidebar-brand .logo-icon{width:36px;height:36px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sidebar-brand .logo-icon svg{width:22px;height:22px;color:var(--orange)}
 .sidebar-brand .logo-text{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.5px}
+.brand-link{display:flex;align-items:center}
+.brand-logo{height:44px;width:auto;display:block}
+.brand-logo-sm{height:30px;width:auto;display:block}
 .sidebar-link{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;color:rgba(255,255,255,.85);font-size:13.5px;font-weight:500;transition:background .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left}
 .sidebar-link:hover{background:rgba(0,0,0,.1);color:#fff}
 .sidebar-link.active{background:rgba(0,0,0,.15);color:#fff;font-weight:600}
@@ -128,7 +131,8 @@ input[type="month"],input[type="date"]{cursor:pointer}
 /* The month and date fields: no blue highlight on the focused segment. */
 input[type="month"]::-webkit-datetime-edit-month-field:focus,input[type="month"]::-webkit-datetime-edit-year-field:focus,
 input[type="date"]::-webkit-datetime-edit-day-field:focus,input[type="date"]::-webkit-datetime-edit-month-field:focus,input[type="date"]::-webkit-datetime-edit-year-field:focus{background:transparent;color:inherit;outline:none}
-input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none}
+input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none;caret-color:transparent}
+input[type="month"]::selection,input[type="date"]::selection{background:transparent}
 </style>
 @stack('styles')
 </head>
@@ -137,13 +141,7 @@ input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none
 {{-- SIDEBAR --}}
 <aside class="sidebar" id="ownerSidebar">
     <div class="sidebar-brand">
-        <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-            </svg>
-        </div>
-        <span class="logo-text">Moka</span>
+        <a href="/owner/dashboard" class="brand-link" aria-label="Moka home"><img src="{{ asset('images/layout/logo-w.svg') }}" alt="Moka" class="brand-logo"></a>
     </div>
 
     <a href="/owner/dashboard" class="sidebar-link {{ request()->is('owner/dashboard') ? 'active' : '' }}">
@@ -208,7 +206,7 @@ input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none
         <button type="button" class="menu-btn" aria-label="Open menu" aria-controls="ownerSidebar" aria-expanded="false" onclick="toggleSidebar()">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <span class="brand">Moka</span>
+        <a href="/owner/dashboard" aria-label="Moka home"><img src="{{ asset('images/layout/logo-orange.svg') }}" alt="Moka" class="brand-logo-sm"></a>
     </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -244,10 +242,22 @@ window.addEventListener('resize', function () { if (window.innerWidth > 1024) to
 <script>
 // Chrome opens a date or month picker only from its small icon. showPicker()
 // opens it from a tap anywhere on the field; browsers without it keep the icon.
-document.addEventListener('click', function (e) {
+// The field itself never takes focus, so Chrome cannot highlight a segment:
+// the press is swallowed and only the picker opens.
+function openPicker(e) {
     var el = e.target;
     if (!(el instanceof HTMLInputElement) || (el.type !== 'month' && el.type !== 'date')) return;
-    if (typeof el.showPicker === 'function') { try { el.showPicker(); } catch (err) {} }
+    if (typeof el.showPicker !== 'function') return;   // older browser: native behaviour
+    e.preventDefault();
+    try { el.showPicker(); } catch (err) {}
+    if (document.activeElement === el) el.blur();
+}
+document.addEventListener('pointerdown', openPicker);
+document.addEventListener('keydown', function (e) {
+    var el = e.target;
+    if ((e.key === 'Enter' || e.key === ' ') && el instanceof HTMLInputElement && (el.type === 'month' || el.type === 'date') && typeof el.showPicker === 'function') {
+        e.preventDefault(); try { el.showPicker(); } catch (err) {}
+    }
 });
 </script>
 @stack('scripts')

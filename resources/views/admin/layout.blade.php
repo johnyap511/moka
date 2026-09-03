@@ -34,6 +34,8 @@ a{color:inherit;text-decoration:none}
 .sidebar-brand{height:var(--topbar-h);display:flex;align-items:center;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
 .sidebar-brand span{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.5px}
 .sidebar-brand small{font-size:11px;color:rgba(255,255,255,.4);margin-left:8px;font-weight:400;letter-spacing:0}
+.brand-link{display:flex;align-items:center}
+.brand-logo{height:34px;width:auto;display:block}
 .sidebar-section{padding:20px 12px 8px;font-size:11px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.6px;text-transform:uppercase}
 .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin:1px 8px;color:rgba(255,255,255,.7);font-size:13.5px;font-weight:450;transition:background .15s,color .15s;cursor:pointer}
 .sidebar-link:hover{background:var(--sidebar-hover);color:#fff}
@@ -197,7 +199,8 @@ input[type="month"],input[type="date"]{cursor:pointer}
 /* The month and date fields: no blue highlight on the focused segment. */
 input[type="month"]::-webkit-datetime-edit-month-field:focus,input[type="month"]::-webkit-datetime-edit-year-field:focus,
 input[type="date"]::-webkit-datetime-edit-day-field:focus,input[type="date"]::-webkit-datetime-edit-month-field:focus,input[type="date"]::-webkit-datetime-edit-year-field:focus{background:transparent;color:inherit;outline:none}
-input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none}
+input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none;caret-color:transparent}
+input[type="month"]::selection,input[type="date"]::selection{background:transparent}
 </style>
 @stack('styles')
 </head>
@@ -206,7 +209,7 @@ input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none
 {{-- SIDEBAR --}}
 <aside class="sidebar" id="adminSidebar">
     <div class="sidebar-brand">
-        <span>MOKA</span><small>Admin</small>
+        <a href="/admin/dashboard" class="brand-link" aria-label="Moka admin home"><img src="{{ asset('images/layout/logo-w.svg') }}" alt="Moka" class="brand-logo"></a><small>Admin</small>
     </div>
 
     <div class="sidebar-section">Main</div>
@@ -563,10 +566,22 @@ window.addEventListener('resize', function () { if (window.innerWidth > 1024) to
 <script>
 // Chrome opens a date or month picker only from its small icon. showPicker()
 // opens it from a tap anywhere on the field; browsers without it keep the icon.
-document.addEventListener('click', function (e) {
+// The field itself never takes focus, so Chrome cannot highlight a segment:
+// the press is swallowed and only the picker opens.
+function openPicker(e) {
     var el = e.target;
     if (!(el instanceof HTMLInputElement) || (el.type !== 'month' && el.type !== 'date')) return;
-    if (typeof el.showPicker === 'function') { try { el.showPicker(); } catch (err) {} }
+    if (typeof el.showPicker !== 'function') return;   // older browser: native behaviour
+    e.preventDefault();
+    try { el.showPicker(); } catch (err) {}
+    if (document.activeElement === el) el.blur();
+}
+document.addEventListener('pointerdown', openPicker);
+document.addEventListener('keydown', function (e) {
+    var el = e.target;
+    if ((e.key === 'Enter' || e.key === ' ') && el instanceof HTMLInputElement && (el.type === 'month' || el.type === 'date') && typeof el.showPicker === 'function') {
+        e.preventDefault(); try { el.showPicker(); } catch (err) {}
+    }
 });
 </script>
 @stack('scripts')
