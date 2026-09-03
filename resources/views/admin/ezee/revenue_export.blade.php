@@ -30,9 +30,9 @@
                 </label>
             </div>
             <label style="display:grid;gap:6px;font-size:13px">
-                <span>EZEE Detail Revenue Report files (optional, one per property, CSV)</span>
+                <span>EZEE report files (optional, CSV): the Detail Revenue Report and the Daily Extra Charge report, one of each per property</span>
                 <input type="file" name="ezee_files[]" accept=".csv,text/csv" multiple style="font-size:13px">
-                <span style="color:var(--text-secondary);font-size:12px">With the files attached, the export adds EZEE's total, commission and deposit beside ours, the difference, and the reason. Lines on EZEE's file with no MOKA counterpart are appended.</span>
+                <span style="color:var(--text-secondary);font-size:12px">With the revenue reports attached, each line gains EZEE's total, commission and deposit, the difference, and the reason. With the extra-charge reports attached as well, cleaning fees are compared, deposits separated, and late check-out, early check-in, extra cleaning, utilities and other charges land in the company column before the difference is taken. Lines on EZEE's files with no MOKA counterpart are appended.</span>
             </label>
             <div>
                 <button type="submit" class="btn btn-primary">Download CSV</button>

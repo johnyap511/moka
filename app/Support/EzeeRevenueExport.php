@@ -56,7 +56,8 @@ class EzeeRevenueExport
             'Revenue at Property (RM) (Incl. Tax)', 'MOKA Booking IDs', 'MOKA Status'];
 
         if ($compared) {
-            $h = array_merge($h, ['EZEE Total (RM) (Incl. Tax)', 'EZEE Commission (RM)', 'EZEE Damage Deposit (RM)', 'Difference (RM)', 'Note']);
+            $h = array_merge($h, ['EZEE Total (RM) (Incl. Tax)', 'EZEE Commission (RM)', 'EZEE Damage Deposit (RM)',
+                'EZEE Cleaning (RM) (Incl. Tax)', 'EZEE Extras - Company (RM) (Incl. Tax)', 'EZEE Extras detail', 'Difference (RM)', 'Note']);
         }
 
         return $h;
@@ -311,12 +312,23 @@ class EzeeRevenueExport
      */
     private function compare(array $lines, array $files): array
     {
-        $ezee = [];
+        $ezee = []; $extras = []; $loose = [];
         foreach ($files as $f) {
+            if (self::isExtraChargeFile($f)) {
+                [$byFolio, $noFolio] = self::parseExtraChargeCsv($f);
+                foreach ($byFolio as $k => $x) {
+                    $extras[$k] = isset($extras[$k]) ? self::mergeExtras($extras[$k], $x) : $x;
+                }
+                foreach ($noFolio as $x) {
+                    $loose[] = $x;
+                }
+                continue;
+            }
             foreach (self::parseEzeeCsv($f) as $row) {
                 $ezee[] = $row;
             }
         }
+        $extrasUsed = [];
 
         // Keyed on property and reservation number; a reservation EZEE sends
         // without a number is keyed on its folio instead, which staff carry
@@ -380,21 +392,44 @@ class EzeeRevenueExport
                     'room' => $r['room'], 'voucher' => '', 'ids' => '', 'status' => 'EZEE only', 'ezee_row' => null,
                     'nights_in' => '', 'room_charge' => '', 'cleaning' => '', 'extras' => '', 'deposit' => '', 'rate' => '', 'sst' => '',
                     'discount' => '', 'total' => '', 'commission' => '', 'revenue' => '',
-                ], ['ezee_total' => $r['total'], 'ezee_commission' => $r['commission'], 'ezee_deposit' => $r['deposit'],
+                ], ['ezee_total' => $r['total'], 'ezee_commission' => $r['commission'], 'ezee_deposit' => $r['deposit'], 'ezee_cleaning' => '', 'ezee_extras' => '', 'ezee_extras_detail' => '',
                     'difference' => round(-($r['total'] - $r['deposit']), 2), 'note' => 'Not in MOKA export for this month']);
                 continue;
             }
 
             $used[] = $pick;
             $l      = &$lines[$pick];
-            $target = $r['total'] - $r['deposit'];
+            $xk     = $r['hotel'] . '|' . preg_replace('/\D/', '', $r['folio']);
+            $x      = $extras[$xk] ?? null;
+            if ($x) {
+                $extrasUsed[$xk] = true;
+            }
+            $companyExtras = $x ? $x['extras'] : 0.0;
+            $target = $r['total'] - max($r['deposit'], $x['deposit'] ?? 0.0) - $companyExtras;
             $diff   = round((float) $l['total'] - $target, 2);
-            $l['ezee_total']      = $r['total'];
-            $l['ezee_commission'] = $r['commission'];
-            $l['ezee_deposit']    = $r['deposit'];
-            $l['difference']      = $diff;
-            $l['note']            = self::reason($l, $r, $diff);
+            $l['ezee_total']         = $r['total'];
+            $l['ezee_commission']    = $r['commission'];
+            $l['ezee_deposit']       = max($r['deposit'], $x['deposit'] ?? 0.0);
+            $l['ezee_cleaning']      = $x ? round($x['cleaning'], 2) : '';
+            $l['ezee_extras']        = $x ? round($x['extras'], 2) : '';
+            $l['ezee_extras_detail'] = $x ? $x['detail'] : '';
+            $l['difference']         = $diff;
+            $l['note']               = self::reason($l, $r, $diff) . ($companyExtras > 0 ? sprintf(' (company extras RM %.2f excluded)', $companyExtras) : '');
             unset($l);
+        }
+
+        // Extra charges on folios that matched no revenue line, and incidental
+        // invoices with no folio at all: company revenue with no booking behind
+        // it, listed so the extra-charge file also reconciles to the sen.
+        foreach ($extras as $k => $x) {
+            if (isset($extrasUsed[$k]) || ($x['extras'] <= 0 && $x['cleaning'] <= 0 && $x['deposit'] <= 0)) {
+                continue;
+            }
+            [$hotel, $folio] = explode('|', $k);
+            $lines[] = self::extraOnlyLine($hotel, 'FN' . $folio, $x['room'], $x);
+        }
+        foreach ($loose as $x) {
+            $lines[] = self::extraOnlyLine($x['hotel'], $x['ref'], '', $x);
         }
 
         foreach ($lines as &$l) {
@@ -406,6 +441,103 @@ class EzeeRevenueExport
         }
 
         return $lines;
+    }
+
+    /** @return array<string,mixed> */
+    private static function extraOnlyLine(string $hotel, string $ref, string $room, array $x): array
+    {
+        return [
+            'hotel' => $hotel, 'property' => self::HOTELS[$hotel] ?? ($hotel ?: 'Unknown'), 'res' => '', 'folio' => $ref, 'guest' => '', 'source' => '',
+            'arrival' => $x['date'] ?? '', 'dept' => '', 'nights' => '', 'nights_in' => '', 'room' => $room, 'voucher' => '', 'ids' => '',
+            'status' => 'EZEE extra charge (company)', 'ezee_row' => null,
+            'room_charge' => '', 'cleaning' => '', 'extras' => '', 'deposit' => '', 'rate' => '', 'sst' => '', 'discount' => '', 'total' => '', 'commission' => '', 'revenue' => '',
+            'ezee_total' => '', 'ezee_commission' => '', 'ezee_deposit' => $x['deposit'] > 0 ? round($x['deposit'], 2) : '',
+            'ezee_cleaning' => $x['cleaning'] > 0 ? round($x['cleaning'], 2) : '', 'ezee_extras' => round($x['extras'], 2), 'ezee_extras_detail' => $x['detail'],
+            'difference' => 0, 'note' => $x['cleaning'] > 0 ? 'Charge on a folio with no revenue line this month' : 'Company extra charge, no booking',
+        ];
+    }
+
+    private static function isExtraChargeFile(string $path): bool
+    {
+        $fh = fopen($path, 'r');
+        $hdr = $fh ? fgetcsv($fh) : null;
+        if ($fh) {
+            fclose($fh);
+        }
+        return $hdr && preg_replace('/^\xEF\xBB\xBF/', '', trim((string) $hdr[0])) === 'Date' && trim((string) ($hdr[1] ?? '')) === 'Voucher No';
+    }
+
+    /**
+     * EZEE's "Daily Extra Charge" report: sections headed "Extra Charge","<type>",
+     * each row referencing a folio and room or an incidental invoice. Cleaning
+     * fees of every flavour compare against our cleaning column; the damage
+     * deposit is a deposit; everything else is company revenue.
+     *
+     * @return array{0: array<string,array<string,mixed>>, 1: array<int,array<string,mixed>>}
+     */
+    private static function parseExtraChargeCsv(string $path): array
+    {
+        $fh = fopen($path, 'r');
+        if (!$fh) {
+            return [[], []];
+        }
+        $map = EzeeUnitMap::make();
+        $type = ''; $byFolio = []; $loose = []; $fileHotel = '';
+        $num = fn ($v) => (float) str_replace(',', '', (string) $v);
+        $date = fn ($v) => preg_match('#^(\d\d)/(\d\d)/(\d{4})#', (string) $v, $m) ? "$m[3]-$m[2]-$m[1]" : (string) $v;
+
+        while (($row = fgetcsv($fh)) !== false) {
+            $c0 = preg_replace('/^\xEF\xBB\xBF/', '', trim((string) ($row[0] ?? '')));
+            if ($c0 === 'Extra Charge') {
+                $type = trim((string) ($row[1] ?? ''));
+                continue;
+            }
+            if (!preg_match('#^\d\d/\d\d/\d{4}$#', $c0) || $type === '') {
+                continue;
+            }
+            $ref   = (string) ($row[2] ?? '');
+            $total = $num($row[7] ?? 0);
+            $kind  = match (true) {
+                stripos($type, 'deposit') !== false => 'deposit',
+                stripos($type, 'clean') !== false || stripos($type, 'channel') !== false => 'cleaning',
+                default => 'extras',
+            };
+            $room = preg_match('/Room\s*:\s*(.+)$/', $ref, $m) ? trim($m[1]) : '';
+            if ($room !== '' && $fileHotel === '') {
+                $listing = $map->listingForReportRoom($room);
+                $fileHotel = $listing ? (self::hotelOfListing($listing->name) ?? '') : '';
+            }
+            $label = $type . ' ' . number_format($total, 2) . (trim((string) ($row[10] ?? '')) !== '' ? ' (' . trim((string) $row[10]) . ')' : '');
+
+            if (preg_match('/Folio-FN(\d+)/', $ref, $m)) {
+                $k = '|' . $m[1];   // hotel filled in below once known for the file
+                $byFolio[$k] = $byFolio[$k] ?? ['cleaning' => 0.0, 'deposit' => 0.0, 'extras' => 0.0, 'detail' => '', 'room' => $room, 'date' => $date($c0)];
+                $byFolio[$k][$kind] += $total;
+                if ($kind === 'extras') {
+                    $byFolio[$k]['detail'] = trim($byFolio[$k]['detail'] . '; ' . $label, '; ');
+                }
+            } else {
+                $loose[] = ['hotel' => '', 'ref' => preg_match('/Invoice\s*:\s*(\S+)/', $ref, $m) ? $m[1] : $ref, 'cleaning' => $kind === 'cleaning' ? $total : 0.0,
+                    'deposit' => $kind === 'deposit' ? $total : 0.0, 'extras' => $kind === 'extras' ? $total : 0.0, 'detail' => $label, 'date' => $date($c0)];
+            }
+        }
+        fclose($fh);
+
+        $keyed = [];
+        foreach ($byFolio as $k => $x) {
+            $keyed[$fileHotel . $k] = $x;
+        }
+        foreach ($loose as &$x) {
+            $x['hotel'] = $fileHotel;
+        }
+
+        return [$keyed, $loose];
+    }
+
+    private static function mergeExtras(array $a, array $b): array
+    {
+        return ['cleaning' => $a['cleaning'] + $b['cleaning'], 'deposit' => $a['deposit'] + $b['deposit'], 'extras' => $a['extras'] + $b['extras'],
+            'detail' => trim($a['detail'] . '; ' . $b['detail'], '; '), 'room' => $a['room'] ?: $b['room'], 'date' => $a['date'] ?: $b['date']];
     }
 
     private static function reason(array $l, array $r, float $diff): string
@@ -520,7 +652,7 @@ class EzeeRevenueExport
             $l['total'], $l['commission'], $l['revenue'], $l['ids'], $l['status']];
 
         if ($compared) {
-            $r = array_merge($r, [$l['ezee_total'], $l['ezee_commission'], $l['ezee_deposit'], $l['difference'], $l['note']]);
+            $r = array_merge($r, [$l['ezee_total'], $l['ezee_commission'], $l['ezee_deposit'], $l['ezee_cleaning'] ?? '', $l['ezee_extras'] ?? '', $l['ezee_extras_detail'] ?? '', $l['difference'], $l['note']]);
         }
 
         return $r;
