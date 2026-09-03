@@ -130,6 +130,14 @@ class EzeeSweepCancelled extends Command
             ->get(['id', 'SubBookingId', 'book_id', 'Start', 'End', 'FirstName', 'LastName']);
 
         foreach ($rows as $row) {
+            // A reservation EZEE sends without a number cannot be matched to
+            // the pull by number, so its absence proves nothing. Left alone:
+            // one such tenancy was retired this way while still live in EZEE.
+            if ($row->SubBookingId === null || trim($row->SubBookingId) === '') {
+                $stillLive++;
+                continue;
+            }
+
             if (isset($live[$row->SubBookingId])) {
                 $stillLive++;
                 continue;
