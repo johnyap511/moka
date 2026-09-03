@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Listing;
 use App\OtherModel\EzeeBooking;
 use App\Role;
+use App\Support\EzeeAutoAssign;
 use App\Support\EzeePricing;
 use App\User;
 use Carbon\Carbon;
@@ -320,7 +321,7 @@ class BookController extends Controller
     }
     public function ezeeBookings(Request $request)
     {
-        return $this->ezeeBookingList($request, [5, 8]);
+        return $this->ezeeBookingList($request, [5, EzeeAutoAssign::NO_UNIT, 8]);
     }
 
     /**

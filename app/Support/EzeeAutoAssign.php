@@ -32,6 +32,13 @@ use Illuminate\Support\Facades\Log;
  */
 class EzeeAutoAssign
 {
+    /**
+     * ezee_bookings.status for a reservation a person has marked as needing
+     * no unit of its own — an extra-guest room. 1 is cancelled, 5 unassigned,
+     * 8 assigned.
+     */
+    public const NO_UNIT = 7;
+
     private bool $dryRun;
     private ?int $actorId;
 
@@ -107,7 +114,12 @@ class EzeeAutoAssign
             // retires a cancelled booking and the daily assignment puts it
             // straight back, so the two scheduled jobs undo each other and a
             // cancelled guest reappears on an owner calendar.
-            ->where('status', '<>', 1)
+            //
+            // Also skip reservations a person has marked as needing no unit:
+            // an extra-guest "room" that EZEE nevertheless reports under a real
+            // unit name, which would otherwise be raised as a conflict against
+            // the genuine occupant on every run.
+            ->whereNotIn('status', [1, self::NO_UNIT])
             ->orderBy('Start')
             ->get();
 
@@ -216,10 +228,64 @@ class EzeeAutoAssign
             return;
         }
 
+        $this->create($ezeeBooking, $listing, 'Matched on EZEE room ' . $ezeeBooking->RoomName);
+    }
+
+    /**
+     * Assign a reservation whose guest changed unit part-way through the stay.
+     *
+     * EZEE reports only the final room, so on an overbooked night the guest is
+     * shown in the final unit for a night they actually spent elsewhere, and
+     * the reservation that genuinely held the final unit that night blocks it
+     * as a conflict. The room history is visible only on EZEE's calendar, so
+     * the person reading it supplies the night the guest moved and the unit
+     * the earlier part was in. The booking is created on the final unit and
+     * split, so each unit carries the nights it really had.
+     *
+     * @param  string  $splitDate       the night the guest moved to the final unit (Y-m-d)
+     * @param  int     $firstListingId  the unit the stay began in
+     * @return array{0:Booking,1:Booking} the earlier segment, then the later one
+     */
+    public function assignSplit(EzeeBooking $ezeeBooking, Listing $final, string $splitDate, int $firstListingId): array
+    {
+        if ($ezeeBooking->book_id) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is already assigned to booking #{$ezeeBooking->book_id}.");
+        }
+
+        // Only the part that stays on the final unit has to be free there; the
+        // splitter checks the first unit for the nights that move to it.
+        $clash = Booking::where('listing_id', $final->id)
+            ->where('status', '!=', 1)
+            ->where('check_in', '<', $ezeeBooking->End)
+            ->where('check_out', '>', $splitDate)
+            ->first();
+
+        if ($clash) {
+            throw new \InvalidArgumentException("{$final->name} already has booking #{$clash->id} from {$splitDate}.");
+        }
+
+        return DB::transaction(function () use ($ezeeBooking, $final, $splitDate, $firstListingId) {
+            $booking = $this->create($ezeeBooking, $final,
+                'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand');
+
+            if (!$booking) {
+                throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");
+            }
+
+            return (new BookingSplitter)->split($booking, $splitDate, 'before', $firstListingId, $this->actorId);
+        });
+    }
+
+    /**
+     * Create the guest, the booking and the link for a reservation. Returns
+     * null when the reservation was linked by someone else in the meantime.
+     */
+    private function create(EzeeBooking $ezeeBooking, Listing $listing, string $how): ?Booking
+    {
         $breakdown = EzeePricing::breakdown($ezeeBooking);
         $actorId   = $this->actorId;
 
-        DB::transaction(function () use ($ezeeBooking, $listing, $breakdown, $actorId) {
+        return DB::transaction(function () use ($ezeeBooking, $listing, $breakdown, $actorId, $how) {
             // Someone assigning the same reservation by hand on the EZEE
             // Bookings screen races this. Re-read under a lock: if that has
             // happened since the candidate list was built, the reservation is
@@ -228,7 +294,7 @@ class EzeeAutoAssign
             $fresh = EzeeBooking::where('id', $ezeeBooking->id)->lockForUpdate()->first();
 
             if (!$fresh || $fresh->book_id) {
-                return;
+                return null;
             }
 
             $user = User::create([
@@ -273,8 +339,9 @@ class EzeeAutoAssign
                 'status'  => 8,
             ]);
 
-            $this->record($ezeeBooking->fresh(), $listing, null, 'auto',
-                'Matched on EZEE room ' . $ezeeBooking->RoomName . ', created booking #' . $booking->id);
+            $this->record($ezeeBooking->fresh(), $listing, null, 'auto', $how . ', created booking #' . $booking->id);
+
+            return $booking;
         });
     }
 
