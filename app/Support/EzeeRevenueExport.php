@@ -653,6 +653,12 @@ class EzeeRevenueExport
             if ($r['other'] > 0) {
                 return sprintf('Extras posted in EZEE (Other RM %.2f), company revenue', $r['other']);
             }
+            $ezeeCleaning = (float) ($l['ezee_cleaning'] ?: 0);
+            if ($diff < 0 && $ezeeCleaning > 0 && abs(abs($diff) - $ezeeCleaning) <= 2) {
+                return $arrivedEarlier
+                    ? sprintf('Cross-month stay: EZEE posted the cleaning fee RM %.2f this month; MOKA booked it in the arrival month', $ezeeCleaning)
+                    : sprintf('EZEE posted a cleaning fee of RM %.2f that MOKA does not carry', $ezeeCleaning);
+            }
             return sprintf('Room charge matches; other charges differ by RM %.2f (cleaning, deposit or extras)', abs($diff));
         }
 
@@ -681,13 +687,14 @@ class EzeeRevenueExport
             str_starts_with($note, 'Extras posted in EZEE')                       => 'None (company revenue)',
             $status === 'EZEE extra charge (company)'                             => 'None (company revenue)',
             $status === 'EZEE zero line'                                          => str_contains($note, 'MOKA: cancelled') || str_contains($note, 'MOKA: not received') ? 'None (cancelled)' : 'Cancel in MOKA?',
-            $status === 'EZEE only'                                               => 'Assign in MOKA',
+            $status === 'EZEE only'                                               => str_contains($note, 'MOKA: cancelled') ? 'None (cancelled in MOKA; confirm in EZEE)' : 'Assign in MOKA',
             $status === 'Unassigned' || $status === 'No unit'                     => $note === 'Not on the EZEE file supplied' ? 'Retire (not in EZEE)' : 'Assign or map the unit',
             $status === 'MOKA only (manual)'                                      => 'Check: should this be in EZEE?',
             str_starts_with($note, 'Not on the EZEE file')                        => 'Check EZEE: cancelled?',
             str_starts_with($note, 'Unit differs')                                => 'Fix the unit (Room history)',
             str_starts_with($note, 'Nights in month differ')                      => 'Check the dates',
             str_starts_with($note, 'Rate changed') || str_starts_with($note, 'Rate differs') => 'Rate decision',
+            str_starts_with($note, 'EZEE posted a cleaning fee')                  => 'Check cleaning fee',
             str_starts_with($note, 'Room charge matches')                         => 'Check other charges',
             str_starts_with($note, 'Link cancelled')                              => 'Restore or reassign',
             default                                                               => 'Check',
