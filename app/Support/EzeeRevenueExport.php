@@ -826,7 +826,8 @@ class EzeeRevenueExport
             stripos($s, 'booking') === 0 => 'Booking.com',
             stripos($s, 'ctrip') === 0 || stripos($s, 'trip.com') === 0 => 'CTrip',
             stripos($s, 'traveloka') === 0 => 'Traveloka',
-            $s === 'PMS' || stripos($s, 'walk') === 0 => 'Walk In',
+            // PMS, walk-in, Google, Internet Booking Engine: one direct channel, "Website", at the 8% fee.
+            $s === 'PMS' || preg_match('/^(walk|google|book on google|internet|booking engine|website)/i', $s) === 1 => 'Website',
             default => $s ?: 'Unknown',
         };
     }

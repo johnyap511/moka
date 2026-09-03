@@ -1179,12 +1179,14 @@ private function getActionButtons($book)
 
             $otaText = '';
             if ($booking->source == 'Booking') {
-                $otaText = 'Booking.com';
-            } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                $otaText = 'Walk In';
-            } else {
-                $otaText = $booking->source;
-            }
+                    $otaText = 'Booking.com';
+                } elseif (preg_match('/^(pms|walk|google|book on google|internet|booking engine|website)/i', trim((string) $booking->source))) {
+                    // Direct channels: PMS, walk-in, Google, Internet Booking Engine.
+                    // Finance treats them as one channel, "Website", at the 8% fee.
+                    $otaText = 'Website';
+                } else {
+                    $otaText = $booking->source;
+                }
 
                 // eZee's own folio number first (the one staff see in eZee), then the
             // folio typed at booking time, then MOKA's internal number.
@@ -1364,8 +1366,10 @@ private function getActionButtons($book)
                 $otaText = '';
                 if ($booking->source == 'Booking') {
                     $otaText = 'Booking.com';
-                } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                    $otaText = 'Walk In';
+                } elseif (preg_match('/^(pms|walk|google|book on google|internet|booking engine|website)/i', trim((string) $booking->source))) {
+                    // Direct channels: PMS, walk-in, Google, Internet Booking Engine.
+                    // Finance treats them as one channel, "Website", at the 8% fee.
+                    $otaText = 'Website';
                 } else {
                     $otaText = $booking->source;
                 }
@@ -1480,12 +1484,14 @@ private function getActionButtons($book)
 
             $otaText = '';
             if ($booking->source == 'Booking') {
-                $otaText = 'Booking.com';
-            } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                $otaText = 'Walk In';
-            } else {
-                $otaText = $booking->source;
-            }
+                    $otaText = 'Booking.com';
+                } elseif (preg_match('/^(pms|walk|google|book on google|internet|booking engine|website)/i', trim((string) $booking->source))) {
+                    // Direct channels: PMS, walk-in, Google, Internet Booking Engine.
+                    // Finance treats them as one channel, "Website", at the 8% fee.
+                    $otaText = 'Website';
+                } else {
+                    $otaText = $booking->source;
+                }
 
                 // eZee's own folio number first (the one staff see in eZee), then the
             // folio typed at booking time, then MOKA's internal number.
