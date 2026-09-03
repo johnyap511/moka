@@ -139,6 +139,16 @@ class EzeeAutoAssign
                 continue;
             }
 
+            // EZEE reports only the final room for a whole stay. A guest who
+            // moved rooms mid-stay is held here as two bookings on one folio,
+            // and the reservation's pointer sits on the first of them. That is
+            // not a booking on the wrong unit, and moving it would put both
+            // halves of the stay on the final room. Leave it where it is.
+            if ($this->roomMoveSplit($booking, $listing->id)) {
+                $this->tally['unchanged']++;
+                continue;
+            }
+
             $this->guard(fn () => $this->move($ezeeBooking, $booking, $listing), $ezeeBooking);
         }
 
@@ -331,6 +341,26 @@ class EzeeAutoAssign
     }
 
     /** A live booking already recording this exact stay on this unit. */
+    /**
+     * True when the booking a reservation points at is one half of a mid-stay
+     * room move: a live booking on the same folio already sits on the unit
+     * EZEE now reports. Folios repeat across properties, so the sibling must
+     * also be a different row and not cancelled; the listing itself is
+     * property-specific, which keeps this to one hotel.
+     */
+    private function roomMoveSplit(Booking $booking, int $targetListingId): bool
+    {
+        if (!$booking->folio_no) {
+            return false;
+        }
+
+        return Booking::where('listing_id', $targetListingId)
+            ->where('folio_no', $booking->folio_no)
+            ->where('id', '!=', $booking->id)
+            ->where('status', '!=', 1)
+            ->exists();
+    }
+
     private function sameStay(int $listingId, EzeeBooking $ezeeBooking): ?Booking
     {
         return Booking::where('listing_id', $listingId)

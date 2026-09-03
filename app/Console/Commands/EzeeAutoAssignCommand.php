@@ -43,6 +43,21 @@ class EzeeAutoAssignCommand extends Command
         );
 
         foreach ($result['detail'] as $row) {
+            // Every write is listed, not just the failures: a move relocates a
+            // stamped booking on an owner's calendar, so a dry run has to show
+            // exactly which ones before anyone applies it.
+            if ($row['action'] === 'assign') {
+                $this->line("  assign: {$row['room']} → {$row['listing']} ({$row['dates']})");
+            }
+
+            if ($row['action'] === 'adopt') {
+                $this->line("  adopt: {$row['room']} → {$row['listing']} ({$row['dates']}) existing booking #{$row['booking']}");
+            }
+
+            if ($row['action'] === 'move') {
+                $this->warn("  move: {$row['room']} → {$row['listing']} ({$row['dates']}) from listing #{$row['from_id']}");
+            }
+
             if ($row['action'] === 'failed') {
                 $this->error("  failed: {$row['room']} — {$row['error']}");
             }
