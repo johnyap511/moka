@@ -83,9 +83,41 @@ class EzeeRevenueExport
         return $lines;
     }
 
+    /** @var array<int,Booking> live bookings around the month, by id */
+    private array $byId = [];
+    /** @var array<string,Booking[]> the same, by folio */
+    private array $byFolio = [];
+    private bool $loaded = false;
+
+    /**
+     * Everything the month can touch, read once: a year-long tenancy that
+     * started last autumn still has a segment in this month, so the window is
+     * wide, and rows are grouped by folio in memory instead of one query per
+     * reservation.
+     */
+    private function load(): void
+    {
+        if ($this->loaded) {
+            return;
+        }
+        $rows = Booking::withoutGlobalScopes()->with('listing', 'user')
+            ->where('status', '<>', 1)
+            ->where('check_out', '>', date('Y-m-d', strtotime($this->from . ' -400 days')))
+            ->where('check_in', '<', date('Y-m-d', strtotime($this->to . ' +400 days')))
+            ->orderBy('check_in')->get();
+        foreach ($rows as $b) {
+            $this->byId[$b->id] = $b;
+            if ($b->folio_no !== null && $b->folio_no !== '') {
+                $this->byFolio[$b->folio_no][] = $b;
+            }
+        }
+        $this->loaded = true;
+    }
+
     /** @return array<int,array<string,mixed>> */
     private function ezeeBackedLines(): array
     {
+        $this->load();
         $rows = EzeeBooking::query()
             ->whereIn(DB::raw('SUBSTR(TransactionId,1,5)'), $this->hotels)
             ->where('status', '<>', 1)
@@ -109,7 +141,7 @@ class EzeeRevenueExport
 
         foreach ($rows as $e) {
             $hotel   = substr((string) $e->TransactionId, 0, 5);
-            $pointer = $e->book_id ? Booking::withoutGlobalScopes()->with('listing', 'user')->find($e->book_id) : null;
+            $pointer = $e->book_id ? ($this->byId[$e->book_id] ?? Booking::withoutGlobalScopes()->with('listing', 'user')->find($e->book_id)) : null;
             $isExtra = stripos((string) $e->RoomName, 'Extra Room') !== false;
 
             $segments = $pointer && (int) $pointer->status !== 1 ? $this->stayRows($pointer, $hotel, $e->Start, $e->End) : collect();
@@ -152,31 +184,31 @@ class EzeeRevenueExport
      */
     private function manualLines(): array
     {
-        $rows = Booking::withoutGlobalScopes()->with('listing', 'user')
-            ->where('status', '<>', 1)
-            ->where('check_out', '>', $this->from)
-            ->where('check_in', '<', $this->to)
-            ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('ezee_bookings')->whereColumn('ezee_bookings.book_id', 'bookings.id')->where('ezee_bookings.status', '<>', 1))
-            ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('bookings as s')->join('ezee_bookings as e', 'e.book_id', '=', 's.id')
-                ->whereColumn('s.folio_no', 'bookings.folio_no')->where('s.folio_no', '<>', '')->whereColumn('s.listing_id', 'bookings.listing_id')
-                ->where('s.status', '<>', 1)->where('e.status', '<>', 1))
-            ->orderBy('check_in')
-            ->get();
+        $this->load();
+        $linked = DB::table('ezee_bookings')->where('status', '<>', 1)->whereNotNull('book_id')->pluck('book_id')->flip();
+
+        $groups = [];
+        foreach ($this->byId as $b) {
+            if ($b->check_out <= $this->from || $b->check_in >= $this->to || isset($linked[$b->id])) {
+                continue;
+            }
+            $key = ($b->folio_no ?: 'B' . $b->id) . '|' . $b->listing_id;
+            $groups[$key][] = $b;
+        }
 
         $lines = [];
-
-        foreach ($rows->groupBy(fn ($b) => ($b->folio_no ?: 'B' . $b->id) . '|' . $b->listing_id) as $group) {
-            $first = $group->sortBy('check_in')->first();
+        foreach ($groups as $key => $group) {
+            [$folio, $listingId] = explode('|', $key);
+            // a folio+unit group with any linked row is an EZEE stay, not a manual one
+            $stay = collect($this->byFolio[$folio] ?? [$group[0]])->filter(fn ($b) => (int) $b->listing_id === (int) $listingId)->sortBy('check_in')->values();
+            if ($stay->contains(fn ($b) => isset($linked[$b->id]))) {
+                continue;
+            }
+            $first = $stay->first();
             $hotel = self::hotelOfListing($first->listing->name ?? '');
-
             if ($hotel && !in_array($hotel, $this->hotels, true)) {
                 continue;
             }
-
-            $stay = Booking::withoutGlobalScopes()->with('listing')->where('status', '<>', 1)
-                ->where('listing_id', $first->listing_id)
-                ->when($first->folio_no, fn ($q) => $q->where('folio_no', $first->folio_no), fn ($q) => $q->where('id', $first->id))
-                ->orderBy('check_in')->get();
 
             $lines[] = array_merge([
                 'hotel'    => $hotel ?: '',
@@ -207,17 +239,18 @@ class EzeeRevenueExport
      */
     private function stayRows(Booking $pointer, string $hotel, string $start, string $end)
     {
-        $rows = Booking::withoutGlobalScopes()->with('listing')
-            ->where('status', '<>', 1)
-            ->where(fn ($q) => $q->where('id', $pointer->id)
-                ->orWhere(fn ($w) => $w->where('folio_no', $pointer->folio_no)->where('folio_no', '<>', '')
-                    ->where('check_out', '>', date('Y-m-d', strtotime($start . ' -1 day')))
-                    ->where('check_in', '<', date('Y-m-d', strtotime($end . ' +1 day')))))
-            ->orderBy('check_in')->get();
+        $lo = date('Y-m-d', strtotime($start . ' -1 day'));
+        $hi = date('Y-m-d', strtotime($end . ' +1 day'));
+        $rows = [$pointer->id => $pointer];
+        foreach ($this->byFolio[$pointer->folio_no] ?? [] as $b) {
+            if ($b->check_out > $lo && $b->check_in < $hi
+                && ($b->listing_id === $pointer->listing_id || self::hotelOfListing($b->listing->name ?? '') === $hotel)) {
+                $rows[$b->id] = $b;
+            }
+        }
+        usort($rows, fn ($a, $b) => strcmp($a->check_in, $b->check_in));
 
-        return $rows->filter(fn ($b) => $b->id === $pointer->id
-            || $b->listing_id === $pointer->listing_id
-            || self::hotelOfListing($b->listing->name ?? '') === $hotel)->values();
+        return collect(array_values($rows));
     }
 
     /**
@@ -294,13 +327,20 @@ class EzeeRevenueExport
 
         $used = [];
         foreach ($ezee as $r) {
-            $cands = array_diff($byKey[$r['hotel'] . '|' . $r['res']] ?? [], $used);
-            if (!$cands) {
-                $cands = [];
+            $cands = $r['hotel'] !== '' ? array_diff($byKey[$r['hotel'] . '|' . $r['res']] ?? [], $used) : [];
+            if (!$cands && $r['hotel'] === '') {
+                // The report names a room the map cannot place (an extra room, a
+                // unit not yet mapped). Take the reservation number if exactly
+                // one property has it; otherwise leave the line unmatched.
+                $hits = [];
                 foreach ($byKey as $k => $idx) {
                     if (substr($k, 6) === $r['res']) {
-                        $cands = array_merge($cands, array_diff($idx, $used));
+                        $hits[$k] = array_diff($idx, $used);
                     }
+                }
+                $hits = array_filter($hits);
+                if (count($hits) === 1) {
+                    $cands = reset($hits);
                 }
             }
             $pick = null;
