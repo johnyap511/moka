@@ -219,6 +219,10 @@ class EzeeNotifications extends Command
     {
         $out = $this->post(['RES_Request' => ['Request_Type' => 'BookingRecdNotification', 'Authentication' => ['HotelCode' => $hotel, 'AuthCode' => $auth], 'Bookings' => ['Booking' => $ack]]]);
 
+        // Kept so the identifier EZEE expects can be settled from real responses.
+        \App\DataLog::create(['title' => 'ezee-ack', 'related_id' => $hotel, 'status' => $out !== null && stripos($out, '"ErrorCode"') === false ? 'ok' : 'failed',
+            'data' => substr(json_encode(['sent' => array_slice($ack, 0, 3), 'count' => count($ack), 'response' => $out]), 0, 4000)]);
+
         // A clean acknowledgement comes back empty or as a Success block; a
         // 501 "Bookings not exists" means the identifiers were not recognised.
         return $out !== null && stripos($out, '"ErrorCode"') === false;
