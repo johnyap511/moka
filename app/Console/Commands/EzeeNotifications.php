@@ -97,8 +97,37 @@ class EzeeNotifications extends Command
             ->get();
 
         if ($ev['status'] !== 'Cancel') {
-            $note = $rows->isEmpty() ? 'not in MOKA yet; the sync will bring it in' : 'known; the sync refreshes it';
-            $this->store($hotel, $ev, $dry, $rows->isEmpty() ? 'pending-sync' : 'known', $note);
+            $t = $ev['payload'];
+            if (empty($t['TransactionId'])) {
+                $this->store($hotel, $ev, $dry, 'ignored', 'no transaction id in payload');
+
+                return 'no transaction id; ignored';
+            }
+            $fields = [
+                'SubBookingId' => $ev['res'], 'IsConfirmed' => $t['IsConfirmed'] ?? null, 'RateplanName' => $t['RateplanName'] ?? null, 'RoomTypeName' => $t['RoomTypeName'] ?? null,
+                'RoomName' => $t['eZeePMSRoomid'] ?? ($t['RoomName'] ?? null), 'Start' => $t['Start'] ?? null, 'End' => $t['End'] ?? null, 'CurrencyCode' => $t['CurrencyCode'] ?? null,
+                'TotalAmountAfterTax' => $t['TotalAmountAfterTax'] ?? null, 'TotalAmountBeforeTax' => $t['TotalAmountBeforeTax'] ?? null, 'TotalDiscount' => $t['TotalDiscount'] ?? null,
+                'TotalExtraCharge' => $t['TotalExtraCharge'] ?? null, 'TotalPayment' => $t['TotalPayment'] ?? null, 'TACommision' => $t['TACommision'] ?? null,
+                'FirstName' => $t['FirstName'] ?? null, 'LastName' => $t['LastName'] ?? null, 'Mobile' => $t['Mobile'] ?? null, 'Email' => $t['Email'] ?? null,
+                'Country' => $t['Country'] ?? null, 'Source' => $t['Source'] ?? null, 'VoucherNo' => $t['VoucherNo'] ?? null,
+                'ezee_status' => $ev['status'], 'ezee_current_status' => $t['CurrentStatus'] ?? null, 'ezee_modified_at' => $t['Modifydatetime'] ?? null,
+            ];
+            $existing = EzeeBooking::where('TransactionId', $t['TransactionId'])->first();
+            if ($existing) {
+                // Refresh dates, room and amounts; empty values never overwrite.
+                if (!$dry) {
+                    $existing->fill(array_filter($fields, fn ($v) => $v !== null && $v !== ''))->save();
+                }
+                $note = "refreshed {$existing->SubBookingId} (row {$existing->id})";
+                $this->store($hotel, $ev, $dry, 'refreshed', $note);
+
+                return $note;
+            }
+            if (!$dry) {
+                EzeeBooking::create(array_merge($fields, ['TransactionId' => $t['TransactionId'], 'status' => 5]));
+            }
+            $note = "created {$ev['res']} " . ($fields['RoomName'] ?? '(no room)') . " {$fields['Start']}..{$fields['End']}; the reconcile assigns it";
+            $this->store($hotel, $ev, $dry, 'created', $note);
 
             return $note;
         }
