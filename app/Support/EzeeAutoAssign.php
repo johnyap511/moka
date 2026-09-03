@@ -270,14 +270,23 @@ class EzeeAutoAssign
             // very ones another guest held, so the model's overlap rule would
             // refuse the intermediate row; it is checked again, segment by
             // segment, when the split saves them.
+            // Created whole and cut by unit first, then by month: the unit split
+            // must see the entire stay, and each part is month-split below.
             $booking = Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $final,
-                'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand'));
+                'Matched on EZEE room ' . $ezeeBooking->RoomName . ' with room history entered by hand', false));
 
             if (!$booking) {
                 throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");
             }
 
-            return (new BookingSplitter)->split($booking, $splitDate, 'before', $firstListingId, $this->actorId);
+            $splitter = new BookingSplitter;
+            [$first, $second] = $splitter->split($booking, $splitDate, 'before', $firstListingId, $this->actorId);
+
+            // Either part may itself cross a month end.
+            $splitter->splitByMonth($first, $this->actorId);
+            $splitter->splitByMonth($second, $this->actorId);
+
+            return [$first->fresh(), $second->fresh()];
         });
     }
 
@@ -285,12 +294,12 @@ class EzeeAutoAssign
      * Create the guest, the booking and the link for a reservation. Returns
      * null when the reservation was linked by someone else in the meantime.
      */
-    private function create(EzeeBooking $ezeeBooking, Listing $listing, string $how): ?Booking
+    private function create(EzeeBooking $ezeeBooking, Listing $listing, string $how, bool $byMonth = true): ?Booking
     {
         $breakdown = EzeePricing::breakdown($ezeeBooking);
         $actorId   = $this->actorId;
 
-        return DB::transaction(function () use ($ezeeBooking, $listing, $breakdown, $actorId, $how) {
+        return DB::transaction(function () use ($ezeeBooking, $listing, $breakdown, $actorId, $how, $byMonth) {
             // Someone assigning the same reservation by hand on the EZEE
             // Bookings screen races this. Re-read under a lock: if that has
             // happened since the candidate list was built, the reservation is
@@ -346,7 +355,15 @@ class EzeeAutoAssign
 
             $this->record($ezeeBooking->fresh(), $listing, null, 'auto', $how . ', created booking #' . $booking->id);
 
-            return $booking;
+            // Revenue is reported by calendar month. A stay crossing a month end
+            // is held as one row per month, the same way the other two paths
+            // store it; the original row stays the first segment and keeps the
+            // link above.
+            if ($byMonth) {
+                (new BookingSplitter)->splitByMonth($booking, $actorId);
+            }
+
+            return $booking->fresh();
         });
     }
 
