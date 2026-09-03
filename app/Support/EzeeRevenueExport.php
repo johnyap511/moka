@@ -648,7 +648,7 @@ class EzeeRevenueExport
             $monthCleaning = round((float) ($l['cleaning'] ?? 0) * 1.08, 2);
             $arrivedEarlier = ($l['stay_arrival'] ?? $l['arrival']) < substr((string) ($l['month_from'] ?? ''), 0, 10);
             if ($diff < 0 && $stayCleaning > 0 && $arrivedEarlier && abs(abs($diff) - $stayCleaning) <= 2) {
-                return sprintf('Cross-month stay: cleaning fee RM %.2f is booked in the arrival month in MOKA and in the departure month in EZEE', $stayCleaning);
+                return sprintf('Cross-month stay: cleaning fee RM %.2f belongs to the arrival month and MOKA booked it there; EZEE posts it at departure, so it shows here. MOKA stands', $stayCleaning);
             }
             if ($diff > 0 && $monthCleaning > 0 && abs($diff - $monthCleaning) <= 2) {
                 return sprintf('Room charge matches; MOKA carries a cleaning fee of RM %.2f that EZEE has not posted', $monthCleaning);
@@ -665,7 +665,7 @@ class EzeeRevenueExport
             $near = fn (float $a, float $b) => abs($a - $b) <= 2.5;
             if ($diff < 0 && $ezeeCleaning > 0 && $near(abs($diff), $ezeeCleaning)) {
                 return $arrivedEarlier
-                    ? sprintf('Cross-month stay: EZEE posted the cleaning fee RM %.2f this month; MOKA booked it in the arrival month', $ezeeCleaning)
+                    ? sprintf('Cross-month stay: EZEE posted the cleaning fee RM %.2f at departure; it belongs to the arrival month, where MOKA booked it. MOKA stands', $ezeeCleaning)
                     : sprintf('EZEE posted a cleaning fee of RM %.2f that MOKA does not carry', $ezeeCleaning);
             }
             if ($deposit > 0 && ($near($diff, $deposit * 1.08) || $near($diff, $deposit))) {
@@ -677,7 +677,7 @@ class EzeeRevenueExport
             if ($diff > 0 && $ezeeCleaning <= 0 && $mokaCleaning > 0 && ($near($diff, $mokaCleaning) || $near($diff, $mokaCleaning * 1.08))) {
                 $departsLater = (string) $l['dept'] >= substr((string) ($l['month_to'] ?? ''), 0, 10);
                 return $departsLater
-                    ? sprintf('Cross-month stay: MOKA books the cleaning fee RM %.2f at arrival; EZEE posts it at departure, next month', $mokaCleaning)
+                    ? sprintf('Cross-month stay: cleaning fee RM %.2f belongs to this arrival month and MOKA booked it; EZEE will post it at departure next month. MOKA stands', $mokaCleaning)
                     : sprintf('MOKA carries a cleaning fee of RM %.2f; EZEE has none posted on this folio this month', $mokaCleaning);
             }
             if ($mokaCleaning > 0 && $ezeeCleaning > 0 && $near($diff, $mokaCleaning - $ezeeCleaning)) {
@@ -709,7 +709,7 @@ class EzeeRevenueExport
 
         return match (true) {
             str_starts_with($note, 'OK')                                          => 'None',
-            str_starts_with($note, 'Cross-month stay')                            => 'None (timing of cleaning fee)',
+            str_starts_with($note, 'Cross-month stay')                            => 'None (MOKA stands; EZEE posts cleaning at departure)',
             str_starts_with($note, 'Extras posted in EZEE')                       => 'None (company revenue)',
             $status === 'EZEE extra charge (company)'                             => 'None (company revenue)',
             $status === 'EZEE zero line'                                          => str_contains($note, 'MOKA: cancelled') || str_contains($note, 'MOKA: not received') ? 'None (cancelled)' : 'Cancel in MOKA?',
