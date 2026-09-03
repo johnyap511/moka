@@ -170,6 +170,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 }
 @media (max-width:700px){
   .topbar-badge{display:none}
+  [style*="grid-template-columns:1fr 1fr"],[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
   .topbar-user span{display:none}
   .form-row,.form-row-3{grid-template-columns:1fr}
   .btn{min-height:38px}

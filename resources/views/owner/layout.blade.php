@@ -111,6 +111,7 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 }
 @media (max-width:700px){
   .btn{min-height:38px}
+  [style*="grid-template-columns:1fr 1fr"],[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
   td,thead th{padding:10px 10px}
   .content{padding:12px}
   .mobile-bar{margin:-12px -12px 12px}
