@@ -242,12 +242,16 @@ class EzeeAutoAssign
             // EZEE lets two guests share "Extra Room 1" on one night; a listing
             // cannot. Any free extra room of the same property will do.
             $spill = self::isExtraRoom($listing) ? $this->freeExtraRoom($listing, $ezeeBooking) : null;
-            if (!$spill) {
+            if (!$spill && !self::isExtraRoom($listing)) {
                 $this->conflict($ezeeBooking, $listing, null, $clash, 'assign');
 
                 return;
             }
-            $listing = $spill;
+            // Extra rooms are the company's virtual rooms: when every one is
+            // taken, the stay goes on the room EZEE named, overlapping, exactly
+            // as EZEE holds it. No owner's calendar is involved.
+            $overlap = !$spill;
+            $listing = $spill ?: $listing;
         }
 
         $this->tally['assigned']++;
@@ -262,7 +266,13 @@ class EzeeAutoAssign
             return;
         }
 
-        $this->create($ezeeBooking, $listing, 'Matched on EZEE room ' . $ezeeBooking->RoomName);
+        $how = 'Matched on EZEE room ' . $ezeeBooking->RoomName;
+        if (!empty($overlap)) {
+            Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $listing, $how . ' (extra room, shared night)'));
+
+            return;
+        }
+        $this->create($ezeeBooking, $listing, $how);
     }
 
     /**
@@ -348,11 +358,14 @@ class EzeeAutoAssign
             throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is already assigned to booking #{$ezeeBooking->book_id}.");
         }
 
-        if ($clash = $this->clash($listing->id, $ezeeBooking)) {
+        if (($clash = $this->clash($listing->id, $ezeeBooking)) && !self::isExtraRoom($listing)) {
             throw new \InvalidArgumentException("{$listing->name} already has booking #{$clash->id} from {$clash->check_in} to {$clash->check_out}.");
         }
 
-        $booking = $this->create($ezeeBooking, $listing, 'Assigned by hand to ' . $listing->name);
+        // An extra room may hold two guests on one night, as it does in EZEE.
+        $booking = $clash
+            ? Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $listing, 'Assigned by hand to ' . $listing->name . ' (extra room, shared night)'))
+            : $this->create($ezeeBooking, $listing, 'Assigned by hand to ' . $listing->name);
 
         if (!$booking) {
             throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");

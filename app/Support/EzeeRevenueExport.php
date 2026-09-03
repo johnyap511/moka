@@ -581,6 +581,13 @@ class EzeeRevenueExport
         if ($l['status'] !== 'Assigned') {
             return $l['status'];
         }
+        // The unit matters more than the amount: a stay on the wrong unit pays the wrong owner.
+        $ezeeUnit = self::unitKey($r['room']);
+        $mokaUnit = self::unitKey(preg_replace('/^(eko\s?cheras|bell suites|forum|damai 88|arte cheras|queensville|kl gateway|alinea(?: suites)?)\s*/i', '', $l['room']));
+        $bothExtra = str_contains($ezeeUnit, 'extraroom') && str_contains($mokaUnit, 'extraroom');
+        if (!$bothExtra && $ezeeUnit !== '' && $mokaUnit !== '' && !str_starts_with($ezeeUnit, $mokaUnit) && !str_starts_with($mokaUnit, $ezeeUnit)) {
+            return sprintf('Unit differs: EZEE reports %s, MOKA has it on %s', trim(preg_replace('/\s*\(.*$/', '', $r['room'])), $l['room']);
+        }
         if ((int) $l['nights_in'] !== (int) $r['nights_in'] && $r['nights_in'] !== null) {
             return sprintf('Nights in month differ: MOKA %d, EZEE %d', $l['nights_in'], $r['nights_in']);
         }
