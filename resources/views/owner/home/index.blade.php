@@ -1,252 +1,321 @@
 @extends('owner.layout')
 @section('title', 'Dashboard')
+@section('page-title', 'Dashboard')
 
 @push('styles')
+{{-- Production's own dashboard stylesheet, so the layout and proportions match
+     rather than approximate it. --}}
+<link rel="stylesheet" href="{{ asset('new-theme23/fontawesome-free-6.3.0-web/css/fontawesome.css') }}">
+<link rel="stylesheet" href="{{ asset('new-theme23/fontawesome-free-6.3.0-web/css/solid.css') }}">
+<link rel="stylesheet" href="{{ asset('new-theme23/css/ownerDashboard23.css') }}">
 <style>
-.stat-colored{border-radius:14px;padding:22px 24px;color:#fff;position:relative;overflow:hidden}
-.stat-colored .s-icon{opacity:.5;margin-bottom:10px}
-.stat-colored .s-val{font-size:32px;font-weight:700;line-height:1.1}
-.stat-colored .s-lbl{font-size:14px;margin-top:6px;opacity:.9}
-.metric-card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
-.metric-card .m-val{font-size:22px;font-weight:700;color:#F36523;line-height:1.1}
-.metric-card .m-sub{font-size:11px;color:#F36523;font-weight:600;margin-top:2px}
-.metric-card .m-lbl{font-size:12px;color:#888;margin-top:6px;line-height:1.5}
-.chart-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.chart-card h4{font-size:13px;font-weight:600;margin-bottom:14px;color:#333}
-.ota-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12px}
-.ota-label{width:90px;color:#333;font-weight:500;font-size:11.5px}
-.ota-bar-wrap{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden}
-.ota-bar{height:100%;border-radius:4px;transition:width .4s}
-.ota-pct{width:38px;text-align:right;font-size:11.5px;font-weight:600;color:#555}
-.filter-bar{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+/* ownerDashboard23.css expects these from all23.css and bootstrap. Only the
+   pieces the dashboard needs are defined, and they are scoped to .owner-db so
+   the stylesheet cannot restyle the sidebar or the other owner pages. */
+.owner-db {
+    --orange: #ff6e00;
+    --green: #004a49;
+    --light_green: #5fc8ba;
+}
+.owner-db .progress {
+    display: flex;
+    overflow: hidden;
+    background-color: #e9ecef;
+    border-radius: 30px;
+    height: 13px;
+}
+.owner-db .progress-bar { display: block; height: 100%; }
+
+/* The three coloured tiles put the icon at the top and the figure beneath. */
+.owner-db .calender,
+.owner-db .revenue,
+.owner-db .occupancy { justify-content: space-between; }
+.owner-db .calender i,
+.owner-db .revenue i,
+.owner-db .occupancy i { color: #fff; font-size: 34px; }
+.owner-db .calender h3,
+.owner-db .revenue h3,
+.owner-db .occupancy h3 { font-size: 30px; font-weight: 700; margin: 0; }
+.owner-db .calender p,
+.owner-db .revenue p,
+.owner-db .occupancy p { font-size: 15px; margin: 0; }
+
+.owner-db .price-digit h3 { font-size: 30px; font-weight: 700; margin: 0; }
+.owner-db .price-digit .per-price { font-size: 14px; font-weight: 600; }
+.owner-db .card-title {
+    font-size: 13px; font-weight: 600; color: #333; margin: 0;
+}
+.owner-db .legend-dot {
+    width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}
+.owner-db .other-listing-performance { column-gap: 8px; margin-bottom: 10px; }
+.owner-db .other-listing-performance .olp-name { font-size: 12px; font-weight: 600; color: #333; }
+.owner-db .other-listing-performance .olp-pct  { font-size: 12px; color: #666; }
+.owner-db .filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.owner-db .filter-bar select,
+.owner-db .filter-bar input {
+    padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fff;
+}
+.owner-db .filter-bar button {
+    background: var(--green); color: #fff; border: 0; border-radius: 8px;
+    padding: 11px 30px; font-weight: 600; font-size: 14px; cursor: pointer;
+}
 </style>
 @endpush
 
 @section('content')
+<div class="owner-db">
 
-{{-- Greeting --}}
-<h2 style="font-size:22px;font-weight:700;color:#F36523;margin-bottom:18px">
-    Hello {{ Auth::user()->name }}!
-</h2>
+<h2 class="owner-pannel-heding" style="margin-bottom:18px">Hello {{ Auth::user()->name }} !</h2>
 
-{{-- Filter bar --}}
 <form method="GET" action="/owner/dashboard" class="filter-bar">
-    <select name="listing_id" class="form-select" style="flex:1;min-width:200px;max-width:420px">
+    <select name="listing_id" style="flex:1;min-width:220px;max-width:760px">
         @foreach($allListings as $l)
             <option value="{{ $l->id }}" {{ ($id == $l->id) ? 'selected' : '' }}>{{ $l->name }}</option>
         @endforeach
     </select>
-    <input type="month" name="date" class="form-input" value="{{ $selDate->format('Y-m') }}" style="width:160px">
-    <button type="submit" class="btn" style="background:#0a5c4a;color:#fff;padding:9px 28px;font-weight:600;font-size:14px">Update</button>
+    <input type="month" name="date" value="{{ $selDate->format('Y-m') }}" style="min-width:280px;flex:1;max-width:420px">
+    <button type="submit">Update</button>
 </form>
 
-{{-- Row 1: 3 colored stat cards --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px">
-    {{-- Bookings (orange) --}}
-    <div class="stat-colored" style="background:#F36523">
-        <div class="s-icon">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        </div>
-        <div class="s-val">{{ $bookingCount }}</div>
-        <div class="s-lbl">Booking{{ $bookingCount != 1 ? 's' : '' }}</div>
-    </div>
-    {{-- Revenue (teal) --}}
-    <div class="stat-colored" style="background:#0d9d7c">
-        <div class="s-icon">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div class="s-val" style="font-size:26px">RM {{ number_format($monthRevenue, 2) }}</div>
-        <div class="s-lbl">Revenue</div>
-    </div>
-    {{-- Occupancy (dark teal) --}}
-    <div class="stat-colored" style="background:#0a5c4a">
-        <div class="s-icon">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        </div>
-        <div class="s-val">{{ $occupancy }}%</div>
-        <div class="s-lbl">Occupancy</div>
-    </div>
-</div>
+@php
+    // Production's palette, so the charts and bars agree with the tiles.
+    $palette = ['#ff6e00', '#5fc8ba', '#004a49', '#3b82f6', '#8b5cf6', '#f59e0b', '#64748b'];
+@endphp
 
-{{-- Row 2: 3 metrics + 2 donut charts --}}
-<div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:18px">
+{{-- The grid is production's: three tiles and two donuts, then three figures
+     beside the comparison panel, then the two trend charts. --}}
+<div class="db-main">
 
-    {{-- Left: 3 metric cards --}}
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div class="metric-card">
-            <div class="m-val">RM {{ number_format($accumulatedSales, 0) }}</div>
-            <div class="m-lbl">Accumulated Sales<br>Based on {{ $selDate->year }}</div>
-        </div>
-        <div class="metric-card">
-            <div class="m-val">RM {{ number_format($avgDailyRate, 1) }}</div>
-            <div class="m-sub">Per day</div>
-            <div class="m-lbl">Average Daily Rate<br>(For The Month)</div>
-        </div>
-        <div class="metric-card">
-            <div class="m-val">{{ $avgLengthOfStay }} Days</div>
-            <div class="m-lbl">Average Length of Stay<br>Per Booking</div>
-        </div>
-    </div>
-
-    {{-- Right: 2 donut charts --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="chart-card" style="display:flex;flex-direction:column;align-items:center">
-            <h4 style="align-self:flex-start">Booking Sources</h4>
-            <canvas id="sourceChart" width="120" height="120"></canvas>
-            <div style="margin-top:8px;width:100%">
-                @php $srcColors = ['#F36523','#0d9d7c','#0a5c4a','#3b82f6','#8b5cf6','#f59e0b','#64748b']; $si=0; @endphp
-                @foreach($sourceBreakdown as $src => $data)
-                    @if($data['count'] > 0)
-                    <div style="display:flex;align-items:center;gap:5px;font-size:11px;margin-bottom:2px">
-                        <span style="width:8px;height:8px;border-radius:50%;background:{{ $srcColors[$si] ?? '#ccc' }};flex-shrink:0;display:inline-block"></span>
-                        <span style="color:#555">{{ $src }}</span>
-                    </div>
-                    @php $si++; @endphp
-                    @endif
-                @endforeach
-            </div>
-        </div>
-        <div class="chart-card" style="display:flex;flex-direction:column;align-items:center">
-            <h4 style="align-self:flex-start">Booking by Category</h4>
-            <canvas id="catChart" width="120" height="120"></canvas>
-            <div style="margin-top:8px;width:100%">
-                @php $catColors = ['#0d9d7c','#0a5c4a','#F36523','#3b82f6','#8b5cf6','#f59e0b']; $ci=0; @endphp
-                @foreach($categoryBreakdown as $cat => $data)
-                    @if($data['count'] > 0)
-                    <div style="display:flex;align-items:center;gap:5px;font-size:11px;margin-bottom:2px">
-                        <span style="width:8px;height:8px;border-radius:50%;background:{{ $catColors[$ci] ?? '#ccc' }};flex-shrink:0;display:inline-block"></span>
-                        <span style="color:#555">{{ $cat }}</span>
-                    </div>
-                    @php $ci++; @endphp
-                    @endif
-                @endforeach
+    {{-- 1 --}}
+    <div>
+        <div class="calender">
+            <i class="fa-solid fa-calendar-days"></i>
+            <div>
+                <h3>{{ $bookingCount }}</h3>
+                <p>Booking</p>
             </div>
         </div>
     </div>
-</div>
 
-{{-- Row 3: OTA comparison --}}
-<div class="chart-card" style="margin-bottom:18px">
-    <h4 style="font-size:14px;margin-bottom:16px">Other Listing Performance and Comparison Analysis</h4>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        {{-- Sources --}}
+    {{-- 2 --}}
+    <div>
+        <div class="revenue">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <div>
+                <h3>RM {{ number_format($monthRevenue, 2) }}</h3>
+                <p>Revenue</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- 3 --}}
+    <div>
+        <div class="occupancy">
+            <i class="fa-solid fa-user-group"></i>
+            <div>
+                <h3>{{ $occupancy }}%</h3>
+                <p>Occupancy</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4 --}}
+    <div>
         <div>
-            @php $srcColors2 = ['#F36523','#0d9d7c','#0a5c4a','#3b82f6','#8b5cf6','#f59e0b','#64748b']; $si2=0; @endphp
-            @foreach($sourceBreakdown as $src => $data)
-            <div class="ota-row">
-                <div class="ota-label">{{ $src }}</div>
-                <div class="ota-bar-wrap"><div class="ota-bar" style="width:{{ $data['pct'] }}%;background:{{ $srcColors2[$si2] ?? '#ccc' }}"></div></div>
-                <div class="ota-pct">{{ $data['pct'] }}%</div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <h6 class="card-title">Booking Sources</h6>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
+                    @php $si = 0; @endphp
+                    @foreach($sourceBreakdown as $src => $data)
+                        @if($data['count'] > 0)
+                            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555">
+                                <span class="legend-dot" style="background:{{ $palette[$si % count($palette)] }}"></span>{{ $src }}
+                            </span>
+                        @endif
+                        @php $si++; @endphp
+                    @endforeach
+                </div>
             </div>
-            @php $si2++; @endphp
-            @endforeach
+            <div style="height:calc(100% - 26px);display:flex;align-items:center;justify-content:center">
+                <canvas id="sourceChart"></canvas>
+            </div>
         </div>
-        {{-- Categories --}}
+    </div>
+
+    {{-- 5 --}}
+    <div>
         <div>
-            @php $catColors2 = ['#0d9d7c','#0a5c4a','#F36523','#3b82f6','#8b5cf6','#f59e0b']; $ci2=0; @endphp
-            @foreach($categoryBreakdown as $cat => $data)
-            <div class="ota-row">
-                <div class="ota-label">{{ $cat }}</div>
-                <div class="ota-bar-wrap"><div class="ota-bar" style="width:{{ $data['pct'] }}%;background:{{ $catColors2[$ci2] ?? '#ccc' }}"></div></div>
-                <div class="ota-pct">{{ $data['pct'] }}%</div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <h6 class="card-title">Booking by Category</h6>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
+                    @php $ci = 0; @endphp
+                    @foreach($categoryBreakdown as $cat => $data)
+                        @if($data['count'] > 0)
+                            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555">
+                                <span class="legend-dot" style="background:{{ $palette[$ci % count($palette)] }}"></span>{{ $cat }}
+                            </span>
+                        @endif
+                        @php $ci++; @endphp
+                    @endforeach
+                </div>
             </div>
-            @php $ci2++; @endphp
-            @endforeach
+            <div style="height:calc(100% - 26px);display:flex;align-items:center;justify-content:center">
+                <canvas id="catChart"></canvas>
+            </div>
         </div>
     </div>
-</div>
 
-{{-- Row 4: 2 line charts --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="chart-card">
-        <h4>Average Monthly Rate</h4>
-        <canvas id="rateChart" height="80"></canvas>
+    {{-- 6 --}}
+    <div>
+        <div class="price-digit">
+            <h3>RM {{ number_format($accumulatedSales, 2) }}</h3>
+            <p>Accumulated Sales<br>Based on {{ $selDate->year }}</p>
+        </div>
     </div>
-    <div class="chart-card">
-        <h4>Occupancy Rate</h4>
-        <canvas id="occChart" height="80"></canvas>
-    </div>
-</div>
 
+    {{-- 7 --}}
+    <div>
+        <div class="price-digit">
+            <h3>RM {{ number_format($avgDailyRate, 2) }}</h3>
+            <span class="per-price">Per day</span>
+            <p>Average Daly Rate<br>(For The Month)</p>
+        </div>
+    </div>
+
+    {{-- 8 --}}
+    <div>
+        <div class="price-digit">
+            <h3>{{ $avgLengthOfStay }} Days</h3>
+            <p>Average Length of Stay<br>Per Booking</p>
+        </div>
+    </div>
+
+    {{-- 9 --}}
+    <div>
+        <div>
+            <h6 class="card-title" style="margin-bottom:14px">Other Listing Performance and Comparison Analysis</h6>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 28px">
+                <div>
+                    @php $si2 = 0; @endphp
+                    @foreach($sourceBreakdown as $src => $data)
+                        <div class="other-listing-performance">
+                            <div class="olp-name">{{ $src }}</div>
+                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '%' }}</div>
+                            <div class="progress progress-1">
+                                <div class="progress-bar" style="width:{{ $data['pct'] }}%;background-color:{{ $palette[$si2 % count($palette)] }}"></div>
+                            </div>
+                        </div>
+                        @php $si2++; @endphp
+                    @endforeach
+                </div>
+                <div>
+                    @php $ci2 = 0; @endphp
+                    @foreach($categoryBreakdown as $cat => $data)
+                        <div class="other-listing-performance">
+                            <div class="olp-name">{{ $cat }}</div>
+                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '%' }}</div>
+                            <div class="progress progress-1">
+                                <div class="progress-bar" style="width:{{ $data['pct'] }}%;background-color:{{ $palette[$ci2 % count($palette)] }}"></div>
+                            </div>
+                        </div>
+                        @php $ci2++; @endphp
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 10 --}}
+    <div>
+        <div>
+            <h6 class="card-title">Average Monthly Rate</h6>
+            <div style="height:calc(100% - 24px)"><canvas id="rateChart"></canvas></div>
+        </div>
+    </div>
+
+    {{-- 11 --}}
+    <div>
+        <div>
+            <h6 class="card-title">Occupancy Rate</h6>
+            <div style="height:calc(100% - 24px)"><canvas id="occChart"></canvas></div>
+        </div>
+    </div>
+
+</div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function(){
-    var graphLabels   = {!! json_encode(array_column($graphArray, 0)) !!};
-    var graphOcc      = {!! json_encode(array_column($graphArray, 1)) !!};
-    var graphRate     = {!! json_encode(array_column($graphavg,  1)) !!};
+    var graphLabels = {!! json_encode(array_column($graphArray, 0)) !!};
+    var graphOcc    = {!! json_encode(array_column($graphArray, 1)) !!};
+    var graphRate   = {!! json_encode(array_column($graphavg,  1)) !!};
+
+    var palette = ['#ff6e00','#5fc8ba','#004a49','#3b82f6','#8b5cf6','#f59e0b','#64748b'];
 
     var srcLabels = {!! json_encode(array_keys($sourceBreakdown)) !!};
     var srcCounts = {!! json_encode(array_column(array_values($sourceBreakdown), 'count')) !!};
-    var srcColors = ['#F36523','#0d9d7c','#0a5c4a','#3b82f6','#8b5cf6','#f59e0b','#64748b'];
-
     var catLabels = {!! json_encode(array_keys($categoryBreakdown)) !!};
     var catCounts = {!! json_encode(array_column(array_values($categoryBreakdown), 'count')) !!};
-    var catColors = ['#0d9d7c','#0a5c4a','#F36523','#3b82f6','#8b5cf6','#f59e0b'];
 
-    // Source donut
-    new Chart(document.getElementById('sourceChart'), {
-        type: 'doughnut',
-        data: { labels: srcLabels, datasets: [{ data: srcCounts, backgroundColor: srcColors, borderWidth: 2 }] },
-        options: { plugins: { legend: { display: false } }, cutout: '65%' }
-    });
-
-    // Category donut
-    new Chart(document.getElementById('catChart'), {
-        type: 'doughnut',
-        data: { labels: catLabels, datasets: [{ data: catCounts, backgroundColor: catColors, borderWidth: 2 }] },
-        options: { plugins: { legend: { display: false } }, cutout: '65%' }
-    });
-
-    var lineDefaults = {
-        fill: false,
-        tension: 0.3,
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        borderWidth: 2
-    };
-
-    // Avg Monthly Rate chart
-    new Chart(document.getElementById('rateChart'), {
-        type: 'line',
-        data: {
-            labels: graphLabels,
-            datasets: [Object.assign({}, lineDefaults, {
-                label: 'Avg Rate (RM)',
-                data: graphRate,
-                borderColor: '#0a5c4a',
-                pointBackgroundColor: '#0a5c4a'
-            })]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: false, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } },
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    function donut(el, labels, counts) {
+        var node = document.getElementById(el);
+        if (!node) return;
+        new Chart(node, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: counts, backgroundColor: palette, borderWidth: 0 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '58%'
             }
+        });
+    }
+
+    donut('sourceChart', srcLabels, srcCounts);
+    donut('catChart', catLabels, catCounts);
+
+    function line(el, data, colour, opts) {
+        var node = document.getElementById(el);
+        if (!node) return;
+        new Chart(node, {
+            type: 'line',
+            data: {
+                labels: graphLabels,
+                datasets: [{
+                    data: data,
+                    borderColor: colour,
+                    pointBackgroundColor: colour,
+                    fill: false, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+                }]
+            },
+            options: Object.assign({
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }, opts)
+        });
+    }
+
+    line('rateChart', graphRate, '#004a49', {
+        scales: {
+            y: { beginAtZero: false, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
         }
     });
 
-    // Occupancy Rate chart
-    new Chart(document.getElementById('occChart'), {
-        type: 'line',
-        data: {
-            labels: graphLabels,
-            datasets: [Object.assign({}, lineDefaults, {
-                label: 'Occupancy %',
-                data: graphOcc,
-                borderColor: '#F36523',
-                pointBackgroundColor: '#F36523'
-            })]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, max: 100, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 }, callback: function(v){ return v+'%'; } } },
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-            }
+    line('occChart', graphOcc, '#ff6e00', {
+        scales: {
+            y: {
+                beginAtZero: true, max: 100, grid: { color: '#f0f0f0' },
+                ticks: { font: { size: 11 } }
+            },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
         }
     });
 })();
