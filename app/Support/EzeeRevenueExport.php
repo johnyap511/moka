@@ -606,7 +606,7 @@ class EzeeRevenueExport
         $label = (string) $r['room'];
         if (stripos($label, 'extra room') === 0) {
             // The report names extra rooms without the property; the room map needs it.
-            $label = (['19676' => 'EkoCheras', '20317' => 'Bell Suites', '20318' => 'Forum', '20319' => 'Arte Cheras', '20320' => 'Alinea'][$r['hotel']] ?? '') . ' ' . preg_replace('/-.*$/', '', $label);
+            $label = (['19676' => 'EkoCheras', '20317' => 'Bell Suites', '20318' => 'Forum', '20319' => 'Arte Cheras', '20320' => 'Alinea'][$r['hotel'] ?: $l['hotel']] ?? '') . ' ' . preg_replace('/-.*$/', '', $label);
         }
         $reported = stripos((string) $r['room'], 'extra room') === 0
             ? Listing::withoutGlobalScope('notArchived')->whereRaw('LOWER(name) = ?', [strtolower(trim($label))])->first()
