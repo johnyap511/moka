@@ -275,15 +275,22 @@ class BookingSplitter
             $pieces[] = [$to, $checkOut, (int) $booking->listing_id, false];
         }
 
-        return DB::transaction(function () use ($booking, $pieces, $template, $totalN, $target, $from, $to, $userId) {
+        // Every piece's figures come from the row as it stands now; the first
+        // piece is written back onto this row, and shaping later pieces after
+        // that would prorate the fee from an already-reduced figure.
+        $plan = [];
+        foreach ($pieces as [$a, $b, $lid, $isFirst]) {
+            $plan[] = [$a, $b, $lid, self::shape($booking, $totalN, self::nights($a, $b), $isFirst)];
+        }
+
+        return DB::transaction(function () use ($booking, $plan, $template, $target, $from, $to, $userId) {
             $result   = [];
             $original = null;
 
-            foreach ($pieces as [$a, $b, $lid, $isFirst]) {
+            foreach ($plan as [$a, $b, $lid, $figures]) {
                 if ($lid === null) {
                     continue;                  // an extra-guest room: those nights belong to no unit
                 }
-                $figures = self::shape($booking, $totalN, self::nights($a, $b), $isFirst);
 
                 if ($original === null && $lid === (int) $booking->listing_id) {
                     $booking->check_in  = $a;
