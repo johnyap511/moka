@@ -39,32 +39,15 @@
                 </div>
                 <div class="modal-body">
                     <form action="/login" method="post">
-                        @csrf                        <input type="email" name="email" placeholder="Email or phone number" required>
+                        @csrf
+                        @error('email')<p class="text-danger mb-2" role="alert">{{ $message }}</p>@enderror
+                        <input type="email" name="email" placeholder="Email or phone number" value="{{ old('email') }}" required>
                         <input type="password" name="password" placeholder="Enter your password" required>
                         <a href="/designs#">
                             <p class="text-danger text-end" data-bs-toggle="modal" data-bs-target="#forgetPasswordModal">Forget Password ?</p>
                         </a>
                         <button type="submit" class="primary-btn w-100">Log In</button>
                     </form>
-                    <div class="d-flex align-items-center gap-2 my-3">
-                        <hr class="m-0 flex-grow-1">
-                        <p class="m-0 text-center">Or</p>
-                        <hr class="m-0 flex-grow-1">
-                    </div>
-                    <div class="d-flex flex-column flex-md-row gap-2">
-                        <a href="/login">
-                            <button class="flex-grow-1 d-flex align-items-center justify-content-center gap-2 google-btn mb-2 mb-md-0">
-                             <img src="{{ asset('new-theme23/images/icon-google.png') }}" alt="" srcset="" width="25px">
-                            Continue With Google
-                            </button>
-                        </a>
-                        <a href="/login">
-                            <button class="flex-grow-1 d-flex align-items-center justify-content-center gap-2 facebook-btn">
-                            <img src="{{ asset('new-theme23/images/icon-facebook.png') }}" alt="" srcset="" width="25px">
-                            Continue With Facebook
-                            </button>
-                        </a>
-                    </div>
                     <p class="mt-4 mb-3">Don't have account <a href="/designs#" class="text-decoration-underline" data-bs-toggle="modal" data-bs-target="#signupModal"> Sign Up </a></p>
                 </div>
             </div>
@@ -340,21 +323,6 @@
                         <input type="password" placeholder="Enter your password" name="password" required>
                         <button type="submit" class="primary-btn w-100">Continue</button>
                     </form>
-                    <div class="d-flex align-items-center gap-2 my-3">
-                        <hr class="m-0 flex-grow-1">
-                        <p class="m-0 text-center">Or</p>
-                        <hr class="m-0 flex-grow-1">
-                    </div>
-                    <div class="d-flex flex-column flex-md-row gap-2">
-                        <a href="/login">   <button
-                            class="flex-grow-1 d-flex align-items-center justify-content-center gap-2 google-btn mb-2 mb-md-0">
-                              <img src="{{ asset('new-theme23/images/icon-google.png') }}" alt="" srcset="" width="25px">
-                            Continue With Google
-                        </button></a>
-                        <a href="/login"> <button class="flex-grow-1 d-flex align-items-center justify-content-center gap-2 facebook-btn">
-                             <img src="{{ asset('new-theme23/images/icon-facebook.png') }}" alt="" srcset="" width="25px">
-                            Continue With Facebook</button></a>
-                    </div>
                     <p class="my-4">Already have an account <a href="/designs#" class="text-decoration-underline" data-bs-toggle="modal" data-bs-target="#loninModal"> Log in </a>
                     </p>
                     <button class="green-btn w-100 mb-3" data-bs-toggle="modal" data-bs-target="#signupOwnerModal">Sign Up as Owner</button>
@@ -810,3 +778,12 @@
         </div>
 </div>
 @endsection
+@if($errors->has('email') || $errors->has('password'))
+<script id="loninModal-reopen">
+// A failed sign-in comes back to this page; reopen the popup so the message is seen.
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('loninModal');
+    if (el && window.bootstrap) { new bootstrap.Modal(el).show(); }
+});
+</script>
+@endif
