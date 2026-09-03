@@ -118,8 +118,7 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 }
 /* Date and month fields: the whole field opens the picker, not just the icon,
    and the icon itself is a comfortable tap target. */
-input[type="month"],input[type="date"]{cursor:pointer;min-height:40px}
-input[type="month"]::-webkit-calendar-picker-indicator,input[type="date"]::-webkit-calendar-picker-indicator{width:22px;height:22px;padding:6px;cursor:pointer;opacity:.8}
+input[type="month"],input[type="date"]{cursor:pointer}
 </style>
 @stack('styles')
 </head>
