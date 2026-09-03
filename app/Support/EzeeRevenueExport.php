@@ -381,6 +381,7 @@ class EzeeRevenueExport
 
         foreach ($lines as &$l) {
             $l['month_from'] = $this->from;
+            $l['month_to']   = $this->to;
         }
         unset($l);
 
@@ -674,7 +675,10 @@ class EzeeRevenueExport
                 return sprintf('Company extra (%s) keyed into the MOKA cleaning fee; owner amounts agree', trim((string) $l['ezee_extras_detail']) ?: sprintf('RM %.2f', $extras));
             }
             if ($diff > 0 && $ezeeCleaning <= 0 && $mokaCleaning > 0 && ($near($diff, $mokaCleaning) || $near($diff, $mokaCleaning * 1.08))) {
-                return sprintf('MOKA carries a cleaning fee of RM %.2f; EZEE has none posted on this folio this month', $mokaCleaning);
+                $departsLater = (string) $l['dept'] >= substr((string) ($l['month_to'] ?? ''), 0, 10);
+                return $departsLater
+                    ? sprintf('Cross-month stay: MOKA books the cleaning fee RM %.2f at arrival; EZEE posts it at departure, next month', $mokaCleaning)
+                    : sprintf('MOKA carries a cleaning fee of RM %.2f; EZEE has none posted on this folio this month', $mokaCleaning);
             }
             if ($mokaCleaning > 0 && $ezeeCleaning > 0 && $near($diff, $mokaCleaning - $ezeeCleaning)) {
                 return abs($diff) < 5
