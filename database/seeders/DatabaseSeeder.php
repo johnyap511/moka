@@ -32,9 +32,9 @@ class DatabaseSeeder extends Seeder
 
         // Create staging accounts
         $accounts = [
-            ['name' => 'MOKA Admin', 'email' => 'admin@moka.app', 'password' => Hash::make('Admin@2026'), 'role' => 'admin'],
-            ['name' => 'MOKA Owner', 'email' => 'owner@moka.app', 'password' => Hash::make('Owner@2026'), 'role' => 'owner'],
-            ['name' => 'Guest User', 'email' => 'user@moka.app',  'password' => Hash::make('User@2026'),  'role' => 'user'],
+            ['name' => 'MOKA Admin', 'email' => 'admin@moka.app', 'password' => Hash::make(env('SEED_ADMIN_PASSWORD', bin2hex(random_bytes(12)))), 'role' => 'admin'],
+            ['name' => 'MOKA Owner', 'email' => 'owner@moka.app', 'password' => Hash::make(env('SEED_OWNER_PASSWORD', bin2hex(random_bytes(12)))), 'role' => 'owner'],
+            ['name' => 'Guest User', 'email' => 'user@moka.app',  'password' => Hash::make(env('SEED_USER_PASSWORD', bin2hex(random_bytes(12)))),  'role' => 'user'],
         ];
 
         foreach ($accounts as $a) {

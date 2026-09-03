@@ -71,7 +71,8 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=moka
 DB_USERNAME=moka
-DB_PASSWORD=Moka@Prod2026
+# A fresh password per server, never written into the repository. Override with DB_PASSWORD=... in the environment.
+DB_PASSWORD="${DB_PASSWORD:-$(openssl rand -base64 24 | tr -d "/+=" | cut -c1-24)}"
 
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
@@ -90,7 +91,7 @@ systemctl start mysql 2>/dev/null || service mysql start 2>/dev/null || true
 
 mysql -u root 2>/dev/null <<SQLEOF || true
 CREATE DATABASE IF NOT EXISTS moka CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'moka'@'localhost' IDENTIFIED BY 'Moka@Prod2026';
+CREATE USER IF NOT EXISTS 'moka'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON moka.* TO 'moka'@'localhost';
 FLUSH PRIVILEGES;
 SQLEOF
@@ -100,7 +101,8 @@ sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' "$APP_DIR/.env"
 sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' "$APP_DIR/.env"
 sed -i 's|^DB_DATABASE=.*|DB_DATABASE=moka|' "$APP_DIR/.env"
 sed -i 's|^DB_USERNAME=.*|DB_USERNAME=moka|' "$APP_DIR/.env"
-sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=Moka@Prod2026|' "$APP_DIR/.env"
+sed -i 's|^DB_PASSWORD=.*|# A fresh password per server, never written into the repository. Override with DB_PASSWORD=... in the environment.
+DB_PASSWORD="${DB_PASSWORD:-$(openssl rand -base64 24 | tr -d "/+=" | cut -c1-24)}"|' "$APP_DIR/.env"
 sed -i 's|^APP_DEBUG=.*|APP_DEBUG=false|' "$APP_DIR/.env"
 sed -i 's|^APP_ENV=.*|APP_ENV=production|' "$APP_DIR/.env"
 
@@ -184,8 +186,6 @@ echo ""
 echo "  Access your site at: http://$SERVER_IP"
 echo ""
 echo "  Login credentials:"
-echo "  Admin : admin@moka.app  / Admin2026"
-echo "  Owner : owner@moka.app  / Owner2026"
-echo "  Guest : user@moka.app   / User2026"
+echo "  Database password is in $APP_DIR/.env (root only). No demo logins are created."
 echo ""
 echo "========================================="
