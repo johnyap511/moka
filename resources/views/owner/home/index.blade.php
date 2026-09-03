@@ -219,7 +219,7 @@
                     @foreach($sourceBreakdown as $src => $data)
                         <div class="other-listing-performance">
                             <div class="olp-name">{{ $src }}</div>
-                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '%' }}</div>
+                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '0%' }}</div>
                             <div class="progress progress-1">
                                 <div class="progress-bar" style="width:{{ $data['pct'] }}%;background-color:{{ $palette[$si2 % count($palette)] }}"></div>
                             </div>
@@ -232,7 +232,7 @@
                     @foreach($categoryBreakdown as $cat => $data)
                         <div class="other-listing-performance">
                             <div class="olp-name">{{ $cat }}</div>
-                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '%' }}</div>
+                            <div class="olp-pct">{{ $data['pct'] > 0 ? $data['pct'] . '%' : '0%' }}</div>
                             <div class="progress progress-1">
                                 <div class="progress-bar" style="width:{{ $data['pct'] }}%;background-color:{{ $palette[$ci2 % count($palette)] }}"></div>
                             </div>
