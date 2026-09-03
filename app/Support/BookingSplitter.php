@@ -178,15 +178,20 @@ class BookingSplitter
         $edges  = array_merge([$checkIn], $bounds, [$checkOut]);
         $totalN = self::nights($checkIn, $checkOut);
 
-        return DB::transaction(function () use ($booking, $edges, $totalN, $userId) {
+        // Every segment's figures come from the row as it stands now. The first
+        // segment is written back onto this same row, so computing later
+        // segments after that would prorate the fee from an already-reduced
+        // figure instead of the whole stay's.
+        $plan = [];
+        for ($i = 0; $i < count($edges) - 1; $i++) {
+            $plan[] = [$edges[$i], $edges[$i + 1], self::shape($booking, $totalN, self::nights($edges[$i], $edges[$i + 1]), $i === 0)];
+        }
+        $template = collect($booking->getAttributes())->except(['id', 'created_at', 'updated_at'])->all();
+
+        return DB::transaction(function () use ($booking, $plan, $template, $edges, $userId) {
             $segments = [];
-            $template = collect($booking->getAttributes())->except(['id', 'created_at', 'updated_at'])->all();
 
-            for ($i = 0; $i < count($edges) - 1; $i++) {
-                $from   = $edges[$i];
-                $to     = $edges[$i + 1];
-                $figures = self::shape($booking, $totalN, self::nights($from, $to), $i === 0);
-
+            foreach ($plan as $i => [$from, $to, $figures]) {
                 if ($i === 0) {
                     $booking->check_in  = $from;
                     $booking->check_out = $to;
