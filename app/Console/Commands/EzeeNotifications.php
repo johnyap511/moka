@@ -77,12 +77,19 @@ class EzeeNotifications extends Command
                 // The acknowledgement pairs EZEE's reservation number with the id
                 // the booking has on our side, the pairing the original queue
                 // reader used. Responses are recorded to settle what EZEE expects.
-                $ours = EzeeBooking::where('TransactionId', 'like', $g->hotel_code . '%')->where('SubBookingId', $ev['res'])->value('id');
-                $ack[] = ['BookingId' => $ev['res'], 'PMS_BookingId' => (string) ($ours ?: $ev['res']), 'Status' => $ev['status']];
+                // A tenancy without a RES number is acknowledged by its EZEE
+                // transaction id: a blank BookingId makes EZEE reject the whole
+                // batch (error 117) and re-deliver every event next hour.
+                $id = $ev['res'] !== '' ? $ev['res'] : (string) ($ev['payload']['TransactionId'] ?? '');
+                if ($id === '' || isset($ack[$id . '|' . $ev['status']])) {
+                    continue;
+                }
+                $ours = $ev['res'] !== '' ? EzeeBooking::where('TransactionId', 'like', $g->hotel_code . '%')->where('SubBookingId', $ev['res'])->value('id') : null;
+                $ack[$id . '|' . $ev['status']] = ['BookingId' => $id, 'PMS_BookingId' => (string) ($ours ?: $id), 'Status' => $ev['status']];
             }
 
             if ($ack && !$dry && !$this->option('no-ack')) {
-                $ok = $this->acknowledge($g->hotel_code, $g->auth_key, $ack);
+                $ok = $this->acknowledge($g->hotel_code, $g->auth_key, array_values($ack));
                 if ($ok) {
                     DB::table('ezee_notifications')->where('hotel_code', $g->hotel_code)->whereNull('acknowledged_at')->update(['acknowledged_at' => now()]);
                 }
@@ -219,12 +226,25 @@ class EzeeNotifications extends Command
         $out = $this->post(['RES_Request' => ['Request_Type' => 'BookingRecdNotification', 'Authentication' => ['HotelCode' => $hotel, 'AuthCode' => $auth], 'Bookings' => ['Booking' => $ack]]]);
 
         // Kept so the identifier EZEE expects can be settled from real responses.
-        \App\DataLog::create(['title' => 'ezee-ack', 'related_id' => $hotel, 'status' => $out !== null && stripos($out, '"ErrorCode"') === false ? 'ok' : 'failed',
+        $ok = $this->accepted($out);
+        \App\DataLog::create(['title' => 'ezee-ack', 'related_id' => $hotel, 'status' => $ok ? 'ok' : 'failed',
             'data' => substr(json_encode(['sent' => array_slice($ack, 0, 3), 'count' => count($ack), 'response' => $out]), 0, 4000)]);
 
-        // A clean acknowledgement comes back empty or as a Success block; a
-        // 501 "Bookings not exists" means the identifiers were not recognised.
-        return $out !== null && stripos($out, '"ErrorCode"') === false;
+        return $ok;
+    }
+
+    // A clean acknowledgement comes back empty, or as a Success block that
+    // EZEE pairs with ErrorCode "0". Any other ErrorCode (117 missing ids,
+    // 501 unknown bookings) means nothing was acknowledged.
+    private function accepted(?string $out): bool
+    {
+        if ($out === null) {
+            return false;
+        }
+        $res = json_decode($out, true);
+        $code = is_array($res) ? (string) ($res['Errors']['ErrorCode'] ?? '0') : (stripos($out, '"ErrorCode"') === false ? '0' : '?');
+
+        return $code === '0';
     }
 
     private function post(array $body): ?string
