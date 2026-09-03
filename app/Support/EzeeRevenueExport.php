@@ -148,6 +148,12 @@ class EzeeRevenueExport
             $isExtra = stripos((string) $e->RoomName, 'Extra Room') !== false;
 
             $segments = $pointer && (int) $pointer->status !== 1 ? $this->stayRows($pointer, $hotel, $e->Start, $e->End) : collect();
+            // A row whose dates were overwritten by another hotel's reservation
+            // can carry an End inside the month while the stay it is linked to
+            // ended long before. The stay decides, not the row.
+            if ($segments->isNotEmpty() && !$segments->contains(fn ($b) => $b->check_out > $this->from && $b->check_in < $this->to)) {
+                continue;
+            }
             $figures  = $this->figures($segments, $e->Start, $e->End);
 
             $status = match (true) {
@@ -163,7 +169,9 @@ class EzeeRevenueExport
                 'property' => self::HOTELS[$hotel] ?? $hotel,
                 'res'      => preg_replace('/-\d+$/', '', (string) $e->SubBookingId),
                 'folio'    => $e->folio_no ?: ($pointer->folio_no ?? ('FN' . ltrim(substr((string) $e->TransactionId, 5), '0'))),
-                'guest'    => $pointer && $pointer->user ? trim($pointer->user->name . ' ' . $pointer->user->last_name) : trim($e->FirstName . ' ' . $e->LastName),
+                // EZEE's guest name is the one on the folio; hand-keyed MOKA
+                // bookings often sit under a shared staff account.
+                'guest'    => trim($e->FirstName . ' ' . $e->LastName) ?: ($pointer && $pointer->user ? trim($pointer->user->name . ' ' . $pointer->user->last_name) : ''),
                 'source'   => self::channel((string) $e->Source),
                 'arrival'  => substr((string) $e->Start, 0, 10),
                 'dept'     => substr((string) $e->End, 0, 10),
