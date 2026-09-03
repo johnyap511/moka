@@ -261,6 +261,19 @@ document.addEventListener('keydown', function (e) {
     }
 });
 </script>
+<script>
+// A table with many columns keeps them readable on a phone by scrolling
+// sideways inside its wrapper, instead of squeezing every cell to a sliver.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.content table').forEach(function (t) {
+        if (t.style.minWidth || t.closest('.fc')) return;
+        var cols = (t.tHead && t.tHead.rows[0]) ? t.tHead.rows[0].cells.length : (t.rows[0] ? t.rows[0].cells.length : 0);
+        if (cols >= 5) t.style.minWidth = Math.max(640, cols * 120) + 'px';
+        var wrap = t.parentElement;
+        if (wrap && getComputedStyle(wrap).overflowX !== 'auto' && getComputedStyle(wrap).overflowX !== 'scroll') wrap.style.overflowX = 'auto';
+    });
+});
+</script>
 @stack('scripts')
 </body>
 </html>

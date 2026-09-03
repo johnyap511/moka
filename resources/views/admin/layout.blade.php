@@ -164,6 +164,8 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
   .menu-btn{display:inline-flex}
   .content{margin-left:0;padding:16px}
   .page-header{flex-direction:column;align-items:stretch;gap:10px}
+  .page-header .flex{flex-wrap:wrap}
+  .page-header .btn{flex:1 1 auto;justify-content:center}
   .page-header h1{font-size:20px}
   .card-header{flex-wrap:wrap}
   .card-body{padding:16px}
@@ -520,7 +522,7 @@ window.makeCombo = function (opts) {
     }
 
     search.addEventListener('input', function () { value.value = ''; render(this.value); });
-    search.addEventListener('focus', function () { render(''); this.select(); });
+    search.addEventListener('focus', function () { render(''); if (!window.matchMedia('(pointer:coarse)').matches) this.select(); });
     search.addEventListener('blur',  function () { setTimeout(close, 120); });
     search.addEventListener('keydown', function (e) {
         var last = matches.length - 1;
@@ -583,6 +585,19 @@ document.addEventListener('keydown', function (e) {
     if ((e.key === 'Enter' || e.key === ' ') && el instanceof HTMLInputElement && (el.type === 'month' || el.type === 'date') && typeof el.showPicker === 'function') {
         e.preventDefault(); try { el.showPicker(); } catch (err) {}
     }
+});
+</script>
+<script>
+// A table with many columns keeps them readable on a phone by scrolling
+// sideways inside its wrapper, instead of squeezing every cell to a sliver.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.content table').forEach(function (t) {
+        if (t.style.minWidth || t.closest('.fc')) return;
+        var cols = (t.tHead && t.tHead.rows[0]) ? t.tHead.rows[0].cells.length : (t.rows[0] ? t.rows[0].cells.length : 0);
+        if (cols >= 5) t.style.minWidth = Math.max(640, cols * 120) + 'px';
+        var wrap = t.parentElement;
+        if (wrap && getComputedStyle(wrap).overflowX !== 'auto' && getComputedStyle(wrap).overflowX !== 'scroll') wrap.style.overflowX = 'auto';
+    });
 });
 </script>
 @stack('scripts')
