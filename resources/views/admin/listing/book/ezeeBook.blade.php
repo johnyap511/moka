@@ -21,6 +21,7 @@ th.sortable { cursor:pointer; user-select:none; }
 .ezee-table tbody tr:hover { background:#fafafa; }
 .ezee-actions { display:flex; flex-direction:column; gap:4px; align-items:stretch; }
 .ezee-actions .btn { padding:3px 8px; font-size:11px; justify-content:center; }
+@media (max-width:700px){ .ezee-actions{flex-direction:row;flex-wrap:wrap} .ezee-actions .btn{min-height:30px;flex:1 1 auto} }
 th.sortable:hover { color:var(--teal); }
 th.sortable .sort-icon { margin-left:4px; opacity:.4; font-style:normal; font-size:10px; }
 th.sortable.asc .sort-icon::after  { content:'▲'; opacity:1; }

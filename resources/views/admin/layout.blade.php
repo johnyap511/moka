@@ -175,7 +175,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 }
 @media (max-width:700px){
   .topbar-badge{display:none}
-  [style*="grid-template-columns:1fr 1fr"],[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns"]{grid-template-columns:1fr!important}
   .card-body form > *,.card-body form label > *{min-width:0;max-width:100%}
   .card-body input,.card-body select,.card-body textarea{max-width:100%}
   .topbar-user span{display:none}
