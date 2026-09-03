@@ -290,7 +290,9 @@ class EzeeRevenueExport
             $nightsIn += $an;
             $room     += (float) $b->price_night * $an;
             $sst      += (float) $b->sst * $an / $n;
-            $feeWhole += (float) $b->ota_fee;
+            // The channel fee follows the nights, as on the owner statement and
+            // the owner portal; a segment holds its own share after a month split.
+            $feeWhole += (float) $b->ota_fee * $an / $n;
 
             if ($b->check_in >= $this->from && $b->check_in < $this->to) {
                 $cleaning += (float) $b->cleaning_fee + (float) $b->sst_cf;
@@ -298,8 +300,7 @@ class EzeeRevenueExport
             }
         }
 
-        $departsInMonth = $end && $end >= $this->from && $end < $this->to;
-        $commission     = $departsInMonth ? $feeWhole : 0.0;
+        $commission = $feeWhole;
         $total          = $room + $cleaning + $sst - $discount;
 
         return [
