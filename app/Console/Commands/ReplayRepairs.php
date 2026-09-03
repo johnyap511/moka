@@ -365,7 +365,7 @@ class ReplayRepairs extends Command
                     case 'split':
                         [$final, $from, $to, $other] = [$this->listing($d[3]), $d[4], $d[5], $this->listing($d[6])];
                         if ($booking && (int) $booking->status !== 1) {
-                            $chain = (new BookingSplitter)->stayChain($booking, $hotel);
+                            $chain = collect((new BookingSplitter)->stayChain($booking, $hotel))->values()->all();
                             $this->line("$tag already assigned: " . implode('; ', array_map(fn ($s) => sprintf('#%d %s %s..%s', $s->id, DB::table('listings')->where('id', $s->listing_id)->value('name'), $s->check_in, $s->check_out), $chain)));
                             break;
                         }
@@ -399,7 +399,7 @@ class ReplayRepairs extends Command
                             $this->line("$tag not linked to a live booking; the reconcile will place it ($state)");
                             break;
                         }
-                        $chain = (new BookingSplitter)->stayChain($booking, $hotel);
+                        $chain = collect((new BookingSplitter)->stayChain($booking, $hotel))->values()->all();
                         $first = $chain[0]->check_in; $last = end($chain)->check_out;
                         if ($first === substr($e->Start, 0, 10) && $last === substr($e->End, 0, 10)) {
                             $this->line("$tag already $first..$last");
