@@ -132,7 +132,7 @@ class EzeeRevenueExport
                 ->whereColumn('o.id', '<>', 'ezee_bookings.id')
                 ->whereRaw('SUBSTR(o.TransactionId,1,5) <> SUBSTR(ezee_bookings.TransactionId,1,5)')
                 ->whereColumn('o.End', 'ezee_bookings.End')
-                ->whereRaw('o.RoomName <=> ezee_bookings.RoomName')
+                ->whereRaw('(o.RoomName <=> ezee_bookings.RoomName OR ezee_bookings.RoomName IS NULL OR ezee_bookings.RoomName = \'\')')
                 ->whereColumn('o.Start', '>', 'ezee_bookings.Start'))
             ->orderBy('Start')
             ->get();
@@ -328,6 +328,18 @@ class EzeeRevenueExport
         $used = [];
         foreach ($ezee as $r) {
             $cands = $r['hotel'] !== '' ? array_diff($byKey[$r['hotel'] . '|' . $r['res']] ?? [], $used) : [];
+            if (!$cands && $r['hotel'] === '' && stripos($r['room'], 'Extra Room') !== false) {
+                foreach ($byKey as $k => $idx) {
+                    if (substr($k, 6) === $r['res']) {
+                        foreach (array_diff($idx, $used) as $i) {
+                            if ($lines[$i]['status'] === 'Extra room (company)') {
+                                $cands = [$i];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
             if (!$cands && $r['hotel'] === '') {
                 // The report names a room the map cannot place (an extra room, a
                 // unit not yet mapped). Take the reservation number if exactly
