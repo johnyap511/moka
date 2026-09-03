@@ -152,6 +152,8 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
    instead of squeezing every cell into a tall sliver. */
 .menu-btn{display:none;width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text)}
 .menu-btn svg{width:18px;height:18px}
+.topbar-logo{display:none;align-items:center;flex-shrink:0}
+.topbar-logo img{height:28px;width:auto;display:block}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:99}
 .sidebar-overlay.show{display:block}
 .table-wrap{-webkit-overflow-scrolling:touch}
@@ -162,6 +164,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
   .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
   .topbar{left:0;padding:0 16px}
   .menu-btn{display:inline-flex}
+  .topbar-logo{display:flex}
   .content{margin-left:0;padding:16px}
   .page-header{flex-direction:column;align-items:stretch;gap:10px}
   .page-header .flex{flex-wrap:wrap}
@@ -390,6 +393,7 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     <button type="button" class="menu-btn" aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false" onclick="toggleSidebar()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
+    <a href="/admin/dashboard" class="topbar-logo" aria-label="Moka admin home"><img src="{{ asset('images/layout/logo-orange.svg') }}" alt="Moka"></a>
     <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
     <span class="topbar-badge">{{ date('D, d M Y') }}</span>
     <div class="topbar-user">
