@@ -246,7 +246,7 @@ class EzeeAutoAssign
      * @param  int     $firstListingId  the unit the stay began in
      * @return array{0:Booking,1:Booking} the earlier segment, then the later one
      */
-    public function assignSplit(EzeeBooking $ezeeBooking, Listing $final, string $splitDate, int $firstListingId): array
+    public function assignSplit(EzeeBooking $ezeeBooking, Listing $final, string $splitDate, ?int $firstListingId): array
     {
         if ($ezeeBooking->book_id) {
             throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is already assigned to booking #{$ezeeBooking->book_id}.");
@@ -280,6 +280,16 @@ class EzeeAutoAssign
             }
 
             $splitter = new BookingSplitter;
+
+            // No first unit means the guest was in an extra-guest room until
+            // the split date: those nights belong to no unit, so the booking
+            // simply starts when the guest reached a real one.
+            if ($firstListingId === null) {
+                $segments = $splitter->retime($booking, $splitDate, $ezeeBooking->End, $this->actorId);
+
+                return [$segments[0], end($segments)];
+            }
+
             [$first, $second] = $splitter->split($booking, $splitDate, 'before', $firstListingId, $this->actorId);
 
             // Either part may itself cross a month end.
@@ -287,6 +297,139 @@ class EzeeAutoAssign
             $splitter->splitByMonth($second, $this->actorId);
 
             return [$first->fresh(), $second->fresh()];
+        });
+    }
+
+    /**
+     * Assign an unassigned reservation to a unit a person has chosen, with the
+     * same pricing, month split and link the automatic path produces. Refused
+     * if the unit is occupied for those nights; a person choosing the unit is
+     * not a reason to stack two guests.
+     */
+    public function assignTo(EzeeBooking $ezeeBooking, Listing $listing): Booking
+    {
+        if ($ezeeBooking->book_id) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is already assigned to booking #{$ezeeBooking->book_id}.");
+        }
+
+        if ($clash = $this->clash($listing->id, $ezeeBooking)) {
+            throw new \InvalidArgumentException("{$listing->name} already has booking #{$clash->id} from {$clash->check_in} to {$clash->check_out}.");
+        }
+
+        $booking = $this->create($ezeeBooking, $listing, 'Assigned by hand to ' . $listing->name);
+
+        if (!$booking) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} was assigned by someone else meanwhile.");
+        }
+
+        return $booking;
+    }
+
+    /**
+     * A reservation for an extra-guest room needs no unit. It is marked so the
+     * reconcile stops raising it, and any open conflict for it is closed.
+     */
+    public function markNoUnit(EzeeBooking $ezeeBooking, ?string $note = null): void
+    {
+        if ($ezeeBooking->book_id) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is assigned to booking #{$ezeeBooking->book_id}; unlink it first.");
+        }
+
+        DB::transaction(function () use ($ezeeBooking, $note) {
+            EzeeBooking::where('id', $ezeeBooking->id)->update(['status' => self::NO_UNIT]);
+
+            EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)
+                ->where('method', 'conflict')->whereNull('resolved_at')
+                ->update(['resolved_at' => now(), 'resolved_by' => $this->actorId,
+                          'resolution_note' => 'No unit needed: ' . ($note ?: 'extra-guest room')]);
+
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $ezeeBooking->id,
+                'listing_id'      => null,
+                'old_listing_id'  => null,
+                'assigned_by'     => $this->actorId,
+                'method'          => 'manual',
+                'note'            => 'Marked as needing no unit (extra-guest room). ' . ($note ?: ''),
+            ]);
+        });
+    }
+
+    /**
+     * Bring a linked booking's dates in line with what EZEE now reports. The
+     * stamped nightly rate stands and the amount follows the nights. For a
+     * stay held as several segments, segments that fall entirely outside the
+     * new range are cancelled, the boundary segment is retimed, and the result
+     * is cut by month again.
+     *
+     * @return Booking[] the live segments of the stay afterwards
+     */
+    public function acceptEzeeDates(EzeeBooking $ezeeBooking): array
+    {
+        $anchor = $ezeeBooking->book_id ? Booking::find($ezeeBooking->book_id) : null;
+
+        if (!$anchor) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} is not linked to a booking.");
+        }
+
+        $start = substr((string) $ezeeBooking->Start, 0, 10);
+        $end   = substr((string) $ezeeBooking->End, 0, 10);
+
+        $segments = Booking::where('status', '!=', 1)
+            ->where(fn ($q) => $q->where('id', $anchor->id)
+                ->orWhere(fn ($w) => $w->where('folio_no', $anchor->folio_no)->where('folio_no', '<>', '')->where('listing_id', $anchor->listing_id)))
+            ->orderBy('check_in')->get();
+
+        $splitter = new BookingSplitter;
+
+        return DB::transaction(function () use ($segments, $start, $end, $splitter, $ezeeBooking) {
+            $kept = [];
+
+            foreach ($segments as $seg) {
+                if ($seg->check_out <= $start || $seg->check_in >= $end) {
+                    $seg->status = 1;
+                    $seg->remark = trim(($seg->remark ?? '') . " | cancelled: EZEE now reports {$start} to {$end}");
+                    $seg->save();
+                    continue;
+                }
+                $from = max($seg->check_in, $start);
+                $to   = min($seg->check_out, $end);
+                if ($from !== $seg->check_in || $to !== $seg->check_out) {
+                    foreach ($splitter->retime($seg, $from, $to, $this->actorId) as $piece) {
+                        $kept[] = $piece;
+                    }
+                } else {
+                    $kept[] = $seg;
+                }
+            }
+
+            usort($kept, fn ($a, $b) => strcmp($a->check_in, $b->check_in));
+
+            // Nights EZEE added beyond what any segment covered.
+            $last = end($kept);
+            if ($last && $last->check_out < $end) {
+                $extra = $splitter->retime($last, $last->check_in, $end, $this->actorId);
+                array_pop($kept);
+                foreach ($extra as $piece) {
+                    $kept[] = $piece;
+                }
+            }
+            $first = $kept[0] ?? null;
+            if ($first && $first->check_in > $start) {
+                $extra = $splitter->retime($first, $start, $first->check_out, $this->actorId);
+                array_shift($kept);
+                $kept = array_merge($extra, $kept);
+            }
+
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $ezeeBooking->id,
+                'listing_id'      => $kept[0]->listing_id ?? null,
+                'old_listing_id'  => null,
+                'assigned_by'     => $this->actorId,
+                'method'          => 'modified',
+                'note'            => "Dates accepted from EZEE: {$start} to {$end}. Rate unchanged; amount follows the nights.",
+            ]);
+
+            return $kept;
         });
     }
 

@@ -288,40 +288,106 @@ class EzeeRoomMappingController extends Controller
         $request->validate(['listing_id' => 'required|exists:listings,id']);
 
         $eb           = EzeeBooking::findOrFail($ezeeBookingId);
+        $listing      = Listing::withoutGlobalScope('notArchived')->findOrFail($request->listing_id);
         $oldListingId = null;
 
-        if ($eb->book_id) {
-            $existing = \App\Booking::find($eb->book_id);
-            if ($existing) {
+        try {
+            if ($eb->book_id && ($existing = Booking::find($eb->book_id))) {
                 $oldListingId         = $existing->listing_id;
-                $existing->listing_id = $request->listing_id;
+                $existing->listing_id = $listing->id;
                 $existing->save();
+            } else {
+                // An unassigned reservation is created the same way the
+                // automatic path creates it: EZEE's amounts, the channel fee,
+                // one row per calendar month, the link recorded. Nothing typed.
+                (new EzeeAutoAssign(false, Auth::id()))->assignTo($eb, $listing);
             }
-        } else {
-            $booking     = \App\Booking::create([
-                'listing_id' => $request->listing_id,
-                'name'       => trim($eb->FirstName . ' ' . $eb->LastName),
-                'email'      => $eb->Email,
-                'check_in'   => $eb->Start,
-                'check_out'  => $eb->End,
-                'price'      => $eb->TotalAmountAfterTax,
-                'status'     => 5,
-                'source'     => $eb->Source ?? 'EZEE',
-            ]);
-            $eb->book_id = $booking->id;
-            $eb->save();
+        } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }
 
-        EzeeAssignmentLog::create([
-            'ezee_booking_id' => $eb->id,
-            'listing_id'      => $request->listing_id,
-            'old_listing_id'  => $oldListingId,
-            'assigned_by'     => Auth::id(),
-            'method'          => $oldListingId ? 'reassign' : 'manual',
-            'note'            => $request->note,
-        ]);
+        if ($oldListingId !== null) {
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $eb->id,
+                'listing_id'      => $listing->id,
+                'old_listing_id'  => $oldListingId,
+                'assigned_by'     => Auth::id(),
+                'method'          => 'reassign',
+                'note'            => $request->note,
+            ]);
+        }
 
         return response()->json(['ok' => true, 'message' => 'Booking reassigned successfully.']);
+    }
+
+    /**
+     * Assign a reservation whose first nights were in another unit, or in an
+     * extra-guest room. The person supplies only what the EZEE calendar
+     * shows; the booking itself is created from EZEE's amounts.
+     */
+    public function assignHistory(Request $request, $ezeeBookingId)
+    {
+        $request->validate([
+            'split_date'       => 'required|date_format:Y-m-d',
+            'first_listing_id' => 'nullable|exists:listings,id',
+        ]);
+
+        $eb    = EzeeBooking::findOrFail($ezeeBookingId);
+        $final = EzeeUnitMap::make()->resolve($eb);
+
+        if (!$final) {
+            return response()->json(['ok' => false, 'message' => "No unit is mapped to EZEE room {$eb->RoomName}."], 422);
+        }
+
+        try {
+            [$first, $last] = (new EzeeAutoAssign(false, Auth::id()))
+                ->assignSplit($eb, $final, $request->input('split_date'), $request->input('first_listing_id') ? (int) $request->input('first_listing_id') : null);
+        } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $this->closeConflictsFor($eb, 'Assigned with room history from ' . $request->input('split_date'));
+
+        return response()->json(['ok' => true, 'message' => sprintf('Assigned: %s from %s, then %s to %s.',
+            optional($first->listing)->name ?? 'unit', $first->check_in, optional($last->listing)->name ?? 'unit', $last->check_out)]);
+    }
+
+    /** The reservation was an extra-guest room: it needs no unit of its own. */
+    public function noUnit(Request $request, $ezeeBookingId)
+    {
+        $request->validate(['note' => 'nullable|string|max:255']);
+        $eb = EzeeBooking::findOrFail($ezeeBookingId);
+
+        try {
+            (new EzeeAutoAssign(false, Auth::id()))->markNoUnit($eb, $request->input('note'));
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['ok' => true, 'message' => "{$eb->SubBookingId} marked as needing no unit."]);
+    }
+
+    /** EZEE's dates for a linked booking are accepted; the stamped rate stands. */
+    public function acceptDates(Request $request, $ezeeBookingId)
+    {
+        $eb = EzeeBooking::findOrFail($ezeeBookingId);
+
+        try {
+            $segments = (new EzeeAutoAssign(false, Auth::id()))->acceptEzeeDates($eb);
+        } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $this->closeConflictsFor($eb, "Dates accepted from EZEE: {$eb->Start} to {$eb->End}");
+
+        return response()->json(['ok' => true, 'message' => sprintf('Booking now runs %s to %s in %d segment(s).',
+            $segments[0]->check_in, end($segments)->check_out, count($segments))]);
+    }
+
+    private function closeConflictsFor(EzeeBooking $eb, string $note): void
+    {
+        EzeeAssignmentLog::where('ezee_booking_id', $eb->id)->where('method', 'conflict')->whereNull('resolved_at')
+            ->update(['resolved_at' => now(), 'resolved_by' => Auth::id(), 'resolution_note' => $note]);
     }
 
     /**
@@ -392,9 +458,21 @@ class EzeeRoomMappingController extends Controller
 
         $ezeeIds = $logs->pluck('ezee_booking_id')->unique();
         $ezeeMap = EzeeBooking::whereIn('id', $ezeeIds)
-            ->get(['id', 'SubBookingId', 'VoucherNo', 'FirstName', 'LastName', 'RoomName', 'RoomTypeName', 'Start', 'End'])
+            ->get(['id', 'SubBookingId', 'VoucherNo', 'FirstName', 'LastName', 'RoomName', 'RoomTypeName', 'Start', 'End', 'book_id', 'Source'])
             ->keyBy('id');
 
-        return view('admin.ezee.assignment_log', compact('logs', 'ezeeMap', 'method', 'counts'));
+        // The review row needs to show our dates against EZEE's, and the
+        // booking that blocked the assignment, so the pattern can be named
+        // without leaving the screen.
+        $bookIds = $ezeeMap->pluck('book_id')->filter();
+        $blockedIds = $logs->map(fn ($l) => preg_match('/booking #(\d+)/', (string) $l->note, $m) ? (int) $m[1] : null)->filter();
+        $bookingMap = Booking::withoutGlobalScopes()->whereIn('id', $bookIds->merge($blockedIds)->unique())
+            ->with('listing')->get(['id', 'listing_id', 'folio_no', 'check_in', 'check_out', 'status', 'source'])->keyBy('id');
+
+        $listings = $method === 'conflict'
+            ? Listing::orderBy('name')->get(['id', 'name'])
+            : collect();
+
+        return view('admin.ezee.assignment_log', compact('logs', 'ezeeMap', 'method', 'counts', 'bookingMap', 'listings'));
     }
 }

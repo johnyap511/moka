@@ -229,6 +229,43 @@ class BookingSplitter
         });
     }
 
+    /**
+     * Move a segment's dates to a new range and reprice its nights at the
+     * stamped nightly rate. Used when EZEE shortens or extends a stay: the
+     * rate the owner has already seen stands, the amount follows the nights,
+     * which is exactly how EZEE's own line changes. Cleaning and its tax are
+     * left as they are on this row. The result is cut by calendar month if
+     * the new range needs it.
+     *
+     * @return Booking[] the resulting segments in date order
+     */
+    public function retime(Booking $booking, string $checkIn, string $checkOut, ?int $userId = null): array
+    {
+        if ($checkOut <= $checkIn) {
+            throw new InvalidArgumentException('Check-out must be after check-in.');
+        }
+
+        if ($clash = self::occupied((int) $booking->listing_id, $checkIn, $checkOut, $booking->id)) {
+            throw new InvalidArgumentException(
+                "Unit already has booking #{$clash->id} over {$clash->check_in} to {$clash->check_out}."
+            );
+        }
+
+        $nights  = self::nights($checkIn, $checkOut);
+        $figures = self::shape($booking, $nights, $nights, true);
+
+        return DB::transaction(function () use ($booking, $checkIn, $checkOut, $figures, $userId) {
+            $booking->check_in  = $checkIn;
+            $booking->check_out = $checkOut;
+            foreach ($figures as $field => $value) {
+                $booking->$field = $value;
+            }
+            $booking->save();
+
+            return $this->splitByMonth($booking, $userId);
+        });
+    }
+
     private static function occupied(int $listingId, string $from, string $to, int $ignoreId): ?Booking
     {
         return Booking::where('listing_id', $listingId)

@@ -37,9 +37,11 @@
 
 @if($method === 'conflict')
 <div class="alert" style="margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:13px">
-    These bookings could not be assigned because the unit was already occupied over those dates.
-    Nothing was changed — the existing assignment was left alone. Resolve each in EZEE or reassign
-    manually from EZEE Bookings.
+    These reservations could not be assigned because the unit was already occupied over those nights.
+    Nothing was changed. Read the room history on the EZEE calendar, name the pattern, then use the
+    matching control: <b>Room history</b> when the first nights were in another unit or an extra room,
+    <b>Accept EZEE dates</b> when the stay was shortened or extended, <b>No unit</b> for an extra-guest
+    room, <b>Reassign</b> to move the whole booking. Nothing is typed by hand.
 </div>
 @endif
 
@@ -96,24 +98,59 @@
                     <td style="white-space:nowrap">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }}</td>
                     <td>
                         @if($log->method === 'conflict')
-                            <div style="display:flex;gap:4px;flex-wrap:wrap">
-                                {{-- Reassign and Edit reuse the screens the team
-                                     already works in, rather than new ones. --}}
-                                <a href="/admin/ezee/booking?q={{ urlencode($eb->SubBookingId ?? '') }}"
-                                   class="btn btn-secondary btn-sm" title="Find this booking on EZEE Bookings to reassign it">Reassign</a>
-                                <a href="{{ route('admin.ezee.booking.edit', $log->ezee_booking_id) }}"
-                                   class="btn btn-secondary btn-sm">Edit</a>
-                                @if($log->resolved_at)
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                            onclick="setResolved(this, {{ $log->id }}, false)">Reopen</button>
+                            @php
+                                $ours = $eb && $eb->book_id ? ($bookingMap[$eb->book_id] ?? null) : null;
+                                $blockId = preg_match('/booking #(\d+)/', (string) $log->note, $bm) ? (int) $bm[1] : null;
+                                $blocker = $blockId ? ($bookingMap[$blockId] ?? null) : null;
+                            @endphp
+                            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5">
+                                @if($ours)
+                                    Ours: {{ $ours->check_in }} → {{ $ours->check_out }} on {{ $ours->listing->name ?? '#'.$ours->listing_id }}
+                                    @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
+                                        <span style="color:#b45309">(EZEE says {{ $eb->Start }} → {{ $eb->End }})</span>
+                                    @endif
+                                    <br>
                                 @else
-                                    <button type="button" class="btn btn-primary btn-sm"
-                                            onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
+                                    Not assigned yet.<br>
+                                @endif
+                                @if($blocker)
+                                    Blocked by #{{ $blocker->id }}: {{ $blocker->check_in }} → {{ $blocker->check_out }}, {{ $blocker->source }}{{ $blocker->status == 1 ? ' (cancelled)' : '' }}
                                 @endif
                             </div>
-                            @if($log->resolved_at)
+                            @if(!$log->resolved_at)
+                            <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                @if(!$ours)
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="First nights were in another unit or an extra room">Room history</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
+                                @else
+                                    @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
+                                    @endif
+                                @endif
+                                <a href="/admin/ezee/booking?q={{ urlencode($eb->SubBookingId ?? '') }}" class="btn btn-secondary btn-sm" title="Move the whole booking to another unit">Reassign</a>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
+                            </div>
+                            <div id="hist-{{ $log->id }}" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--border, #e5e7eb);border-radius:6px;background:var(--bg-secondary, #f9fafb)">
+                                <div style="font-size:11px;margin-bottom:6px">Night the guest reached <b>{{ $eb->RoomName }}</b>:</div>
+                                <input type="date" id="hist-date-{{ $log->id }}" value="{{ $eb->Start }}" min="{{ $eb->Start }}" max="{{ $eb->End }}" style="font-size:12px;padding:4px 6px;margin-bottom:6px">
+                                <div style="font-size:11px;margin-bottom:6px">Before that, the guest was in:</div>
+                                <select id="hist-unit-{{ $log->id }}" style="font-size:12px;padding:4px 6px;max-width:220px;margin-bottom:8px">
+                                    <option value="">Extra room (no unit)</option>
+                                    @foreach($listings as $l)
+                                        <option value="{{ $l->id }}">{{ $l->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div style="display:flex;gap:4px">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="assignHistory(this, {{ $log->id }}, {{ $log->ezee_booking_id }})">Assign</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')">Cancel</button>
+                                </div>
+                            </div>
+                            @else
+                                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="setResolved(this, {{ $log->id }}, false)">Reopen</button>
+                                </div>
                                 <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">
-                                    Done {{ \Carbon\Carbon::parse($log->resolved_at)->format('d M H:i') }}
+                                    Done {{ \Carbon\Carbon::parse($log->resolved_at)->format('d M H:i') }}{{ $log->resolution_note ? ' — '.$log->resolution_note : '' }}
                                 </div>
                             @endif
                         @else
@@ -187,6 +224,52 @@ async function setResolved(btn, logId, resolved) {
         btn.disabled = false;
         btn.textContent = resolved ? 'Mark done' : 'Reopen';
     }
+}
+
+function togglePanel(id) {
+    var el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// Every control posts, shows the server's own sentence, and takes the row off
+// the queue. Nothing here computes a price or a date: the server does, from
+// EZEE's amounts, so what staff click cannot differ from what the automatic
+// path would have written.
+async function postAction(btn, url, body, doneLabel) {
+    var label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Working…';
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: JSON.stringify(body || {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+        alert(data.message || doneLabel);
+        window.location.reload();
+    } catch (e) {
+        alert('Not done: ' + e.message);
+        btn.disabled = false; btn.textContent = label;
+    }
+}
+
+function assignHistory(btn, logId, ezeeId) {
+    var date = document.getElementById('hist-date-' + logId).value;
+    var unit = document.getElementById('hist-unit-' + logId).value;
+    if (!date) { alert('Pick the night the guest reached the final unit.'); return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/assign-history', { split_date: date, first_listing_id: unit || null }, 'Assigned.');
+}
+
+function noUnit(btn, ezeeId) {
+    var note = prompt('Mark this reservation as needing no unit (extra-guest room)?\n\nWhat the EZEE calendar shows:', '');
+    if (note === null) { return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/no-unit', { note: note }, 'Marked.');
+}
+
+function acceptDates(btn, ezeeId, start, end) {
+    if (!confirm('Move our dates to EZEE\'s (' + start + ' to ' + end + ')?\n\nThe nightly rate stays as stamped; the amount follows the nights. Segments outside the new dates are cancelled.')) { return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/accept-dates', {}, 'Dates updated.');
 }
 </script>
 @endpush
