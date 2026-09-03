@@ -339,7 +339,7 @@ class EzeeRevenueExport
                 foreach ($byKey as $k => $idx) {
                     if (substr($k, 6) === $r['res']) {
                         foreach (array_diff($idx, $used) as $i) {
-                            if ($lines[$i]['status'] === 'Extra room (company)') {
+                            if (stripos((string) ($lines[$i]['ezee_row']->RoomName ?? ''), 'Extra Room') !== false) {
                                 $cands = [$i];
                                 break 2;
                             }
@@ -599,6 +599,10 @@ class EzeeRevenueExport
     /** EZEE's report labels the room with the unit and room type run together; the unit map finds the unit. */
     private static function hotelOfReportRoom(string $room, EzeeUnitMap $map): ?string
     {
+        // "Extra Room 1" exists at every property; the label alone cannot place it.
+        if (stripos($room, 'Extra Room') !== false) {
+            return null;
+        }
         $listing = $map->listingForReportRoom($room);
 
         return $listing ? self::hotelOfListing($listing->name) : null;
