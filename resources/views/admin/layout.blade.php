@@ -219,7 +219,11 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         Upload Bookings
     </a>
-    <a href="/admin/ezee/room-mapping" class="sidebar-link {{ request()->is('admin/ezee/room-mapping*') || request()->is('admin/ezee/assignment*') ? 'active' : '' }}">
+    <a href="/admin/ezee/assignment-log?method=conflict" class="sidebar-link {{ request()->is('admin/ezee/assignment*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+        Needs Review
+    </a>
+    <a href="/admin/ezee/room-mapping" class="sidebar-link {{ request()->is('admin/ezee/room-mapping*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
         Room Mapping
     </a>
