@@ -87,6 +87,22 @@ class ReplayRepairs extends Command
         ['19676', 'RES30960-3', 'accept-dates'],
         ['19676', 'RES29951', 'accept-dates'],
         ['20320', 'RES3413', 'accept-dates'],
+        // Decided later on 3 Sep 2026 from the EZEE calendar and the queue's cancellation events.
+        ['20319', 'RES4109', 'cancel'],
+        ['20320', 'RES4154', 'cancel'],
+        ['19676', 'RES31096', 'cancel'],
+        ['19676', 'RES31157', 'cancel'],
+        ['19676', 'RES31163', 'cancel'],
+        ['20317', 'RES21924', 'cancel'],
+        ['19676', 'RES28991', 'retire'],
+        ['19676', 'RES30289', 'retire'],
+        ['20317', 'FN22662', 'retire'],
+        // EZEE has RES30720 in Extra Room 1 for 7-24 Aug; a hand-keyed "split booking" had put it on H-09-21.
+        ['19676', 'RES30720', 'move-to', 'EkoCheras Extra Room 1', 'EkoCheras H-09-21'],
+        // FN0300 (Lin Siqi, H-09-21, 8 Jul-7 Aug) is a monthly rental keyed as Website with a fee; EZEE FN32034 Monthly Rental, no commission.
+        ['19676', 'FN0300', 'monthly-rental', 'EkoCheras H-09-21'],
+        // A row with no room name whose End was overwritten pointed at another guest's Alinea booking.
+        ['20319', 'RES3895', 'unlink-if-shared'],
     ];
 
     public function handle()
@@ -322,7 +338,9 @@ class ReplayRepairs extends Command
         $aa = new EzeeAutoAssign($this->dry, null);
         foreach (self::DECISIONS as $d) {
             [$hotel, $res, $action] = $d;
-            $rows = EzeeBooking::where('TransactionId', 'like', $hotel . '%')->where('SubBookingId', $res)->orderByDesc('id')->get();
+            $rows = str_starts_with($res, 'FN')
+                ? EzeeBooking::where('TransactionId', 'like', $hotel . '%')->where(fn ($w) => $w->where('folio_no', $res)->orWhere('TransactionId', 'like', $hotel . '%' . ltrim(substr($res, 2), '0')))->orderByDesc('id')->get()
+                : EzeeBooking::where('TransactionId', 'like', $hotel . '%')->where('SubBookingId', $res)->orderByDesc('id')->get();
             $tag = sprintf('  %-11s@%s %-14s', $res, $hotel, $action);
             if ($rows->isEmpty()) {
                 $this->warn("$tag no EZEE row here; skipped");
@@ -372,6 +390,65 @@ class ReplayRepairs extends Command
                         $this->line("$tag ASSIGN to {$final->name}, $from..$to in {$other->name} | $state");
                         $this->write('F-decision', 'ezee_bookings', $e->id, 'book_id', $e->book_id, "new on {$final->name} + {$other->name}", "$res room history per EZEE calendar",
                             fn () => $aa->assignSplit($this->fresh($e), $final, $from, $to, $other->id));
+                        break;
+
+                    case 'retire':
+                        if ((int) $e->status === 1) {
+                            $this->line("$tag already retired ($state)");
+                            break;
+                        }
+                        if ($booking && (int) $booking->status !== 1) {
+                            $this->warn("$tag has live booking #{$booking->id}; NOT retired, check it ($state)");
+                            break;
+                        }
+                        $this->line("$tag RETIRE row (no booking) | $state");
+                        $this->write('F-decision', 'ezee_bookings', $e->id, 'status', $e->status, 1, "$res not on the EZEE report; confirmed cancelled",
+                            fn () => EzeeBooking::where('id', $e->id)->update(['status' => 1]));
+                        break;
+
+                    case 'move-to':
+                        [$to, $wrongUnit] = [$this->listing($d[3]), $this->listing($d[4])];
+                        if ($booking && (int) $booking->status !== 1 && strcasecmp(DB::table('listings')->where('id', $booking->listing_id)->value('name'), $to->name) === 0) {
+                            $this->line("$tag already on {$to->name} #{$booking->id}");
+                            break;
+                        }
+                        if (!$booking || (int) $booking->status === 1 || (int) $booking->listing_id !== (int) $wrongUnit->id) {
+                            $this->warn("$tag not on {$wrongUnit->name} as expected; left for staff ($state)");
+                            break;
+                        }
+                        $this->line("$tag MOVE: cancel #{$booking->id} on {$wrongUnit->name}, recreate on {$to->name} from EZEE amounts | $state");
+                        $this->write('F-decision', 'bookings', $booking->id, 'listing', $wrongUnit->name, $to->name, "$res per EZEE calendar", function () use ($booking, $e, $to, $res, $aa) {
+                            DB::table('bookings')->where('id', $booking->id)->update(['status' => 1, 'updated_at' => now(),
+                                'remark' => DB::raw("LEFT(CONCAT(IFNULL(remark,''), ' | cancelled: EZEE has $res in {$to->name}'), 255)")]);
+                            EzeeBooking::where('id', $e->id)->update(['book_id' => null, 'status' => 5]);
+                            $aa->assignTo($this->fresh($e), $to);
+                        });
+                        break;
+
+                    case 'monthly-rental':
+                        $unit = $this->listing($d[3]);
+                        $rows2 = DB::table('bookings')->where('folio_no', $res)->where('listing_id', $unit->id)->where('status', '<>', 1)
+                            ->where(fn ($w) => $w->where('source', '<>', 'Monthly Rental')->orWhere('ota_fee', '>', 0))->get(['id', 'source', 'ota_fee']);
+                        if ($rows2->isEmpty()) {
+                            $this->line("$tag already Monthly Rental with no fee");
+                            break;
+                        }
+                        foreach ($rows2 as $r2) {
+                            $this->line("$tag booking #{$r2->id}: {$r2->source} fee {$r2->ota_fee} -> Monthly Rental, no fee");
+                            $this->write('F-decision', 'bookings', $r2->id, 'source', $r2->source, 'Monthly Rental', "$res is a monthly rental (EZEE: Monthly Rental, no commission); fee {$r2->ota_fee} removed",
+                                fn () => DB::table('bookings')->where('id', $r2->id)->update(['source' => 'Monthly Rental', 'ota_fee' => 0, 'updated_at' => now()]));
+                        }
+                        break;
+
+                    case 'unlink-if-shared':
+                        $other = $booking ? EzeeBooking::where('book_id', $booking->id)->where('id', '<>', $e->id)->where('status', '<>', 1)->first() : null;
+                        if ($booking && $other && trim((string) $e->RoomName) === '') {
+                            $this->line("$tag UNLINK: shares booking #{$booking->id} with {$other->SubBookingId}, and has no room name | $state");
+                            $this->write('F-decision', 'ezee_bookings', $e->id, 'book_id', $e->book_id, null, "$res overwritten row pointed at another reservation's booking",
+                                fn () => EzeeBooking::where('id', $e->id)->update(['book_id' => null, 'status' => EzeeAutoAssign::NO_UNIT]));
+                        } else {
+                            $this->line("$tag fine ($state)");
+                        }
                         break;
 
                     case 'no-unit':
