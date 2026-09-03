@@ -1212,7 +1212,7 @@ class BookController extends Controller
                                     // matching the previous behaviour of this block.
                                     $ota = EzeePricing::marketingFee(
                                         $request->source,
-                                        $pricePerNight * $nights,
+                                        $pricePerNight * $nightsThis,
                                         $cleaning_fee,
                                         $tax,
                                         $sst_cf,
@@ -1570,7 +1570,7 @@ class BookController extends Controller
 // Rates live in EzeePricing so every screen agrees on the fee.
 $ota = EzeePricing::marketingFee(
     $ezee->Source,
-    $pricePerNight * $nights,
+    $pricePerNight * $nightsThis,
     $ezee->TotalExtraCharge,
     $tax,
     $sst_cf,
@@ -1579,7 +1579,7 @@ $ota = EzeePricing::marketingFee(
 );
 
 // Calculate total
-$total = ($pricePerNight * $nights) + $cleaning_fee + $tax + $sst_cf - $ezee->TotalDiscount;
+$total = ($pricePerNight * $nightsThis) + $cleaning_fee + $tax + $sst_cf - $ezee->TotalDiscount;
 
                 $folioNo = 'FN' . substr($ezee->TransactionId, -4);
                 $otaText = '';
