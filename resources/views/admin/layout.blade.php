@@ -188,6 +188,16 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 /* Date and month fields: the whole field opens the picker, not just the icon,
    and the icon itself is a comfortable tap target. */
 input[type="month"],input[type="date"]{cursor:pointer}
+/* No text selection or tap flash on touch devices; the app should feel like
+   an app. Fields the user types into keep selection. */
+@media (hover:none) and (pointer:coarse){
+  body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+  input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text}
+}
+/* The month and date fields: no blue highlight on the focused segment. */
+input[type="month"]::-webkit-datetime-edit-month-field:focus,input[type="month"]::-webkit-datetime-edit-year-field:focus,
+input[type="date"]::-webkit-datetime-edit-day-field:focus,input[type="date"]::-webkit-datetime-edit-month-field:focus,input[type="date"]::-webkit-datetime-edit-year-field:focus{background:transparent;color:inherit;outline:none}
+input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none}
 </style>
 @stack('styles')
 </head>
