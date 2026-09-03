@@ -1152,7 +1152,7 @@ private function getActionButtons($book)
         // it to null, so 10,498 rows exported with a blank listing name.
         // lazyById keeps the query chunked — this runs over 65,000 bookings.
         $bookings = Booking::where('status', '>=', 3)
-            ->with(['user', 'listing'])
+            ->with(['user', 'listing', 'ezeeBooking'])
             ->lazyById(500);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -1175,24 +1175,28 @@ private function getActionButtons($book)
             // bookings, so the same export run twice either side of a rate
             // change produced two different documents.
             $ota = $booking->ota_fee;
-            if ($booking->source == 'Long Term Rental') {
-                $sst = 0;
-            }
+            $sst = $booking->sst; // stored figure: a tenancy carries its SST too
 
             $otaText = '';
             if ($booking->source == 'Booking') {
                 $otaText = 'Booking.com';
             } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                $otaText = 'Website';
+                $otaText = 'Walk In';
             } else {
                 $otaText = $booking->source;
             }
 
-            if (!empty($booking->server_folio_no)) {
-                $folio_no = $booking->server_folio_no;
-            } else {
-                $folio_no = $booking->folio_no;
+                // eZee's own folio number first (the one staff see in eZee), then the
+            // folio typed at booking time, then MOKA's internal number.
+            $ezee      = $booking->ezeeBooking;
+            $ezeeFolio = $ezee->folio_no ?? '';
+            if ($ezeeFolio === '' && !empty($booking->server_folio_no)) {
+                $ezeeFolio = $booking->server_folio_no;
             }
+            $folio_no  = $ezeeFolio !== '' ? $ezeeFolio : $booking->folio_no;
+            // The guest as eZee names them; hand-keyed rows sit under a staff account.
+            $firstName = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) $ezee->FirstName) : ($booking->user->name ?? '');
+            $lastName  = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) ($ezee->LastName ?? '')) : ($booking->user->last_name ?? '');
 
             $total_charges = $booking->price_night * $booking->nights;
             // The stored total, the same figure the calendar and the owner portal show.
@@ -1204,12 +1208,12 @@ private function getActionButtons($book)
             $listing = $booking->listing;
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
-                    $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                    $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
                     $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $total, $booking->remark,
                 ];
             } else {
                 $exportData[$x] = [
-                    $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                    $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
                     $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $total, $booking->remark,
                 ];
             }
@@ -1245,7 +1249,7 @@ private function getActionButtons($book)
         $sheet->getStyle('A1:N1')->applyFromArray($styleArrayFirstHeader);
         $sheet->getStyle('A2:N2')->applyFromArray($styleArraySecondHeader);
         $alphabet = range('A', 'Z');
-        for ($i = 0; $i <= 13; $i++) {
+        for ($i = 0; $i <= 18; $i++) {
             $spreadsheet->getActiveSheet()->getColumnDimension($alphabet[$i])->setWidth(16);
         }
 
@@ -1336,7 +1340,7 @@ private function getActionButtons($book)
 
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
-            $sheet->mergeCells('A1:R1');
+            $sheet->mergeCells('A1:S1');
             $exportData[0] = ['MOKA'];
             $exportData[1] = [
                 'Booking Id', 'RES', 'Folio No.', 'First Name', 'Last Name', 'Listing Name', 'Arrival', 'Departure', 'Nights', 'Reservation Source', 'Price per Night', 'Discount', 'Cleaning Fee', 'SST(CF)',
@@ -1356,23 +1360,27 @@ private function getActionButtons($book)
                 // bookings, so the same export run twice either side of a rate
                 // change produced two different documents.
                 $ota = $booking->ota_fee;
-                if ($booking->source == 'Long Term Rental') {
-                    $sst = 0;
-                }
+                $sst = $booking->sst; // stored figure: a tenancy carries its SST too
                 $otaText = '';
                 if ($booking->source == 'Booking') {
                     $otaText = 'Booking.com';
                 } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                    $otaText = 'Website';
+                    $otaText = 'Walk In';
                 } else {
                     $otaText = $booking->source;
                 }
 
-                if (!empty($booking->server_folio_no)) {
-                    $folio_no = $booking->server_folio_no;
-                } else {
-                    $folio_no = $booking->folio_no;
+                // eZee's own folio number first (the one staff see in eZee), then the
+                // folio typed at booking time, then MOKA's internal number.
+                $ezee      = $booking->ezeeBooking;
+                $ezeeFolio = $ezee->folio_no ?? '';
+                if ($ezeeFolio === '' && !empty($booking->server_folio_no)) {
+                    $ezeeFolio = $booking->server_folio_no;
                 }
+                $folio_no  = $ezeeFolio !== '' ? $ezeeFolio : $booking->folio_no;
+                // The guest as eZee names them; hand-keyed rows sit under a staff account.
+                $firstName = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) $ezee->FirstName) : ($booking->user->name ?? '');
+                $lastName  = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) ($ezee->LastName ?? '')) : ($booking->user->last_name ?? '');
                 $user = $booking->user;
                 $listing = $booking->listing;
                 // echo $booking->id."<br/>";
@@ -1385,13 +1393,13 @@ private function getActionButtons($book)
                 $total = round((float) $booking->price, 2);
                 if ($booking->source == 'Long Term Rental') {
                     $exportData[$x] = [
-                        $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $booking->server_folio_no, $total, $booking->remark,
+                        $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $booking->remark,
                     ];
                 } else {
                     $exportData[$x] = [
-                        $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $booking->server_folio_no, $total, $booking->remark,
+                        $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $booking->remark,
                     ];
                 }
 
@@ -1423,10 +1431,10 @@ private function getActionButtons($book)
                 ],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ];
-            $sheet->getStyle('A1:R1')->applyFromArray($styleArrayFirstHeader);
-            $sheet->getStyle('A2:R2')->applyFromArray($styleArraySecondHeader);
+            $sheet->getStyle('A1:S1')->applyFromArray($styleArrayFirstHeader);
+            $sheet->getStyle('A2:S2')->applyFromArray($styleArraySecondHeader);
             $alphabet = range('A', 'Z');
-            for ($i = 0; $i <= 13; $i++) {
+            for ($i = 0; $i <= 18; $i++) {
                 $spreadsheet->getActiveSheet()->getColumnDimension($alphabet[$i])->setWidth(16);
             }
 
@@ -1447,7 +1455,7 @@ private function getActionButtons($book)
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->mergeCells('A1:R1');
+        $sheet->mergeCells('A1:S1');
         $exportData[0] = ['MOKA'];
         $exportData[1] = [
             'Booking Id', 'RES', 'Folio No.', 'First Name', 'Last Name', 'Listing Name', 'Arrival', 'Departure', 'Nights', 'Reservation Source', 'Price per Night', 'Discount', 'Cleaning Fee', 'SST(CF)',
@@ -1468,29 +1476,39 @@ private function getActionButtons($book)
             // bookings, so the same export run twice either side of a rate
             // change produced two different documents.
             $ota = $booking->ota_fee;
-            if ($booking->source == 'Long Term Rental') {
-                $sst = 0;
-            }
+            $sst = $booking->sst; // stored figure: a tenancy carries its SST too
 
             $otaText = '';
             if ($booking->source == 'Booking') {
                 $otaText = 'Booking.com';
             } else if ($booking->source == 'PMS' || $booking->source == 'Walk-in' || $booking->source == 'Walk In') {
-                $otaText = 'Website';
+                $otaText = 'Walk In';
             } else {
                 $otaText = $booking->source;
             }
 
-            if (!empty($booking->server_folio_no)) {
-                $folio_no = $booking->server_folio_no;
-            } else {
-                $folio_no = $booking->folio_no;
+                // eZee's own folio number first (the one staff see in eZee), then the
+            // folio typed at booking time, then MOKA's internal number.
+            $ezee      = $booking->ezeeBooking;
+            $ezeeFolio = $ezee->folio_no ?? '';
+            if ($ezeeFolio === '' && !empty($booking->server_folio_no)) {
+                $ezeeFolio = $booking->server_folio_no;
             }
-            if (!empty($booking->server_folio_no)) {
-                $folio_no = $booking->server_folio_no;
-            } else {
-                $folio_no = $booking->folio_no;
+            $folio_no  = $ezeeFolio !== '' ? $ezeeFolio : $booking->folio_no;
+            // The guest as eZee names them; hand-keyed rows sit under a staff account.
+            $firstName = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) $ezee->FirstName) : ($booking->user->name ?? '');
+            $lastName  = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) ($ezee->LastName ?? '')) : ($booking->user->last_name ?? '');
+                // eZee's own folio number first (the one staff see in eZee), then the
+            // folio typed at booking time, then MOKA's internal number.
+            $ezee      = $booking->ezeeBooking;
+            $ezeeFolio = $ezee->folio_no ?? '';
+            if ($ezeeFolio === '' && !empty($booking->server_folio_no)) {
+                $ezeeFolio = $booking->server_folio_no;
             }
+            $folio_no  = $ezeeFolio !== '' ? $ezeeFolio : $booking->folio_no;
+            // The guest as eZee names them; hand-keyed rows sit under a staff account.
+            $firstName = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) $ezee->FirstName) : ($booking->user->name ?? '');
+            $lastName  = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) ($ezee->LastName ?? '')) : ($booking->user->last_name ?? '');
             $user = $booking->user;
             $listing = $booking->listing;
             $ezee = $booking->ezeeBooking;
@@ -1502,17 +1520,17 @@ private function getActionButtons($book)
             $total = round((float) $booking->price, 2);
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
-                    $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $booking->server_folio_no, $total, $booking->remark,
+                    $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $booking->remark,
                 ];
             } else {
                 $exportData[$x] = [
-                    $booking->id, $ezee->SubBookingId ?? '', $folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $booking->server_folio_no, $total, $booking->remark,
+                    $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $booking->remark,
                 ];
             }
 
-            // $exportData[$x] = [$booking->folio_no, $user->name ?? '', $user->last_name ?? '', $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
+            // $exportData[$x] = [$booking->folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
             // $booking->source, $booking->price_night, $booking->cleaning_fee, $booking->ota_fee, $booking->sst, $booking->price, $booking->remark];
             $x++;
         }
@@ -1545,7 +1563,7 @@ private function getActionButtons($book)
         $sheet->getStyle('A1:Q1')->applyFromArray($styleArrayFirstHeader);
         $sheet->getStyle('A2:Q2')->applyFromArray($styleArraySecondHeader);
         $alphabet = range('A', 'Z');
-        for ($i = 0; $i <= 13; $i++) {
+        for ($i = 0; $i <= 18; $i++) {
             $spreadsheet->getActiveSheet()->getColumnDimension($alphabet[$i])->setWidth(16);
         }
 

@@ -531,6 +531,8 @@ class EzeeAutoAssign
                 'listing_id'   => $listing->id,
                 'user_id'      => $user->id,
                 'folio_no'     => $ezeeBooking->folio_no ?: 'FN' . substr((string) $ezeeBooking->TransactionId, -4),
+                // eZee's folio as staff key it by hand, so the Bookings export shows it.
+                'server_folio_no' => $ezeeBooking->folio_no ?: null,
                 'check_in'     => $ezeeBooking->Start,
                 'check_out'    => $ezeeBooking->End,
                 'adult'        => 2,
