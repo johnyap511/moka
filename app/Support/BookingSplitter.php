@@ -251,8 +251,11 @@ class BookingSplitter
             );
         }
 
+        // The fee is apportioned against the nights this row held before the
+        // change, so a shortened stay gives back its share and an extended
+        // one takes more.
         $nights  = self::nights($checkIn, $checkOut);
-        $figures = self::shape($booking, $nights, $nights, true);
+        $figures = self::shape($booking, max(1, (int) $booking->nights), $nights, true);
 
         return DB::transaction(function () use ($booking, $checkIn, $checkOut, $figures, $userId) {
             $booking->check_in  = $checkIn;

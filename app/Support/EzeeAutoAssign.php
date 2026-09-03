@@ -343,14 +343,12 @@ class EzeeAutoAssign
                 ->update(['resolved_at' => now(), 'resolved_by' => $this->actorId,
                           'resolution_note' => 'No unit needed: ' . ($note ?: 'extra-guest room')]);
 
-            EzeeAssignmentLog::create([
-                'ezee_booking_id' => $ezeeBooking->id,
-                'listing_id'      => null,
-                'old_listing_id'  => null,
-                'assigned_by'     => $this->actorId,
-                'method'          => 'manual',
-                'note'            => 'Marked as needing no unit (extra-guest room). ' . ($note ?: ''),
-            ]);
+            // The log needs a unit to hang on; use the one EZEE's room name maps
+            // to, which is the unit this reservation would otherwise have taken.
+            if ($listing = EzeeUnitMap::make()->resolve($ezeeBooking)) {
+                $this->record($ezeeBooking, $listing, null, 'manual',
+                    'Marked as needing no unit (extra-guest room). ' . ($note ?: ''));
+            }
         });
     }
 
