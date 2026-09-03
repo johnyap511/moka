@@ -592,7 +592,12 @@ class EzeeRevenueExport
         // The unit matters more than the amount: a stay on the wrong unit pays
         // the wrong owner. The report's room is resolved through the room map
         // and compared with the unit the stay ended on ("A → B" ends on B).
-        $reported = self::unitMap()->listingForReportRoom((string) $r['room']);
+        $label = (string) $r['room'];
+        if (stripos($label, 'extra room') === 0) {
+            // The report names extra rooms without the property; the room map needs it.
+            $label = (['19676' => 'EkoCheras', '20317' => 'Bell Suites', '20318' => 'Forum', '20319' => 'Arte Cheras', '20320' => 'Alinea'][$r['hotel']] ?? '') . ' ' . preg_replace('/-.*$/', '', $label);
+        }
+        $reported = self::unitMap()->listingForReportRoom($label);
         $final    = trim((string) preg_replace('/^.*→\s*/u', '', (string) $l['room']));
         $final    = trim((string) preg_replace('/\s*\(.*$/', '', $final));
         $bothExtra = stripos((string) $r['room'], 'extra room') !== false && stripos($final, 'extra room') !== false;
