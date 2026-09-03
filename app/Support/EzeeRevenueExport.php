@@ -318,16 +318,20 @@ class EzeeRevenueExport
             }
         }
 
+        // Keyed on property and reservation number; a reservation EZEE sends
+        // without a number is keyed on its folio instead, which staff carry
+        // across when they key the tenancy by hand.
+        $keyOf = fn (string $hotel, string $res, string $folio) => $hotel . '|' . ($res !== '' ? $res : 'FN:' . preg_replace('/\D/', '', $folio));
         $byKey = [];
         foreach ($lines as $i => $l) {
-            if ($l['res'] !== '') {
-                $byKey[$l['hotel'] . '|' . $l['res']][] = $i;
+            if ($l['res'] !== '' || $l['folio'] !== '') {
+                $byKey[$keyOf($l['hotel'], $l['res'], (string) $l['folio'])][] = $i;
             }
         }
 
         $used = [];
         foreach ($ezee as $r) {
-            $cands = $r['hotel'] !== '' ? array_diff($byKey[$r['hotel'] . '|' . $r['res']] ?? [], $used) : [];
+            $cands = $r['hotel'] !== '' ? array_diff($byKey[$keyOf($r['hotel'], $r['res'], $r['folio'])] ?? [], $used) : [];
             if (!$cands && $r['hotel'] === '' && stripos($r['room'], 'Extra Room') !== false) {
                 foreach ($byKey as $k => $idx) {
                     if (substr($k, 6) === $r['res']) {
@@ -346,7 +350,7 @@ class EzeeRevenueExport
                 // one property has it; otherwise leave the line unmatched.
                 $hits = [];
                 foreach ($byKey as $k => $idx) {
-                    if (substr($k, 6) === $r['res']) {
+                    if (substr($k, 6) === ($r['res'] !== '' ? $r['res'] : 'FN:' . preg_replace('/\D/', '', $r['folio']))) {
                         $hits[$k] = array_diff($idx, $used);
                     }
                 }
