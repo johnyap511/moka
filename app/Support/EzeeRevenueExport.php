@@ -208,6 +208,14 @@ class EzeeRevenueExport
             }
             $first = $stay->first();
             $hotel = self::hotelOfListing($first->listing->name ?? '');
+            // A night carved out to another unit (a split stay) belongs to the
+            // linked reservation's line, not to a line of its own.
+            $sibling = collect($this->byFolio[$folio] ?? [])->first(fn ($b) => isset($linked[$b->id])
+                && self::hotelOfListing($b->listing->name ?? '') === $hotel
+                && abs(strtotime((string) $b->check_in) - strtotime((string) $first->check_in)) < 60 * 86400);
+            if ($sibling) {
+                continue;
+            }
             if ($hotel && !in_array($hotel, $this->hotels, true)) {
                 continue;
             }
@@ -581,12 +589,15 @@ class EzeeRevenueExport
         if ($l['status'] !== 'Assigned') {
             return $l['status'];
         }
-        // The unit matters more than the amount: a stay on the wrong unit pays the wrong owner.
-        $ezeeUnit = self::unitKey($r['room']);
-        $mokaUnit = self::unitKey(preg_replace('/^(eko\s?cheras|bell suites|forum|damai 88|arte cheras|queensville|kl gateway|alinea(?: suites)?)\s*/i', '', $l['room']));
-        $bothExtra = str_contains($ezeeUnit, 'extraroom') && str_contains($mokaUnit, 'extraroom');
-        if (!$bothExtra && $ezeeUnit !== '' && $mokaUnit !== '' && !str_starts_with($ezeeUnit, $mokaUnit) && !str_starts_with($mokaUnit, $ezeeUnit)) {
-            return sprintf('Unit differs: EZEE reports %s, MOKA has it on %s', trim(preg_replace('/\s*\(.*$/', '', $r['room'])), $l['room']);
+        // The unit matters more than the amount: a stay on the wrong unit pays
+        // the wrong owner. The report's room is resolved through the room map
+        // and compared with the unit the stay ended on ("A → B" ends on B).
+        $reported = self::unitMap()->listingForReportRoom((string) $r['room']);
+        $final    = trim((string) preg_replace('/^.*→\s*/u', '', (string) $l['room']));
+        $final    = trim((string) preg_replace('/\s*\(.*$/', '', $final));
+        $bothExtra = stripos((string) $r['room'], 'extra room') !== false && stripos($final, 'extra room') !== false;
+        if ($reported && !$bothExtra && strcasecmp(preg_replace('/\s+/', ' ', $reported->name), preg_replace('/\s+/', ' ', $final)) !== 0) {
+            return sprintf('Unit differs: EZEE reports %s, MOKA has it on %s', $reported->name, $final);
         }
         if ((int) $l['nights_in'] !== (int) $r['nights_in'] && $r['nights_in'] !== null) {
             return sprintf('Nights in month differ: MOKA %d, EZEE %d', $l['nights_in'], $r['nights_in']);
@@ -668,6 +679,13 @@ class EzeeRevenueExport
             str_starts_with($n, 'alinea')                                                              => '20320',
             default                                                                                    => null,
         };
+    }
+
+    private static ?EzeeUnitMap $unitMap = null;
+
+    private static function unitMap(): EzeeUnitMap
+    {
+        return self::$unitMap ??= EzeeUnitMap::make();
     }
 
     private static function unitKey(string $s): string
