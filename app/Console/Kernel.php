@@ -47,6 +47,11 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground();
 
+        // EZEE's notification queue is the only feed that reports a cancellation
+        // by name. Read after the hourly sync, so a cancellation lands before
+        // the reconcile could act on the reservation.
+        $schedule->command('ezee:notifications')->hourlyAt(10)->withoutOverlapping();
+
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying
         // units and blocking real bookings.

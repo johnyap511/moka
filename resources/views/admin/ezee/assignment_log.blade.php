@@ -18,6 +18,7 @@
         null        => 'All',
         'conflict'  => 'Needs review',
         'modified'  => 'Changed in eZee',
+        'cancelled' => 'Cancelled in eZee',
         'auto'      => 'Auto-assigned',
         'move'      => 'Room moves',
         'manual'    => 'Manual',
@@ -75,7 +76,7 @@
                 @forelse($logs as $log)
                 @php
                     $eb = $ezeeMap[$log->ezee_booking_id] ?? null;
-                    $methodColors = ['auto'=>'badge-blue','manual'=>'badge-teal','reassign'=>'badge-orange'];
+                    $methodColors = ['auto'=>'badge-blue','manual'=>'badge-teal','reassign'=>'badge-orange','cancelled'=>'badge-red'];
                 @endphp
                 <tr>
                     <td class="mono">#{{ $log->ezee_booking_id }}</td>
