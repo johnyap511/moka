@@ -445,6 +445,13 @@ class EzeeAutoAssign
                 $kept = array_merge($extra, $kept);
             }
 
+            // The linked segment may be one that fell outside the new range and
+            // was cancelled above; the reservation must point at a live segment.
+            $keptIds = array_map(fn ($b) => $b->id, $kept);
+            if ($kept && !in_array($ezeeBooking->book_id, $keptIds, true)) {
+                EzeeBooking::where('id', $ezeeBooking->id)->update(['book_id' => $kept[0]->id, 'status' => 8]);
+            }
+
             EzeeAssignmentLog::create([
                 'ezee_booking_id' => $ezeeBooking->id,
                 'listing_id'      => $kept[0]->listing_id ?? null,
