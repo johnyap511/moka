@@ -554,9 +554,11 @@ public function index(Request $request)
     if ($request->filled('q')) {
         $q = trim($request->q);
         $query->where(function ($sq) use ($q) {
-            $sq->where('name', 'LIKE', "%{$q}%")
-               ->orWhere('folio_no', 'LIKE', "%{$q}%")
+            // bookings has no name column; the guest is on the user, the RES
+            // number on the linked EZEE reservation.
+            $sq->where('folio_no', 'LIKE', "%{$q}%")
                ->orWhere('server_folio_no', 'LIKE', "%{$q}%")
+               ->orWhereHas('ezeeBooking', fn($e) => $e->where('SubBookingId', 'LIKE', "%{$q}%"))
                ->orWhereHas('user', fn($u) => $u->where('name', 'LIKE', "%{$q}%")
                    ->orWhere('last_name', 'LIKE', "%{$q}%")
                    ->orWhere('email', 'LIKE', "%{$q}%"))

@@ -157,7 +157,9 @@ class EzeeNotifications extends Command
 
             if ($booking && (int) $booking->status !== 1 && (!$recent || $touched)) {
                 // Old, or someone has worked on the booking since: a person decides.
-                if (!$dry) {
+                // One open item per reservation, however often the queue repeats it.
+                $open = EzeeAssignmentLog::where('ezee_booking_id', $row->id)->where('method', 'conflict')->whereNull('resolved_at')->exists();
+                if (!$dry && !$open) {
                     $listing = EzeeUnitMap::make()->resolve($row);
                     EzeeAssignmentLog::create([
                         'ezee_booking_id' => $row->id, 'listing_id' => $booking->listing_id, 'old_listing_id' => null, 'assigned_by' => null, 'method' => 'conflict',
