@@ -117,7 +117,11 @@ class HomeController extends Controller
             foreach ($knownCats as $cat) {
                 $cnt = $monthBooks->filter(function ($b) use ($cat) {
                     $value = trim((string) ($b->category ?? ''));
-                    if ($value === '') {
+                    // Bookings created from EZEE default to 'Accommodation',
+                    // which is not one of the six the dashboard reports; those
+                    // and uncategorised ones are the vacation stays production
+                    // shows them as.
+                    if ($value === '' || strcasecmp($value, 'Accommodation') === 0) {
                         return $cat === 'Vacation';
                     }
                     return strcasecmp($value, $cat) === 0;

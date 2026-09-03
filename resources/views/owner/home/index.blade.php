@@ -48,7 +48,10 @@
 .owner-db .legend-dot {
     width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0;
 }
-.owner-db .other-listing-performance { column-gap: 8px; margin-bottom: 10px; }
+/* The stylesheet's columns are 25/15/60 — exactly 100% — so any gap here
+   pushes each row wider than its card. Spacing goes inside the cells. */
+.owner-db .other-listing-performance { margin-bottom: 10px; }
+.owner-db .other-listing-performance .olp-pct { padding-right: 8px; }
 .owner-db .other-listing-performance .olp-name { font-size: 12px; font-weight: 600; color: #333; }
 .owner-db .other-listing-performance .olp-pct  { font-size: 12px; color: #666; }
 .owner-db .filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
