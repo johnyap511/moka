@@ -19,6 +19,16 @@
 .fc .fc-day-today{background:#fff8f5!important}
 .fc .fc-day-today .fc-daygrid-day-number{background:#F36523;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;margin:5px}
 .fc .fc-daygrid-day-frame{min-height:80px}
+/* Phone: the toolbar wraps into two rows and the day cells shrink, so the
+   month still fits without sideways scrolling. */
+@media (max-width:640px){
+  .fc .fc-toolbar{flex-wrap:wrap;gap:8px}
+  .fc .fc-toolbar-chunk{display:flex;align-items:center;gap:6px}
+  .fc .fc-toolbar-title{font-size:15px}
+  .fc .fc-button{padding:5px 9px!important;font-size:12px!important}
+  .fc .fc-daygrid-day-frame{min-height:56px}
+  .fc .fc-daygrid-event{font-size:11px}
+}
 .fc td,.fc th{border-color:#f1f5f9!important}
 .fc-event{border:none!important;border-radius:5px!important;font-size:11.5px!important;font-weight:500!important;padding:2px 7px!important;cursor:pointer!important}
 .fc-event:hover{filter:brightness(.92)}

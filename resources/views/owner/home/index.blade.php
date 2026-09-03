@@ -63,6 +63,21 @@
     background: var(--green); color: #fff; border: 0; border-radius: 8px;
     padding: 11px 30px; font-weight: 600; font-size: 14px; cursor: pointer;
 }
+/* ownerDashboard23.css hides the whole grid below 576px (the old site had a
+   separate phone page). Show it as one column instead: tiles, donuts, figures,
+   then the two trend charts, each with a fixed chart height so the canvases
+   have room. Above 575px the stylesheet's own breakpoints apply. */
+@media (max-width: 575px) {
+    .owner-db .db-main { display: grid !important; grid-template-columns: 1fr; grid-template-rows: none; margin: 0; gap: 12px; }
+    .owner-db .db-main > div { padding: 0; grid-column: auto !important; grid-row: auto !important; }
+    .owner-db .db-main > div > div { min-height: 0; padding: 16px; }
+    .owner-db .calender, .owner-db .revenue, .owner-db .occupancy { min-height: 110px; }
+    .owner-db .calender h3, .owner-db .revenue h3, .owner-db .occupancy h3 { font-size: 26px !important; }
+    .owner-db .db-main canvas { max-height: 240px; }
+    .owner-db .db-main > div:nth-child(10) > div, .owner-db .db-main > div:nth-child(11) > div { height: 280px; }
+    .owner-db .filter-bar select, .owner-db .filter-bar input { min-width: 0 !important; width: 100%; }
+    .owner-db .filter-bar button { width: 100%; }
+}
 </style>
 @endpush
 
