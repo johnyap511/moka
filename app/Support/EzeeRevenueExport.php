@@ -53,7 +53,7 @@ class EzeeRevenueExport
     public function headers(bool $compared): array
     {
         $h = ['Sr. No', 'Property', 'Reservation No', 'Folio No', 'Guest Name', 'Source', 'Arrival', 'Dept.', 'Nights', 'Nights in Month',
-            'Room', 'Vouc. No', 'Room Charges (RM) (Excl. Tax)', 'Cleaning Fee (RM) (Excl. Tax)', 'Extras - Company (RM) (Excl. Tax)',
+            'Room', 'Vouc. No', 'Room Charges (RM) (Excl. Tax)', 'Rate/Night (RM) (Excl. Tax)', 'Cleaning Fee (RM) (Excl. Tax)', 'Extras - Company (RM) (Excl. Tax)',
             'Damage Deposit (RM)', 'Room Rate (RM) (Incl. Tax)', 'SST (RM)', 'Discount (RM)', 'Total (RM) (Incl. Tax)', 'Commission (RM)',
             'Revenue at Property (RM) (Incl. Tax)', 'MOKA Booking IDs', 'MOKA Status'];
 
@@ -831,10 +831,24 @@ class EzeeRevenueExport
     }
 
     /** @return array<int,mixed> one CSV row in header order */
+    /**
+     * The stamped nightly rate before tax: the figure on the owner statement
+     * ("Rate/Night") and the owner portal, so the two tally without arithmetic.
+     */
+    public static function rateExcl(array $l): string|float
+    {
+        $n = (int) ($l['nights_in'] ?? 0);
+        if ($n <= 0 || $l['room_charge'] === '' || $l['room_charge'] === null) {
+            return '';
+        }
+
+        return round((float) $l['room_charge'] / $n, 2);
+    }
+
     public function row(array $l, bool $compared): array
     {
         $r = [$l['sr'], $l['property'], $l['res'], $l['folio'], $l['guest'], $l['source'], $l['arrival'], $l['dept'], $l['nights'], $l['nights_in'],
-            $l['room'], $l['voucher'], $l['room_charge'], $l['cleaning'], $l['extras'], $l['deposit'], $l['rate'], $l['sst'], $l['discount'],
+            $l['room'], $l['voucher'], $l['room_charge'], self::rateExcl($l), $l['cleaning'], $l['extras'], $l['deposit'], $l['rate'], $l['sst'], $l['discount'],
             $l['total'], $l['commission'], $l['revenue'], $l['ids'], $l['status']];
 
         if ($compared) {
