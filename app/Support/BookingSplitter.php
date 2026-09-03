@@ -415,11 +415,22 @@ class BookingSplitter
             return collect([$anchor]);
         }
 
+        // A row that another live reservation points at is another guest's,
+        // whatever its folio number says: at Alinea the numbers drift so far
+        // that consecutive guests can share one, night after night.
+        $own = EzeeBooking::where('book_id', $anchor->id)->where('status', '<>', 1)->pluck('SubBookingId')
+            ->map(fn ($r) => preg_replace('/-\d+$/', '', (string) $r))->unique()->all();
+
         $pool = Booking::with('listing')->where('status', '!=', 1)
             ->where('folio_no', $anchor->folio_no)->where('id', '!=', $anchor->id)
             ->get()
             ->filter(fn ($b) => $hotel === null || $b->listing_id === $anchor->listing_id
                 || EzeeRevenueExport::hotelOfListing($b->listing->name ?? '') === $hotel)
+            ->filter(function ($b) use ($own) {
+                $theirs = EzeeBooking::where('book_id', $b->id)->where('status', '<>', 1)->pluck('SubBookingId')
+                    ->map(fn ($r) => preg_replace('/-\d+$/', '', (string) $r))->unique()->all();
+                return !$theirs || !$own || array_intersect($theirs, $own);
+            })
             ->keyBy('id')->all();
 
         do {

@@ -118,7 +118,7 @@
                                 @endif
                             </div>
                             @if(!$log->resolved_at)
-                            @php $linkDead = $eb && $eb->book_id && !$ours; @endphp
+                            @php $linkDead = $eb && $eb->book_id && (!$ours || (int) $ours->status === 1); @endphp
                             <div style="display:flex;gap:4px;flex-wrap:wrap">
                                 @if($linkDead)
                                     <button type="button" class="btn btn-primary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
