@@ -185,19 +185,11 @@ class EzeeAutoAssign
                 // EZEE may have changed the rate or the extras since we captured
                 // them. A booking the system created follows EZEE's figures; one
                 // a person keyed or edited is raised for that person.
+                // EZEE's amounts are final (management, 4 Sep 2026): every booking
+                // follows them, whether the system or a person created it. Each
+                // change is written to the assignment log with both figures.
                 if ($amount = $this->amountDrift($ezeeBooking, $booking)) {
-                    if ($this->systemMade($amount['chain'])) {
-                        $this->guard(fn () => $this->reprice($ezeeBooking, $listing, $amount), $ezeeBooking);
-                    } elseif (!$amount['room_differs']) {
-                        // A hand-keyed booking whose only difference is the cleaning
-                        // line: the month-end export shows it; no review item.
-                        $this->tally['unchanged']++;
-                    } else {
-                        $this->review($ezeeBooking, $listing, sprintf(
-                            'EZEE now charges room RM %.2f, cleaning RM %.2f (+SST %.2f); our booking has room RM %.2f, cleaning RM %.2f (+SST %.2f). The booking was keyed or edited by hand, so it was not repriced.',
-                            $amount['theirs']['room'], $amount['theirs']['cleaning'], $amount['theirs']['sst_cf'],
-                            $amount['ours']['room'], $amount['ours']['cleaning'], $amount['ours']['sst_cf']));
-                    }
+                    $this->guard(fn () => $this->reprice($ezeeBooking, $listing, $amount), $ezeeBooking);
                     continue;
                 }
 
@@ -987,6 +979,8 @@ class EzeeAutoAssign
                 ]);
                 $first = false;
             }
+            EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)->where('method', 'conflict')->whereNull('resolved_at')
+                ->where('note', 'like', 'EZEE now charges%')->update(['resolved_at' => now(), 'resolved_by' => $this->actorId, 'resolution_note' => 'Repriced from EZEE automatically.']);
             EzeeAssignmentLog::create([
                 'ezee_booking_id' => $ezeeBooking->id, 'listing_id' => $listing->id, 'old_listing_id' => null,
                 'assigned_by' => $this->actorId, 'method' => 'modified',
