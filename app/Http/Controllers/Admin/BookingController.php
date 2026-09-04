@@ -1305,6 +1305,32 @@ private function getActionButtons($book)
         exit;
     }
 
+    /**
+     * The eZee record of a hand-keyed piece's stay: a linked booking with the same
+     * folio number that sits in the same room or whose dates touch this piece.
+     */
+    private function siblingEzee($booking): ?object
+    {
+        $folio = trim((string) $booking->folio_no);
+        if ($folio === '' || !preg_match('/^FN\d+$/', $folio)) {
+            return null;
+        }
+
+        return \DB::table('ezee_bookings as e')
+            ->join('bookings as s', 's.id', '=', 'e.book_id')
+            ->where('e.status', '<>', 1)
+            ->where('e.folio_no', $folio)
+            ->where('s.id', '<>', $booking->id)
+            ->where(function ($q) use ($booking) {
+                $q->where('s.listing_id', $booking->listing_id)
+                  ->orWhere('s.check_in', $booking->check_out)
+                  ->orWhere('s.check_out', $booking->check_in);
+            })
+            ->orderBy('s.check_in')
+            ->select('e.*')
+            ->first();
+    }
+
     public function exportExcelRange(Request $request)
     {
         if ($request->input('action') == "loaddata") {
@@ -1363,13 +1389,15 @@ private function getActionButtons($book)
                 // change produced two different documents.
                 $ota = $booking->ota_fee;
                 $sst = $booking->sst; // stored figure: a tenancy carries its SST too
-                $ezee = $booking->ezeeBooking;
+                // Ground rule 2: a month or split piece keyed by staff belongs to the same
+                // eZee stay as its linked sibling (same folio, same room or touching dates),
+                // so it prints that RES, folio, guest and channel rather than blanks.
+                $ezee = $booking->ezeeBooking ?: $this->siblingEzee($booking);
                 // Ground rule 12: eZee's source, mapped to the one channel list.
                 $otaText = \App\Support\Channel::canonical($ezee->Source ?? $booking->source);
 
                 // eZee's own folio number first (the one staff see in eZee), then the
                 // folio typed at booking time, then MOKA's internal number.
-                $ezee      = $booking->ezeeBooking;
                 $ezeeFolio = $ezee->folio_no ?? '';
                 if ($ezeeFolio === '' && !empty($booking->server_folio_no)) {
                     $ezeeFolio = $booking->server_folio_no;
@@ -1381,7 +1409,6 @@ private function getActionButtons($book)
                 $user = $booking->user;
                 $listing = $booking->listing;
                 // echo $booking->id."<br/>";
-                $ezee = $booking->ezeeBooking;
                 $total_charges = $booking->price_night * $booking->nights;
                 // The stored total, the same figure the calendar and the owner portal show.
                 // Recomputing it from price_night x nights understated August by RM354,563:
