@@ -13,6 +13,11 @@
             ->where(fn ($x) => $x->where('listing_id', $book->listing_id)->orWhere('check_in', $book->check_out)->orWhere('check_out', $book->check_in))))
         ->orderBy('check_in')->get();
     $units = \App\Listing::orderBy('name')->get(['id', 'name']);
+    // Swap candidates: live bookings in other units of the same hotel whose dates overlap this one.
+    $swaps = (int) $book->status === 5 ? \App\Booking::withoutGlobalScopes()->with(['listing', 'user'])->where('status', 5)->where('id', '<>', $book->id)
+        ->where('listing_id', '<>', $book->listing_id)->where('check_in', '<', $book->check_out)->where('check_out', '>', $book->check_in)
+        ->whereHas('listing', fn ($q) => $q->where('ezee_hotel_code', $listing->ezee_hotel_code ?? ''))
+        ->get()->sortBy(fn ($x) => $x->listing->name ?? '') : collect();
     $fmt   = fn ($d) => \Carbon\Carbon::parse($d)->format('D d M Y');
 @endphp
 
@@ -270,6 +275,23 @@
             </div>
         </div>
 
+        <div class="eb-section" style="padding:14px 0 14px;border-top:1px solid var(--border)">
+            <h3>Swap units with another booking (both move at once)</h3>
+            @if($swaps->isEmpty())
+                <div class="eb-hint">No live booking in another unit of this hotel overlaps these dates.</div>
+            @else
+            <div class="eb-move">
+                <label>Other booking
+                    <select id="swap-other" class="form-input">
+                        @foreach($swaps as $o)<option value="{{ $o->id }}">#{{ $o->id }} · {{ trim(($o->user->name ?? '') . ' ' . ($o->user->last_name ?? '')) ?: 'guest' }} · {{ $o->listing->name ?? '' }} · {{ $o->check_in }} → {{ $o->check_out }}</option>@endforeach
+                    </select>
+                </label>
+                <button type="button" class="btn btn-secondary" onclick="swapUnits(this)">Swap units</button>
+            </div>
+            <div class="eb-hint" style="margin-top:6px">This booking takes the other one's unit and vice versa, in one step. Refused if either unit is taken by a third booking on those dates.</div>
+            @endif
+        </div>
+
         <div class="eb-section" style="padding:14px 0 0;border-top:1px solid var(--border)">
             <h3>Split: move some nights to another unit (room move)</h3>
             <div class="eb-split">
@@ -329,6 +351,12 @@ function cancelBooking(btn) {
     if (reason === null) { return; }
     if (!reason.trim()) { alert('A reason is required.'); return; }
     postJson(btn, '/admin/booking/{{ $book->id }}/cancel', { reason: reason.trim() });
+}
+function swapUnits(btn) {
+    var sel = document.getElementById('swap-other');
+    if (!sel || !sel.value) { return; }
+    if (!confirm('Swap units?\n\n#{{ $book->id }} ({{ $listing->name ?? '' }}) takes the unit of ' + sel.options[sel.selectedIndex].textContent + ', and that booking takes {{ $listing->name ?? 'this unit' }}.')) { return; }
+    postJson(btn, '/admin/booking/{{ $book->id }}/swap', { other_id: sel.value });
 }
 function moveBooking(btn) {
     var sel = document.getElementById('move-unit');

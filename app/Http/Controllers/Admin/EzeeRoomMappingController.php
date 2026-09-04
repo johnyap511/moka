@@ -368,6 +368,60 @@ class EzeeRoomMappingController extends Controller
         return response()->json(['ok' => true, 'message' => $eb->SubBookingId . ' retired' . ($booking ? ', booking #' . $booking->id . ' cancelled and the unit freed.' : '. It will not be assigned again.')]);
     }
 
+    /**
+     * Swap the units of two bookings in one step. Done by hand this takes three
+     * moves (park one in an extra room, move the other, move the first back) and
+     * can be left half done. Here both move inside one transaction, the clash
+     * check runs on the end state, and one log entry records the swap.
+     */
+    public function swapUnits(Request $request, $bookingId)
+    {
+        $request->validate(['other_id' => 'required|integer|different:bookingId']);
+
+        $a = Booking::withoutGlobalScopes()->with('listing')->findOrFail($bookingId);
+        $b = Booking::withoutGlobalScopes()->with('listing')->findOrFail($request->input('other_id'));
+        if ($a->id === $b->id || (int) $a->status !== 5 || (int) $b->status !== 5) {
+            return response()->json(['ok' => false, 'message' => 'Both bookings must be live, and different.'], 422);
+        }
+        if ((int) $a->listing_id === (int) $b->listing_id) {
+            return response()->json(['ok' => false, 'message' => 'Both bookings are already in the same unit.'], 422);
+        }
+
+        $unitA = $a->listing; $unitB = $b->listing;
+        $by    = Auth::user()->name ?? ('user #' . Auth::id());
+        $stamp = now()->format('d M');
+
+        try {
+            DB::transaction(function () use ($a, $b, $unitA, $unitB, $by, $stamp) {
+                Booking::withoutOverlapCheck(function () use ($a, $b, $unitA, $unitB, $by, $stamp) {
+                    $a->listing_id = $unitB->id; $a->remark = mb_substr(trim((string) $a->remark . ' | swapped with #' . $b->id . ' into ' . $unitB->name . ' by ' . $by . ' ' . $stamp), 0, 255); $a->save();
+                    $b->listing_id = $unitA->id; $b->remark = mb_substr(trim((string) $b->remark . ' | swapped with #' . $a->id . ' into ' . $unitA->name . ' by ' . $by . ' ' . $stamp), 0, 255); $b->save();
+                });
+                // The clash check on the end state: each booking against everything else in its new unit.
+                foreach ([[$a, $unitB], [$b, $unitA]] as [$bk, $unit]) {
+                    $clash = Booking::withoutGlobalScopes()->where('listing_id', $unit->id)->where('status', 5)->whereNotIn('id', [$a->id, $b->id])
+                        ->where('check_in', '<', $bk->check_out)->where('check_out', '>', $bk->check_in)->first();
+                    if ($clash) {
+                        throw new \InvalidArgumentException(sprintf('%s is taken %s to %s by booking #%d, so #%d cannot go there.', $unit->name, $clash->check_in, $clash->check_out, $clash->id, $bk->id));
+                    }
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        foreach ([[$a, $unitA, $unitB], [$b, $unitB, $unitA]] as [$bk, $from, $to]) {
+            if ($eb = EzeeBooking::where('book_id', $bk->id)->where('status', '<>', 1)->first()) {
+                EzeeAssignmentLog::create(['ezee_booking_id' => $eb->id, 'listing_id' => $to->id, 'old_listing_id' => $from->id, 'assigned_by' => Auth::id(), 'method' => 'reassign',
+                    'note' => sprintf('Swap: booking #%d moved %s → %s, exchanging units with #%d.', $bk->id, $from->name, $to->name, $bk->id === $a->id ? $b->id : $a->id)]);
+            }
+        }
+        DataLog::create(['related_id' => $a->id, 'title' => 'Booking swapped', 'status' => 'done',
+            'data' => json_encode(['bookings' => [$a->id, $b->id], 'units' => [$unitA->name, $unitB->name], 'by' => $by])]);
+
+        return response()->json(['ok' => true, 'message' => sprintf('Swapped: #%d is now in %s, #%d is now in %s.', $a->id, $unitB->name, $b->id, $unitA->name)]);
+    }
+
     public function split(Request $request, $bookingId, BookingSplitter $splitter)
     {
         $request->validate([
@@ -398,6 +452,10 @@ class EzeeRoomMappingController extends Controller
         $eb           = EzeeBooking::findOrFail($ezeeBookingId);
         $listing      = Listing::withoutGlobalScope('notArchived')->findOrFail($request->listing_id);
         $oldListingId = null;
+
+        if ($eb->book_id && ($cur = Booking::withoutGlobalScopes()->find($eb->book_id)) && (int) $cur->listing_id === (int) $listing->id) {
+            return response()->json(['ok' => false, 'message' => 'The booking is already in ' . $listing->name . '.'], 422);
+        }
 
         try {
             if ($eb->book_id && ($existing = Booking::find($eb->book_id))) {
