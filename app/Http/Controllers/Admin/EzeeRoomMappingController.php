@@ -287,6 +287,47 @@ class EzeeRoomMappingController extends Controller
         return response()->json(['ok' => true, 'message' => 'Moved to ' . $listing->name . '.']);
     }
 
+    /**
+     * Cancel a booking from the Edit Booking page, the way the sync cancels one
+     * eZee reports: the booking is cancelled (never deleted), the unit is freed,
+     * and the eZee record is retired so no job re-creates the stay. The reason
+     * and the staff member are kept on the booking and in the assignment log.
+     */
+    public function cancelBooking(Request $request, $bookingId)
+    {
+        $request->validate(['reason' => 'required|string|max:160']);
+
+        $booking = Booking::withoutGlobalScopes()->findOrFail($bookingId);
+        if ((int) $booking->status === 1) {
+            return response()->json(['ok' => false, 'message' => 'This booking is already cancelled.'], 422);
+        }
+
+        $reason = trim($request->input('reason'));
+        $by     = Auth::user()->name ?? ('user #' . Auth::id());
+        $stamp  = now()->format('d M Y H:i');
+
+        DB::table('bookings')->where('id', $booking->id)->update([
+            'status'     => 1,
+            'remark'     => mb_substr(trim((string) $booking->remark . ' | cancelled by ' . $by . ' ' . $stamp . ': ' . $reason), 0, 255),
+            'updated_at' => now(),
+        ]);
+
+        $eb = EzeeBooking::where('book_id', $booking->id)->where('status', '<>', 1)->first();
+        if ($eb) {
+            EzeeBooking::where('id', $eb->id)->update(['status' => 1]);
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $eb->id, 'listing_id' => $booking->listing_id, 'old_listing_id' => null, 'assigned_by' => Auth::id(), 'method' => 'cancelled',
+                'note' => sprintf('Cancelled by %s on %s: %s. Booking #%d cancelled; %s retired so it is not re-created.', $by, $stamp, $reason, $booking->id, $eb->SubBookingId),
+            ]);
+            EzeeAssignmentLog::where('ezee_booking_id', $eb->id)->where('method', 'conflict')->whereNull('resolved_at')
+                ->update(['resolved_at' => now(), 'resolved_by' => Auth::id(), 'resolution_note' => 'Cancelled by ' . $by . ': ' . $reason]);
+        }
+        DataLog::create(['related_id' => $booking->id, 'title' => 'Booking cancelled', 'status' => 'done',
+            'data' => json_encode(['booking' => $booking->id, 'listing_id' => $booking->listing_id, 'stay' => $booking->check_in . ' to ' . $booking->check_out, 'reason' => $reason, 'ezee' => $eb->SubBookingId ?? null, 'by' => $by])]);
+
+        return response()->json(['ok' => true, 'message' => 'Booking #' . $booking->id . ' cancelled. The unit is free' . ($eb ? ' and ' . $eb->SubBookingId . ' will not be re-created.' : '.')]);
+    }
+
     public function split(Request $request, $bookingId, BookingSplitter $splitter)
     {
         $request->validate([

@@ -83,6 +83,7 @@ Route::post('/ezee/booking/{ezeeBookingId}/accept-amounts', 'Admin\EzeeRoomMappi
 // Split divides one stay across two units; reassign moves a whole booking.
 Route::post('/booking/{bookingId}/split', 'Admin\EzeeRoomMappingController@split')->name('admin.booking.split');
 Route::post('/booking/{bookingId}/reassign', 'Admin\EzeeRoomMappingController@reassignBooking')->name('admin.booking.reassign');
+Route::post('/booking/{bookingId}/cancel', 'Admin\EzeeRoomMappingController@cancelBooking')->name('admin.booking.cancel');
 Route::get('/ezee/assignment-log', 'Admin\EzeeRoomMappingController@auditLog')->name('admin.ezee.assignment-log');
 Route::post('/ezee/assignment-log/{log}/resolve', 'Admin\EzeeRoomMappingController@resolveConflict')->name('admin.ezee.assignment-log.resolve');
 

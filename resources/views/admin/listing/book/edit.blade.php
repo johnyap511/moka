@@ -33,6 +33,9 @@
 .eb-total{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:12px 14px;border:1px dashed var(--border);border-radius:8px;background:#f9fafb;font-size:13px;margin:0 20px 16px}
 .eb-total b{font-size:18px}
 .eb-actions{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 20px;background:var(--surface);border-top:1px solid var(--border);z-index:2}
+.eb-cancel{margin-left:auto;color:#b91c1c;border-color:#fecaca}
+.eb-cancel:hover{background:#fef2f2}
+@media (max-width:700px){.eb-cancel{margin-left:0}}
 .eb-locked .form-input[readonly]{background:#f3f4f6;color:#6b7280}
 .eb-pieces{overflow-x:auto;margin-bottom:14px}
 .eb-pieces table{width:100%;min-width:520px;font-size:12.5px}
@@ -231,7 +234,12 @@
 
         <div class="eb-actions">
             <button type="submit" class="btn btn-primary">Update booking</button>
-            <a href="/admin/book" class="btn btn-secondary">Cancel</a>
+            <a href="/admin/book" class="btn btn-secondary">Back to list</a>
+            @if((int) $book->status !== 1)
+            <button type="button" class="btn btn-secondary eb-cancel" onclick="cancelBooking(this)" title="Cancel this booking: the unit is freed and the stay is not re-created">Cancel booking</button>
+            @else
+            <span class="badge badge-red" style="align-self:center">Cancelled</span>
+            @endif
         </div>
     </form>
 </div>
@@ -315,6 +323,12 @@ async function postJson(btn, url, body) {
         if (!res.ok || !data.ok) { throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Request failed')); }
         alert(data.message); window.location.reload();
     } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
+function cancelBooking(btn) {
+    var reason = prompt('Cancel booking #{{ $book->id }} ({{ $book->check_in }} to {{ $book->check_out }}).\n\nThe unit is freed and the booking is kept as cancelled, never deleted.{{ $ezee ? ' eZee record ' . $ezee->SubBookingId . ' is retired so the 6 AM job cannot re-create it.' : '' }}\n\nReason (for example: voided in eZee, guest no-show):', '');
+    if (reason === null) { return; }
+    if (!reason.trim()) { alert('A reason is required.'); return; }
+    postJson(btn, '/admin/booking/{{ $book->id }}/cancel', { reason: reason.trim() });
 }
 function moveBooking(btn) {
     var sel = document.getElementById('move-unit');
