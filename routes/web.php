@@ -52,6 +52,16 @@ Route::middleware('lang')->group(function () {
 
     /* ── Authentication ─────────────────────────────────────────────── */
     Route::middleware('guest')->group(function () {
+        // The old site's sign-in address, still saved in owners' phones:
+        // /home?modal=login. Signed-in visitors go to their own dashboard,
+        // everyone else to the login page.
+        Route::get('/home', function () {
+            if (auth()->check()) {
+                $u = auth()->user();
+                return redirect($u->hasRole('admin') ? '/admin/dashboard' : ($u->hasRole('owner') ? '/owner/dashboard' : '/home/dashboard'));
+            }
+            return redirect('/login');
+        });
         Route::get('/login',               'Auth\LoginController@showLoginForm')->name('login');
         Route::post('/login',              'Auth\LoginController@login')->middleware('throttle:10,1');
         Route::get('/register',            'Auth\RegisterController@showRegistrationForm')->name('register');
