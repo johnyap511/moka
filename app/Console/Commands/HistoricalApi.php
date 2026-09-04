@@ -250,6 +250,7 @@ class HistoricalApi extends Command
                                         } else {
                                             $totalExtraCharge = $reserve1['BookingTran']['TotalExtraCharge'];
                                         }
+                                        $extraChargeTax = \App\Support\EzeePricing::extraChargeTax($reserve1['BookingTran']);
 
                                         if (is_array($reserve1['BookingTran']['TotalPayment'])) {
                                             $totalPayment = NULL;
@@ -331,7 +332,7 @@ class HistoricalApi extends Command
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                     'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                     'TotalDiscount' => $totalDiscount,
-                                                    'TotalExtraCharge' => $totalExtraCharge,
+                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
                                                     'TotalPayment' => $totalPayment,
                                                     'TACommision' => $tACommision,
                                                     'FirstName' => $first_name,
@@ -357,7 +358,7 @@ class HistoricalApi extends Command
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
                                                     'End' => $end,
-                                                    'TotalExtraCharge' => $totalExtraCharge,
+                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                     'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                     'TotalDiscount' => $totalDiscount,
@@ -555,7 +556,7 @@ class HistoricalApi extends Command
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                         'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                         'TotalDiscount' => $totalDiscount,
-                                                        'TotalExtraCharge' => $totalExtraCharge,
+                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
                                                         'TotalPayment' => $totalPayment,
                                                         'TACommision' => $tACommision,
                                                         'FirstName' => $first_name,
@@ -581,7 +582,7 @@ class HistoricalApi extends Command
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
                                                         'End' => $end,
-                                                        'TotalExtraCharge' => $totalExtraCharge,
+                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                         'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                         'TotalDiscount' => $totalDiscount,

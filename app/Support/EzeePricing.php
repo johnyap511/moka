@@ -91,6 +91,32 @@ class EzeePricing
     /**
      * @return array{price_night:float,sst:float,cleaning_fee:float,sst_cf:float,ota_fee:float,total:float,nights:int}
      */
+
+    /**
+     * The tax EZEE applied to the extra charges, from the per-charge breakdown
+     * it sends: sum of (after tax - before tax). Null when the breakdown is
+     * absent, so the caller can fall back to the 8% assumption.
+     */
+    public static function extraChargeTax($tran): ?float
+    {
+        $charges = $tran['ExtraCharge'] ?? null;
+        if (!is_array($charges) || $charges === []) {
+            return null;
+        }
+        if (isset($charges['AmountAfterTax'])) {
+            $charges = [$charges];
+        }
+        $tax = 0.0;
+        foreach ($charges as $c) {
+            if (!is_array($c)) {
+                continue;
+            }
+            $tax += (float) ($c['AmountAfterTax'] ?? 0) - (float) ($c['AmountBeforeTax'] ?? 0);
+        }
+
+        return round(max(0.0, $tax), 2);
+    }
+
     public static function breakdown($ezee): array
     {
         $nights = self::nights($ezee->Start, $ezee->End);
@@ -104,7 +130,11 @@ class EzeePricing
         $sstRate  = $bookedOn < self::SST_DATE ? 0.06 : 0.08;
 
         $sst   = self::floor2($roomTotal * $sstRate);
-        $sstCf = self::floor2($cleaningFee * $sstRate);
+        // EZEE's own tax on the extras when the pull carried it (an Agoda
+        // "channel" surcharge carries none); the 8% assumption otherwise.
+        $sstCf = isset($ezee->extra_charge_tax) && $ezee->extra_charge_tax !== null && $ezee->extra_charge_tax !== ''
+            ? round((float) $ezee->extra_charge_tax, 2)
+            : self::floor2($cleaningFee * $sstRate);
 
         $otaFee = self::otaFee(
             self::normaliseSource($ezee->Source),
