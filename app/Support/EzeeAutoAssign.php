@@ -52,6 +52,7 @@ class EzeeAutoAssign
         'unchanged' => 0,
         'adopted'   => 0,
         'resolved'  => 0,
+        'repriced'  => 0,
         'failed'    => 0,
     ];
 
@@ -178,6 +179,21 @@ class EzeeAutoAssign
                 // person, who accepts it from the review row.
                 if ($drift = $this->dateDrift($ezeeBooking, $booking)) {
                     $this->review($ezeeBooking, $listing, $drift);
+                    continue;
+                }
+
+                // EZEE may have changed the rate or the extras since we captured
+                // them. A booking the system created follows EZEE's figures; one
+                // a person keyed or edited is raised for that person.
+                if ($amount = $this->amountDrift($ezeeBooking, $booking)) {
+                    if ($this->systemMade($amount['chain'])) {
+                        $this->guard(fn () => $this->reprice($ezeeBooking, $listing, $amount), $ezeeBooking);
+                    } else {
+                        $this->review($ezeeBooking, $listing, sprintf(
+                            'EZEE now charges room RM %.2f, cleaning RM %.2f (+SST %.2f); our booking has room RM %.2f, cleaning RM %.2f (+SST %.2f). The booking was keyed or edited by hand, so it was not repriced.',
+                            $amount['theirs']['room'], $amount['theirs']['cleaning'], $amount['theirs']['sst_cf'],
+                            $amount['ours']['room'], $amount['ours']['cleaning'], $amount['ours']['sst_cf']));
+                    }
                     continue;
                 }
 
@@ -848,6 +864,107 @@ class EzeeAutoAssign
      * same-folio siblings on the same unit. Returns a note when EZEE's dates
      * differ from it, null when they agree.
      */
+    /**
+     * EZEE's current amounts against the stay we hold. Null when they agree
+     * (room within RM 1, extras within 5 sen) or when the nights differ, which
+     * is a date drift and handled by dateDrift().
+     *
+     * @return array{chain:\Illuminate\Support\Collection,bd:array,ours:array,theirs:array}|null
+     */
+    private function amountDrift(EzeeBooking $ezeeBooking, Booking $booking): ?array
+    {
+        $chain = collect(BookingSplitter::stayChain($booking, substr((string) $ezeeBooking->TransactionId, 0, 5)))
+            ->filter(fn ($b) => (int) $b->status !== 1)->sortBy('check_in')->values();
+        if ($chain->isEmpty()) {
+            return null;
+        }
+        $bd     = EzeePricing::breakdown($ezeeBooking);
+        $nights = (int) $bd['nights'];
+        if ($nights <= 0 || (int) $chain->sum('nights') !== $nights) {
+            return null;
+        }
+        $ours = [
+            'room'     => round($chain->sum(fn ($b) => (float) $b->price_night * (int) $b->nights), 2),
+            'cleaning' => round((float) $chain->sum('cleaning_fee'), 2),
+            'sst_cf'   => round((float) $chain->sum('sst_cf'), 2),
+        ];
+        $theirs = [
+            'room'     => round((float) $bd['price_night'] * $nights, 2),
+            'cleaning' => round((float) $bd['cleaning_fee'], 2),
+            'sst_cf'   => round((float) $bd['sst_cf'], 2),
+        ];
+        $differs = abs($ours['room'] - $theirs['room']) > 1.00
+            || abs($ours['cleaning'] - $theirs['cleaning']) > 0.05
+            || abs($ours['sst_cf'] - $theirs['sst_cf']) > 0.05;
+
+        return $differs ? compact('chain', 'bd', 'ours', 'theirs') : null;
+    }
+
+    /** Every segment was written by the system and carries no hand edit. */
+    private function systemMade($chain): bool
+    {
+        foreach ($chain as $b) {
+            $remark = (string) $b->remark;
+            if (!preg_match('/^(Auto-assigned from EZEE|Matched on EZEE room|Assigned by hand to|Room move: )/', $remark)) {
+                return false;
+            }
+            if (preg_match('/\| (cancelled|edited|corrected|keyed)/i', $remark)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Rewrite every segment of the stay from EZEE's current amounts: the
+     * nightly rate on all of them, cleaning and its SST on the first, the
+     * channel fee spread by nights. Totals are recomputed, nothing else moves.
+     */
+    private function reprice(EzeeBooking $ezeeBooking, Listing $listing, array $amount): void
+    {
+        $chain = $amount['chain']; $bd = $amount['bd'];
+        $nights  = max(1, (int) $bd['nights']);
+        $sstRate = $amount['theirs']['room'] > 0 ? round((float) $bd['sst'] / $amount['theirs']['room'], 4) : 0.08;
+        $this->tally['repriced']++;
+        $this->detail[] = [
+            'action'  => 'reprice',
+            'room'    => $ezeeBooking->RoomName,
+            'listing' => $listing->name,
+            'dates'   => $ezeeBooking->Start . ' → ' . $ezeeBooking->End,
+            'note'    => sprintf('room %.2f→%.2f, cleaning %.2f→%.2f, SST(CF) %.2f→%.2f',
+                $amount['ours']['room'], $amount['theirs']['room'], $amount['ours']['cleaning'], $amount['theirs']['cleaning'], $amount['ours']['sst_cf'], $amount['theirs']['sst_cf']),
+        ];
+        if ($this->dryRun) {
+            return;
+        }
+        DB::transaction(function () use ($chain, $bd, $nights, $sstRate, $ezeeBooking, $listing, $amount) {
+            $first = true;
+            foreach ($chain as $b) {
+                $n    = (int) $b->nights;
+                $room = round((float) $bd['price_night'] * $n, 2);
+                $sst  = round($room * $sstRate, 2);
+                $cf   = $first ? round((float) $bd['cleaning_fee'], 2) : 0.0;
+                $cft  = $first ? round((float) $bd['sst_cf'], 2) : 0.0;
+                $disc = $first ? round((float) ($b->discount_fee ?? 0), 2) : 0.0;
+                $fee  = round((float) $bd['ota_fee'] * $n / $nights, 2);
+                DB::table('bookings')->where('id', $b->id)->update([
+                    'price_night' => round((float) $bd['price_night'], 2), 'sst' => $sst, 'tourism_tax' => $sst,
+                    'cleaning_fee' => $cf, 'sst_cf' => $cft, 'ota_fee' => $fee,
+                    'price' => round($room + $sst + $cf + $cft - $disc, 2), 'updated_at' => now(),
+                ]);
+                $first = false;
+            }
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $ezeeBooking->id, 'listing_id' => $listing->id, 'old_listing_id' => null,
+                'assigned_by' => $this->actorId, 'method' => 'modified',
+                'note' => sprintf('Repriced from EZEE: room RM %.2f → %.2f, cleaning RM %.2f → %.2f, SST on cleaning %.2f → %.2f. Booking(s) %s.',
+                    $amount['ours']['room'], $amount['theirs']['room'], $amount['ours']['cleaning'], $amount['theirs']['cleaning'],
+                    $amount['ours']['sst_cf'], $amount['theirs']['sst_cf'], $chain->map(fn ($b) => '#' . $b->id)->implode(', ')),
+            ]);
+        });
+    }
+
     private function dateDrift(EzeeBooking $ezeeBooking, Booking $booking): ?string
     {
         $rows = $this->stayRows($ezeeBooking, $booking);

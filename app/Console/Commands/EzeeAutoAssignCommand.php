@@ -38,8 +38,8 @@ class EzeeAutoAssignCommand extends Command
         }
 
         $this->table(
-            ['Assigned', 'Adopted', 'Moved', 'Conflicts', 'Unmapped room', 'Overwritten row', 'Already correct', 'Failed'],
-            [[$result['assigned'], $result['adopted'], $result['moved'], $result['conflicts'], $result['unmapped'], $result['overwritten'], $result['unchanged'], $result['failed']]]
+            ['Assigned', 'Adopted', 'Moved', 'Repriced', 'Conflicts', 'Unmapped room', 'Overwritten row', 'Already correct', 'Failed'],
+            [[$result['assigned'], $result['adopted'], $result['moved'], $result['repriced'] ?? 0, $result['conflicts'], $result['unmapped'], $result['overwritten'], $result['unchanged'], $result['failed']]]
         );
 
         foreach ($result['detail'] as $row) {
@@ -56,6 +56,10 @@ class EzeeAutoAssignCommand extends Command
 
             if ($row['action'] === 'move') {
                 $this->warn("  move: {$row['room']} → {$row['listing']} ({$row['dates']}) from listing #{$row['from_id']}");
+            }
+
+            if ($row['action'] === 'reprice') {
+                $this->line("  reprice: {$row['room']} → {$row['listing']} ({$row['dates']}) {$row['note']}");
             }
 
             if ($row['action'] === 'failed') {
