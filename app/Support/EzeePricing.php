@@ -128,19 +128,31 @@ class EzeePricing
         if ($list === null) {
             return null;
         }
-        $cleaning = 0.0; $tax = 0.0;
-        foreach ($list as $c) {
-            $name = (string) ($c['ChargeName'] ?? $c['ChargeDesc'] ?? '');
-            if (!self::isCleaningCharge($name)) {
-                continue;
+        // The cleaning fee is the "Cleaning Fee" line. A channel surcharge
+        // line stands in for it only when the folio has no cleaning line
+        // (Agoda posts its cleaning fee that way); when both exist, the
+        // channel line is a separate charge and is not added.
+        $sum = function (callable $match) use ($list): array {
+            $cleaning = 0.0; $tax = 0.0; $hit = false;
+            foreach ($list as $c) {
+                $name = (string) ($c['ChargeName'] ?? $c['ChargeDesc'] ?? '');
+                if (!$match($name)) {
+                    continue;
+                }
+                $hit = true;
+                $before = (float) ($c['AmountBeforeTax'] ?? 0);
+                $after  = (float) ($c['AmountAfterTax'] ?? $before);
+                $cleaning += $before;
+                $tax      += max(0.0, $after - $before);
             }
-            $before = (float) ($c['AmountBeforeTax'] ?? 0);
-            $after  = (float) ($c['AmountAfterTax'] ?? $before);
-            $cleaning += $before;
-            $tax      += max(0.0, $after - $before);
+            return [$hit, round($cleaning, 2), round($tax, 2)];
+        };
+        [$hit, $cleaning, $tax] = $sum(fn ($n) => stripos($n, 'cleaning') !== false);
+        if (!$hit) {
+            [$hit, $cleaning, $tax] = $sum(fn ($n) => preg_match('/^channel/i', $n) === 1);
         }
 
-        return ['cleaning' => round($cleaning, 2), 'tax' => round($tax, 2)];
+        return ['cleaning' => $cleaning, 'tax' => $tax];
     }
 
     /** Kept for the sync: the tax over every extra line, from the breakdown. */
