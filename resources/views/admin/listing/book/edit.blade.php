@@ -16,7 +16,7 @@
     // Swap candidates: live bookings in other units of the same hotel whose dates overlap this one.
     $swaps = (int) $book->status === 5 ? \App\Booking::withoutGlobalScopes()->with(['listing', 'user'])->where('status', 5)->where('id', '<>', $book->id)
         ->where('listing_id', '<>', $book->listing_id)->where('check_in', '<', $book->check_out)->where('check_out', '>', $book->check_in)
-        ->whereHas('listing', fn ($q) => $q->where('ezee_hotel_code', $listing->ezee_hotel_code ?? ''))
+        ->whereHas('listing', fn ($q) => $q->whereRaw('LOWER(SUBSTRING_INDEX(name, " ", 1)) = ?', [strtolower(strtok((string) ($listing->name ?? ''), ' '))]))  // same hotel: listings share the first word of their name
         ->get()->sortBy(fn ($x) => $x->listing->name ?? '') : collect();
     $fmt   = fn ($d) => \Carbon\Carbon::parse($d)->format('D d M Y');
 @endphp
