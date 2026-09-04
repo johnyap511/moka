@@ -1363,16 +1363,9 @@ private function getActionButtons($book)
                 // change produced two different documents.
                 $ota = $booking->ota_fee;
                 $sst = $booking->sst; // stored figure: a tenancy carries its SST too
-                $otaText = '';
-                if ($booking->source == 'Booking') {
-                    $otaText = 'Booking.com';
-                } elseif (preg_match('/^(pms|walk|google|book on google|internet|booking engine|website)/i', trim((string) $booking->source))) {
-                    // Direct channels: PMS, walk-in, Google, Internet Booking Engine.
-                    // Finance treats them as one channel, "Website", at the 8% fee.
-                    $otaText = 'Website';
-                } else {
-                    $otaText = $booking->source;
-                }
+                $ezee = $booking->ezeeBooking;
+                // Ground rule 12: eZee's source, mapped to the one channel list.
+                $otaText = \App\Support\Channel::canonical($ezee->Source ?? $booking->source);
 
                 // eZee's own folio number first (the one staff see in eZee), then the
                 // folio typed at booking time, then MOKA's internal number.

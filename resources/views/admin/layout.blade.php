@@ -281,6 +281,10 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         Revenue Export (EZEE)
     </a>
+    <a href="/admin/ground-rules" class="sidebar-link {{ request()->is('admin/ground-rules*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
+        Ground rules
+    </a>
     @endif
     @if(admin_can('ezee.manage'))
     <a href="/admin/ezee/upload_bookings" class="sidebar-link {{ request()->is('admin/ezee/upload_bookings*') ? 'active' : '' }}">

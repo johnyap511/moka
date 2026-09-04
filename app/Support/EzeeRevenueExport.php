@@ -821,15 +821,7 @@ class EzeeRevenueExport
     /** The channel as finance names it, without the account suffixes EZEE appends. */
     public static function channel(string $source): string
     {
-        $s = trim(preg_replace('/[-_ ]?\d+.*$/', '', $source));
-        return match (true) {
-            stripos($s, 'booking') === 0 => 'Booking.com',
-            stripos($s, 'ctrip') === 0 || stripos($s, 'trip.com') === 0 => 'CTrip',
-            stripos($s, 'traveloka') === 0 => 'Traveloka',
-            // PMS, walk-in, Google, Internet Booking Engine: one direct channel, "Website", at the 8% fee.
-            $s === 'PMS' || preg_match('/^(walk|google|book on google|internet|booking engine|website)/i', $s) === 1 => 'Website',
-            default => $s ?: 'Unknown',
-        };
+        return Channel::canonical($source) ?: 'Unknown';
     }
 
     /** @return array<int,mixed> one CSV row in header order */

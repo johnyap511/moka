@@ -301,6 +301,17 @@ class EzeePricing
             return 0.0;
         }
 
+        // Ground rule 9 (confirmed 4 Sep 2026): direct business — Walk In, PMS,
+        // Google, Internet Booking Engine, Monthly Rental — is "Website" and
+        // carries the 8% M&A fee on the room charge before tax, never on the
+        // cleaning fee. Long Term Rental carries no fee.
+        if ($afterCutover && Channel::isDirect($source)) {
+            return self::round2(self::RATES['WALK_IN8'] * $roomTotal);
+        }
+        if ($afterCutover && Channel::isFeeFree($source)) {
+            return 0.0;
+        }
+
         $afterCheck  = $bookedOn > new DateTime(self::CHECK_DATE);
         $afterNew    = $bookedOn > new DateTime(self::CHECK_DATE_NEW);
         $beforeNew   = $bookedOn < new DateTime(self::CHECK_DATE_NEW);

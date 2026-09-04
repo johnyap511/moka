@@ -558,7 +558,7 @@ class EzeeAutoAssign
                 'price'        => $breakdown['total'],
                 'tourism_tax'  => $breakdown['sst'],
                 'discount_fee' => $ezeeBooking->TotalDiscount ?? 0,
-                'source'       => preg_replace('/[^A-Za-z\. ]/', '', (string) $ezeeBooking->Source),
+                'source'       => Channel::canonical($ezeeBooking->Source),
                 'status'       => 5,
                 'remark'       => 'Auto-assigned from EZEE room ' . $ezeeBooking->RoomName,
             ]);

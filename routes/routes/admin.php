@@ -58,6 +58,7 @@ Route::get('/ezee/booking/{id}/edit', 'Admin\EzeeBookingController@edit')->name(
 Route::put('/ezee/booking/{id}', 'Admin\EzeeBookingController@update')->name('admin.ezee.booking.update');
 
 Route::get('ezee/booking_report', 'Admin\BookController@ezeeBookingsReports');
+Route::view('/ground-rules', 'admin.ground_rules')->name('admin.ground-rules');
 Route::get('/ezee/revenue-export', 'Admin\EzeeRevenueExportController@index')->name('admin.ezee.revenue-export');
 Route::post('/ezee/revenue-export', 'Admin\EzeeRevenueExportController@download')->name('admin.ezee.revenue-export.download');
 Route::get('ezee/upload_bookings', 'Admin\BookController@uploadBookings'); 
