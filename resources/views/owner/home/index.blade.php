@@ -67,6 +67,16 @@
    separate phone page). Show it as one column instead: tiles, donuts, figures,
    then the two trend charts, each with a fixed chart height so the canvases
    have room. Above 575px the stylesheet's own breakpoints apply. */
+/* Chart boxes keep a fixed height: with a height that follows the viewport,
+   a phone's address bar showing and hiding on scroll re-sizes every chart
+   and the page flickers. */
+.owner-db canvas { display:block; }
+.owner-db .chart-box { position:relative; height:220px; }
+@media (max-width: 575px) {
+    .owner-db .db-main > div:nth-child(10) > div, .owner-db .db-main > div:nth-child(11) > div { height: auto; }
+    .owner-db .chart-box { height: 200px; }
+    .owner-db .chart-box.tall { height: 240px; }
+}
 @media (max-width: 575px) {
     .owner-db .db-main { display: grid !important; grid-template-columns: 1fr; grid-template-rows: none; margin: 0; gap: 12px; }
     .owner-db .db-main > div { padding: 0; grid-column: auto !important; grid-row: auto !important; }
@@ -156,7 +166,7 @@
                 </div>
             </div>
             <div style="height:calc(100% - 26px);display:flex;align-items:center;justify-content:center">
-                <canvas id="sourceChart"></canvas>
+                <div class="chart-box"><canvas id="sourceChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -179,7 +189,7 @@
                 </div>
             </div>
             <div style="height:calc(100% - 26px);display:flex;align-items:center;justify-content:center">
-                <canvas id="catChart"></canvas>
+                <div class="chart-box"><canvas id="catChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -248,7 +258,7 @@
     <div>
         <div>
             <h6 class="card-title">Average Monthly Rate</h6>
-            <div style="height:calc(100% - 24px)"><canvas id="rateChart"></canvas></div>
+            <div class="chart-box tall"><canvas id="rateChart"></canvas></div>
         </div>
     </div>
 
@@ -256,7 +266,7 @@
     <div>
         <div>
             <h6 class="card-title">Occupancy Rate</h6>
-            <div style="height:calc(100% - 24px)"><canvas id="occChart"></canvas></div>
+            <div class="chart-box tall"><canvas id="occChart"></canvas></div>
         </div>
     </div>
 
@@ -290,6 +300,8 @@
             },
             options: {
                 maintainAspectRatio: false,
+                animation: false,
+                resizeDelay: 400,
                 plugins: { legend: { display: false } },
                 cutout: '58%'
             }
@@ -315,6 +327,8 @@
             },
             options: Object.assign({
                 maintainAspectRatio: false,
+                animation: false,
+                resizeDelay: 400,
                 plugins: { legend: { display: false } }
             }, opts)
         });

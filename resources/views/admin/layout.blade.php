@@ -577,15 +577,20 @@ window.addEventListener('resize', function () { if (window.innerWidth > 1024) to
 // opens it from a tap anywhere on the field; browsers without it keep the icon.
 // The field itself never takes focus, so Chrome cannot highlight a segment:
 // the press is swallowed and only the picker opens.
+// Phones and tablets open their own picker on a tap anywhere in the field,
+// so they are left alone. On a mouse, Chrome only opens the picker from the
+// icon; a click anywhere on the field opens it, and the field is blurred
+// so no segment is highlighted.
+var coarsePointer = window.matchMedia('(pointer:coarse)').matches;
 function openPicker(e) {
+    if (coarsePointer) return;
     var el = e.target;
     if (!(el instanceof HTMLInputElement) || (el.type !== 'month' && el.type !== 'date')) return;
     if (typeof el.showPicker !== 'function') return;   // older browser: native behaviour
-    e.preventDefault();
-    try { el.showPicker(); } catch (err) {}
+    try { el.showPicker(); e.preventDefault(); } catch (err) { return; }
     if (document.activeElement === el) el.blur();
 }
-document.addEventListener('pointerdown', openPicker);
+document.addEventListener('click', openPicker);
 document.addEventListener('keydown', function (e) {
     var el = e.target;
     if ((e.key === 'Enter' || e.key === ' ') && el instanceof HTMLInputElement && (el.type === 'month' || el.type === 'date') && typeof el.showPicker === 'function') {
