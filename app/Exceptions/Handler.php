@@ -20,7 +20,12 @@ class Handler extends ExceptionHandler
         // A form loaded before a deploy, or a leftover cookie from the old
         // site, carries a token this session does not know. Send the person
         // back to the form with a plain sentence instead of a bare 419 page.
-        $this->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+        // Laravel wraps the token exception in a 419 HttpException before the
+        // callbacks run, so that is the type to catch.
+        $this->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
             if ($request->expectsJson()) {
                 return response()->json(['ok' => false, 'message' => 'Your session expired. Reload the page and try again.'], 419);
             }
