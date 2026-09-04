@@ -249,6 +249,44 @@ class EzeeRoomMappingController extends Controller
      * room mid-stay occupied two units, and EZEE reports only the last one, so
      * the division has to be entered by someone who can see its calendar.
      */
+    /**
+     * Move one booking (a whole stay or one piece of it) to another unit, from
+     * the Edit Booking page. The overlap check runs on save; the move is logged
+     * against the eZee record when there is one, otherwise in the data log.
+     */
+    public function reassignBooking(Request $request, $bookingId)
+    {
+        $request->validate(['listing_id' => 'required|exists:listings,id']);
+
+        $booking = Booking::withoutGlobalScopes()->findOrFail($bookingId);
+        $listing = Listing::withoutGlobalScope('notArchived')->findOrFail($request->listing_id);
+        $from    = $booking->listing_id;
+
+        if ((int) $from === (int) $listing->id) {
+            return response()->json(['ok' => false, 'message' => 'The booking is already in ' . $listing->name . '.'], 422);
+        }
+
+        try {
+            $booking->listing_id = $listing->id;
+            $booking->remark     = mb_substr(trim((string) $booking->remark . ' | moved to ' . $listing->name . ' by staff ' . now()->format('d M')), 0, 255);
+            $booking->save();
+        } catch (\InvalidArgumentException | \App\Exceptions\OverlappingBookingException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $eb = EzeeBooking::where('book_id', $booking->id)->where('status', '<>', 1)->first();
+        if ($eb) {
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $eb->id, 'listing_id' => $listing->id, 'old_listing_id' => $from, 'assigned_by' => Auth::id(), 'method' => 'reassign',
+                'note' => sprintf('Booking #%d (%s to %s) moved to %s from the Edit Booking page.', $booking->id, $booking->check_in, $booking->check_out, $listing->name),
+            ]);
+        }
+        \App\DataLog::create(['related_id' => $booking->id, 'title' => 'Booking moved', 'status' => 'done',
+            'data' => json_encode(['booking' => $booking->id, 'from_listing_id' => $from, 'to_listing_id' => $listing->id, 'stay' => $booking->check_in . ' to ' . $booking->check_out, 'by' => 'user #' . Auth::id()])]);
+
+        return response()->json(['ok' => true, 'message' => 'Moved to ' . $listing->name . '.']);
+    }
+
     public function split(Request $request, $bookingId, BookingSplitter $splitter)
     {
         $request->validate([

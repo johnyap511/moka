@@ -156,9 +156,74 @@
     </div>
 </div>
 
+@php
+    // Every piece of this stay: same MOKA folio, in the same unit or with touching dates.
+    $pieces = \App\Booking::withoutGlobalScopes()->with('listing')->where('status', '<>', 1)
+        ->where(fn ($q) => $q->where('id', $book->id)->orWhere(fn ($w) => $w->where('folio_no', $book->folio_no)->where('folio_no', '<>', '')
+            ->where(fn ($x) => $x->where('listing_id', $book->listing_id)->orWhere('check_in', $book->check_out)->orWhere('check_out', $book->check_in))))
+        ->orderBy('check_in')->get();
+    $units = \App\Listing::orderBy('name')->get(['id', 'name']);
+@endphp
+<div class="card" style="margin-top:16px">
+    <div class="card-header"><h2>Unit</h2></div>
+    <div class="card-body" style="font-size:13px">
+        <p style="margin:0 0 10px;color:var(--text-secondary)"><b>Reassign</b> moves this booking to another unit as it is. <b>Split</b> moves some of its nights to another unit (a room move): amounts follow the stamped nightly rate, cleaning stays with the first night, the channel fee follows the nights. Both check for clashes before saving.</p>
+        <table style="font-size:12px;margin-bottom:12px">
+            <thead><tr><th>Booking</th><th>Unit</th><th>Check in</th><th>Check out</th><th>Nights</th><th>Total</th></tr></thead>
+            <tbody>
+            @foreach($pieces as $s)
+                <tr @if($s->id == $book->id) style="font-weight:600" @endif><td>#{{ $s->id }}</td><td>{{ $s->listing->name ?? '' }}</td><td>{{ $s->check_in }}</td><td>{{ $s->check_out }}</td><td>{{ $s->nights }}</td><td>RM {{ number_format($s->price, 2) }}</td></tr>
+            @endforeach
+            </tbody>
+        </table>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,max-content));gap:10px;align-items:end;margin-bottom:14px">
+            <label style="display:grid;gap:4px">Reassign booking #{{ $book->id }} to
+                <select id="move-unit" style="max-width:260px">
+                    @foreach($units as $u)<option value="{{ $u->id }}" @if($u->id == $book->listing_id) selected @endif>{{ $u->name }}</option>@endforeach
+                </select>
+            </label>
+            <div><button type="button" class="btn btn-secondary" onclick="moveBooking(this)">Reassign</button></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,max-content));gap:10px;align-items:end">
+            <label style="display:grid;gap:4px">Split: first night elsewhere <input type="date" id="split-from" value="{{ $book->check_in }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}"></label>
+            <label style="display:grid;gap:4px">Morning back <input type="date" id="split-to" value="{{ \Carbon\Carbon::parse($book->check_in)->addDay()->format('Y-m-d') }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}"></label>
+            <label style="display:grid;gap:4px">Where
+                <select id="split-unit" style="max-width:260px">
+                    <option value="">Extra room (no unit)</option>
+                    @foreach($units as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
+                </select>
+            </label>
+            <div><button type="button" class="btn btn-primary" onclick="splitStay(this)">Move those nights</button></div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
+<script>
+async function postJson(btn, url, body) {
+    btn.disabled = true;
+    try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Request failed')); }
+        alert(data.message); window.location.reload();
+    } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
+function moveBooking(btn) {
+    var sel = document.getElementById('move-unit');
+    if (!sel.value) { alert('Pick the unit.'); return; }
+    if (!confirm('Move booking #{{ $book->id }} ({{ $book->check_in }} to {{ $book->check_out }}) to ' + sel.options[sel.selectedIndex].textContent + '?')) { return; }
+    postJson(btn, '/admin/booking/{{ $book->id }}/reassign', { listing_id: sel.value });
+}
+function splitStay(btn) {
+    var from = document.getElementById('split-from').value, to = document.getElementById('split-to').value, unit = document.getElementById('split-unit').value;
+    if (!from || !to || to <= from) { alert('Pick the first night elsewhere and the morning the guest came back.'); return; }
+    if (!confirm('Move ' + from + ' to ' + to + ' to ' + (unit ? document.querySelector('#split-unit option:checked').textContent : 'an extra room (no unit)') + '?')) { return; }
+    postJson(btn, '/admin/booking/{{ $book->id }}/split', { from: from, to: to, listing_id: unit || null });
+}
+</script>
 {{-- Rates changed over time, so an old booking must recalculate against the
      date it was created, not today. --}}
 @include('admin.listing.book._fees', [
