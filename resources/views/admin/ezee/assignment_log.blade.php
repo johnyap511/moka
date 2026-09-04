@@ -128,6 +128,7 @@
                                 @endif
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')" title="Move the whole booking to another unit">Reassign</button>
+                                <button type="button" class="btn btn-secondary btn-sm" style="color:#b91c1c;border-color:#fecaca" onclick="voidedInEzee(this, {{ $log->ezee_booking_id }}, '{{ $eb->SubBookingId }}')" title="You checked eZee and this reservation is voided or cancelled there">Voided in eZee</button>
                                 @if($linkDead)
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
                                 @endif
@@ -293,6 +294,12 @@ function reassignTo(btn, logId, ezeeId) {
     postAction(btn, '/admin/ezee/booking/' + ezeeId + '/reassign', { listing_id: unit, note: 'Reassigned from the review row' }, 'Reassigned.');
 }
 
+function voidedInEzee(btn, ezeeId, res) {
+    var reason = prompt('You checked eZee and ' + res + ' is voided or cancelled there?\n\nMOKA retires it (never assigned again), cancels its booking if one exists, and frees the unit. Nothing is deleted.\n\nReason:', 'voided in eZee');
+    if (reason === null) { return; }
+    if (!reason.trim()) { alert('A reason is required.'); return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/voided', { reason: reason.trim() }, 'Retired.');
+}
 function restoreBooking(btn, ezeeId) {
     if (!confirm('Restore the cancelled booking? EZEE still reports this stay.')) { return; }
     postAction(btn, '/admin/ezee/booking/' + ezeeId + '/restore', {}, 'Restored.');
