@@ -251,6 +251,8 @@ class HistoricalApi extends Command
                                             $totalExtraCharge = $reserve1['BookingTran']['TotalExtraCharge'];
                                         }
                                         $extraChargeTax = \App\Support\EzeePricing::extraChargeTax($reserve1['BookingTran']);
+                                        $extraCharges = \App\Support\EzeePricing::extraChargeList($reserve1['BookingTran']);
+                                        $extraCharges = $extraCharges === null ? null : json_encode($extraCharges);
 
                                         if (is_array($reserve1['BookingTran']['TotalPayment'])) {
                                             $totalPayment = NULL;
@@ -332,7 +334,7 @@ class HistoricalApi extends Command
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                     'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                     'TotalDiscount' => $totalDiscount,
-                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
+                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax, 'extra_charges' => $extraCharges,
                                                     'TotalPayment' => $totalPayment,
                                                     'TACommision' => $tACommision,
                                                     'FirstName' => $first_name,
@@ -358,7 +360,7 @@ class HistoricalApi extends Command
                                                     'RoomName' => $roomName,
                                                     'Start' => $start,
                                                     'End' => $end,
-                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
+                                                    'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax, 'extra_charges' => $extraCharges,
                                                     'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                     'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                     'TotalDiscount' => $totalDiscount,
@@ -556,7 +558,7 @@ class HistoricalApi extends Command
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                         'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                         'TotalDiscount' => $totalDiscount,
-                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
+                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax, 'extra_charges' => $extraCharges,
                                                         'TotalPayment' => $totalPayment,
                                                         'TACommision' => $tACommision,
                                                         'FirstName' => $first_name,
@@ -582,7 +584,7 @@ class HistoricalApi extends Command
                                                         'RoomName' => $roomName,
                                                         'Start' => $start,
                                                         'End' => $end,
-                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax,
+                                                        'TotalExtraCharge' => $totalExtraCharge, 'extra_charge_tax' => $extraChargeTax, 'extra_charges' => $extraCharges,
                                                         'TotalAmountAfterTax' => $totalAmountAfterTax,
                                                         'TotalAmountBeforeTax' => $totalAmountBeforeTax,
                                                         'TotalDiscount' => $totalDiscount,

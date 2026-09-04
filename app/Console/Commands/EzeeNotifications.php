@@ -118,7 +118,7 @@ class EzeeNotifications extends Command
                 'SubBookingId' => $ev['res'], 'IsConfirmed' => $t['IsConfirmed'] ?? null, 'RateplanName' => $t['RateplanName'] ?? null, 'RoomTypeName' => $t['RoomTypeName'] ?? null,
                 'RoomName' => $t['eZeePMSRoomid'] ?? ($t['RoomName'] ?? null), 'Start' => $t['Start'] ?? null, 'End' => $t['End'] ?? null, 'CurrencyCode' => $t['CurrencyCode'] ?? null,
                 'TotalAmountAfterTax' => $t['TotalAmountAfterTax'] ?? null, 'TotalAmountBeforeTax' => $t['TotalAmountBeforeTax'] ?? null, 'TotalDiscount' => $t['TotalDiscount'] ?? null,
-                'TotalExtraCharge' => $t['TotalExtraCharge'] ?? null, 'extra_charge_tax' => \App\Support\EzeePricing::extraChargeTax($t), 'TotalPayment' => $t['TotalPayment'] ?? null, 'TACommision' => $t['TACommision'] ?? null,
+                'TotalExtraCharge' => $t['TotalExtraCharge'] ?? null, 'extra_charge_tax' => \App\Support\EzeePricing::extraChargeTax($t), 'extra_charges' => (($l = \App\Support\EzeePricing::extraChargeList($t)) === null ? null : json_encode($l)), 'TotalPayment' => $t['TotalPayment'] ?? null, 'TACommision' => $t['TACommision'] ?? null,
                 'FirstName' => $t['FirstName'] ?? null, 'LastName' => $t['LastName'] ?? null, 'Mobile' => $t['Mobile'] ?? null, 'Email' => $t['Email'] ?? null,
                 'Country' => $t['Country'] ?? null, 'Source' => $t['Source'] ?? null, 'VoucherNo' => $t['VoucherNo'] ?? null,
                 'ezee_status' => $ev['status'], 'ezee_current_status' => $t['CurrentStatus'] ?? null, 'ezee_modified_at' => $t['Modifydatetime'] ?? null,

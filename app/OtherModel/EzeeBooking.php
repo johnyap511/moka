@@ -18,6 +18,7 @@ class EzeeBooking extends Model
      */
     protected $fillable = [
         'extra_charge_tax',
+        'extra_charges',
         'book_id',
         'ezee_group_id',
         'SubBookingId',

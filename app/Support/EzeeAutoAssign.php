@@ -188,6 +188,10 @@ class EzeeAutoAssign
                 if ($amount = $this->amountDrift($ezeeBooking, $booking)) {
                     if ($this->systemMade($amount['chain'])) {
                         $this->guard(fn () => $this->reprice($ezeeBooking, $listing, $amount), $ezeeBooking);
+                    } elseif (!$amount['room_differs']) {
+                        // A hand-keyed booking whose only difference is the cleaning
+                        // line: the month-end export shows it; no review item.
+                        $this->tally['unchanged']++;
                     } else {
                         $this->review($ezeeBooking, $listing, sprintf(
                             'EZEE now charges room RM %.2f, cleaning RM %.2f (+SST %.2f); our booking has room RM %.2f, cleaning RM %.2f (+SST %.2f). The booking was keyed or edited by hand, so it was not repriced.',
@@ -893,11 +897,17 @@ class EzeeAutoAssign
             'cleaning' => round((float) $bd['cleaning_fee'], 2),
             'sst_cf'   => round((float) $bd['sst_cf'], 2),
         ];
-        $differs = abs($ours['room'] - $theirs['room']) > 1.00
-            || abs($ours['cleaning'] - $theirs['cleaning']) > 0.05
-            || abs($ours['sst_cf'] - $theirs['sst_cf']) > 0.05;
+        // Cleaning is only compared when EZEE's per-charge breakdown is on the
+        // row; without it, TotalExtraCharge would drag deposits and incidentals
+        // into the cleaning fee.
+        $hasBreakdown = EzeePricing::cleaningFromCharges($ezeeBooking) !== null;
+        $roomDiffers  = abs($ours['room'] - $theirs['room']) > 1.00;
+        $cleanDiffers = $hasBreakdown && (abs($ours['cleaning'] - $theirs['cleaning']) > 0.05 || abs($ours['sst_cf'] - $theirs['sst_cf']) > 0.05);
+        if (!$roomDiffers && !$cleanDiffers) {
+            return null;
+        }
 
-        return $differs ? compact('chain', 'bd', 'ours', 'theirs') : null;
+        return compact('chain', 'bd', 'ours', 'theirs') + ['room_differs' => $roomDiffers, 'clean_differs' => $cleanDiffers];
     }
 
     /** Every segment was written by the system and carries no hand edit. */
@@ -944,8 +954,8 @@ class EzeeAutoAssign
                 $n    = (int) $b->nights;
                 $room = round((float) $bd['price_night'] * $n, 2);
                 $sst  = round($room * $sstRate, 2);
-                $cf   = $first ? round((float) $bd['cleaning_fee'], 2) : 0.0;
-                $cft  = $first ? round((float) $bd['sst_cf'], 2) : 0.0;
+                $cf   = $first ? ($amount['clean_differs'] ? round((float) $bd['cleaning_fee'], 2) : round((float) $b->cleaning_fee, 2)) : 0.0;
+                $cft  = $first ? ($amount['clean_differs'] ? round((float) $bd['sst_cf'], 2) : round((float) $b->sst_cf, 2)) : 0.0;
                 $disc = $first ? round((float) ($b->discount_fee ?? 0), 2) : 0.0;
                 $fee  = round((float) $bd['ota_fee'] * $n / $nights, 2);
                 DB::table('bookings')->where('id', $b->id)->update([

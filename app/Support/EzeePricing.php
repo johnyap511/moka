@@ -92,25 +92,66 @@ class EzeePricing
      * @return array{price_night:float,sst:float,cleaning_fee:float,sst_cf:float,ota_fee:float,total:float,nights:int}
      */
 
-    /**
-     * The tax EZEE applied to the extra charges, from the per-charge breakdown
-     * it sends: sum of (after tax - before tax). Null when the breakdown is
-     * absent, so the caller can fall back to the 8% assumption.
-     */
-    public static function extraChargeTax($tran): ?float
+    /** A charge line EZEE posted as a cleaning fee or a channel surcharge. */
+    public static function isCleaningCharge(string $name): bool
     {
-        $charges = $tran['ExtraCharge'] ?? null;
+        return (bool) preg_match('/cleaning|^channel/i', $name);
+    }
+
+    /** EZEE's per-charge list as an array, from the API payload or the stored JSON. Null when absent. */
+    public static function extraChargeList($tran): ?array
+    {
+        $charges = is_array($tran) ? ($tran['ExtraCharge'] ?? null) : ($tran->extra_charges ?? null);
+        if (is_string($charges)) {
+            $charges = json_decode($charges, true);
+        }
         if (!is_array($charges) || $charges === []) {
             return null;
         }
-        if (isset($charges['AmountAfterTax'])) {
+        if (isset($charges['AmountAfterTax']) || isset($charges['ChargeName'])) {
             $charges = [$charges];
         }
-        $tax = 0.0;
-        foreach ($charges as $c) {
-            if (!is_array($c)) {
+
+        return array_values(array_filter($charges, 'is_array'));
+    }
+
+    /**
+     * Cleaning fee and its tax from EZEE's breakdown: only the cleaning and
+     * channel lines, never a deposit or an incidental. Null when the breakdown
+     * is absent, so the caller falls back to TotalExtraCharge at 8%.
+     *
+     * @return array{cleaning:float,tax:float}|null
+     */
+    public static function cleaningFromCharges($tran): ?array
+    {
+        $list = self::extraChargeList($tran);
+        if ($list === null) {
+            return null;
+        }
+        $cleaning = 0.0; $tax = 0.0;
+        foreach ($list as $c) {
+            $name = (string) ($c['ChargeName'] ?? $c['ChargeDesc'] ?? '');
+            if (!self::isCleaningCharge($name)) {
                 continue;
             }
+            $before = (float) ($c['AmountBeforeTax'] ?? 0);
+            $after  = (float) ($c['AmountAfterTax'] ?? $before);
+            $cleaning += $before;
+            $tax      += max(0.0, $after - $before);
+        }
+
+        return ['cleaning' => round($cleaning, 2), 'tax' => round($tax, 2)];
+    }
+
+    /** Kept for the sync: the tax over every extra line, from the breakdown. */
+    public static function extraChargeTax($tran): ?float
+    {
+        $list = self::extraChargeList($tran);
+        if ($list === null) {
+            return null;
+        }
+        $tax = 0.0;
+        foreach ($list as $c) {
             $tax += (float) ($c['AmountAfterTax'] ?? 0) - (float) ($c['AmountBeforeTax'] ?? 0);
         }
 
@@ -123,7 +164,10 @@ class EzeePricing
 
         $priceNight  = $nights > 0 ? (self::grossRoomTotal($ezee) / $nights) : 0.0;
         $roomTotal   = $priceNight * $nights;
-        $cleaningFee = (float) ($ezee->TotalExtraCharge ?? 0);
+        // With EZEE's breakdown, the cleaning fee is the cleaning and channel
+        // lines only; deposits and incidentals are not revenue of the stay.
+        $fromCharges = self::cleaningFromCharges($ezee);
+        $cleaningFee = $fromCharges ? $fromCharges['cleaning'] : (float) ($ezee->TotalExtraCharge ?? 0);
         $discount    = (float) ($ezee->TotalDiscount ?? 0);
 
         $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
@@ -132,9 +176,7 @@ class EzeePricing
         $sst   = self::floor2($roomTotal * $sstRate);
         // EZEE's own tax on the extras when the pull carried it (an Agoda
         // "channel" surcharge carries none); the 8% assumption otherwise.
-        $sstCf = isset($ezee->extra_charge_tax) && $ezee->extra_charge_tax !== null && $ezee->extra_charge_tax !== ''
-            ? round((float) $ezee->extra_charge_tax, 2)
-            : self::floor2($cleaningFee * $sstRate);
+        $sstCf = $fromCharges ? $fromCharges['tax'] : self::floor2($cleaningFee * $sstRate);
 
         $otaFee = self::otaFee(
             self::normaliseSource($ezee->Source),
