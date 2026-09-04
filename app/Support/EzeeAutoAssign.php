@@ -875,6 +875,28 @@ class EzeeAutoAssign
      *
      * @return array{chain:\Illuminate\Support\Collection,bd:array,ours:array,theirs:array}|null
      */
+    /**
+     * A person accepting EZEE's amounts for a stay keyed or edited by hand:
+     * the same repricing the reconcile applies to system-made bookings.
+     */
+    public function acceptEzeeAmounts(EzeeBooking $ezeeBooking): array
+    {
+        $booking = $ezeeBooking->book_id ? Booking::withoutGlobalScopes()->find($ezeeBooking->book_id) : null;
+        if (!$booking || (int) $booking->status === 1) {
+            throw new \InvalidArgumentException("{$ezeeBooking->SubBookingId} has no live booking to reprice.");
+        }
+        $amount = $this->amountDrift($ezeeBooking, $booking);
+        if (!$amount) {
+            return ['changed' => false, 'note' => 'Amounts already match EZEE.'];
+        }
+        $listing = Listing::withoutGlobalScope('notArchived')->find($booking->listing_id);
+        $this->reprice($ezeeBooking, $listing, $amount);
+        EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)->where('method', 'conflict')->whereNull('resolved_at')
+            ->update(['resolved_at' => now(), 'resolved_by' => $this->actorId, 'resolution_note' => 'EZEE amounts accepted: ' . end($this->detail)['note']]);
+
+        return ['changed' => true, 'note' => end($this->detail)['note']];
+    }
+
     private function amountDrift(EzeeBooking $ezeeBooking, Booking $booking): ?array
     {
         $chain = collect(BookingSplitter::stayChain($booking, substr((string) $ezeeBooking->TransactionId, 0, 5)))

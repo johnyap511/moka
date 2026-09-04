@@ -123,6 +123,9 @@
                             <div style="display:flex;gap:4px;flex-wrap:wrap">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Some nights were in another unit or an extra room">Room history</button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
+                                @if(str_starts_with((string) $log->note, 'EZEE now charges'))
+                                <button type="button" class="btn btn-primary btn-sm" onclick="acceptAmounts(this, {{ $log->ezee_booking_id }})" title="Set this booking's rate, cleaning fee and SST to EZEE's current figures">Use EZEE amounts</button>
+                                @endif
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')" title="Move the whole booking to another unit">Reassign</button>
                                 @if($linkDead)
@@ -301,6 +304,10 @@ function noUnit(btn, ezeeId) {
     postAction(btn, '/admin/ezee/booking/' + ezeeId + '/no-unit', { note: note }, 'Marked.');
 }
 
+function acceptAmounts(btn, ezeeId) {
+    if (!confirm('Set this booking to EZEE\'s current rate, cleaning fee and SST?\n\nEvery segment of the stay is repriced; nothing else changes.')) { return; }
+    postAction(btn, '/admin/ezee/booking/' + ezeeId + '/accept-amounts', {}, 'Repriced from EZEE.');
+}
 function acceptDates(btn, ezeeId, start, end) {
     if (!confirm('Move our dates to EZEE\'s (' + start + ' to ' + end + ')?\n\nThe nightly rate stays as stamped; the amount follows the nights. Segments outside the new dates are cancelled.')) { return; }
     postAction(btn, '/admin/ezee/booking/' + ezeeId + '/accept-dates', {}, 'Dates updated.');

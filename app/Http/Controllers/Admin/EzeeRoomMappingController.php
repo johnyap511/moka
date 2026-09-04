@@ -379,6 +379,18 @@ class EzeeRoomMappingController extends Controller
     }
 
     /** EZEE's dates for a linked booking are accepted; the stamped rate stands. */
+    /** Reprice a hand-keyed booking from EZEE's current amounts, from the review row. */
+    public function acceptAmounts(Request $request, $id)
+    {
+        $row = \App\OtherModel\EzeeBooking::findOrFail($id);
+        try {
+            $r = (new \App\Support\EzeeAutoAssign(false, auth()->id()))->acceptEzeeAmounts($row);
+            return response()->json(['ok' => true, 'message' => $r['changed'] ? 'Repriced from EZEE: ' . $r['note'] : $r['note']]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
     public function acceptDates(Request $request, $ezeeBookingId)
     {
         $eb = EzeeBooking::findOrFail($ezeeBookingId);
