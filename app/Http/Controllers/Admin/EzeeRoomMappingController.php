@@ -306,13 +306,13 @@ class EzeeRoomMappingController extends Controller
         $by     = Auth::user()->name ?? ('user #' . Auth::id());
         $stamp  = now()->format('d M Y H:i');
 
+        $eb = EzeeBooking::where('book_id', $booking->id)->where('status', '<>', 1)->first();
+        DB::beginTransaction();
         DB::table('bookings')->where('id', $booking->id)->update([
             'status'     => 1,
             'remark'     => mb_substr(trim((string) $booking->remark . ' | cancelled by ' . $by . ' ' . $stamp . ': ' . $reason), 0, 255),
             'updated_at' => now(),
         ]);
-
-        $eb = EzeeBooking::where('book_id', $booking->id)->where('status', '<>', 1)->first();
         if ($eb) {
             EzeeBooking::where('id', $eb->id)->update(['status' => 1]);
             EzeeAssignmentLog::create([
@@ -324,6 +324,8 @@ class EzeeRoomMappingController extends Controller
         }
         DataLog::create(['related_id' => $booking->id, 'title' => 'Booking cancelled', 'status' => 'done',
             'data' => json_encode(['booking' => $booking->id, 'listing_id' => $booking->listing_id, 'stay' => $booking->check_in . ' to ' . $booking->check_out, 'reason' => $reason, 'ezee' => $eb->SubBookingId ?? null, 'by' => $by])]);
+
+        DB::commit();
 
         return response()->json(['ok' => true, 'message' => 'Booking #' . $booking->id . ' cancelled. The unit is free' . ($eb ? ' and ' . $eb->SubBookingId . ' will not be re-created.' : '.')]);
     }
@@ -348,22 +350,29 @@ class EzeeRoomMappingController extends Controller
         $stamp   = now()->format('d M Y H:i');
         $booking = $eb->book_id ? Booking::withoutGlobalScopes()->find($eb->book_id) : null;
 
-        EzeeBooking::where('id', $eb->id)->update(['status' => 1]);
-        if ($booking && (int) $booking->status !== 1) {
-            DB::table('bookings')->where('id', $booking->id)->update([
-                'status'     => 1,
-                'remark'     => mb_substr(trim((string) $booking->remark . ' | voided in EZEE, cancelled by ' . $by . ' ' . $stamp . ': ' . $reason), 0, 255),
-                'updated_at' => now(),
-            ]);
-        }
-        EzeeAssignmentLog::create([
-            'ezee_booking_id' => $eb->id, 'listing_id' => $booking->listing_id ?? null, 'old_listing_id' => null, 'assigned_by' => Auth::id(), 'method' => 'cancelled',
-            'note' => sprintf('Voided in EZEE, confirmed by %s on %s: %s. %s retired%s.', $by, $stamp, $reason, $eb->SubBookingId, $booking ? '; booking #' . $booking->id . ' cancelled' : ''),
-        ]);
-        EzeeAssignmentLog::where('ezee_booking_id', $eb->id)->where('method', 'conflict')->whereNull('resolved_at')
-            ->update(['resolved_at' => now(), 'resolved_by' => Auth::id(), 'resolution_note' => 'Voided in EZEE, confirmed by ' . $by . ': ' . $reason]);
-        DataLog::create(['related_id' => $booking->id ?? $eb->id, 'title' => 'EZEE voided', 'status' => 'done',
-            'data' => json_encode(['sub_booking_id' => $eb->SubBookingId, 'booking' => $booking->id ?? null, 'reason' => $reason, 'by' => $by])]);
+        // The unit for the log row: the booking's, else the unit eZee's room maps to.
+        $unitId = $booking->listing_id ?? optional(EzeeUnitMap::make()->resolve($eb))->id;
+
+        DB::transaction(function () use ($eb, $booking, $by, $stamp, $reason, $unitId) {
+            EzeeBooking::where('id', $eb->id)->update(['status' => 1]);
+            if ($booking && (int) $booking->status !== 1) {
+                DB::table('bookings')->where('id', $booking->id)->update([
+                    'status'     => 1,
+                    'remark'     => mb_substr(trim((string) $booking->remark . ' | voided in EZEE, cancelled by ' . $by . ' ' . $stamp . ': ' . $reason), 0, 255),
+                    'updated_at' => now(),
+                ]);
+            }
+            if ($unitId) {
+                EzeeAssignmentLog::create([
+                    'ezee_booking_id' => $eb->id, 'listing_id' => $unitId, 'old_listing_id' => null, 'assigned_by' => Auth::id(), 'method' => 'cancelled',
+                    'note' => sprintf('Voided in EZEE, confirmed by %s on %s: %s. %s retired%s.', $by, $stamp, $reason, $eb->SubBookingId, $booking ? '; booking #' . $booking->id . ' cancelled' : ''),
+                ]);
+            }
+            EzeeAssignmentLog::where('ezee_booking_id', $eb->id)->where('method', 'conflict')->whereNull('resolved_at')
+                ->update(['resolved_at' => now(), 'resolved_by' => Auth::id(), 'resolution_note' => 'Voided in EZEE, confirmed by ' . $by . ': ' . $reason]);
+            DataLog::create(['related_id' => $booking->id ?? $eb->id, 'title' => 'EZEE voided', 'status' => 'done',
+                'data' => json_encode(['sub_booking_id' => $eb->SubBookingId, 'booking' => $booking->id ?? null, 'reason' => $reason, 'by' => $by])]);
+        });
 
         return response()->json(['ok' => true, 'message' => $eb->SubBookingId . ' retired' . ($booking ? ', booking #' . $booking->id . ' cancelled and the unit freed.' : '. It will not be assigned again.')]);
     }
