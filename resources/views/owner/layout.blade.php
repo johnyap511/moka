@@ -105,7 +105,9 @@ td{padding:12px 14px;font-size:13.5px;vertical-align:middle}
 .table-wrap{-webkit-overflow-scrolling:touch}
 .table-wrap table{min-width:560px}
 @media (max-width:1024px){
-  .sidebar{transform:translateX(-100%);transition:transform .2s ease}
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+  .sidebar-spacer{flex:0 0 0}
+  .sidebar form .sidebar-link{background:rgba(0,0,0,.12)}
   .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
   .content{margin-left:0;padding:16px}
   .mobile-bar{display:flex;margin:-16px -16px 16px}
@@ -208,6 +210,12 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <a href="/owner/dashboard" aria-label="Moka home"><img src="{{ asset('images/layout/logo-orange.svg') }}" alt="Moka" class="brand-logo-sm"></a>
+        <form action="/logout" method="POST" style="margin:0 0 0 auto">
+            @csrf
+            <button type="submit" class="menu-btn" aria-label="Log out" title="Log out">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
+        </form>
     </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

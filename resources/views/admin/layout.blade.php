@@ -152,6 +152,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
    instead of squeezing every cell into a tall sliver. */
 .menu-btn{display:none;width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text)}
 .menu-btn svg{width:18px;height:18px}
+.topbar-logout{display:inline-flex}
 .topbar-logo{display:none;align-items:center;flex-shrink:0}
 .topbar-logo img{height:28px;width:auto;display:block}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:99}
@@ -160,7 +161,8 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .table-wrap table{min-width:640px}
 .table-wrap.wide table{min-width:1100px}
 @media (max-width:1024px){
-  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:none}
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:none;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+  .sidebar-footer{margin-top:12px}
   .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
   .topbar{left:0;padding:0 16px}
   .menu-btn{display:inline-flex}
@@ -400,6 +402,12 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         <div class="avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
         <span>{{ Auth::user()->name }}</span>
     </div>
+    <form action="/logout" method="POST" style="margin:0">
+        @csrf
+        <button type="submit" class="menu-btn topbar-logout" aria-label="Log out" title="Log out">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+    </form>
 </header>
 
 {{-- MAIN CONTENT --}}
