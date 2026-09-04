@@ -17,6 +17,17 @@ class Handler extends ExceptionHandler
 
     public function register(): void
     {
+        // A form loaded before a deploy, or a leftover cookie from the old
+        // site, carries a token this session does not know. Send the person
+        // back to the form with a plain sentence instead of a bare 419 page.
+        $this->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['ok' => false, 'message' => 'Your session expired. Reload the page and try again.'], 419);
+            }
+            return redirect()->back()->withInput($request->except('password', '_token'))
+                ->withErrors(['email' => 'Your session expired. Please try again.']);
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });
