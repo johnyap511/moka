@@ -185,8 +185,8 @@
             <div><button type="button" class="btn btn-secondary" onclick="moveBooking(this)">Reassign</button></div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,max-content));gap:10px;align-items:end">
-            <label style="display:grid;gap:4px">Split: first night elsewhere <input type="date" id="split-from" value="{{ $book->check_in }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}"></label>
-            <label style="display:grid;gap:4px">Morning back <input type="date" id="split-to" value="{{ \Carbon\Carbon::parse($book->check_in)->addDay()->format('Y-m-d') }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}"></label>
+            <label style="display:grid;gap:4px">Split: move nights from (check-in) <input type="date" id="split-from" value="{{ $book->check_in }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}" oninput="splitSummary()"></label>
+            <label style="display:grid;gap:4px">to (check-out) <input type="date" id="split-to" value="{{ \Carbon\Carbon::parse($book->check_in)->addDay()->format('Y-m-d') }}" min="{{ $book->check_in }}" max="{{ $book->check_out }}" oninput="splitSummary()"></label>
             <label style="display:grid;gap:4px">Where
                 <select id="split-unit" style="max-width:260px">
                     <option value="">Extra room (no unit)</option>
@@ -195,6 +195,14 @@
             </label>
             <div><button type="button" class="btn btn-primary" onclick="splitStay(this)">Move those nights</button></div>
         </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
+            <span style="color:var(--text-secondary)">Quick pick:</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="splitPick('first')">First night</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="splitPick('last')">Last night</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="splitPick('from2')">All but the first night</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="splitPick('butlast')">All but the last night</button>
+        </div>
+        <div id="split-summary" style="margin-top:8px;font-weight:600"></div>
     </div>
 </div>
 
@@ -217,6 +225,29 @@ function moveBooking(btn) {
     if (!confirm('Move booking #{{ $book->id }} ({{ $book->check_in }} to {{ $book->check_out }}) to ' + sel.options[sel.selectedIndex].textContent + '?')) { return; }
     postJson(btn, '/admin/booking/{{ $book->id }}/reassign', { listing_id: sel.value });
 }
+var stayIn = '{{ $book->check_in }}', stayOut = '{{ $book->check_out }}';
+function addDays(d, n) { var x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+function nightsBetween(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
+function splitPick(which) {
+    var f = document.getElementById('split-from'), t = document.getElementById('split-to');
+    if (which === 'first')   { f.value = stayIn; t.value = addDays(stayIn, 1); }
+    if (which === 'last')    { f.value = addDays(stayOut, -1); t.value = stayOut; }
+    if (which === 'from2')   { f.value = addDays(stayIn, 1); t.value = stayOut; }
+    if (which === 'butlast') { f.value = stayIn; t.value = addDays(stayOut, -1); }
+    splitSummary();
+}
+function splitSummary() {
+    var f = document.getElementById('split-from').value, t = document.getElementById('split-to').value, el = document.getElementById('split-summary');
+    var n = (f && t) ? nightsBetween(f, t) : 0, total = nightsBetween(stayIn, stayOut);
+    if (n <= 0 || f < stayIn || t > stayOut) { el.textContent = 'Pick a check-in and check-out inside ' + stayIn + ' to ' + stayOut + '.'; el.style.color = '#b91c1c'; return; }
+    el.style.color = '';
+    if (n >= total) { el.textContent = 'That is the whole booking (' + n + ' night' + (n > 1 ? 's' : '') + '). Use Reassign instead.'; return; }
+    var stays = [];
+    if (f > stayIn) stays.push(stayIn + ' to ' + f + ' (' + nightsBetween(stayIn, f) + ')');
+    if (t < stayOut) stays.push(t + ' to ' + stayOut + ' (' + nightsBetween(t, stayOut) + ')');
+    el.textContent = 'Moves ' + n + ' night' + (n > 1 ? 's' : '') + ': ' + f + ' to ' + t + '. Stays here: ' + stays.join(' and ') + '.';
+}
+document.addEventListener('DOMContentLoaded', splitSummary);
 function splitStay(btn) {
     var from = document.getElementById('split-from').value, to = document.getElementById('split-to').value, unit = document.getElementById('split-unit').value;
     if (!from || !to || to <= from) { alert('Pick the first night elsewhere and the morning the guest came back.'); return; }
