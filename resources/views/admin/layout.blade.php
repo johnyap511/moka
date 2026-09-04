@@ -595,8 +595,10 @@ function openPicker(e) {
     var el = e.target;
     if (!(el instanceof HTMLInputElement) || (el.type !== 'month' && el.type !== 'date')) return;
     if (typeof el.showPicker !== 'function') return;   // older browser: native behaviour
-    try { el.showPicker(); e.preventDefault(); } catch (err) { return; }
-    if (document.activeElement === el) el.blur();
+    // Open the picker; leave focus and the default click alone so the icon and
+    // typing keep working. If the picker is already open, the call is refused
+    // by the browser and nothing else changes.
+    try { el.showPicker(); } catch (err) {}
 }
 document.addEventListener('click', openPicker);
 document.addEventListener('keydown', function (e) {
