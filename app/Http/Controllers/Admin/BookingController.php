@@ -1307,7 +1307,7 @@ private function getActionButtons($book)
 
     /**
      * The eZee record of a hand-keyed piece's stay: a linked booking with the same
-     * folio number that sits in the same room or whose dates touch this piece.
+     * MOKA folio number that sits in the same room or whose dates touch this piece.
      */
     private function siblingEzee($booking): ?object
     {
@@ -1319,7 +1319,7 @@ private function getActionButtons($book)
         return \DB::table('ezee_bookings as e')
             ->join('bookings as s', 's.id', '=', 'e.book_id')
             ->where('e.status', '<>', 1)
-            ->where('e.folio_no', $folio)
+            ->where('s.folio_no', $folio)   // MOKA's own folio number, shared by every piece of the stay
             ->where('s.id', '<>', $booking->id)
             ->where(function ($q) use ($booking) {
                 $q->where('s.listing_id', $booking->listing_id)
