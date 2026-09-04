@@ -119,7 +119,7 @@ class WebController extends Controller
      */
     public function contact()
     {
-        return view('auth.contact');
+        return view('v2.pages.contact');
     }
 
     /**
@@ -422,7 +422,7 @@ class WebController extends Controller
      */
     public function policy()
     {
-        return view('auth.policy');
+        return view('v2.pages.policy');
     }
 
     /**
@@ -430,7 +430,7 @@ class WebController extends Controller
      */
     public function terms()
     {
-        return view('auth.terms');
+        return view('v2.pages.terms');
     }
 
     /**
