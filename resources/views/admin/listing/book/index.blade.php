@@ -194,12 +194,17 @@ $statusMap = [
                         <div class="actions">
                             <a href="/admin/book/{{ $book->id }}" class="btn btn-secondary btn-sm">View</a>
                             <a href="/admin/book/{{ $book->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+                            @if((int) $book->status !== 1)
+                            <button type="button" class="btn btn-secondary btn-sm" style="color:#b91c1c;border-color:#fecaca" onclick="cancelBookingRow(this, {{ $book->id }}, '{{ $book->check_in }}', '{{ $book->check_out }}')" title="Cancel: unit freed, eZee record retired, nothing deleted">Cancel</button>
+                            @endif
+                            @if(admin_can('bookings.delete'))
                             <form action="/admin/book/{{ $book->id }}" method="POST"
-                                  onsubmit="return confirm('Delete this booking?')">
+                                  onsubmit="return confirm('Delete this booking permanently?\n\nDeleting loses the history and the eZee link, and the 6 AM job may re-create the stay. Use Cancel instead unless this booking was keyed by mistake.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -249,3 +254,20 @@ $statusMap = [
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+async function cancelBookingRow(btn, id, ci, co) {
+    var reason = prompt('Cancel booking #' + id + ' (' + ci + ' to ' + co + ').\n\nThe unit is freed, the eZee record is retired, nothing is deleted.\n\nReason:', 'voided in eZee');
+    if (reason === null) { return; }
+    if (!reason.trim()) { alert('A reason is required.'); return; }
+    btn.disabled = true;
+    try {
+        const res = await fetch('/admin/booking/' + id + '/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ reason: reason.trim() }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+        alert(data.message); window.location.reload();
+    } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
+</script>
+@endpush

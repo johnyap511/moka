@@ -18,6 +18,12 @@
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             Edit
         </a>
+        <a href="/admin/book/{{ $book->id }}/edit#unit-card" class="btn btn-secondary" title="Reassign, split or swap the unit">Unit / room move</a>
+        @if((int) $book->status !== 1)
+        <button type="button" class="btn btn-secondary" style="color:#b91c1c;border-color:#fecaca" onclick="cancelBookingRow(this, {{ $book->id }}, '{{ $book->check_in }}', '{{ $book->check_out }}')">Cancel booking</button>
+        @else
+        <span class="badge badge-red" style="align-self:center">Cancelled</span>
+        @endif
     </div>
 </div>
 
@@ -128,3 +134,20 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+async function cancelBookingRow(btn, id, ci, co) {
+    var reason = prompt('Cancel booking #' + id + ' (' + ci + ' to ' + co + ').\n\nThe unit is freed, the eZee record is retired, nothing is deleted.\n\nReason:', 'voided in eZee');
+    if (reason === null) { return; }
+    if (!reason.trim()) { alert('A reason is required.'); return; }
+    btn.disabled = true;
+    try {
+        const res = await fetch('/admin/booking/' + id + '/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ reason: reason.trim() }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+        alert(data.message); window.location.reload();
+    } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
+</script>
+@endpush

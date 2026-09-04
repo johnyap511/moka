@@ -95,6 +95,7 @@
     <div class="row"><span class="lbl">SST (CF)</span><span id="pp-sst-cf"></span></div>
     <div class="row"><span class="lbl">M&amp;A Fee</span><span id="pp-ota"></span></div>
     <div class="row" style="font-weight:600"><span class="lbl" style="font-weight:600">Total</span><span id="pp-price"></span></div>
+    <div class="row" style="justify-content:flex-end;gap:6px;margin-top:8px"><a id="pp-open" href="#" class="btn btn-secondary btn-sm">Open booking</a><a id="pp-unit" href="#" class="btn btn-secondary btn-sm">Unit / room move</a></div>
     <div style="margin-top:12px">
         <a id="pp-view" href="#" class="btn btn-primary btn-sm" style="width:100%;text-align:center">View Booking</a>
     </div>
@@ -138,6 +139,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var fmt = function(v) { return (v !== null && v !== undefined && v !== '') ? 'RM ' + parseFloat(v).toFixed(2) : '—'; };
             document.getElementById('pp-name').textContent        = e.title || 'Guest';
             document.getElementById('pp-booking-id').textContent  = '#' + (ext.booking_id || e.id);
+            document.getElementById('pp-open').href = '/admin/book/' + (ext.booking_id || e.id) + '/edit';
+            document.getElementById('pp-unit').href = '/admin/book/' + (ext.booking_id || e.id) + '/edit#unit-card';
             document.getElementById('pp-ezee-res').textContent    = ext.ezee_res || '—';
             document.getElementById('pp-start').textContent       = e.startStr;
             document.getElementById('pp-end').textContent         = e.endStr;

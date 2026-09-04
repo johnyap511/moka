@@ -14,6 +14,8 @@
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             Back
         </a>
+        @if($booking->book_id)<a href="/admin/book/{{ $booking->book_id }}/edit#unit-card" class="btn btn-secondary">Open booking #{{ $booking->book_id }}</a>@endif
+        @if((int) $booking->status !== 1)<button type="button" class="btn btn-secondary" style="color:#b91c1c;border-color:#fecaca" onclick="voidedInEzee(this)" title="You checked eZee and this reservation is voided or cancelled there">Voided in eZee</button>@endif
     </div>
 </div>
 
@@ -190,6 +192,18 @@
 
 @push('scripts')
 <script>
+async function voidedInEzee(btn) {
+    var reason = prompt('You checked eZee and {{ $booking->SubBookingId }} is voided or cancelled there?\n\nMOKA retires it (never assigned again), cancels its booking if one exists, and frees the unit. Nothing is deleted.\n\nReason:', 'voided in eZee');
+    if (reason === null) { return; }
+    if (!reason.trim()) { alert('A reason is required.'); return; }
+    btn.disabled = true;
+    try {
+        const res = await fetch('/admin/ezee/booking/{{ $booking->id }}/voided', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ reason: reason.trim() }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) { throw new Error(data.message || 'Request failed'); }
+        alert(data.message); window.location.reload();
+    } catch (e) { alert('Not done: ' + e.message); btn.disabled = false; }
+}
 async function splitStay(btn) {
     var id   = document.getElementById('split-booking').value;
     var from = document.getElementById('split-from').value;

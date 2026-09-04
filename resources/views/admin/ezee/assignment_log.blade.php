@@ -121,6 +121,7 @@
                             @if(!$log->resolved_at)
                             @php $linkDead = $eb && $eb->book_id && (!$ours || (int) $ours->status === 1); @endphp
                             <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                @if($ours)<a href="/admin/book/{{ $ours->id }}/edit#unit-card" class="btn btn-secondary btn-sm" title="Edit, cancel, reassign, split or swap this booking">Open #{{ $ours->id }}</a>@endif
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Some nights were in another unit or an extra room">Room history</button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
                                 @if(str_starts_with((string) $log->note, 'EZEE now charges'))
