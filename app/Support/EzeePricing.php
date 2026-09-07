@@ -108,7 +108,7 @@ class EzeePricing
         if (!is_array($charges) || $charges === []) {
             return null;
         }
-        if (isset($charges['AmountAfterTax']) || isset($charges['ChargeName'])) {
+        if (isset($charges['AmountAfterTax']) || isset($charges['Amount']) || isset($charges['ChargeName'])) {
             $charges = [$charges];
         }
 
@@ -141,7 +141,7 @@ class EzeePricing
                 }
                 $hit = true;
                 $before = (float) ($c['AmountBeforeTax'] ?? 0);
-                $after  = (float) ($c['AmountAfterTax'] ?? $before);
+                $after  = (float) ($c['AmountAfterTax'] ?? $c['Amount'] ?? $before);
                 $cleaning += $before;
                 $tax      += max(0.0, $after - $before);
             }
@@ -164,7 +164,7 @@ class EzeePricing
         }
         $tax = 0.0;
         foreach ($list as $c) {
-            $tax += (float) ($c['AmountAfterTax'] ?? 0) - (float) ($c['AmountBeforeTax'] ?? 0);
+            $tax += (float) ($c['AmountAfterTax'] ?? $c['Amount'] ?? 0) - (float) ($c['AmountBeforeTax'] ?? 0);
         }
 
         return round(max(0.0, $tax), 2);
