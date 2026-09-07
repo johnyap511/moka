@@ -80,6 +80,7 @@ class BookingSplitter
             $new['check_out']  = $moves === 'before' ? $splitDate : $checkOut;
             $new = array_merge($new, $shape($movedNights, $moves === 'before'));
             $new['remark']     = trim(($booking->remark ?? '') . " | split stay: {$new['check_in']} to {$new['check_out']} in {$listing->name}");
+            $new['is_split']   = 1;
             $new['created_at'] = $booking->created_at;
             $new['updated_at'] = now();
 
@@ -91,6 +92,7 @@ class BookingSplitter
                 $booking->$field = $value;
             }
             $booking->remark = trim(($booking->remark ?? '') . " | split stay: {$booking->check_in} to {$booking->check_out}");
+            $booking->is_split = 1;
             $booking->save();
 
             if ($ezee = EzeeBooking::where('book_id', $booking->id)->first()) {
@@ -299,6 +301,7 @@ class BookingSplitter
                         $booking->$field = $value;
                     }
                     $booking->remark = trim(($booking->remark ?? '') . " | split stay: {$a} to {$b}");
+                    $booking->is_split = 1;
                     $booking->save();
                     $original = $booking;
                     $result[] = $booking;
@@ -310,6 +313,7 @@ class BookingSplitter
                     'check_in'   => $a,
                     'check_out'  => $b,
                     'remark'     => trim(($template['remark'] ?? '') . " | split stay: {$a} to {$b}" . ($lid !== (int) $booking->listing_id ? ' in ' . ($target->name ?? $lid) : '')),
+                    'is_split'   => 1,
                     'created_at' => $booking->created_at,
                     'updated_at' => now(),
                 ]);

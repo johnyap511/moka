@@ -183,6 +183,11 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Split booking</label>
+                    <label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:9px 0"><input type="checkbox" name="is_split" value="1" {{ old('is_split', $book->is_split) ? 'checked' : '' }}> Guest changed room during this eZee stay</label>
+                    <div class="eb-hint">Prints "Split Booking" in the export's Remarks. Set automatically when MOKA splits a stay.</div>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Booking category</label>
                     <select name="category" class="form-input">
                         @foreach(\App\Support\BookingOptions::CATEGORIES as $c)

@@ -21,7 +21,7 @@ class Booking extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id', 'listing_id', 'folio_no', 'server_folio_no', 'check_in', 'check_out', 'adult', 'infant', 'remark', 'nights', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf',
+        'user_id', 'listing_id', 'folio_no', 'server_folio_no', 'check_in', 'check_out', 'adult', 'infant', 'remark', 'is_split', 'nights', 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf',
         'price', 'source', 'category', 'status', 'tourism_tax', 'discount_fee', 'water',
         //Status
         // 1->Pending booking

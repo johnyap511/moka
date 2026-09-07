@@ -1021,6 +1021,7 @@ private function getActionButtons($book)
 
         $data = $request->only("name", "last_name", "email", "phone");
         $bookData = $request->only("folio_no", "check_in", "check_out", "adult", "infant", 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'discount_fee', 'price', "remark", "source", "category");
+        $bookData['is_split'] = $request->boolean('is_split');
         if ($bookData['check_out'] <= $bookData['check_in']) {
             return back()->with('error', 'The check out should be bigger than check in!')->withInput();
         }
@@ -1211,12 +1212,12 @@ private function getActionButtons($book)
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
                     $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $total, $booking->remark,
+                    $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $total, $this->remarksFor($booking),
                 ];
             } else {
                 $exportData[$x] = [
                     $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $total, $booking->remark,
+                    $otaText, $booking->price_night, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $total, $this->remarksFor($booking),
                 ];
             }
 
@@ -1331,6 +1332,22 @@ private function getActionButtons($book)
             ->first();
     }
 
+    /**
+     * Remarks column of the exports. A split booking (guest changed room during
+     * one eZee reservation) always starts with "Split Booking", whether MOKA made
+     * the split, staff ticked it, or an older remark mentions it.
+     */
+    private function remarksFor($booking): string
+    {
+        $remark = trim((string) $booking->remark);
+        $split  = (int) ($booking->is_split ?? 0) === 1 || preg_match('/split/i', $remark) === 1;
+        if (!$split || preg_match('/^split booking/i', $remark) === 1) {
+            return $remark;
+        }
+
+        return 'Split Booking' . ($remark !== '' ? ' | ' . $remark : '');
+    }
+
     public function exportExcelRange(Request $request)
     {
         if ($request->input('action') == "loaddata") {
@@ -1418,12 +1435,12 @@ private function getActionButtons($book)
                 if ($booking->source == 'Long Term Rental') {
                     $exportData[$x] = [
                         $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $booking->remark,
+                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $this->remarksFor($booking),
                     ];
                 } else {
                     $exportData[$x] = [
                         $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $booking->remark,
+                        $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $this->remarksFor($booking),
                     ];
                 }
 
@@ -1547,12 +1564,12 @@ private function getActionButtons($book)
             if ($booking->source == 'Long Term Rental') {
                 $exportData[$x] = [
                     $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $booking->remark,
+                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $sst, $ezeeFolio, $total, $this->remarksFor($booking),
                 ];
             } else {
                 $exportData[$x] = [
                     $booking->id, $ezee->SubBookingId ?? '', $folio_no, $firstName, $lastName, $listing->name ?? '', $booking->check_in, $booking->check_out, $booking->nights,
-                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $booking->remark,
+                    $otaText, $booking->price_night, $booking->discount_fee, $booking->cleaning_fee, $booking->sst_cf, $ota, $booking->sst, $ezeeFolio, $total, $this->remarksFor($booking),
                 ];
             }
 
