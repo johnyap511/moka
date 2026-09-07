@@ -143,6 +143,12 @@ class EzeeAutoAssign
                 continue;
             }
 
+            // Ground rule 22: a day-use (hourly) stay is company revenue. It sits
+            // in the hotel's company room, never on an owner's calendar or statement.
+            if ((string) $ezeeBooking->Start === (string) $ezeeBooking->End && ($company = self::companyRoomFor($listing))) {
+                $listing = $company;
+            }
+
             if ($this->overwrittenByOtherHotel($ezeeBooking)) {
                 $this->tally['overwritten']++;
                 continue;
@@ -571,7 +577,7 @@ class EzeeAutoAssign
                 'discount_fee' => $ezeeBooking->TotalDiscount ?? 0,
                 'source'       => Channel::canonical($ezeeBooking->Source),
                 'status'       => 5,
-                'remark'       => 'Auto-assigned from EZEE room ' . $ezeeBooking->RoomName,
+                'remark'       => ((string) $ezeeBooking->Start === (string) $ezeeBooking->End ? 'Day use (hourly): company revenue, not on the owner\'s calendar | ' : '') . 'Auto-assigned from EZEE room ' . $ezeeBooking->RoomName,
             ]);
 
             // status 8 marks the EZEE record assigned; without it the list still
@@ -892,6 +898,14 @@ class EzeeAutoAssign
         ));
 
         return true;
+    }
+
+    /** The hotel's first company room ("<Hotel> Extra Room 1"), by the unit's hotel name. */
+    public static function companyRoomFor(Listing $unit): ?Listing
+    {
+        $hotel = strtolower(strtok((string) $unit->name, ' '));
+
+        return Listing::where('user_id', 4475)->whereRaw('LOWER(SUBSTRING_INDEX(name, " ", 1)) = ?', [$hotel])->orderBy('name')->first();
     }
 
     private function conflict(EzeeBooking $ezeeBooking, Listing $listing, ?int $fromListingId, Booking $clash, string $intent): void

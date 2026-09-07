@@ -48,3 +48,7 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 20. Room swaps eZee confirms (7 Sep 2026): when reservation A's final room is X, booking B blocks X, and eZee says B ended
     elsewhere, the sync moves B's nights from A's check-in to B's final room and puts A in X, for unlocked months only.
     Every applied swap appears in Needs Review for a person to check in eZee and Mark done.
+21. One booking per unit per night, strictly. Two live bookings never share a night on an owner's unit; the save is refused.
+    Company rooms ("<Hotel> Extra Room n") are the only exception and belong to MOKA, not to an owner.
+22. Day-use / hourly stays (eZee check-in = check-out) are MOKA company revenue: assigned to the hotel's company room, never on
+    an owner's calendar or statement; 0 nights, rate blank, room charge + SST in the total, "Day use" in Remarks.

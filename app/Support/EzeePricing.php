@@ -175,7 +175,8 @@ class EzeePricing
         $nights = self::nights($ezee->Start, $ezee->End);
 
         $priceNight  = $nights > 0 ? (self::grossRoomTotal($ezee) / $nights) : 0.0;
-        $roomTotal   = $priceNight * $nights;
+        // A day-use (Start = End) has no nightly rate but its room charge is still revenue.
+        $roomTotal   = $nights > 0 ? $priceNight * $nights : self::grossRoomTotal($ezee);
         // With EZEE's breakdown, the cleaning fee is the cleaning and channel
         // lines only; deposits and incidentals are not revenue of the stay.
         $fromCharges = self::cleaningFromCharges($ezee);
