@@ -16,6 +16,9 @@ class Duplicates
     /** The live booking this one would duplicate, or null. */
     public static function find(int $listingId, string $checkIn, string $checkOut, ?string $folio, ?string $guest, ?int $exceptId = null): ?object
     {
+        if ((strtotime($checkOut) - strtotime($checkIn)) / 86400 > 7) {
+            $guest = null; // long stays match on folio only
+        }
         $unit = DB::table('listings')->where('id', $listingId)->value('name');
         if (!$unit) {
             return null;
@@ -31,8 +34,10 @@ class Duplicates
                 if ($folio !== '' && preg_match('/^FN\d+$/i', $folio)) {
                     $w->orWhere('b.folio_no', $folio)->orWhere('b.server_folio_no', $folio);
                 }
-                if ($guest !== '' && strlen($guest) > 3) {
-                    $w->orWhereRaw('LOWER(TRIM(CONCAT(IFNULL(u.name,""), " ", IFNULL(u.last_name,"")))) = ?', [$guest]);
+                // Same name counts only for short stays: a tenant or agent legitimately
+                // holds several units for a month, and that is not a duplicate.
+                if ($guest !== '' && strlen($guest) > 3 && !str_contains($guest, ' x ')) {
+                    $w->orWhere(fn ($g) => $g->whereRaw('LOWER(TRIM(CONCAT(IFNULL(u.name,""), " ", IFNULL(u.last_name,"")))) = ?', [$guest])->where('b.nights', '<=', 7));
                 }
             });
         if ($exceptId) {

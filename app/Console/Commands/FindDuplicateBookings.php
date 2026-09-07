@@ -28,7 +28,9 @@ class FindDuplicateBookings extends Command
             left join users ua on ua.id = a.user_id left join users ub on ub.id = b.user_id
             where a.status = 5 and a.check_in >= ? and LOWER(SUBSTRING_INDEX(la.name,' ',1)) = LOWER(SUBSTRING_INDEX(lb.name,' ',1))
               and ((a.folio_no like 'FN%' and a.folio_no = b.folio_no)
-                   or (LENGTH(TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,'')))) > 3
+                   or (a.nights <= 7 and b.nights <= 7
+                       and LENGTH(TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,'')))) > 3
+                       and LOWER(TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,'')))) not like '% x %'
                        and LOWER(TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,'')))) = LOWER(TRIM(CONCAT(IFNULL(ub.name,''),' ',IFNULL(ub.last_name,''))))))", [$from]);
         $raised = 0;
         foreach ($pairs as $p) {
