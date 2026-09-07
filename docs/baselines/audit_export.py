@@ -61,7 +61,9 @@ for r in rows:
             if abs(cft-cm['tax'])>0.05: issues['SST(CF) vs eZee'].append(f"{tag}: MOKA {cft:.2f} vs eZee {cm['tax']:.2f}"); bad=True
     elif clean>0: issues['cleaning on a non-first piece'].append(f"{tag}: {clean:.2f}")
     if n>0 and abs(sst-round(rate*n*0.08,2))>0.05: issues['SST not 8% of room'].append(f"{tag}: {sst:.2f} vs {round(rate*n*0.08,2):.2f}"); bad=True
-    if abs(total-round(rate*n+sst+clean+cft-disc,2))>0.05: issues['Total formula'].append(f"{tag}: {total:.2f} vs {round(rate*n+sst+clean+cft-disc,2):.2f}"); bad=True
+    if n==0 and b.get('TotalAmountBeforeTax'):
+        if abs(total-round(num(b['TotalAmountBeforeTax'])*1.08,2))>0.05: issues['day-use total'].append(f"{tag}: {total:.2f} vs {round(num(b['TotalAmountBeforeTax'])*1.08,2):.2f}"); bad=True
+    elif abs(total-round(rate*n+sst+clean+cft-disc,2))>0.05: issues['Total formula'].append(f"{tag}: {total:.2f} vs {round(rate*n+sst+clean+cft-disc,2):.2f}"); bad=True
     if rate*n>0: ratios[r['Reservation Source']][round(ota/(rate*n)*100,1)]+=1
     ch=r['Reservation Source']
     if ch=='Website' and abs(ota-round(rate*n*0.08,2))>0.05: issues['Website fee not 8% of room'].append(f"{tag}: {ota:.2f} vs {round(rate*n*0.08,2):.2f}"); bad=True
