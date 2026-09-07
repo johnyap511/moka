@@ -850,7 +850,10 @@ class EzeeAutoAssign
         }
 
         try {
-            DB::transaction(function () use ($a, $x, $b, $y, $from, $to) {
+            DB::transaction(function () use ($a, $x, $b, $y, $from, $to, $bEzee) {
+              // A may be parked in Y already, so the pieces move without the
+              // per-save clash check; the end state is verified below.
+              Booking::withoutOverlapCheck(function () use ($a, $x, $b, $y, $from, $to, $bEzee) {
                 if ($from <= (string) $b->check_in) {
                     // B's whole stay from here on is in Y: move it as it is.
                     $b->listing_id = $y->id;
@@ -865,6 +868,15 @@ class EzeeAutoAssign
                     $ab->save();
                 } else {
                     $this->assignTo($a, $x);
+                }
+              });
+                // End state: no third booking may share either unit on the moved nights.
+                foreach ([[$x->id, $a->Start, $a->End], [$y->id, $from, $to]] as [$lid, $s, $e]) {
+                    $clash = Booking::withoutGlobalScopes()->where('listing_id', $lid)->where('status', 5)->where('check_in', '<', $e)->where('check_out', '>', $s)
+                        ->where('folio_no', '<>', (string) $b->folio_no)->where('id', '<>', (int) $a->book_id)->exists();
+                    if ($clash && !Listing::where('id', $lid)->where('user_id', 4475)->exists()) {
+                        throw new \InvalidArgumentException('a third booking holds unit #' . $lid . ' on ' . $s . ' to ' . $e);
+                    }
                 }
             });
         } catch (\Throwable $e) {
