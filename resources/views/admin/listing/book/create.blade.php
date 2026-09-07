@@ -45,6 +45,7 @@
     <div class="card-body">
         {{-- The store route takes the listing id in the path, so the action is
              rewritten from the Unit No. dropdown below. --}}
+        <div class="alert" style="margin-bottom:14px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:13px;padding:10px 14px;border-radius:8px"><b>eZee reservations are created automatically</b> by the sync, so do not key them here. Use this form only for a stay that is not in eZee. A booking that already exists for the same hotel, dates and folio or guest is refused.</div>
         <form method="POST" id="create-booking-form" action="/admin/listing/0/book">
             @csrf
 

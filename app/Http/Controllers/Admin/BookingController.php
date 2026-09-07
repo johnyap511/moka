@@ -1025,6 +1025,9 @@ private function getActionButtons($book)
         $data = $request->only("name", "last_name", "email", "phone");
         $bookData = $request->only("folio_no", "check_in", "check_out", "adult", "infant", 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'discount_fee', 'price', "remark", "source", "category");
         $bookData['is_split'] = $request->boolean('is_split');
+        if ($dup = \App\Support\Duplicates::find((int) $book->listing_id, $request->check_in, $request->check_out, $request->folio_no, trim($request->name . ' ' . $request->last_name), (int) $book->id)) {
+            return redirect()->back()->withInput()->with('error', \App\Support\Duplicates::message($dup));
+        }
         if ($bookData['check_out'] <= $bookData['check_in']) {
             return back()->with('error', 'The check out should be bigger than check in!')->withInput();
         }

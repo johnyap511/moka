@@ -103,6 +103,11 @@ class BookController extends Controller
             return back()->with('error', 'Booking on same date is already exists! for given listing');
         }
         $data = $request->only("name", "last_name", "email", "phone");
+        // A stay is recorded once. eZee reservations are created by the sync; the
+        // form is for MOKA-only stays, and it refuses what already exists.
+        if ($dup = \App\Support\Duplicates::find((int) ($request->listing_id ?: $id), $request->check_in, $request->check_out, $request->folio_no, trim($request->name . ' ' . $request->last_name))) {
+            return redirect()->back()->withInput()->with('error', \App\Support\Duplicates::message($dup));
+        }
         $bookData = $request->only("folio_no", "check_in", "check_out", "adult", "infant", 'price_night', 'cleaning_fee', 'ota_fee', 'discount_fee', 'sst', 'sst_cf', 'price', "remark", "source", "category");
         if ($bookData['check_out'] <= $bookData['check_in']) {
             return back()->with('error', 'The check out should be bigger than check in!')->withInput();

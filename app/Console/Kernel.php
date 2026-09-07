@@ -63,6 +63,9 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground();
 
+        // Same stay keyed twice goes to Needs Review (7 Sep 2026).
+        $schedule->command('moka:duplicates')->dailyAt('05:30')->withoutOverlapping();
+
         $schedule->command('hour:update')
                 ->hourly()
                 ->withoutOverlapping(120);
