@@ -127,9 +127,17 @@ class EzeeSweepCancelled extends Command
         $rows = EzeeBooking::whereRaw('SUBSTR(TransactionId,1,5) = ?', [$hotel])
             ->whereBetween('Start', [$from, $to])
             ->where('status', '<>', 1)
-            ->get(['id', 'SubBookingId', 'book_id', 'Start', 'End', 'FirstName', 'LastName']);
+            ->get(['id', 'SubBookingId', 'book_id', 'Start', 'End', 'FirstName', 'LastName', 'RoomName', 'ezee_current_status']);
 
         foreach ($rows as $row) {
+            // A stay that has started or ended is not a void, however absent it is
+            // from the list: EZEE's booking list drops checked-out stays, and two
+            // real stays (RES6381, RES3471) were retired that way on 7 Sep 2026.
+            // Only a reservation that has not started yet can be voided by absence.
+            if (in_array((string) $row->ezee_current_status, ['Checked Out', 'Checked In', 'Stayover', 'Due Out'], true) || (string) $row->Start < now()->toDateString()) {
+                $stillLive++;
+                continue;
+            }
             // A reservation EZEE sends without a number cannot be matched to
             // the pull by number, so its absence proves nothing. Left alone:
             // one such tenancy was retired this way while still live in EZEE.
@@ -160,6 +168,14 @@ class EzeeSweepCancelled extends Command
 
             if (!$dryRun) {
                 DB::table('ezee_bookings')->where('id', $row->id)->update(['status' => 1, 'updated_at' => now()]);
+                // Every retirement is written down: what, when, and why.
+                $unit = \App\Support\EzeeUnitMap::make()->resolve($row);
+                \App\DataLog::create(['related_id' => $row->book_id ?: $row->id, 'title' => 'EZEE sweep', 'status' => 'done',
+                    'data' => json_encode(['sub_booking_id' => $row->SubBookingId, 'room' => $row->RoomName, 'stay' => $row->Start . ' to ' . $row->End, 'guest' => $guest, 'note' => 'Absent from the EZEE booking list on ' . now()->toDateString() . ': retired by the daily sweep', 'booking' => $row->book_id])]);
+                if ($unit) {
+                    \App\EzeeAssignmentLog::create(['ezee_booking_id' => $row->id, 'listing_id' => $unit->id, 'old_listing_id' => null, 'assigned_by' => null, 'method' => 'cancelled',
+                        'note' => sprintf('Absent from the EZEE booking list on %s: %s (%s → %s, %s) retired by the daily sweep%s.', now()->toDateString(), $row->SubBookingId, $row->Start, $row->End, $guest, $row->book_id ? ', booking #' . $row->book_id . ' cancelled' : '')]);
+                }
             }
 
             $cleared++;
