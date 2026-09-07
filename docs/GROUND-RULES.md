@@ -45,3 +45,6 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 18. Voids: eZee sends no event for a voided reservation. The absence sweep runs daily at 05:00, before the 06:00
     auto-assign; unassigned reservations are retired, assigned ones go to Needs Review. "Voided in eZee" is the manual path.
 19. Delete is hidden (config moka.show_delete_button). Cancel keeps history; delete does not.
+20. Room swaps eZee confirms (7 Sep 2026): when reservation A's final room is X, booking B blocks X, and eZee says B ended
+    elsewhere, the sync moves B's nights from A's check-in to B's final room and puts A in X, for unlocked months only.
+    Every applied swap appears in Needs Review for a person to check in eZee and Mark done.

@@ -7,6 +7,7 @@ use App\DataLog;
 use App\EzeeAssignmentLog;
 use App\Listing;
 use App\Support\Lock;
+use App\Support\BookingSplitter;
 use App\OtherModel\EzeeBooking;
 use App\Role;
 use App\User;
@@ -822,6 +823,65 @@ class EzeeAutoAssign
             ->first();
     }
 
+    /**
+     * Reservation A belongs in unit X (eZee's final room) but booking B occupies
+     * X on those nights, and eZee says B ended in another unit Y. Then B's nights
+     * from A's check-in go to Y and A goes to X. Both are eZee's own facts; the
+     * only inference is the move date, which is A's check-in. Returns true when
+     * applied; false leaves the ordinary conflict path to run.
+     */
+    private function autoRoomSwap(EzeeBooking $a, Listing $x, ?int $fromListingId, Booking $b): bool
+    {
+        if (Lock::isLocked($a->Start) || Lock::isLocked($b->check_in) || (int) $b->status !== 5) {
+            return false;
+        }
+        $bEzee = EzeeBooking::where('book_id', $b->id)->where('status', '<>', 1)->first();
+        if (!$bEzee || $bEzee->id === $a->id) {
+            return false;
+        }
+        $y = \App\Support\EzeeUnitMap::make()->resolve($bEzee);
+        if (!$y || (int) $y->id === (int) $x->id) {
+            return false;
+        }
+        $from = max((string) $a->Start, (string) $b->check_in);
+        $to   = (string) $b->check_out;
+        if ($from >= $to) {
+            return false;
+        }
+
+        try {
+            DB::transaction(function () use ($a, $x, $b, $y, $from, $to) {
+                if ($from <= (string) $b->check_in) {
+                    // B's whole stay from here on is in Y: move it as it is.
+                    $b->listing_id = $y->id;
+                    $b->remark     = mb_substr(trim((string) $b->remark . ' | moved to ' . $y->name . ': EZEE final room (room swap with ' . $a->SubBookingId . ')'), 0, 255);
+                    $b->save();
+                } else {
+                    (new BookingSplitter)->carve($b, $from, $to, $y->id, null);
+                }
+                if ($a->book_id && ($ab = Booking::withoutGlobalScopes()->find($a->book_id)) && (int) $ab->status === 5) {
+                    $ab->listing_id = $x->id;
+                    $ab->remark     = mb_substr(trim((string) $ab->remark . ' | moved to ' . $x->name . ': EZEE final room (room swap with ' . $bEzee->SubBookingId . ')'), 0, 255);
+                    $ab->save();
+                } else {
+                    $this->assignTo($a, $x);
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::info('Room swap not applied for ' . $a->SubBookingId . ': ' . $e->getMessage());
+            return false;
+        }
+
+        $this->tally['swapped'] = ($this->tally['swapped'] ?? 0) + 1;
+        $this->detail[] = ['action' => 'swap', 'room' => $a->RoomName, 'listing' => $x->name, 'dates' => $a->Start . ' → ' . $a->End, 'with' => $b->id];
+        $this->record($a, $x, $fromListingId, 'conflict', sprintf(
+            'Room swap applied from EZEE: %s now in %s for %s → %s; %s (booking #%d) moved to %s from %s, its EZEE final room. Check both in EZEE and Mark done.',
+            $a->SubBookingId, $x->name, $a->Start, $a->End, $bEzee->SubBookingId, $b->id, $y->name, $from
+        ));
+
+        return true;
+    }
+
     private function conflict(EzeeBooking $ezeeBooking, Listing $listing, ?int $fromListingId, Booking $clash, string $intent): void
     {
         $this->conflictedNow[$ezeeBooking->id] = true;
@@ -836,6 +896,14 @@ class EzeeAutoAssign
         ];
 
         if ($this->dryRun) {
+            return;
+        }
+
+        // A room swap eZee itself confirms (ground rules 17 and 20, 7 Sep 2026):
+        // the blocker's final room in eZee is elsewhere, so it moved out and this
+        // reservation took the unit. Applied automatically for unlocked months,
+        // and raised for review so a person checks it and marks it done.
+        if ($this->autoRoomSwap($ezeeBooking, $listing, $fromListingId, $clash)) {
             return;
         }
 
