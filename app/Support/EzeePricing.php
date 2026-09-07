@@ -305,10 +305,12 @@ class EzeePricing
         // Google, Internet Booking Engine, Monthly Rental — is "Website" and
         // carries the 8% M&A fee on the room charge before tax, never on the
         // cleaning fee. Long Term Rental carries no fee.
-        if ($afterCutover && Channel::isDirect($source)) {
+        // Not gated by the cutover: stamped months are never repriced, and every
+        // month MOKA reports follows the ground rules.
+        if (Channel::isDirect($source)) {
             return self::round2(self::RATES['WALK_IN8'] * $roomTotal);
         }
-        if ($afterCutover && Channel::isFeeFree($source)) {
+        if (Channel::isFeeFree($source)) {
             return 0.0;
         }
 
