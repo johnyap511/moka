@@ -159,7 +159,7 @@ class EzeeNotifications extends Command
             $booking = $row->book_id ? DB::table('bookings')->where('id', $row->book_id)->first() : null;
             $touched = $booking && $booking->updated_at && $ev['at'] && strtotime($booking->updated_at) > strtotime($ev['at']);
 
-            if ($booking && (int) $booking->status !== 1 && (!$recent || $touched)) {
+            if ($booking && (int) $booking->status !== 1 && (!$recent || $touched || \App\Support\Lock::isLocked($booking->check_in))) {
                 // Old, or someone has worked on the booking since: a person decides.
                 // One open item per reservation, however often the queue repeats it.
                 $open = EzeeAssignmentLog::where('ezee_booking_id', $row->id)->where('method', 'conflict')->whereNull('resolved_at')->exists();

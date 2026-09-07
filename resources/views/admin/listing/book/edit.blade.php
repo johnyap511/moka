@@ -110,6 +110,7 @@
                 <span class="badge badge-gray">MOKA-only, not linked</span>
             @endif
         </div>
+        @if(\App\Support\Lock::isLocked($book->check_in))<div><span class="k">Month</span><span class="badge badge-orange" title="Stamped: no job changes this booking. Edits by hand are still allowed.">Locked before {{ \App\Support\Lock::cutoff()->format('d M Y') }}</span></div>@endif
         <div><span class="k">Status</span><span class="badge {{ (int) $book->status === 5 ? 'badge-green' : 'badge-gray' }}">{{ (int) $book->status === 5 ? 'Confirmed' : 'Status ' . $book->status }}</span></div>
     </div>
 

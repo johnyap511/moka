@@ -197,7 +197,7 @@ $statusMap = [
                             @if((int) $book->status !== 1)
                             <button type="button" class="btn btn-secondary btn-sm" style="color:#b91c1c;border-color:#fecaca" onclick="cancelBookingRow(this, {{ $book->id }}, '{{ $book->check_in }}', '{{ $book->check_out }}')" title="Cancel: unit freed, eZee record retired, nothing deleted">Cancel</button>
                             @endif
-                            @if(admin_can('bookings.delete'))
+                            @if(config('moka.show_delete_button') && admin_can('bookings.delete'))
                             <form action="/admin/book/{{ $book->id }}" method="POST"
                                   onsubmit="return confirm('Delete this booking permanently?\n\nDeleting loses the history and the eZee link, and the 6 AM job may re-create the stay. Use Cancel instead unless this booking was keyed by mistake.')">
                                 @csrf

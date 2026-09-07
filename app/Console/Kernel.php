@@ -55,8 +55,11 @@ class Kernel extends ConsoleKernel
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying
         // units and blocking real bookings.
+        // Daily (7 Sep 2026): a void in eZee sends no event, so absence is the only
+        // signal. Runs before the 06:00 auto-assign; unassigned reservations are
+        // retired, assigned ones go to Needs Review.
         $schedule->command('ezee:sweep-cancelled')
-            ->weeklyOn(1, '05:00')
+            ->dailyAt('05:00')
             ->withoutOverlapping()
             ->runInBackground();
 

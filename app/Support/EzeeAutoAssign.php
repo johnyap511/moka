@@ -6,6 +6,7 @@ use App\Booking;
 use App\DataLog;
 use App\EzeeAssignmentLog;
 use App\Listing;
+use App\Support\Lock;
 use App\OtherModel\EzeeBooking;
 use App\Role;
 use App\User;
@@ -189,6 +190,15 @@ class EzeeAutoAssign
                 // follows them, whether the system or a person created it. Each
                 // change is written to the assignment log with both figures.
                 if ($amount = $this->amountDrift($ezeeBooking, $booking)) {
+                    if (Lock::isLocked($booking->check_in)) {
+                        // Ground rule 17: the month is stamped. Nothing moves; a person sees the difference once.
+                        $this->tally['locked'] = ($this->tally['locked'] ?? 0) + 1;
+                        if (!$this->dryRun && !EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)->where('method', 'conflict')->whereNull('resolved_at')->exists()) {
+                            EzeeAssignmentLog::create(['ezee_booking_id' => $ezeeBooking->id, 'listing_id' => $listing->id, 'old_listing_id' => null, 'assigned_by' => null, 'method' => 'conflict',
+                                'note' => sprintf('Locked month: EZEE now charges %s but booking #%d (%s) is stamped and left unchanged. Apply by hand if the report must change.', $amount['note'] ?? 'different amounts', $booking->id, $booking->check_in)]);
+                        }
+                        continue;
+                    }
                     $this->guard(fn () => $this->reprice($ezeeBooking, $listing, $amount), $ezeeBooking);
                     continue;
                 }

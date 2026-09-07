@@ -11,20 +11,10 @@ namespace App\Support;
  */
 class BookingOptions
 {
+    // Ground rule 12: the one channel list (app/Support/Channel.php).
     public const SOURCES = [
-        'Booking.com',
-        'Airbnb',
-        'Agoda',
-        'Expedia',
-        'Traveloka',
-        'CTrip',
-        'Trip.com',
-        'Tiket.com',
-        'Walk In',
-        'PMS',
-        'Website',
-        'Long Term Rental',
-        'Owner',
+        Channel::BOOKING, Channel::AGODA, Channel::EXPEDIA, Channel::AIRBNB, Channel::TRIP, Channel::TRAVELOKA,
+        Channel::TIKET, Channel::WEBSITE, Channel::LTR, Channel::OWNER,
     ];
 
     public const CATEGORIES = [

@@ -39,3 +39,9 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 14. The old export's 19 columns never change.
 15. Every automated amount change is written to the price log; nothing is changed silently.
 16. Manual edits in MOKA are for MOKA-only bookings. On a linked booking they are overwritten by the next sync.
+17. Stamped months (confirmed 7 Sep 2026): a booking that checked in before the first day of the previous month is locked.
+    In September, July and earlier are locked. No job changes a locked booking; an eZee difference on one goes to Needs
+    Review once. People may still edit it by hand.
+18. Voids: eZee sends no event for a voided reservation. The absence sweep runs daily at 05:00, before the 06:00
+    auto-assign; unassigned reservations are retired, assigned ones go to Needs Review. "Voided in eZee" is the manual path.
+19. Delete is hidden (config moka.show_delete_button). Cancel keeps history; delete does not.
