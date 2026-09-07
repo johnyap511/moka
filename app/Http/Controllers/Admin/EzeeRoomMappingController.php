@@ -13,6 +13,7 @@ use App\Listing;
 use App\OtherModel\EzeeBooking;
 use App\Support\EzeeAutoAssign;
 use App\Support\EzeeUnitMap;
+use App\Support\Lock;
 use App\Support\BookingSplitter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -261,6 +262,9 @@ class EzeeRoomMappingController extends Controller
         $booking = Booking::withoutGlobalScopes()->findOrFail($bookingId);
         $listing = Listing::withoutGlobalScope('notArchived')->findOrFail($request->listing_id);
         $from    = $booking->listing_id;
+        if (Lock::isLocked($booking->check_in) && !Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+            return response()->json(['ok' => false, 'message' => Lock::refusal()], 403);
+        }
 
         if ((int) $from === (int) $listing->id) {
             return response()->json(['ok' => false, 'message' => 'The booking is already in ' . $listing->name . '.'], 422);
@@ -300,6 +304,9 @@ class EzeeRoomMappingController extends Controller
         $booking = Booking::withoutGlobalScopes()->findOrFail($bookingId);
         if ((int) $booking->status === 1) {
             return response()->json(['ok' => false, 'message' => 'This booking is already cancelled.'], 422);
+        }
+        if (Lock::isLocked($booking->check_in) && !Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+            return response()->json(['ok' => false, 'message' => Lock::refusal()], 403);
         }
 
         $reason = trim($request->input('reason'));
@@ -392,6 +399,9 @@ class EzeeRoomMappingController extends Controller
         if ($a->id === $b->id || (int) $a->status !== 5 || (int) $b->status !== 5) {
             return response()->json(['ok' => false, 'message' => 'Both bookings must be live, and different.'], 422);
         }
+        if ((Lock::isLocked($a->check_in) || Lock::isLocked($b->check_in)) && !Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+            return response()->json(['ok' => false, 'message' => Lock::refusal()], 403);
+        }
         if ((int) $a->listing_id === (int) $b->listing_id) {
             return response()->json(['ok' => false, 'message' => 'Both bookings are already in the same unit.'], 422);
         }
@@ -440,6 +450,9 @@ class EzeeRoomMappingController extends Controller
         ]);
 
         $booking = Booking::findOrFail($bookingId);
+        if (Lock::isLocked($booking->check_in) && !Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+            return response()->json(['ok' => false, 'message' => Lock::refusal()], 403);
+        }
 
         try {
             $pieces = $splitter->carve($booking, $request->input('from'), $request->input('to'),

@@ -21,4 +21,16 @@ class Lock
     {
         return $checkIn !== null && Carbon::parse($checkIn)->lt(self::cutoff());
     }
+
+    /** A stamped booking changes only by a super admin who re-enters their password. */
+    public static function unlocked($user, ?string $password): bool
+    {
+        return $user && admin_is_super($user) && $password !== null && $password !== '' && \Illuminate\Support\Facades\Hash::check($password, $user->password);
+    }
+
+    /** Message for a refused change to a stamped booking. */
+    public static function refusal(): string
+    {
+        return 'This booking is in a stamped month (before ' . self::cutoff()->format('d M Y') . '). Only a super admin can change it, with their password.';
+    }
 }

@@ -55,3 +55,11 @@ if (! function_exists('admin_can')) {
         return in_array($permission, $rolePermissions, true);
     }
 }
+
+if (! function_exists('admin_is_super')) {
+    function admin_is_super($user = null): bool
+    {
+        $user = $user ?: Auth::user();
+        return $user && (empty($user->admin_role) || $user->admin_role === 'super_admin');
+    }
+}

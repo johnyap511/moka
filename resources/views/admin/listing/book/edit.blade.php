@@ -19,6 +19,9 @@
         ->whereHas('listing', fn ($q) => $q->whereRaw('LOWER(SUBSTRING_INDEX(name, " ", 1)) = ?', [strtolower(strtok((string) ($listing->name ?? ''), ' '))]))  // same hotel: listings share the first word of their name
         ->get()->sortBy(fn ($x) => $x->listing->name ?? '') : collect();
     $fmt   = fn ($d) => \Carbon\Carbon::parse($d)->format('D d M Y');
+    $locked = \App\Support\Lock::isLocked($book->check_in);
+    $canUnlock = $locked && admin_is_super();
+    $frozen = $locked && !$canUnlock;   // not a super admin: read only
 @endphp
 
 @push('styles')
@@ -114,7 +117,14 @@
         <div><span class="k">Status</span><span class="badge {{ (int) $book->status === 5 ? 'badge-green' : 'badge-gray' }}">{{ (int) $book->status === 5 ? 'Confirmed' : 'Status ' . $book->status }}</span></div>
     </div>
 
-    @if($ezee)
+    @if($locked)
+    <div class="eb-note" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">
+        <span>🔏</span>
+        <span><b>Stamped month.</b> This booking checked in before {{ \App\Support\Lock::cutoff()->format('d M Y') }}, so it is locked: no job changes it, and it is reported as final.
+        @if($canUnlock) As a super admin you may still change it: enter your password in the box next to the buttons below. @else Only a super admin can change it. @endif</span>
+    </div>
+    @endif
+    @if($ezee && !$frozen)
     <div class="eb-note" id="eb-note">
         <span>🔒</span>
         <span><b>Amounts follow eZee.</b> Rate, cleaning fee, SST and total on this booking are set from eZee's record and re-applied by the hourly sync, so a figure changed here is overwritten unless eZee changes too. To correct a figure, change it in eZee. Guest details, dates and remarks can be edited here.</span>
@@ -244,9 +254,10 @@
         </div>
 
         <div class="eb-actions">
-            <button type="submit" class="btn btn-primary">Update booking</button>
+            @if($canUnlock)<input type="password" name="unlock_password" id="unlock_password" class="form-input" style="max-width:220px" placeholder="Super admin password" autocomplete="current-password">@endif
+            @unless($frozen)<button type="submit" class="btn btn-primary">Update booking</button>@endunless
             <a href="/admin/book" class="btn btn-secondary">Back to list</a>
-            @if((int) $book->status !== 1)
+            @if((int) $book->status !== 1 && !$frozen)
             <button type="button" class="btn btn-secondary eb-cancel" onclick="cancelBooking(this)" title="Cancel this booking: the unit is freed and the stay is not re-created">Cancel booking</button>
             @else
             <span class="badge badge-red" style="align-self:center">Cancelled</span>
@@ -255,6 +266,9 @@
     </form>
 </div>
 
+@if($frozen)
+<script>document.addEventListener('DOMContentLoaded', function () { document.querySelectorAll('#edit-booking-form input, #edit-booking-form select, #edit-booking-form textarea').forEach(function (el) { el.disabled = true; }); });</script>
+@else
 <div class="card" style="margin-top:16px" id="unit-card">
     <div class="card-header"><h2>Unit &amp; room moves</h2></div>
     <div class="card-body" style="font-size:13px">
@@ -324,10 +338,12 @@
     </div>
 </div>
 
+@endif
 @endsection
 
 @push('scripts')
 <script>
+function unlockPw() { var el = document.getElementById('unlock_password'); return el ? el.value : undefined; }
 function unlockAmounts(btn) {
     if (!confirm('Amounts on an eZee-linked booking are re-applied by the hourly sync.\n\nEdit them here anyway?')) { return; }
     document.querySelectorAll('#edit-booking-form .form-input[readonly]').forEach(function (el) { el.removeAttribute('readonly'); });
@@ -346,7 +362,7 @@ function unlockAmounts(btn) {
 async function postJson(btn, url, body) {
     btn.disabled = true;
     try {
-        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify(Object.assign({ unlock_password: unlockPw() }, body)) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) { throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Request failed')); }
         alert(data.message); window.location.reload();

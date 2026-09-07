@@ -1008,6 +1008,9 @@ private function getActionButtons($book)
      */
     public function update(Request $request, $id)
     {
+        if (\App\Support\Lock::isLocked($book->check_in ?? null) && !\App\Support\Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+            return redirect()->back()->withInput()->with('error', \App\Support\Lock::refusal());
+        }
         $validator = Validator::make($request->all(), [
             'email' => 'nullable|email|max:120',
             'check_in' => 'required|date',
