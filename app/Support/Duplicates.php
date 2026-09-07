@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
  * A duplicate is the same stay keyed twice: same hotel, overlapping dates, and
  * the same folio number or the same guest name. Folio numbers repeat across
  * hotels, so the hotel (first word of the unit name) is always part of the test.
+ * Guest name is not used: a guest or company often books several rooms at once.
  * Pieces of one stay never overlap, so they never match here.
  */
 class Duplicates
@@ -16,9 +17,7 @@ class Duplicates
     /** The live booking this one would duplicate, or null. */
     public static function find(int $listingId, string $checkIn, string $checkOut, ?string $folio, ?string $guest, ?int $exceptId = null): ?object
     {
-        if ((strtotime($checkOut) - strtotime($checkIn)) / 86400 > 7) {
-            $guest = null; // long stays match on folio only
-        }
+        // Guest name is not a test: one guest often books several rooms. Folio only.
         $unit = DB::table('listings')->where('id', $listingId)->value('name');
         if (!$unit) {
             return null;
@@ -33,11 +32,6 @@ class Duplicates
             ->where(function ($w) use ($folio, $guest) {
                 if ($folio !== '' && preg_match('/^FN\d+$/i', $folio)) {
                     $w->orWhere('b.folio_no', $folio)->orWhere('b.server_folio_no', $folio);
-                }
-                // Same name counts only for short stays: a tenant or agent legitimately
-                // holds several units for a month, and that is not a duplicate.
-                if ($guest !== '' && strlen($guest) > 3 && !str_contains($guest, ' x ')) {
-                    $w->orWhere(fn ($g) => $g->whereRaw('LOWER(TRIM(CONCAT(IFNULL(u.name,""), " ", IFNULL(u.last_name,"")))) = ?', [$guest])->where('b.nights', '<=', 7));
                 }
             });
         if ($exceptId) {
