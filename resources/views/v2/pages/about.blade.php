@@ -52,9 +52,9 @@
     <div class="container">
         <div class="stats-grid">
             @foreach([
-                ['100,000+', 'Trips Hosted'],
+                ['200,000+', 'Trips Hosted'],
                 ['70%',      'Avg. Occupancy'],
-                ['RM10M+',   'Revenue for Hosts'],
+                ['RM30M+',   'Revenue for Owners'],
                 ['4.9★',     'Guest Rating'],
                 ['Superhost','Status Awarded'],
             ] as $i => $s)

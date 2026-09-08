@@ -641,7 +641,7 @@
     <div class="bg-white">
         <div class="container d-flex flex-column flex-lg-row mb-5 py-3">
             <div class="flex-grow-1 p-3">
-                <h2 class="heading-green-3 text-center m-0">100,000+</h2>
+                <h2 class="heading-green-3 text-center m-0">200,000+</h2>
                 <p class="text-green-2 text-center m-0">Trips hosted</p>
             </div>
             <div class="flex-grow-1 p-3">
@@ -649,8 +649,8 @@
                 <p class="text-green-2 text-center m-0">Occupancy rate</p>
             </div>
             <div class="flex-grow-1 p-3">
-                <h2 class="heading-green-3 text-center m-0">RM10 Million+</h2>
-                <p class="text-green-2 text-center m-0">Revenue earned for hosts</p>
+                <h2 class="heading-green-3 text-center m-0">RM30 Million+</h2>
+                <p class="text-green-2 text-center m-0">Revenue earned for owners</p>
             </div>
             <div class="flex-grow-1 p-3">
                 <h2 class="heading-green-3 text-center m-0">Superhost & Preferred Host</h2>

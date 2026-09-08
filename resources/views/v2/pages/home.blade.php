@@ -119,9 +119,9 @@
         <div class="stats-grid">
             @php
             $stats = [
-                ['number' => '20,000+', 'label' => 'Trips hosted'],
+                ['number' => '200,000+', 'label' => 'Trips hosted'],
                 ['number' => '70%',     'label' => 'Occupancy rate'],
-                ['number' => 'RM10M+',  'label' => 'Revenue for hosts'],
+                ['number' => 'RM30M+',  'label' => 'Revenue for owners'],
                 ['number' => '4.9/5',   'label' => 'Overall rating'],
                 ['number' => 'Superhost','label' => 'Airbnb award'],
             ];
