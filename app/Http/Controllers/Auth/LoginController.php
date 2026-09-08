@@ -13,8 +13,14 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        // Opened from the home-screen app (manifest start_url -> /home?source=app -> /login?app=1):
+        // a bare sign-in screen, remembered for the rest of that app session by a cookie so a
+        // failed attempt comes back to the same screen.
+        if ($request->boolean('app') || $request->cookie('moka_app')) {
+            return response()->view('v2.pages.login-app')->cookie('moka_app', '1', 60 * 24 * 30, '/', null, true, true);
+        }
         return view('v2.pages.login');
     }
 

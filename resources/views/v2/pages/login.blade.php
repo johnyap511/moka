@@ -45,3 +45,6 @@
         <p class="acct-help">Trouble signing in? <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or email <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>.</p>
     </div>
 @endsection
+@push('scripts')
+<script>if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) { location.replace('/login?app=1'); }</script>
+@endpush

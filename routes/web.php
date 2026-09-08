@@ -68,7 +68,7 @@ Route::middleware('lang')->group(function () {
                 $u = auth()->user();
                 return redirect($u->hasRole('admin') ? '/admin/dashboard' : ($u->hasRole('owner') ? '/owner/dashboard' : '/home/dashboard'));
             }
-            return redirect('/login');
+            return redirect(request('source') === 'app' ? '/login?app=1' : '/login');
         });
         Route::get('/login',               'Auth\LoginController@showLoginForm')->name('login');
         Route::post('/login',              'Auth\LoginController@login')->middleware('throttle:10,1');
