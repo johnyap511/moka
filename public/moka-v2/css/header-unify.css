@@ -10,3 +10,8 @@
 .moka-header .header-cta { border: 3px solid #fff !important; border-radius: 20px !important; padding: 1px 15px 4px 15px !important; background: transparent !important; color: #fff !important; font-size: 20px !important; font-weight: 700 !important; white-space: nowrap; box-shadow: none !important; }
 .moka-header .header-cta:hover { background: rgba(255,255,255,.12) !important; color: #fff !important; transform: none !important; }
 .moka-header .header-logo img { filter: none !important; }
+.moka-header .header-nav { gap: 22px !important; }
+.moka-header .header-nav a { white-space: nowrap !important; font-size: 18px !important; padding: 6px 2px !important; }
+.moka-header .header-login-btn { white-space: nowrap !important; font-size: 18px !important; }
+.moka-header .header-cta { font-size: 18px !important; }
+@media (max-width: 1200px) { .moka-header .header-nav { gap: 16px !important; } .moka-header .header-nav a, .moka-header .header-login-btn, .moka-header .header-cta { font-size: 16px !important; } }
