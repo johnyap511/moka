@@ -168,6 +168,16 @@ class WebController extends Controller
         }
         $now = Carbon::now();
         DB::table('subscribe')->insert(['email' => $request->email, 'created_at' => $now, 'updated_at' => $now]);
+        // Tell the office; the subscriber is saved either way.
+        try {
+            $total = DB::table('subscribe')->count();
+            \Illuminate\Support\Facades\Mail::raw(
+                "New newsletter subscriber on homemoka.com\n\nEmail: {$request->email}\nWhen:  " . now()->format('d M Y H:i') . "\nTotal subscribers: {$total}\n\nThe full list is under Admin > Subscribers.",
+                fn ($m) => $m->to('hello@homemoka.com')->subject('New subscriber: ' . $request->email)
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Subscriber email not sent: ' . $e->getMessage());
+        }
         return back()->with("success", "Subscribed successfully!");
     }
 
