@@ -13,6 +13,7 @@ $navItems = [
     ['href' => url('https://staymoka.com/'), 'label' => 'Book Now',     'external' => true],
     ['href' => url('/homepage'),             'label' => 'Why MOKA?'],
     ['href' => url('/service'),              'label' => 'Our Services'],
+    ['href' => url('/solutions'),              'label' => 'Our Solutions'],
     ['href' => url('/designs'),              'label' => 'Our Designs'],
     ['href' => url('/about'),                'label' => 'About Us'],
 ];

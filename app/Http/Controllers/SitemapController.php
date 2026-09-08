@@ -15,6 +15,7 @@ class SitemapController extends Controller
     private const STATIC_PAGES = [
         ['path' => '/',             'priority' => '1.0', 'changefreq' => 'weekly'],
         ['path' => '/service',      'priority' => '0.9', 'changefreq' => 'monthly'],
+        ['path' => '/solutions',    'priority' => '0.9', 'changefreq' => 'monthly'],
         ['path' => '/blog',         'priority' => '0.8', 'changefreq' => 'weekly'],
         ['path' => '/get/estimate', 'priority' => '0.9', 'changefreq' => 'monthly'],
         ['path' => '/about',        'priority' => '0.7', 'changefreq' => 'monthly'],
@@ -46,6 +47,7 @@ class SitemapController extends Controller
         // The XML declaration is prepended here rather than in the Blade view:
         // Blade skips any line containing a literal `<?`, treating it as a raw
         // PHP tag, so the declaration would pass through uncompiled.
+        $solutions = collect(config('solutions.pages', []))->map(fn ($p) => ['path' => '/solutions/' . $p['slug'], 'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => \Carbon\Carbon::parse($p['updated'])->toAtomString()]);
         $posts = collect(config('blog.posts', []))->map(function ($post) {
             return [
                 'slug'    => $post['slug'],

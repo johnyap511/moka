@@ -460,6 +460,21 @@ class WebController extends Controller
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
+    /** Solutions index: one landing page per audience and service (config/solutions.php). */
+    public function solutions()
+    {
+        return view('v2.pages.solutions', ['pages' => config('solutions.pages', [])]);
+    }
+
+    public function solution(string $slug)
+    {
+        $pages = collect(config('solutions.pages', []));
+        $page  = $pages->firstWhere('slug', $slug);
+        abort_unless($page, 404);
+
+        return view('v2.pages.solution', ['page' => $page, 'all' => $pages]);
+    }
+
     public function newAbout()
     {
 

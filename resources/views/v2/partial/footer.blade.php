@@ -60,6 +60,16 @@
                     </nav>
                 </div>
 
+                {{-- Solutions --}}
+                <div class="footer-col">
+                    <h4 class="footer-col-heading">Solutions</h4>
+                    <nav class="footer-links" aria-label="Solutions">
+                        @foreach(config('solutions.pages', []) as $sp)
+                            <a href="{{ url('/solutions/' . $sp['slug']) }}">{{ $sp['label'] }}</a>
+                        @endforeach
+                    </nav>
+                </div>
+
                 {{-- Hosts Links --}}
                 <div class="footer-col">
                     <h4 class="footer-col-heading">Homeowners</h4>
