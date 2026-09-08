@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Owner') — MOKA</title>
 @include('partials.pwa')
@@ -143,6 +143,41 @@ input[type="month"]::-webkit-datetime-edit-month-field:focus,input[type="month"]
 input[type="date"]::-webkit-datetime-edit-day-field:focus,input[type="date"]::-webkit-datetime-edit-month-field:focus,input[type="date"]::-webkit-datetime-edit-year-field:focus{background:transparent;color:inherit;outline:none}
 input[type="month"],input[type="date"]{-webkit-user-select:none;user-select:none;caret-color:transparent}
 input[type="month"]::selection,input[type="date"]::selection{background:transparent}
+
+/* ---- Phone app frame (<=768px): fixed top bar + bottom tabs; only the content scrolls ---- */
+.app-top{display:none;position:fixed;top:0;left:0;right:0;z-index:97;height:calc(52px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 14px 0;background:#fff;border-bottom:1px solid var(--border);align-items:center;gap:10px}
+.app-top .brand-logo-sm{height:26px}
+.app-top .app-title{font-size:16px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:97;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid var(--border);grid-template-columns:repeat(4,1fr)}
+.app-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:500;color:var(--text-secondary);background:none;border:0;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.app-tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.app-tab.active{color:var(--orange)}
+.app-tab.active svg{stroke-width:2.3}
+.app-sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:98}
+.app-sheet{display:none;position:fixed;left:0;right:0;bottom:0;z-index:99;background:#fff;border-radius:18px 18px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.18);animation:sheet-in .22s ease}
+.app-sheet.open,.app-sheet-overlay.open{display:block}
+@keyframes sheet-in{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.app-sheet__grip{width:40px;height:4px;border-radius:2px;background:#d9d9de;margin:2px auto 12px}
+.app-sheet__user{padding:6px 6px 12px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.app-sheet__user b{display:block;font-size:15px}
+.app-sheet__user span{font-size:12.5px;color:var(--text-secondary)}
+.app-sheet a,.app-sheet button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 6px;font-size:15px;color:var(--text);background:none;border:0;border-bottom:1px solid #f0f0f2;font-family:inherit;text-align:left;cursor:pointer}
+.app-sheet a:last-child,.app-sheet form:last-child button{border-bottom:0}
+.app-sheet svg{width:20px;height:20px;stroke:var(--text-secondary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.app-sheet .danger{color:#b91c1c}.app-sheet .danger svg{stroke:#b91c1c}
+@media (max-width:768px){
+  html{-webkit-text-size-adjust:100%}
+  body{overscroll-behavior-y:none;background:var(--bg)}
+  .sidebar,.sidebar-overlay,.mobile-bar{display:none!important}
+  .app-top{display:flex}
+  .app-tabs{display:grid}
+  .content{margin-left:0;padding:calc(52px + env(safe-area-inset-top) + 14px) 14px calc(60px + env(safe-area-inset-bottom) + 18px);min-height:100vh;min-height:100dvh}
+  .page-header{margin-bottom:14px}
+  .page-header h1{display:none}
+  .page-header p{margin-top:0}
+  .alert{margin-bottom:14px}
+  .a2hs{bottom:calc(66px + env(safe-area-inset-bottom))!important}
+}
 </style>
 @stack('styles')
 </head>
@@ -212,6 +247,10 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
 {{-- MAIN CONTENT --}}
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 <main class="content">
+    <header class="app-top">
+        <a href="/owner/dashboard" aria-label="Moka home"><img src="{{ asset('images/layout/logo-orange.svg') }}" alt="Moka" class="brand-logo-sm"></a>
+        <span class="app-title">@yield('title', 'Owner')</span>
+    </header>
     <div class="mobile-bar">
         <button type="button" class="menu-btn" aria-label="Open menu" aria-controls="ownerSidebar" aria-expanded="false" onclick="toggleSidebar()">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -238,6 +277,34 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
 
     @yield('content')
 </main>
+
+{{-- Phone app frame: bottom tabs and the "More" sheet --}}
+<nav class="app-tabs" aria-label="Sections">
+    <a href="/owner/dashboard" class="app-tab {{ request()->is('owner/dashboard') ? 'active' : '' }}"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>Dashboard</a>
+    <a href="/owner/listing" class="app-tab {{ request()->is('owner/listing*') && !request()->is('owner/listing/chart*') ? 'active' : '' }}"><svg viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 012-2h12a2 2 0 012 2v16"/><path d="M2 21h20"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>Units</a>
+    <a href="/owner/calendar" class="app-tab {{ request()->is('owner/calendar') ? 'active' : '' }}"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</a>
+    <button type="button" class="app-tab {{ request()->is('owner/change_password') ? 'active' : '' }}" id="appMoreBtn" aria-controls="appSheet" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Account</button>
+</nav>
+<div class="app-sheet-overlay" id="appSheetOverlay"></div>
+<div class="app-sheet" id="appSheet" role="dialog" aria-label="Account">
+    <div class="app-sheet__grip"></div>
+    <div class="app-sheet__user"><b>{{ auth()->user()->name ?? 'Owner' }}</b><span>{{ auth()->user()->email ?? '' }}</span></div>
+    <a href="/owner/change_password"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>Change password</a>
+    <form action="/logout" method="POST" style="margin:0">
+        @csrf
+        <button type="submit" class="danger"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M13 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5"/></svg>Log out</button>
+    </form>
+</div>
+<script>
+(function () {
+    var btn = document.getElementById('appMoreBtn'), sheet = document.getElementById('appSheet'), ov = document.getElementById('appSheetOverlay');
+    if (!btn || !sheet) return;
+    function set(open) { sheet.classList.toggle('open', open); ov.classList.toggle('open', open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); document.body.style.overflow = open ? 'hidden' : ''; }
+    btn.addEventListener('click', function () { set(!sheet.classList.contains('open')); });
+    ov.addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+})();
+</script>
 
 <script>
 // Off-canvas sidebar for tablet and phone. Closes on overlay tap, Escape, or
