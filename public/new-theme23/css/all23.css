@@ -596,3 +596,5 @@ hr {
     margin-left: 25px !important; 
     }
   }
+/* <picture> wrappers (WebP) must not affect layout: the inner img keeps its width classes. */
+picture { display: contents; }
