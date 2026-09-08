@@ -117,6 +117,10 @@ a:hover .sx-more svg { transform: translateX(3px); }
 .sx-cta .sx-btn--white:hover { background: #fff3ee; }
 .sx-cta small { display: block; margin-top: 16px; font-size: 15px; color: rgba(255,255,255,.85); }
 
+.sx-table td .sx-yes { display: block; margin-bottom: 2px; }
+.sx-swipe { display: none; font-size: 13px; color: var(--blog-muted); margin: 10px 0 0; }
+@media (max-width: 860px) { .sx-swipe { display: block; } }
+
 @media (max-width: 1024px) {
     .sx { --sx-section: 72px; --sx-pad: 24px; --sx-gap: 18px; }
     .sx-aud { grid-template-columns: repeat(2, 1fr); }
