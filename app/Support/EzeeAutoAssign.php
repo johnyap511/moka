@@ -7,6 +7,7 @@ use App\DataLog;
 use App\EzeeAssignmentLog;
 use App\Listing;
 use App\Support\Lock;
+use App\Support\Guests;
 use App\Support\BookingSplitter;
 use App\OtherModel\EzeeBooking;
 use App\Role;
@@ -543,18 +544,8 @@ class EzeeAutoAssign
                 return null;
             }
 
-            $user = User::create([
-                // EZEE does not always send a name, and users.name is NOT NULL.
-                'name'      => $ezeeBooking->FirstName ?: 'EZEE Guest',
-                'last_name' => $ezeeBooking->LastName ?: '',
-                'phone'     => $ezeeBooking->Mobile,
-                'email'     => $ezeeBooking->Email,
-                'ezee_tmp'  => 1,
-            ]);
-
-            if ($role = Role::find(2)) {
-                $user->attachRole($role);
-            }
+            // One guest profile per person, matched on email, mobile or name (Guests).
+            $user = Guests::profileFor($ezeeBooking);
 
             $booking = Booking::create([
                 'listing_id'   => $listing->id,

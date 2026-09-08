@@ -56,3 +56,6 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
     stamped rate for the nights in the month + cleaning fees of stays arriving in the month, excluding SST; the M&A fee is not
     deducted. An owner's share = the unit's pool weight ÷ the pool's total weight; weight follows unit size (e.g. 900 for a
     3-bedroom, 600 for a studio; equal weights where units are the same size). The owner portal shows pool figures and the share.
+24. Guest profiles (8 Sep 2026): one profile per guest, built from eZee's name, email, mobile and country. A stay is matched
+    to an existing profile by email, then mobile, then full name only when neither side has any contact detail. Names carry
+    no counter; the old "NUR56" style names are cleaned. Nothing is merged on name alone when a phone or email exists.

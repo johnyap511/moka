@@ -1131,15 +1131,7 @@ class BookController extends Controller
             $server_folio_no = null;
         }
 
-        $user = User::where('name', $ezee->FirstName)->get();
-        $user_count = count($user) + 1;
-        $user = User::create([
-            'name' => $ezee->FirstName . $user_count,
-            'last_name' => $ezee->LastName,
-            'phone' => $ezee->Mobile,
-            'email' => $ezee->Email,
-            'ezee_tmp' => 1,
-        ]);
+        $user = \App\Support\Guests::profileFor($ezee);   // one profile per guest, no counter in the name
         $role = Role::find(2);
         $user->attachRole($role);
         $userId = $user->id ?? null;
@@ -1501,14 +1493,7 @@ class BookController extends Controller
             $server_folio_no = null;
         }
 
-        $user = User::where('name', $ezee->FirstName)->get();
-        $user_count = count($user) + 1;
-        $user = User::create([
-            'name' => $ezee->FirstName . $user_count, 'last_name' => $ezee->LastName, 'phone' => $ezee->Mobile,
-            'email' => $ezee->Email, 'ezee_tmp' => 1,
-        ]);
-        $role = Role::find(2);
-        $user->attachRole($role);
+        $user = \App\Support\Guests::profileFor($ezee);   // one profile per guest, no counter in the name
         // }
         $userId = $user->id ?? null;
         $bookingStartDate = date_create($ezee->Start);
