@@ -10,12 +10,13 @@
 $transparent = $headerTransparent ?? false;
 $currentPath = request()->path();
 $navItems = [
-    ['href' => url('https://staymoka.com/'), 'label' => 'Book Now',     'external' => true],
-    ['href' => url('/homepage'),             'label' => 'Why MOKA?'],
-    ['href' => url('/service'),              'label' => 'Our Services'],
-    ['href' => url('/solutions'),              'label' => 'Our Solutions'],
-    ['href' => url('/designs'),              'label' => 'Our Designs'],
-    ['href' => url('/about'),                'label' => 'About Us'],
+    ['href' => 'https://staymoka.com/', 'label' => 'Book now',      'external' => true],
+    ['href' => url('/homepage'),        'label' => 'Why MOKA?'],
+    ['href' => url('/service'),         'label' => 'Our Services'],
+    ['href' => url('/solutions'),       'label' => 'Our Solutions'],
+    ['href' => url('/designs'),         'label' => 'Our Designs'],
+    ['href' => url('/about'),           'label' => 'About Us'],
+    ['href' => url('/blog'),            'label' => 'Blog'],
 ];
 ?>
 
@@ -67,10 +68,10 @@ $navItems = [
                 @endauth
 
                 <a href="{{ url('/get/estimate') }}"
-                   class="btn btn-primary btn-sm header-cta"
+                   class="header-cta"
                    target="_blank"
                    rel="noopener">
-                    Get Free Estimate
+                    Get a quick estimate (Free)
                 </a>
 
                 {{-- Hamburger --}}
@@ -128,7 +129,7 @@ $navItems = [
            style="width:100%; justify-content:center;"
            target="_blank"
            rel="noopener">
-            Get Free Estimate
+            Get a quick estimate (Free)
         </a>
     </div>
 </div>
