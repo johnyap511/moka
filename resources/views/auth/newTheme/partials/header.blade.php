@@ -36,16 +36,32 @@
             </div>
         </nav>
 </header>
-<style>#main_header.moka-scrolled{background-color:#004a49 !important}</style>
 <script>
-// Header behaviour from the homepage, for every page that uses this header:
-// fixed at the top, and it takes the brand colour once the page is scrolled.
+// Header behaviour for every page that uses this header: fixed at the top and,
+// once the page is scrolled, painted in the colour of the page's own hero, so
+// an orange page keeps an orange header and a green page keeps a green one.
 (function () {
     var header = document.getElementById('main_header');
     if (!header || header.dataset.scrollBound) return;
     header.dataset.scrollBound = '1';
-    function paint() { header.classList.toggle('moka-scrolled', window.scrollY > 5); }
+    var colour = null;
+    function heroColour() {
+        var y = header.offsetHeight + 12, el = document.elementFromPoint(24, y);
+        while (el && el !== document.documentElement) {
+            if (header.contains(el)) { el = el.parentElement; continue; }
+            var bg = getComputedStyle(el).backgroundColor;
+            if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
+            el = el.parentElement;
+        }
+        return '#004a49';
+    }
+    function paint() {
+        if (colour === null && window.scrollY < 5) colour = heroColour();
+        header.style.backgroundColor = window.scrollY > 5 ? (colour || '#004a49') : '';
+        header.classList.remove('bg-orange');
+    }
     window.addEventListener('scroll', paint, { passive: true });
+    window.addEventListener('load', paint);
     paint();
 })();
 </script>
