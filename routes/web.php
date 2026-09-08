@@ -26,7 +26,7 @@ Route::middleware('lang')->group(function () {
     Route::get('/homepage',     'Auth\WebController@newHomepage');
     Route::get('/about',        'Auth\WebController@newAbout');
     Route::get('/solutions',        'Auth\WebController@solutions');
-    Route::get('/solutions/preview', fn () => view('v2.pages.solutions-preview', ['pages' => config('solutions.pages', []), 'preview' => true]));
+    Route::get('/solutions/preview', fn () => redirect('/solutions', 301));
     Route::get('/solutions/{slug}', 'Auth\WebController@solution')->where('slug', '[a-z0-9-]+');
     // The old site's paths that Google still links to (Sep 2026): send them to the closest page, permanently.
     foreach (['/properties' => '/solutions/short-term-rental-management', '/property' => '/solutions/short-term-rental-management', '/listings' => '/solutions/short-term-rental-management', '/short-stay-listing' => '/solutions/short-term-rental-management', '/short-stay' => '/solutions/short-term-rental-management', '/rent' => '/solutions/monthly-rental', '/hosts' => '/get/estimate', '/host' => '/get/estimate', '/services' => '/service', '/faq' => '/service', '/menu' => '/'] as $from => $to) {
