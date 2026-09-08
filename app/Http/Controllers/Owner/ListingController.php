@@ -160,57 +160,20 @@ class ListingController extends Controller
             $mobile_chart = [$months, (($book->price_night) * $nights + $book->cleaning_fee), (($book->price_night) * $nights), (($book->price_night) * $nights), ($book->price_night + ($book->price_night * $nights))];
             $occupancyRateThis = $bookedDays / date_format($selDate, 't');
             if ($listing->type == 'group') {
-                $bookingThisMonth = 0;
-                $nights = 0;
-                $bookedDays = 0;
-                $revenue = 0;
-                $totalNights = 0;
-                $group = \App\ListingGroup::where('listing_id', $id)->first();
-                //   dd($data);
-                if (!empty($group)) {
-                    $listingIds = \App\ListingGroup::where('group_id', $group->group_id)->pluck('listing_id')->toArray();
-                    $revenues = \App\Booking::whereIn('listing_id', $listingIds)->where([['status', '>=', 5], ['check_out', '>', $start], ['check_in', '<=', $end]])->get();
-                    foreach ($revenues as $book) {
-
-                        $checkIn = $book->check_in;
-                        $checkOut = $book->check_out;
-                        $nights = $book->nights;
-                        if ($book->check_in >= $start && $book->check_in <= $end) {
-                            if ($book->check_out <= $end) {
-                                $nights = $book->nights;
-                            } else {
-                                $earlier = new DateTime($end);
-                                $later = new DateTime($book->check_out);
-                                $diff = $later->diff($earlier)->format("%a");
-                                $nights = $book->nights - $diff;
-                                $checkOut = $end;
-                            }
-
-                        } elseif ($book->check_out > $start && $book->check_out <= $end) {
-                            $earlier = new DateTime($book->check_in);
-                            $later = new DateTime($thisMonth);
-                            $diff = $later->diff($earlier)->format("%a");
-                            $nights = $book->nights - $diff;
-                            $checkIn = $start;
-                        } elseif ($book->check_in <= $start && $book->check_out >= $end) {
-                            $nights = date_format($selDate, 't');
-                            $checkIn = $start;
-                            $checkOut = $end;
-                        }
-
-                        if ($checkIn != $checkOut && $checkOut <= $end) {
-                            $revenue = $revenue + ($nights * $book->price_night) + $book->cleaning_fee + $book->sst;
-                            $bookingThisMonth++;
-                            $bookedDays = $bookedDays + $nights;
-                        }
-                    }
-                    $averageRentalRateDays = $bookedDays;
-                    $bookedDays = $bookedDays / count($listingIds);
-                    $averageBookedDate = $bookedDays;
-                    $bookedInNext60 = \App\Booking::whereIn('listing_id', $listingIds)->where([['status', '>=', 5], ['check_in', '>=', $start], ['check_out', '<=', $FirstOf2MLater]])->sum('nights');
-                    $bookedInNext60 = round($bookedInNext60 / count($listingIds));
-                    $Occupancy = round((($bookedDays / date_format($selDate, 't')) * 100), 2);
-                    $occupancyRateThis = round(($occupancyRateThis / count($listingIds)) * 100, 2);
+                // Pool profit sharing (ground rule 23): the pool's month and the owner's weighted share.
+                $pool = \App\Support\Pool::for($listing);
+                if ($pool) {
+                    $pm = \App\Support\Pool::month($pool['listing_ids'], $start, date('Y-m-d', strtotime($firstOfNextMonth)));
+                    $revenue               = round($pm['base'] * $pool['share'], 2);
+                    $bookingThisMonth      = $pm['bookings']->count();
+                    $averageRentalRateDays = $pm['nights'];
+                    $bookedDays            = $pm['nights'] / max(1, $pool['units']);
+                    $averageBookedDate     = $bookedDays;
+                    $bookedInNext60        = round(\App\Booking::whereIn('listing_id', $pool['listing_ids'])->where('status', '>=', 5)->where('check_in', '>=', $start)->where('check_out', '<', date('Y-m-d', strtotime($start . ' +60 days')))->sum('nights') / max(1, $pool['units']));
+                    $Occupancy             = round(($bookedDays / date_format($selDate, 't')) * 100, 2);
+                    $occupancyRateThis     = $Occupancy;
+                    $averageRentalRate     = $pm['nights'] > 0 ? round($pm['room'] / $pm['nights'], 2) : 0;
+                    $poolRate              = $averageRentalRate;
                 }
             } else {
                 //    $revenue = $books->sum('price');
@@ -218,7 +181,8 @@ class ListingController extends Controller
                 $occupancyRateThis = round($occupancyRateThis * 100, 2);
             }
             //exit;
-            if ($bookedDays > 0) {$averageRentalRate = round(($revenue / $averageRentalRateDays), 2);}
+            if ($bookedDays > 0 && !isset($poolRate)) {$averageRentalRate = round(($revenue / $averageRentalRateDays), 2);}
+            unset($poolRate);
             $occupancyRateOther = round((($bookedDays / date_format($selDate, 't')) * 100), 2);
 
             $graphData = [$months . "`" . $years, $Occupancy];
