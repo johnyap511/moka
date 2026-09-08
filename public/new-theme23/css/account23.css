@@ -25,4 +25,4 @@
 .acct-help { max-width: 480px; margin: 22px auto 0; text-align: center; font-size: 15px; color: var(--blog-muted); }
 .acct-help a { color: var(--blog-teal); font-family: SemiBold; text-decoration: none; }
 .acct-help a:hover { color: var(--blog-orange); }
-@media (max-width: 600px) { .acct-card { padding: 28px 22px 24px; margin-top: -70px; } .acct-hero { padding-bottom: 100px; } }
+@media (max-width: 600px) { .acct-card { padding: 28px 22px 24px; margin-top: -70px; } .acct-hero { padding-bottom: 100px; } .acct-help { text-align: left; padding-right: 84px; } .acct-body { padding-bottom: 60px; } }
