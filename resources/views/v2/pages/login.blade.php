@@ -45,6 +45,3 @@
         <p class="acct-help">Trouble signing in? <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or email <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>.</p>
     </div>
 @endsection
-@push('scripts')
-    @include('partials.pwa-install')
-@endpush

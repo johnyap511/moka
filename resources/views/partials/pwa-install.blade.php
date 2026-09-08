@@ -1,8 +1,11 @@
 {{--
     "Add MOKA to your home screen" hint for phones, plus service-worker registration.
-    Android: waits for the browser's install prompt and offers an Install button.
-    iPhone: shows the Share > Add to Home Screen steps. Hidden once installed, and for
-    30 days after "Not now". Force for testing with ?a2hs=ios or ?a2hs=android.
+    Shown on the owner portal (after sign-in), not on the login page.
+    Android: waits for the browser's install prompt and offers an Install button
+    (Chrome stops firing it once the app is installed). iPhone: shows the
+    Share > Add to Home Screen steps. Hidden when running as the installed app, and
+    permanently after "Not now" or "Already added" (iPhone gives no other way to know).
+    Force for testing with ?a2hs=ios or ?a2hs=android.
 --}}
 <style>
 .a2hs{position:fixed;left:12px;right:12px;bottom:12px;z-index:9000;background:#fff;color:#1d2b2a;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:18px 18px 16px;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;display:none;animation:a2hs-in .35s ease}
@@ -15,7 +18,8 @@
 .a2hs__steps{margin:14px 0 0;padding:12px 14px;background:#faf8f4;border-radius:12px;font-size:14px;line-height:1.55;color:#33403f}
 .a2hs__steps svg{width:18px;height:18px;vertical-align:-4px;margin:0 2px;stroke:#004a49;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .a2hs__actions{display:flex;gap:10px;margin-top:14px}
-.a2hs__actions button{flex:1;border:0;border-radius:999px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer}
+.a2hs__actions{flex-wrap:wrap}
+.a2hs__actions button{flex:1 1 40%;border:0;border-radius:999px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer}
 .a2hs__go{background:#ff6b35;color:#fff}
 .a2hs__later{background:#eef2f1;color:#004a49}
 @media (min-width:768px){.a2hs{display:none !important}}
@@ -32,6 +36,7 @@ html.acct-typing .a2hs{display:none !important}
     </div>
     <div class="a2hs__actions">
         <button type="button" class="a2hs__later" id="a2hs-later">Not now</button>
+        <button type="button" class="a2hs__later" id="a2hs-done">Already added</button>
         <button type="button" class="a2hs__go" id="a2hs-go" hidden>Install</button>
     </div>
 </div>
@@ -43,11 +48,11 @@ html.acct-typing .a2hs{display:none !important}
     var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     var ua = navigator.userAgent;
     var ios = /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
-    var dismissedAt = 0; try { dismissedAt = parseInt(localStorage.getItem('moka-a2hs-dismissed') || '0', 10); } catch (e) {}
-    var recentlyDismissed = Date.now() - dismissedAt < 30 * 24 * 3600 * 1000;
-    if (!force && (standalone || recentlyDismissed)) return;
-    function dismiss() { box.classList.remove('show'); document.documentElement.classList.remove('a2hs-open'); try { localStorage.setItem('moka-a2hs-dismissed', String(Date.now())); } catch (e) {} }
+    var dismissed = false; try { dismissed = !!localStorage.getItem('moka-a2hs-dismissed'); } catch (e) {}
+    if (!force && (standalone || dismissed)) return;
+    function dismiss() { box.classList.remove('show'); document.documentElement.classList.remove('a2hs-open'); try { localStorage.setItem('moka-a2hs-dismissed', 'never'); } catch (e) {} }
     document.getElementById('a2hs-later').addEventListener('click', dismiss);
+    document.getElementById('a2hs-done').addEventListener('click', dismiss);
     if (ios || force === 'ios') {
         document.getElementById('a2hs-ios').hidden = false;
         setTimeout(function () { box.classList.add('show'); document.documentElement.classList.add('a2hs-open'); }, 1200);
