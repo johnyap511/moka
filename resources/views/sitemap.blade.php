@@ -6,6 +6,14 @@
         <priority>{{ $page['priority'] }}</priority>
     </url>
 @endforeach
+@foreach ($solutions as $sol)
+    <url>
+        <loc>{{ url($sol['path']) }}</loc>
+        <lastmod>{{ $sol['lastmod'] }}</lastmod>
+        <changefreq>{{ $sol['changefreq'] }}</changefreq>
+        <priority>{{ $sol['priority'] }}</priority>
+    </url>
+@endforeach
 @foreach ($listings as $listing)
     <url>
         <loc>{{ url('/listing/' . rawurlencode($listing['slug'])) }}</loc>

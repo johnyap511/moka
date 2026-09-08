@@ -59,6 +59,7 @@ class SitemapController extends Controller
             'staticPages' => self::STATIC_PAGES,
             'listings'    => $listings,
             'posts'       => $posts,
+            'solutions'   => $solutions,
         ])->render();
 
         return response($body)
