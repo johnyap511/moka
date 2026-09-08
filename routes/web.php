@@ -46,8 +46,9 @@ Route::middleware('lang')->group(function () {
     Route::get('/announcement',    'Admin\OwnerController@announcement');
 
     /* ── Property Search & Detail ───────────────────────────────────── */
-    Route::get('/location/search', 'Auth\WebController@locationSearch')->name('search');
-    Route::get('/listing/{key}',   'Auth\WebController@propertyDetail')->name('listing.detail');
+    // Booking engine retired (8 Sep 2026): bookings are taken on staymoka.com. The code stays; the routes send visitors there.
+    Route::get('/location/search', fn () => redirect('https://staymoka.com/', 301))->name('search');
+    Route::get('/listing/{key}',   fn () => redirect('https://staymoka.com/', 301))->name('listing.detail');
 
     /* ── Payment ─────────────────────────────────────────────────────── */
     Route::get('/payment/redirect',   'User\PaymentController@paymentRedirect');

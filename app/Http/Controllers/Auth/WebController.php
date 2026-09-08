@@ -530,7 +530,14 @@ class WebController extends Controller
             'bedroom' => 'required',
             'type'    => 'required',
         ]);
-        \App\OtherModel\PropertyEstimate::create($request->only('name', 'email', 'phone', 'address', 'bedroom', 'type'));
+        $data = $request->only('name', 'email', 'phone', 'address', 'bedroom', 'type');
+        \App\OtherModel\PropertyEstimate::create($data);
+        // The enquiry is saved first; the email is best-effort so the owner never sees a failure.
+        try {
+            \Illuminate\Support\Facades\Mail::to('hello@homemoka.com')->send(new \App\Mail\EstimateRequested($data));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Estimate email not sent: ' . $e->getMessage(), ['name' => $data['name'] ?? null]);
+        }
         return back()->with('success', 'Thank you! We will contact you shortly.');
     }
 

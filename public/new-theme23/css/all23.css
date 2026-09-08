@@ -1,26 +1,31 @@
 @font-face {
   font-family: "SemiBold";
-  src: url(/new-theme23/fonts/SourceSansPro-SemiBold.ttf);
+  src: url(/new-theme23/fonts/SourceSansPro-SemiBold.woff2) format("woff2"), url(/new-theme23/fonts/SourceSansPro-SemiBold.ttf) format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "SansPro_Regular";
-  src: url(/new-theme23/fonts/SourceSansPro-Regular.ttf);
+  src: url(/new-theme23/fonts/SourceSansPro-Regular.woff2) format("woff2"), url(/new-theme23/fonts/SourceSansPro-Regular.ttf) format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Bold";
-  src: url(/new-theme23/fonts/SourceSansPro-Bold.ttf);
+  src: url(/new-theme23/fonts/SourceSansPro-Bold.woff2) format("woff2"), url(/new-theme23/fonts/SourceSansPro-Bold.ttf) format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Black";
-  src: url(/new-theme23/fonts/SourceSansPro-Black.ttf);
+  src: url(/new-theme23/fonts/SourceSansPro-Black.woff2) format("woff2"), url(/new-theme23/fonts/SourceSansPro-Black.ttf) format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "RiadPro_Regular";
   src: url(/new-theme23/fonts/MyriadPro-Regular.otf);
+  font-display: swap;
 }
 
 :root {

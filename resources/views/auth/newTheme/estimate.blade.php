@@ -663,17 +663,17 @@
                     <!-- <img src="{{ asset('new-theme23/images/Asset 1.png') }}" alt="" srcset="" class="w-100 ps-lg-5"> -->
                     <div class="d-flex flex-column flex-sm-row flex-md-column align-items-center gap-3 gap-md-5">
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img src="{{ asset('new-theme/images/iconp1.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp1.svg') }}" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">Earn more, work less</span>
                         </div>
                         
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img src="{{ asset('new-theme/images/iconp2.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp2.svg') }}" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">Complete host management</span>
                         </div>
                         
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img src="{{ asset('new-theme/images/iconp3.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp3.svg') }}" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">You’re always in control</span>
                         </div>
                     </div>

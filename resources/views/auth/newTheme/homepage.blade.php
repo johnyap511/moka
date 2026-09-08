@@ -658,7 +658,7 @@
                     </div>
                 </div>
                 <div class="col-md-6 py-3 ps-md-4 ps-lg-5">
-                    <img src="{{ asset('new-theme23/images/Asset%201.png') }}" alt="" srcset="" class="w-100">
+                    <picture><source srcset="{{ asset('new-theme23/images/Asset%201.webp') }}" type="image/webp"><img src="{{ asset('new-theme23/images/Asset%201.png') }}" alt="" srcset="" class="w-100"></picture>
                 </div>
             </div>
         </div>
@@ -667,7 +667,7 @@
         <h1 class="heading-green-1 mb-0 text-center mb-5">Why Choose MOKA?</h1>
         <div class="d-flex flex-column flex-md-row align-items-center">
             <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                <img src="{{ asset('new-theme23/images/Asset%202.png') }}" alt="" srcset="" class="w-100">
+                <picture><source srcset="{{ asset('new-theme23/images/Asset%202.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%202.png') }}" alt="" srcset="" class="w-100"></picture>
             </div>
             <div class="col-md-6 py-3 ps-md-4 ps-lg-5 make-order-first">
                 <h2 class="heading-orange-2 mb-4">
@@ -702,7 +702,7 @@
                     </div>
                 </div>
                 <div class="col-md-6 py-3 ps-md-4 ps-lg-5">
-                    <img src="{{ asset('new-theme23/images/Asset%2048.png') }}" alt="" srcset="" class="w-100">
+                    <picture><source srcset="{{ asset('new-theme23/images/Asset%2048.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%2048.png') }}" alt="" srcset="" class="w-100"></picture>
                 </div>
             </div>
         </div>
@@ -710,7 +710,7 @@
         <div class="container section-height my-5 py-5">
             <div class="d-flex flex-column flex-md-row align-items-center">
                 <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                    <img src="{{ asset('new-theme23/images/Asset%203.png') }}" alt="" srcset="" class="w-100">
+                    <picture><source srcset="{{ asset('new-theme23/images/Asset%203.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%203.png') }}" alt="" srcset="" class="w-100"></picture>
                 </div>
                 <div class="col-md-6 py-3 pe-md-4 pe-lg-5 make-order-first">
                     <h2 class="heading-orange-2 mb-4">
@@ -740,13 +740,13 @@
                 </p>
             </div>
             <div class="col-md-6 py-3 ps-md-4 ps-lg-5">
-                <img src="{{ asset('new-theme23/images/Asset%204.png') }}" alt="" srcset="" class="w-100">
+                <picture><source srcset="{{ asset('new-theme23/images/Asset%204.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%204.png') }}" alt="" srcset="" class="w-100"></picture>
             </div>
         </div>
         <div class="d-flex flex-wrap orange-card-parent my-5">
             <div class="col-12 col-md-6 col-lg-3 p-3">
                 <div class="orange-card p-4">
-                    <img src="{{ asset('new-theme23/images/Asset%207.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%207.png') }}" alt="" srcset="">
                     <h3 class="heading-orange-3 my-3">Renovation</h3>
                     <p class="text-green-2 m-0">
                         Home makeover from
@@ -756,7 +756,7 @@
             </div>
             <div class="col-12 col-md-6 col-lg-3 p-3">
                 <div class="orange-card p-4">
-                    <img src="{{ asset('new-theme23/images/Asset%208.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%208.png') }}" alt="" srcset="">
                     <h3 class="heading-orange-3 my-3">Guest Hosting</h3>
                     <p class="text-green-2 m-0">
                         24-hour booking service
@@ -766,7 +766,7 @@
             </div>
             <div class="col-12 col-md-6 col-lg-3 p-3">
                 <div class="orange-card p-4">
-                    <img src="{{ asset('new-theme23/images/Asset%209.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%209.png') }}" alt="" srcset="">
                     <h3 class="heading-orange-3 my-3">Hotel Revenue
                         Management</h3>
                     <p class="text-green-2 m-0">
@@ -777,7 +777,7 @@
             </div>
             <div class="col-12 col-md-6 col-lg-3 p-3">
                 <div class="orange-card p-4">
-                    <img src="{{ asset('new-theme23/images/Asset%2010.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2010.png') }}" alt="" srcset="">
                     <h3 class="heading-orange-3 my-3">Housekeeping &
                         Maintenance</h3>
                     <p class="text-green-2 m-0">
@@ -822,7 +822,7 @@
         </h1>
         <div class="d-flex flex-column flex-md-row align-items-center mt-4">
             <div class="col-md-6 d-flex justify-content-center py-3">
-                <img src="{{ asset('new-theme23/images/Asset%205.png') }}" alt="" srcset="" class="w-50">
+                <picture><source srcset="{{ asset('new-theme23/images/Asset%205.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%205.png') }}" alt="" srcset="" class="w-50"></picture>
             </div>
             <div class="col-md-6 py-3">
                 <p class="text-orange-1">
@@ -831,23 +831,23 @@
                 </p>
                 <ul class="smarter-management-ul">
                     <li class="my-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Overview </p>
                     </li>
                     <li class="my-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Calendar </p>
                     </li>
                     <li class="my-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Performance </p>
                     </li>
                     <li class="my-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Cleans </p>
                     </li>
                     <li class="my-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Maintenance </p>
                     </li>
                 </ul>
@@ -863,7 +863,7 @@
             <div class="d-flex flex-wrap orange-card-parent my-4">
                 <div class="col-12 col-md-6 col-lg-3 p-3">
                     <div class="orange-card p-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2012.png') }}" alt="" srcset="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2012.png') }}" alt="" srcset="">
                         <h3 class="heading-orange-3 my-3">Site Inspection</h3>
                         <p class="text-green-2 m-0">
                             Professional consultation
@@ -873,7 +873,7 @@
                 </div>
                 <div class="col-12 col-md-6 col-lg-3 p-3">
                     <div class="orange-card p-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2013.png') }}" alt="" srcset="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2013.png') }}" alt="" srcset="">
                         <h3 class="heading-orange-3 my-3">Renovation</h3>
                         <p class="text-green-2 m-0">
                             Make over your home
@@ -883,7 +883,7 @@
                 </div>
                 <div class="col-12 col-md-6 col-lg-3 p-3">
                     <div class="orange-card p-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2014.png') }}" alt="" srcset="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2014.png') }}" alt="" srcset="">
                         <h3 class="heading-orange-3 my-3">Rent</h3>
                         <p class="text-green-2 m-0">
                             Rent it with ease and high
@@ -893,7 +893,7 @@
                 </div>
                 <div class="col-12 col-md-6 col-lg-3 p-3">
                     <div class="orange-card p-4">
-                        <img src="{{ asset('new-theme23/images/Asset%2015.png') }}" alt="" srcset="">
+                        <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2015.png') }}" alt="" srcset="">
                         <h3 class="heading-orange-3 my-3">Tenant
                             Management</h3>
                         <p class="text-green-2 m-0">
@@ -914,7 +914,7 @@
         <h1 class="heading-orange-1 text-center">
             Our Partners
         </h1>
-        <img src="{{ asset('new-theme23/images/Asset%206.png') }}" alt="" class="mt-5 pt-3 w-100">
+        <picture><source srcset="{{ asset('new-theme23/images/Asset%206.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%206.png') }}" alt="" class="mt-5 pt-3 w-100"></picture>
         <div class="d-flex justify-content-center mt-5 pt-4">
             <a href="/about"><button class="primary-btn">About Us </button> </a>
         </div>

@@ -29,7 +29,8 @@ class SitemapController extends Controller
     {
         // Only live listings, and only those addressable by the /listing/{key}
         // route — `key` is nullable, and propertyDetail() also accepts `name`.
-        $listings = Listing::where('status', 1)
+        // Unit pages are not published since the booking engine was retired (8 Sep 2026).
+        $listings = Listing::whereRaw('1 = 0')
             ->where('user_id', '<>', 4475)   // company extra rooms are not pages for Google
             ->select('key', 'name', 'updated_at')
             ->orderByDesc('updated_at')

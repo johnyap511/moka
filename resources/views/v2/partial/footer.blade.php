@@ -56,7 +56,6 @@
                         <a href="{{ url('/service') }}">Our Services</a>
                         <a href="{{ url('/designs') }}">Our Designs</a>
                         <a href="{{ url('/about') }}">About Us</a>
-                        <a href="{{ url('/location/search') }}">Find a Property</a>
                     </nav>
                 </div>
 
