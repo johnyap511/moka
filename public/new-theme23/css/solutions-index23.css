@@ -29,7 +29,7 @@
 .sx-hero__badge svg { width: 30px; height: 30px; }
 .sx-trust { margin-top: 56px; border-top: 1px solid rgba(255,255,255,.14); display: grid; grid-template-columns: repeat(4, 1fr); }
 .sx-trust > div { padding: 22px 18px 24px 0; font-size: 15px; line-height: 1.4; color: rgba(255,255,255,.72); display: flex; align-items: center; gap: 14px; }
-.sx-trust > div > div { display: block; }
+.sx-trust > div > div { display: block; color: rgba(255,255,255,.72); font-size: 15px; }
 .sx-trust > div + div { padding-left: 18px; border-left: 1px solid rgba(255,255,255,.14); }
 .sx-trust b { display: block; color: #fff; font-family: Bold; font-size: 16.5px; margin-bottom: 2px; }
 .sx-trust svg { width: 28px; height: 28px; flex: none; stroke: var(--blog-orange); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
