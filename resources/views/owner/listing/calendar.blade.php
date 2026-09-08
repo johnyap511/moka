@@ -16,7 +16,7 @@
 .cal-legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--text-secondary);margin:0 4px 12px}
 .cal-legend .k{display:inline-flex;align-items:center;gap:6px}
 .cal-legend .sw{width:12px;height:12px;border-radius:4px}
-.cal-legend .today-sw{width:18px;height:18px;border-radius:50%;background:#F36523;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.cal-legend .today-sw{width:18px;height:18px;border-radius:50%;background:var(--teal);color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .cal-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px 20px}
 .cal-stats{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--text-secondary);margin-bottom:12px}
 .cal-stats b{color:var(--text);font-size:14px}
@@ -39,8 +39,8 @@
 .fc .fc-day-other .fc-daygrid-day-number{color:#c4c4c8}
 .fc .fc-day-past:not(.fc-day-today){background:#fbfbfc}
 .fc .fc-day-sat,.fc .fc-day-sun{background:#fcfcfd}
-.fc .fc-day-today{background:#fff7f1!important;box-shadow:inset 0 2px 0 #F36523}
-.fc .fc-day-today .fc-daygrid-day-number{background:#F36523;color:#fff;font-weight:700}
+.fc .fc-day-today{background:#f0faf7!important;box-shadow:inset 0 2px 0 var(--teal)}
+.fc .fc-day-today .fc-daygrid-day-number{background:var(--teal);color:#fff;font-weight:700}
 .fc td,.fc th{border-color:#eef0f3!important}
 .fc .fc-daygrid-event{border-radius:6px!important;border:none!important;font-size:11.5px!important;font-weight:600!important;padding:3px 8px!important;margin:1px 3px!important;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.05);line-height:1.3}
 .fc .fc-daygrid-event .fc-event-main{color:#fff}
@@ -51,7 +51,7 @@
 .fc .fc-daygrid-more-link{font-size:11px;color:#F36523;font-weight:600}
 .fc .fc-list{border-radius:10px;overflow:hidden}
 .fc .fc-list-day-cushion{background:#f8f9fb!important}
-.fc .fc-list-event:hover td{background:#fff7f1}
+.fc .fc-list-event:hover td{background:#f0faf7}
 .fc .fc-list-event-dot{border-width:5px!important}
 @media (max-width:1024px){.cal-toolbar{grid-template-columns:1fr 170px auto}}
 @media (max-width:700px){
