@@ -17,12 +17,6 @@
 .db-head p{color:var(--text-secondary);margin-top:4px;font-size:14px}
 .db-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 190px auto;gap:10px;align-items:center;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:18px}
 .db-toolbar .btn{padding:10px 22px;font-size:13.5px;font-weight:600;justify-content:center}
-.db-pool{display:flex;gap:14px;align-items:flex-start;background:linear-gradient(135deg,#fff7ed,#fff);border:1px solid #fed7aa;border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.55}
-.db-pool .ic{width:38px;height:38px;border-radius:10px;background:#F36523;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.db-pool .ic svg{width:20px;height:20px}
-.db-pool b{color:#9a3412}
-.db-pool .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.db-pool .chip{background:#fff;border:1px solid #fed7aa;border-radius:20px;padding:3px 10px;font-size:12px;color:#9a3412}
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
@@ -82,7 +76,7 @@ canvas{display:block}
 <div class="db-head">
     <div>
         <h1>Hello {{ Auth::user()->name }}</h1>
-        <p>{{ $listing->name ?? 'Your portfolio' }}@if($isPool) · <b>{{ $pool['group']->name ?? 'Pool' }}</b>, {{ $pool['units'] }} units, pool figures@endif · {{ $selDate->format('F Y') }}</p>
+        <p>{{ $listing->name ?? 'Your portfolio' }}{!! $isPool ? ' · <b>' . e($pool['group']->name ?? 'Pool') . '</b>, ' . $pool['units'] . ' units, pool figures' : '' !!} · {{ $selDate->format('F Y') }}</p>
     </div>
 </div>
 
@@ -95,10 +89,6 @@ canvas{display:block}
     <input type="month" name="date" class="form-input" value="{{ $selDate->format('Y-m') }}" aria-label="Month">
     <button type="submit" class="btn btn-primary">Update</button>
 </form>
-
-    </div>
-</div>
-@endif
 
 <div class="kpis">
     <div class="kpi hero">
