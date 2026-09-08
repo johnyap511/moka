@@ -7,7 +7,7 @@
 @section('seo_description', 'MOKA for homeowners, investors, developers and agents: Airbnb and short-term rental management, monthly and weekly rental, corporate housing and renovation across Malaysia.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/solutions23.css') }}">
 @endpush
 

@@ -11,7 +11,7 @@
 @section('seo_image', asset($post['image']))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
 @endpush
 
 @push('schema')

@@ -4,7 +4,7 @@
 @section('seo_description', 'Practical guides for Malaysian property owners on short-stay hosting, Airbnb management, renovation and furnishing — written by the MOKA team.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
 @endpush
 
 @push('schema')

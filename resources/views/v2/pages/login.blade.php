@@ -4,7 +4,7 @@
 @section('seo_description', 'Sign in to your MOKA owner account to see bookings, calendar and revenue for your units.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/account23.css') }}?v={{ filemtime(public_path('new-theme23/css/account23.css')) }}">
     <meta name="robots" content="noindex">
 @endpush

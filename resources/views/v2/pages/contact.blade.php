@@ -4,7 +4,7 @@
 @section('seo_description', 'Talk to MOKA about managing your property, a corporate stay or a partnership. Menara Lien Hoe, Tropicana, Petaling Jaya. We reply within one working day.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/solutions23.css') }}">
     <style>
     .ct-body{background:#fff;padding:56px 20px 72px}

@@ -107,3 +107,9 @@
     .blog-hero { padding: 130px 18px 46px; }
     .blog-body { padding: 40px 18px 56px; }
 }
+
+/* Phone header on green pages stays green (the theme's default paints it
+   orange for the orange pages). */
+@media (max-width: 991px) {
+    .navbar#main_header { background-color: var(--blog-teal) !important; }
+}
