@@ -52,9 +52,15 @@ class HomeController extends Controller
         $graphArray        = [];
         $graphavg          = [];
 
+        // Pool profit sharing (ground rule 23): a pooled unit shows its pool's
+        // figures and the owner's weighted share, not the unit's own bookings.
+        $pool     = \App\Support\Pool::for($listing);
+        $scopeIds = $pool ? $pool['listing_ids'] : [$id];
+        $poolMonth = null;
+
         if ($id) {
             // Bookings overlapping selected month
-            $monthBooks = Booking::where('listing_id', $id)
+            $monthBooks = Booking::whereIn('listing_id', $scopeIds)
                 ->where('status', '>=', 5)
                 ->where('check_out', '>', $monthStart)
                 ->where('check_in', '<=', $monthEnd)
@@ -73,9 +79,15 @@ class HomeController extends Controller
 
             $bookingCount    = $monthBooks->count();
             $monthRevenue    = round($totalRevenue, 2);
-            $occupancy       = $daysInMonth > 0 ? round(($bookedDays / $daysInMonth) * 100, 2) : 0;
+            $unitDays        = $daysInMonth * ($pool ? $pool['units'] : 1);
+            $occupancy       = $unitDays > 0 ? round(($bookedDays / $unitDays) * 100, 2) : 0;
             $avgDailyRate    = $bookedDays > 0 ? round($monthRevenue / $bookedDays, 2) : 0;
             $avgLengthOfStay = $bookingCount > 0 ? round($bookedDays / $bookingCount) : 0;
+
+            if ($pool) {
+                $poolMonth    = \App\Support\Pool::month($scopeIds, $monthStart, $monthEndEx);
+                $monthRevenue = round($poolMonth['base'] * $pool['share'], 2);   // the owner's share
+            }
 
             // Accumulated sales: each month of the year up to and including the
             // selected one, measured the same way as the monthly revenue.
@@ -84,6 +96,10 @@ class HomeController extends Controller
                 $mStart = $mDate->toDateString();
                 $mEndEx = $mDate->copy()->addMonth()->startOfMonth()->toDateString();
 
+                if ($pool) {
+                    $accumulatedSales += \App\Support\Pool::month($scopeIds, $mStart, $mEndEx)['base'] * $pool['share'];
+                    continue;
+                }
                 $mBooks = Booking::where('listing_id', $id)
                     ->where('status', '>=', 5)
                     ->where('check_out', '>', $mStart)
@@ -137,7 +153,7 @@ class HomeController extends Controller
                 $mEndEx = $m->copy()->addMonth()->startOfMonth()->toDateString();
                 $mDays  = $m->daysInMonth;
 
-                $mBooks = Booking::where('listing_id', $id)
+                $mBooks = Booking::whereIn('listing_id', $scopeIds)
                     ->where('status', '>=', 5)
                     ->where('check_out', '>', $mStart)
                     ->where('check_in', '<=', $mEnd)
@@ -152,7 +168,7 @@ class HomeController extends Controller
                     $mRev    += ($b->price_night ?? 0) * $n;
                 }
 
-                $graphArray[] = [$m->format("M'y"), $mDays > 0 ? round(($mBooked / $mDays) * 100, 2) : 0];
+                $graphArray[] = [$m->format("M'y"), $mDays > 0 ? round(($mBooked / ($mDays * ($pool ? $pool['units'] : 1))) * 100, 2) : 0];
                 $graphavg[]   = [$m->format("M'y"), $mBooked > 0 ? round($mRev / $mBooked, 2) : 0];
             }
         }
@@ -162,7 +178,7 @@ class HomeController extends Controller
             'bookingCount', 'monthRevenue', 'occupancy',
             'accumulatedSales', 'avgDailyRate', 'avgLengthOfStay',
             'sourceBreakdown', 'categoryBreakdown',
-            'graphArray', 'graphavg'
+            'graphArray', 'graphavg', 'pool', 'poolMonth'
         ));
     }
 
