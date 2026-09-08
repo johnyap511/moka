@@ -27,6 +27,22 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'skyworld-solution-plus-early-bird-renovate-before-vp',
+            'view'        => 'skyworld-solution-plus-early-bird-renovate-before-vp',
+            'title'       => 'SkyWorld Solution+ Early Bird: Renovate Before VP, Move In on Handover Day | MOKA',
+            'heading'     => 'Solution+ Early Bird: renovated before VP, ready to move in on handover day',
+            'description' => 'How SkyWorld’s Solution+ Early Bird event worked, why renovating before vacant possession saves owners months of empty instalments, and how MOKA’s custom interior design fits inside the developer’s pre-VP schedule.',
+            'published'   => '2026-09-09',
+            'updated'     => '2026-09-09',
+            'image'       => 'images/layout/og-cover.jpg',
+            'read_time'   => 6,
+            'cta_heading' => 'Collecting keys from SkyWorld soon?',
+            'cta_body'    => 'Send us your unit number and floor plan and we will tell you what can be finished before your VP date.',
+            'cta_label'   => 'Speak to our designers',
+            'cta_url'     => '/contact',
+        ],
+
+        [
             'slug'        => 'penang-short-term-rental-rules-2026',
             'view'        => 'penang-short-term-rental-rules-2026',
             'title'       => 'Penang Short-Term Rental Rules 2026: Licences, Fees and Which Units Qualify | MOKA',
