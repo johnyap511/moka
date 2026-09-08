@@ -49,6 +49,22 @@
 .fc .fc-daygrid-event .ev .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .fc .fc-daygrid-event .ev .c{font-size:10px;font-weight:600;opacity:.9;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:10px;flex-shrink:0}
 .fc .fc-daygrid-more-link{font-size:11px;color:#F36523;font-weight:600}
+.cal-list{display:none}
+.cal-list table{width:100%;border-collapse:collapse;min-width:0}
+.cal-list th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+.cal-list td{padding:11px 10px;font-size:13px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.cal-list tr:last-child td{border-bottom:none}
+.cal-list tr.row{cursor:pointer}
+.cal-list tr.row:hover td{background:#f8f9fb}
+.cal-list tr.today td{background:#f0faf7}
+.cal-list .guest{font-weight:600}
+.cal-list .chan{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;color:#fff;white-space:nowrap}
+.cal-list .dates{white-space:nowrap}
+.cal-list .arrow{color:var(--text-secondary);margin:0 6px}
+.cal-list .n{font-variant-numeric:tabular-nums;font-weight:600}
+.cal-list .muted{color:var(--text-secondary);font-size:12px}
+.cal-list .empty{padding:36px;text-align:center;color:var(--text-secondary)}
+@media (max-width:700px){.cal-list .hide-sm{display:none}.cal-list td,.cal-list th{padding:9px 6px}}
 .fc .fc-list{border-radius:10px;overflow:hidden}
 .fc .fc-list-day-cushion{background:#f8f9fb!important}
 .fc .fc-list-event:hover td{background:#f0faf7}
@@ -111,6 +127,7 @@
 <div class="cal-wrap">
     <div class="cal-stats" id="cal-stats"></div>
     <div id="calendar"></div>
+    <div class="cal-list" id="cal-list"></div>
 </div>
 
 <div id="ev-popup">
@@ -165,8 +182,12 @@
         initialView: 'dayGridMonth',
         initialDate: initialDate,
         firstDay: 1,
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
-        buttonText: { today: 'Today', dayGridMonth: 'Month', listMonth: 'List' },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'monthBtn,listBtn' },
+        buttonText: { today: 'Today' },
+        customButtons: {
+            monthBtn: { text: 'Month', click: function () { setMode('month'); } },
+            listBtn:  { text: 'List',  click: function () { setMode('list'); } }
+        },
         events: fcEvents,
         eventClick: showPopup,
         height: 'auto',
@@ -176,10 +197,42 @@
             var ch = arg.event.extendedProps.channel;
             return { html: '<div class="ev"><span class="n">' + escapeHtml(arg.event.title) + '</span><span class="c">' + escapeHtml(ch) + '</span></div>' };
         },
-        datesSet: function (info) { monthStats(info.view.currentStart, info.view.currentEnd); }
+        datesSet: function (info) { monthStats(info.view.currentStart, info.view.currentEnd); renderList(info.view.currentStart, info.view.currentEnd); }
     });
     cal.render();
+    setMode('month');
 
+    var mode = 'month';
+    function setMode(m) {
+        mode = m;
+        var grid = document.querySelector('#calendar .fc-view-harness'), list = document.getElementById('cal-list');
+        if (grid) grid.style.display = m === 'list' ? 'none' : '';
+        list.style.display = m === 'list' ? 'block' : 'none';
+        document.querySelectorAll('.fc-monthBtn-button, .fc-listBtn-button').forEach(function (b) { b.classList.toggle('fc-button-active', b.classList.contains(m === 'list' ? 'fc-listBtn-button' : 'fc-monthBtn-button')); });
+    }
+    // One row per booking for the month on screen, in check-in order: guest,
+    // channel, dates and nights. FullCalendar's own list repeats a stay on
+    // every day it covers, which is unreadable for a 30-night tenant.
+    function renderList(start, end) {
+        var s = start.toISOString().slice(0, 10), e = end.toISOString().slice(0, 10), today = new Date().toISOString().slice(0, 10);
+        var rows = raw.filter(function (ev) { return ev.start < e && ev.end > s; }).sort(function (a, b) { return a.start < b.start ? -1 : 1; });
+        var html = '<table><thead><tr><th>Guest</th><th>Channel</th><th>Stay</th><th class="hide-sm">Nights</th><th class="hide-sm">Guests</th></tr></thead><tbody>';
+        if (!rows.length) html += '<tr><td colspan="5" class="empty">No bookings in this month</td></tr>';
+        rows.forEach(function (ev) {
+            var ch = ev.channel || 'Other', inMonth = ev.start >= s && ev.end <= e;
+            html += '<tr class="row' + (ev.start <= today && ev.end > today ? ' today' : '') + '" data-id="' + ev.id + '">' +
+                '<td><div class="guest">' + escapeHtml(ev.name || 'Guest') + '</div>' + (inMonth ? '' : '<div class="muted">spans another month</div>') + '</td>' +
+                '<td><span class="chan" style="background:' + colourOf(ch) + '">' + escapeHtml(ch) + '</span></td>' +
+                '<td class="dates">' + fmt(ev.start) + '<span class="arrow">→</span>' + fmt(ev.end) + '</td>' +
+                '<td class="hide-sm n">' + (ev.nights ?? '') + '</td>' +
+                '<td class="hide-sm muted">' + escapeHtml(ev.guest || '') + '</td></tr>';
+        });
+        document.getElementById('cal-list').innerHTML = html + '</tbody></table>';
+        document.querySelectorAll('#cal-list tr.row').forEach(function (tr) {
+            tr.addEventListener('click', function () { var ev = raw.find(function (x) { return String(x.id) === tr.dataset.id; }); if (ev) showPopup({ event: { id: ev.id, title: ev.name || 'Guest', startStr: ev.start, endStr: ev.end, extendedProps: { nights: ev.nights, guest: ev.guest, channel: ev.channel || 'Other' } }, el: tr }); });
+        });
+        if (mode === 'list') setMode('list');
+    }
     function monthStats(start, end) {
         var s = start.toISOString().slice(0, 10), e = end.toISOString().slice(0, 10);
         var nights = 0, count = 0;
