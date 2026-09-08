@@ -30,3 +30,7 @@
 .acct-help a { color: var(--blog-teal); font-family: SemiBold; text-decoration: none; }
 .acct-help a:hover { color: var(--blog-orange); }
 @media (max-width: 600px) { .acct-card { padding: 28px 22px 24px; margin-top: -70px; } .acct-hero { padding-bottom: 100px; } .acct-help { text-align: left; padding-right: 84px; } .acct-body { padding-bottom: 60px; } }
+
+/* While an owner is typing on a phone the chat button would ride up over the
+   fields with the keyboard, so it is hidden until the field loses focus. */
+@media (max-width: 991px) { html.acct-typing respond-io-widget { display: none !important; } }

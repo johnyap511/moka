@@ -27,10 +27,10 @@
             <form method="POST" action="/login">
                 @csrf
                 <label for="l-email">Email address</label>
-                <input id="l-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                <input id="l-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" enterkeyhint="next" spellcheck="false" autocapitalize="off" placeholder="you@example.com">
                 <label for="l-password">Password</label>
                 <div class="acct-pw">
-                    <input id="l-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    <input id="l-password" type="password" name="password" required autocomplete="current-password" enterkeyhint="go" placeholder="••••••••">
                     <button type="button" class="acct-pw__toggle" aria-label="Show password" onclick="var i=document.getElementById('l-password');var show=i.type==='password';i.type=show?'text':'password';this.textContent=show?'Hide':'Show';this.setAttribute('aria-label',show?'Hide password':'Show password');">Show</button>
                 </div>
                 <div class="acct-row">
@@ -41,6 +41,7 @@
             </form>
             <p class="foot">Not a MOKA host yet? <a href="/get/estimate">Get a free estimate</a></p>
         </div>
+        @include('v2.pages._account-focus')
         <p class="acct-help">Trouble signing in? <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or email <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>.</p>
     </div>
 @endsection

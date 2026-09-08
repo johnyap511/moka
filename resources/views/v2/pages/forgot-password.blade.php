@@ -27,10 +27,11 @@
             <form method="POST" action="/password/email">
                 @csrf
                 <label for="f-email">Email address</label>
-                <input id="f-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                <input id="f-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" enterkeyhint="go" spellcheck="false" autocapitalize="off" placeholder="you@example.com">
                 <button type="submit">Send reset link</button>
             </form>
             <p class="foot"><a href="/login">Back to sign in</a></p>
         </div>
+        @include('v2.pages._account-focus')
     </div>
 @endsection

@@ -28,12 +28,13 @@
                 <input type="hidden" name="token" value="{{ $token }}">
                 <input type="hidden" name="email" value="{{ $email }}">
                 <label for="r-password">New password</label>
-                <input id="r-password" type="password" name="password" required autocomplete="new-password">
+                <input id="r-password" type="password" name="password" required autocomplete="new-password" enterkeyhint="next">
                 <label for="r-confirm">Confirm password</label>
-                <input id="r-confirm" type="password" name="password_confirmation" required autocomplete="new-password">
+                <input id="r-confirm" type="password" name="password_confirmation" required autocomplete="new-password" enterkeyhint="go">
                 <button type="submit">Save new password</button>
             </form>
             <p class="foot"><a href="/login">Back to sign in</a></p>
         </div>
+        @include('v2.pages._account-focus')
     </div>
 @endsection
