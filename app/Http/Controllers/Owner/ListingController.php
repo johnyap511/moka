@@ -163,7 +163,8 @@ class ListingController extends Controller
                 // Pool profit sharing (ground rule 23): the pool's month and the owner's weighted share.
                 $pool = \App\Support\Pool::for($listing);
                 if ($pool) {
-                    $pm = \App\Support\Pool::month($pool['listing_ids'], $start, date('Y-m-d', strtotime($firstOfNextMonth)));
+                    $mStart = date('Y-m-01', strtotime($start));
+                    $pm = \App\Support\Pool::month($pool['listing_ids'], $mStart, date('Y-m-01', strtotime($mStart . ' +1 month')));
                     $revenue               = round($pm['base'] * $pool['share'], 2);
                     $bookingThisMonth      = $pm['bookings']->count();
                     $averageRentalRateDays = $pm['nights'];
