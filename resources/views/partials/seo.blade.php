@@ -42,7 +42,7 @@
 @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
-    <meta name="robots" content="{{ $seoRobots }}">
+    <meta name="robots" content="@yield('robots', 'index,follow,max-image-preview:large')">
     <link rel="canonical" href="{{ $seoCanonical }}">
 
     {{-- Open Graph — drives WhatsApp, Facebook and LinkedIn link previews --}}
