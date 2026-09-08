@@ -37,35 +37,21 @@
         </nav>
 </header>
 <script>
-// Header behaviour for pages that use this header. The original pages
-// (homepage, services, about, designs, estimate) carry their own scroll script
-// that turns the header orange, which this must not fight. Pages with a solid
-// hero (blog, solutions, contact) get that hero's colour once scrolled, so a
-// green page keeps a green header.
+// Header behaviour for pages that use this header. Once scrolled, the header
+// is painted brand green. The original pages (homepage, services, about,
+// designs, estimate) carry their own scroll script that adds .bg-orange
+// (!important), which wins over this, so those pages stay orange as before
+// and the green pages (blog, solutions, contact) stay green.
 (function () {
     var header = document.getElementById('main_header');
     if (!header || header.dataset.scrollBound) return;
     header.dataset.scrollBound = '1';
-    var colour = null, sampled = false;
-    function heroColour() {
-        var y = header.offsetHeight + 12, el = document.elementFromPoint(24, y);
-        while (el && el !== document.documentElement && el !== document.body) {
-            if (header.contains(el)) { el = el.parentElement; continue; }
-            var bg = getComputedStyle(el).backgroundColor;
-            if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
-            el = el.parentElement;
-        }
-        return null; // photo hero or nothing solid: leave it to the page's own script
-    }
     function paint() {
-        if (!sampled && window.scrollY < 5) { colour = heroColour(); sampled = true; }
-        if (!colour) return;
         var on = window.scrollY > 5;
-        header.style.backgroundColor = on ? colour : '';
-        header.style.boxShadow = on ? '0px 0px 20px -3px rgba(0,0,0,0.1)' : 'none';
+        header.style.backgroundColor = on ? '#004a49' : '';
+        if (!header.classList.contains('bg-orange')) header.style.boxShadow = on ? '0px 0px 20px -3px rgba(0,0,0,0.1)' : 'none';
     }
     window.addEventListener('scroll', paint, { passive: true });
-    window.addEventListener('load', paint);
     paint();
 })();
 </script>
