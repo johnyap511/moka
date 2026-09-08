@@ -285,6 +285,12 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
         Ground rules
     </a>
+    @if(admin_is_super())
+    <a href="/admin/settings/mail" class="sidebar-link {{ request()->is('admin/settings/mail*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Mail settings
+    </a>
+    @endif
     @endif
     @if(admin_can('ezee.manage'))
     <a href="/admin/ezee/upload_bookings" class="sidebar-link {{ request()->is('admin/ezee/upload_bookings*') ? 'active' : '' }}">

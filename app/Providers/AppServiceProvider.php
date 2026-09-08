@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Mail account set from the admin portal wins over the server file.
+        \App\Support\AppSettings::applyMail();
+
         // \URL::forceScheme('https');
     }
 }
