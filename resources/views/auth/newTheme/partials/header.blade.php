@@ -36,3 +36,15 @@
             </div>
         </nav>
 </header>
+<script>
+// Header behaviour from the homepage, for every page that uses this header:
+// fixed at the top, and it takes the brand colour once the page is scrolled.
+(function () {
+    var header = document.getElementById('main_header');
+    if (!header || header.dataset.scrollBound) return;
+    header.dataset.scrollBound = '1';
+    function paint() { header.classList.toggle('bg-orange', window.scrollY > 5); }
+    window.addEventListener('scroll', paint, { passive: true });
+    paint();
+})();
+</script>

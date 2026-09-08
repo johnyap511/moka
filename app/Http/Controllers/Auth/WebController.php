@@ -140,11 +140,19 @@ class WebController extends Controller
                 ->withInput();
         }
 
-        $email = "sam@homemoka.com";
-        $data22 = $request->only('name', 'phone', 'email', 'message');
-        //        Mail::to($email)->queue(new ContactWebMail($data22));
+        $data = $request->only('name', 'phone', 'email', 'message');
+        // Saved first, then emailed to the office with reply-to set to the sender.
+        \Illuminate\Support\Facades\DB::table('contact_messages')->insert($data + ['ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now()]);
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "New message from the homemoka.com contact form\n\nName:    {$data['name']}\nEmail:   {$data['email']}\nPhone:   {$data['phone']}\n\nMessage:\n{$data['message']}\n\nReceived " . now()->format('d M Y H:i') . ". Reply to this email to answer them.",
+                fn ($m) => $m->to('hello@homemoka.com')->replyTo($data['email'], $data['name'])->subject('Website enquiry from ' . $data['name'])
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Contact email not sent: ' . $e->getMessage(), ['name' => $data['name']]);
+        }
 
-        return back()->with("success", "Message sent successfully!");
+        return back()->with("success", "Message sent. We reply within one working day.");
     }
 
     /**
