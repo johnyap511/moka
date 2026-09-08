@@ -20,6 +20,7 @@
 .a2hs__later{background:#eef2f1;color:#004a49}
 @media (min-width:768px){.a2hs{display:none !important}}
 html.a2hs-open respond-io-widget{display:none !important}
+html.acct-typing .a2hs{display:none !important}
 </style>
 <div class="a2hs" id="a2hs" role="dialog" aria-label="Add MOKA to your home screen">
     <div class="a2hs__row">
