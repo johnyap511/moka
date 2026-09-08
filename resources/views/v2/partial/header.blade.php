@@ -61,10 +61,10 @@ $navItems = [
                         My Account
                     </a>
                 @else
-                    <button class="header-login-btn" data-open-modal="auth" aria-label="Log in to your account">
+                    <a href="/login" class="header-login-btn" aria-label="Log in to your account">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         Log In
-                    </button>
+                    </a>
                 @endauth
 
                 <a href="{{ url('/get/estimate') }}"
@@ -122,7 +122,7 @@ $navItems = [
         @auth
             <a href="{{ url('/user/home') }}" class="btn btn-outline-teal" style="width:100%; justify-content:center;">My Account</a>
         @else
-            <button class="btn btn-outline-teal" data-open-modal="auth" style="width:100%; justify-content:center;">Log In</button>
+            <a href="/login" class="btn btn-outline-teal" style="width:100%; justify-content:center;">Log In</a>
         @endauth
         <a href="{{ url('/get/estimate') }}"
            class="btn btn-primary"

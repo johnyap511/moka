@@ -60,7 +60,7 @@
             <div>
                 <h4>Hosts</h4>
                 <ul class="mk-list">
-                    <li><a href="/login" onclick="var m=document.getElementById('loninModal'); if (m && window.bootstrap) { event.preventDefault(); bootstrap.Modal.getOrCreateInstance(m).show(); }">Hosts log in</a></li>
+                    <li><a href="/login">Hosts log in</a></li>
                     <li><a href="/get/estimate">Get a free estimate</a></li>
                     <li><a href="/contact">Contact us</a></li>
                     <li><a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a></li>
