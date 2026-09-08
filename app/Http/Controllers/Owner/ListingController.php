@@ -68,7 +68,7 @@ class ListingController extends Controller
             ->where('check_in', '>=', $prevOf6Month)
             ->where('check_in', '<', $nextOf6Month)
             ->where('status', '>=', 5)
-            ->orderBy('check_in', 'ASC')
+            ->orderByRaw('MIN(check_in)')
             ->groupBy('month', 'year')
             ->get();
 
@@ -194,23 +194,23 @@ class ListingController extends Controller
         }
 
         $graphO = DB::table('bookings')
-            ->select(DB::raw('DATE_FORMAT(check_in, "%b") as month, DAY(LAST_DAY(DATE_FORMAT(check_in,"%Y-%m-%d"))) as days ,DATE_FORMAT(check_in, "%y") as year,DATEDIFF(check_out, check_in) AS daydiff'))
+            ->select(DB::raw('DATE_FORMAT(check_in, "%b") as month, ANY_VALUE(DAY(LAST_DAY(DATE_FORMAT(check_in,"%Y-%m-%d")))) as days , ANY_VALUE(DATE_FORMAT(check_in, "%y")) as year, ANY_VALUE(DATEDIFF(check_out, check_in)) AS daydiff'))
         // ->where('user_id', Auth::id())
             ->where('check_in', '>', $prevOf6Month)
             ->where('check_out', '<=', $nextOf6Month)
             ->where('status', '>=', 5)
-            ->orderBy('check_in', 'ASC')
+            ->orderByRaw('MIN(check_in)')
             ->groupBy('month')
             ->get();
         $graphmonthO = json_decode(json_encode($graphO), true);
 
         $graph = DB::table('bookings')
-            ->select(DB::raw('DATE_FORMAT(check_in, "%b") as month,DATE_FORMAT(check_in, "%y") as year,price_night,nights,cleaning_fee , DATEDIFF(check_out, check_in) AS days'))
+            ->select(DB::raw('DATE_FORMAT(check_in, "%b") as month, ANY_VALUE(DATE_FORMAT(check_in, "%y")) as year, ANY_VALUE(price_night) as price_night, ANY_VALUE(nights) as nights, ANY_VALUE(cleaning_fee) as cleaning_fee, ANY_VALUE(DATEDIFF(check_out, check_in)) AS days'))
             ->where('check_in', '>', $prevOf6Month)
             ->where('check_out', '<=', $nextOf6Month)
         //  ->whereIn('listing_id', $listingIds)
             ->where('status', '>=', 5)
-            ->orderBy('check_in', 'ASC')
+            ->orderByRaw('MIN(check_in)')
             ->groupBy('month')
             ->get();
         $sub_month = json_encode($graph, true);
