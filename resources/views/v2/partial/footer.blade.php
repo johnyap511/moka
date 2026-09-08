@@ -89,6 +89,7 @@
                         <p>Menara Lien Hoe, Tropicana<br>47410 Petaling Jaya, Selangor</p>
                         <a href="tel:60367892288">+603 6789 2288</a>
                         <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>
+                        <a href="https://share.google/pLkG6DaCGgnjUA4mj" target="_blank" rel="noopener">Find us on Google</a>
                     </address>
 
                     <div class="footer-newsletter">

@@ -76,6 +76,10 @@
                 'image'       => asset('images/layout/og-cover.jpg'),
                 'description' => 'Airbnb and short-stay property management in Malaysia.',
                 'areaServed'  => ['@type' => 'Country', 'name' => 'Malaysia'],
+                'telephone'   => '+60 3 6789 2288',
+                'email'       => 'hello@homemoka.com',
+                // Google Business Profile ("EkoCheras by Moka", knowledge graph /g/11frnkj_bz) and the share link Sam gave on 8 Sep 2026.
+                'sameAs'      => ['https://share.google/pLkG6DaCGgnjUA4mj', 'https://www.google.com/search?kgmid=/g/11frnkj_bz'],
             ],
             [
                 '@type'      => 'WebSite',
