@@ -56,8 +56,13 @@ class CalendarController extends Controller
                 }
             }
             $guest = ($book->adult ?? 0) . ' adults, ' . ($book->infant ?? 0) . ' children';
+            if ((string) $book->check_in === (string) $book->check_out) {
+                continue;   // day-use: company revenue, not a night on the owner's calendar (rule 22)
+            }
             $events[] = [
                 'id'           => $book->id,
+                'name'         => $name ?: 'Guest',
+                'channel'      => \App\Support\Channel::canonical($book->source) ?: 'Other',
                 'title'        => 'Booked by ' . ($name ?: 'Guest'),
                 'start'        => $book->check_in,
                 'end'          => $book->check_out,

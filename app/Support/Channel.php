@@ -46,6 +46,16 @@ class Channel
         };
     }
 
+    /** One colour per channel, used by the owner calendar and dashboard charts. */
+    public static function colours(): array
+    {
+        return [
+            self::BOOKING => '#1d4ed8', self::AGODA => '#7c3aed', self::AIRBNB => '#e11d48', self::EXPEDIA => '#d97706',
+            self::TRAVELOKA => '#0891b2', self::TRIP => '#0f766e', self::TIKET => '#4f46e5', self::WEBSITE => '#F36523',
+            self::LTR => '#475569', self::OWNER => '#16a34a',
+        ];
+    }
+
     /** Direct channel: the 8% M&A fee on the room charge before tax (rule 9). */
     public static function isDirect(?string $source): bool
     {
