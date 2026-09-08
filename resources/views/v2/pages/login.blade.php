@@ -1,6 +1,6 @@
 {{-- Hosts log in. Route: /login → Auth\LoginController. Homepage template, blog styling. --}}
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Hosts Log In | MOKA')
+@section('seo_title', 'Owner Log In | MOKA')
 @section('seo_description', 'Sign in to your MOKA owner account to see bookings, calendar and revenue for your units.')
 
 @push('styles')
@@ -14,7 +14,7 @@
 
     <div class="blog-hero acct-hero">
         <div class="blog-hero__inner">
-            <div class="blog-hero__eyebrow">Hosts</div>
+            <div class="blog-hero__eyebrow">Owners</div>
             <h1>Welcome back</h1>
             <p class="blog-hero__meta">Sign in to see your bookings, calendar and revenue.</p>
         </div>
@@ -39,7 +39,7 @@
                 </div>
                 <button type="submit">Sign in</button>
             </form>
-            <p class="foot">Not a MOKA host yet? <a href="/get/estimate">Get a free estimate</a></p>
+            <p class="foot">Not a MOKA owner yet? <a href="/get/estimate">Get a free estimate</a></p>
         </div>
         @include('v2.pages._account-focus')
         <p class="acct-help">Trouble signing in? <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or email <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>.</p>

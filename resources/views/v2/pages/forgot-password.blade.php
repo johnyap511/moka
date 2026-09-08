@@ -14,7 +14,7 @@
 
     <div class="blog-hero acct-hero">
         <div class="blog-hero__inner">
-            <div class="blog-hero__eyebrow">Hosts</div>
+            <div class="blog-hero__eyebrow">Owners</div>
             <h1>Reset your password</h1>
             <p class="blog-hero__meta">Enter your email and we will send you a reset link.</p>
         </div>

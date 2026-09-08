@@ -14,7 +14,7 @@
 
     <div class="blog-hero acct-hero">
         <div class="blog-hero__inner">
-            <div class="blog-hero__eyebrow">Hosts</div>
+            <div class="blog-hero__eyebrow">Owners</div>
             <h1>Choose a new password</h1>
             <p class="blog-hero__meta">Pick something at least 8 characters long.</p>
         </div>
