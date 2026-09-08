@@ -19,6 +19,7 @@
 .a2hs__go{background:#ff6b35;color:#fff}
 .a2hs__later{background:#eef2f1;color:#004a49}
 @media (min-width:768px){.a2hs{display:none !important}}
+html.a2hs-open respond-io-widget{display:none !important}
 </style>
 <div class="a2hs" id="a2hs" role="dialog" aria-label="Add MOKA to your home screen">
     <div class="a2hs__row">
@@ -44,20 +45,20 @@
     var dismissedAt = 0; try { dismissedAt = parseInt(localStorage.getItem('moka-a2hs-dismissed') || '0', 10); } catch (e) {}
     var recentlyDismissed = Date.now() - dismissedAt < 30 * 24 * 3600 * 1000;
     if (!force && (standalone || recentlyDismissed)) return;
-    function dismiss() { box.classList.remove('show'); try { localStorage.setItem('moka-a2hs-dismissed', String(Date.now())); } catch (e) {} }
+    function dismiss() { box.classList.remove('show'); document.documentElement.classList.remove('a2hs-open'); try { localStorage.setItem('moka-a2hs-dismissed', String(Date.now())); } catch (e) {} }
     document.getElementById('a2hs-later').addEventListener('click', dismiss);
     if (ios || force === 'ios') {
         document.getElementById('a2hs-ios').hidden = false;
-        setTimeout(function () { box.classList.add('show'); }, 1200);
+        setTimeout(function () { box.classList.add('show'); document.documentElement.classList.add('a2hs-open'); }, 1200);
         return;
     }
     var deferred = null;
     window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault(); deferred = e;
         document.getElementById('a2hs-go').hidden = false;
-        setTimeout(function () { box.classList.add('show'); }, 1200);
+        setTimeout(function () { box.classList.add('show'); document.documentElement.classList.add('a2hs-open'); }, 1200);
     });
-    if (force === 'android') { document.getElementById('a2hs-go').hidden = false; box.classList.add('show'); }
+    if (force === 'android') { document.getElementById('a2hs-go').hidden = false; box.classList.add('show'); document.documentElement.classList.add('a2hs-open'); }
     document.getElementById('a2hs-go').addEventListener('click', function () {
         if (!deferred) { dismiss(); return; }
         deferred.prompt();
