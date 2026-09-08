@@ -82,5 +82,7 @@ $(function () {
 </script>
 
 @yield('scripts')
+    {{-- respond.io chat widget (WhatsApp general line), added 8 Sep 2026 --}}
+    <script id="respondio__growth_tool" src="https://cdn.respond.io/widget/widget.js?wId=f1f4075f-2633-4a52-82ec-77a9975f7521" defer></script>
 </body>
 </html>
