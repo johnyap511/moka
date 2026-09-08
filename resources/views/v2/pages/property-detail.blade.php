@@ -3,7 +3,7 @@
 @section('title', $listing->title . ' — MOKA')
 @section('meta_description', substr(strip_tags($listing->description ?? ''), 0, 155))
 @if((int) $listing->user_id === 4475 || trim(strip_tags($listing->description ?? '')) === '')
-@section('robots', 'noindex,follow')
+@section('seo_robots', 'noindex,follow')
 @endif
 
 @section('head')
