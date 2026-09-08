@@ -30,7 +30,7 @@
                 <input id="l-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
                 <label for="l-password">Password</label>
                 <input id="l-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-                <div class="row">
+                <div class="acct-row">
                     <label><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
                     <a href="/password/reset">Forgot password?</a>
                 </div>

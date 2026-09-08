@@ -2,16 +2,19 @@
    blog/solutions palette, so they read as the same site. */
 .acct-hero { padding-bottom: 120px; text-align: center; }
 .acct-hero .blog-hero__inner { max-width: 640px; }
+.acct-hero .blog-hero__meta { text-align: center; font-size: 16.5px; color: rgba(255,255,255,.8); }
 .acct-body { background: var(--blog-cream); padding: 0 20px 80px; }
 .acct-card { max-width: 480px; margin: -80px auto 0; background: #fff; border: 1px solid var(--blog-rule); border-radius: 16px; padding: 36px 36px 30px; box-shadow: 0 14px 40px rgba(0,61,60,.10); color: var(--blog-ink); }
 .acct-card h2 { font-family: Bold; font-size: 24px; color: var(--blog-teal); margin: 0 0 6px; }
 .acct-card .lead { font-size: 16px; color: var(--blog-muted); margin: 0 0 24px; line-height: 1.5; }
 .acct-card label { display: block; font-family: SemiBold; font-size: 15.5px; color: var(--blog-teal); margin: 0 0 6px; }
-.acct-card input { width: 100%; border: 1px solid var(--blog-rule); border-radius: 12px; padding: 13px 16px; font-size: 16.5px; font-family: SansPro_Regular, sans-serif; color: var(--blog-ink); background: #fff; margin-bottom: 18px; outline: 0; box-sizing: border-box; }
+.acct-card input { width: 100%; height: 50px; border: 1px solid var(--blog-rule); border-radius: 12px; padding: 13px 16px; font-size: 16.5px; font-family: SansPro_Regular, sans-serif; color: var(--blog-ink); background: #fff; margin-bottom: 18px; outline: 0; box-sizing: border-box; }
 .acct-card input:focus { border-color: var(--blog-orange); box-shadow: 0 0 0 3px rgba(255,107,53,.15); }
-.acct-card .row { display: flex; justify-content: space-between; align-items: center; margin: -6px 0 18px; }
-.acct-card .row label { margin: 0; font-family: SansPro_Regular, sans-serif; color: var(--blog-muted); font-size: 15px; display: flex; align-items: center; gap: 8px; }
-.acct-card .row input { width: auto; margin: 0; }
+.acct-card .acct-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -4px 0 22px; }
+.acct-card .acct-row label { margin: 0; font-family: SansPro_Regular, sans-serif; color: var(--blog-muted); font-size: 15px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.acct-card .acct-row input { width: 17px; height: 17px; margin: 0; padding: 0; accent-color: var(--blog-orange); }
+.acct-card .acct-row a { font-size: 15px; }
+.acct-card input:-webkit-autofill, .acct-card input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #fff inset; -webkit-text-fill-color: var(--blog-ink); }
 .acct-card a { color: var(--blog-teal); font-family: SemiBold; text-decoration: none; }
 .acct-card a:hover { color: var(--blog-orange); }
 .acct-card button { width: 100%; background: var(--blog-orange); color: #fff; border: 0; border-radius: 999px; padding: 15px 32px; font-family: Bold; font-size: 18px; cursor: pointer; }
