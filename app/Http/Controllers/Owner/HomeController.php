@@ -86,7 +86,7 @@ class HomeController extends Controller
 
             if ($pool) {
                 $poolMonth    = \App\Support\Pool::month($scopeIds, $monthStart, $monthEndEx);
-                $monthRevenue = round($poolMonth['base'] * $pool['share'], 2);   // the owner's share
+                $monthRevenue = $poolMonth['base'];   // the pool's revenue: owners see pool totals (Sam, 8 Sep 2026)
             }
 
             // Accumulated sales: each month of the year up to and including the
@@ -97,7 +97,7 @@ class HomeController extends Controller
                 $mEndEx = $mDate->copy()->addMonth()->startOfMonth()->toDateString();
 
                 if ($pool) {
-                    $accumulatedSales += \App\Support\Pool::month($scopeIds, $mStart, $mEndEx)['base'] * $pool['share'];
+                    $accumulatedSales += \App\Support\Pool::month($scopeIds, $mStart, $mEndEx)['base'];
                     continue;
                 }
                 $mBooks = Booking::where('listing_id', $id)

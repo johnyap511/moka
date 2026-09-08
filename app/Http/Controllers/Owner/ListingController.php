@@ -165,7 +165,7 @@ class ListingController extends Controller
                 if ($pool) {
                     $mStart = date('Y-m-01', strtotime($start));
                     $pm = \App\Support\Pool::month($pool['listing_ids'], $mStart, date('Y-m-01', strtotime($mStart . ' +1 month')));
-                    $revenue               = round($pm['base'] * $pool['share'], 2);
+                    $revenue               = $pm['base'];   // pool totals, not the share
                     $bookingThisMonth      = $pm['bookings']->count();
                     $averageRentalRateDays = $pm['nights'];
                     $bookedDays            = $pm['nights'] / max(1, $pool['units']);
