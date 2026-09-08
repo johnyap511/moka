@@ -646,7 +646,7 @@
 }
 
 @media (min-width: 640px)  { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: var(--space-8); } }
+@media (min-width: 1024px) { .footer-grid { grid-template-columns: 1.6fr 1fr 1.2fr 1fr 1.4fr; gap: var(--space-8); } }  /* brand, Company, Solutions, Homeowners, Get in touch */
 
 .footer-brand .footer-tagline {
   font-size: var(--text-sm);
