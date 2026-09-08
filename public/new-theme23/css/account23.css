@@ -15,6 +15,10 @@
 .acct-card .acct-row input { width: 17px; height: 17px; margin: 0; padding: 0; accent-color: var(--blog-orange); }
 .acct-card .acct-row a { font-size: 15px; }
 .acct-card input:-webkit-autofill, .acct-card input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #fff inset; -webkit-text-fill-color: var(--blog-ink); }
+.acct-pw { position: relative; }
+.acct-pw input { padding-right: 76px; }
+.acct-pw__toggle { position: absolute; right: 8px; top: 8px; height: 34px; width: auto; padding: 0 14px; background: var(--blog-cream); color: var(--blog-teal); border: 1px solid var(--blog-rule); border-radius: 999px; font-family: SemiBold; font-size: 14px; cursor: pointer; }
+.acct-pw__toggle:hover { background: #f0ece4; }
 .acct-card a { color: var(--blog-teal); font-family: SemiBold; text-decoration: none; }
 .acct-card a:hover { color: var(--blog-orange); }
 .acct-card button { width: 100%; background: var(--blog-orange); color: #fff; border: 0; border-radius: 999px; padding: 15px 32px; font-family: Bold; font-size: 18px; cursor: pointer; }

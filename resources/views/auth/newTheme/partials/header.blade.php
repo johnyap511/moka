@@ -24,9 +24,8 @@
                         <li class="nav-item"><a href="/about">About Us</a></li>
                         <li class="nav-item"><a href="/blog">Blog</a></li>
                         <!-- <li class="nav-item" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</li> -->
-                        {{-- Opens the login pop-up on pages that carry it; on pages that do not (the blog), goes to the login page. --}}
-                        <li class="nav-item cursor-pointer">
-                            <a href="/login">Log In</a>
+                        <li class="nav-item nav-login">
+                            <a href="/login"><i class="fa-solid fa-user d-lg-none"></i><span class="d-lg-none">Owner log in</span><span class="d-none d-lg-inline">Log In</span></a>
                         </li>
                         <li class="nav-item d-none d-lg-block">
                             <a href="/get/estimate" target="_blank" class="get-est-btn">Get a quick estimate (Free)</a>

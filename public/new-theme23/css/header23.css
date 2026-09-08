@@ -105,3 +105,10 @@
         padding-bottom: 3px;
     }
 }
+/* Phone menu: comfortable tap targets and a clear owner log-in pill. */
+@media (max-width:991px) {
+    .header-menu>li>a { display: block; padding: 8px 0; }
+    .header-menu .nav-login { margin-top: 4px; }
+    .header-menu .nav-login>a { display: inline-flex; align-items: center; gap: 10px; border: 2px solid #fff; border-radius: 100px; padding: 9px 22px; line-height: 1.2; }
+    .header-menu .nav-login>a i { font-size: 16px; }
+}

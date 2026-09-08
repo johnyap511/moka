@@ -21,7 +21,7 @@
 
     <link rel="stylesheet" href="{{ asset('new-theme23/css/all23.css') }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/home23.css') }}">
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/header23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/header23.css') }}?v={{ filemtime(public_path('new-theme23/css/header23.css')) }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/footer23.css') }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/registerLoginModal23.css') }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/css/service23.css') }}">

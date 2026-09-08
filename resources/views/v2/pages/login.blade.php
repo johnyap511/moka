@@ -29,7 +29,10 @@
                 <label for="l-email">Email address</label>
                 <input id="l-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
                 <label for="l-password">Password</label>
-                <input id="l-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                <div class="acct-pw">
+                    <input id="l-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    <button type="button" class="acct-pw__toggle" aria-label="Show password" onclick="var i=document.getElementById('l-password');var show=i.type==='password';i.type=show?'text':'password';this.textContent=show?'Hide':'Show';this.setAttribute('aria-label',show?'Hide password':'Show password');">Show</button>
+                </div>
                 <div class="acct-row">
                     <label><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
                     <a href="/password/reset">Forgot password?</a>
