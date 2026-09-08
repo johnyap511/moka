@@ -27,7 +27,7 @@
     {{-- MOKA v2 CSS — order matters --}}
     <link rel="stylesheet" href="{{ asset('/moka-v2/css/design-system.css') }}">
     <link rel="stylesheet" href="{{ asset('/moka-v2/css/header.css') }}">
-    <link rel="stylesheet" href="{{ asset('moka-v2/css/header-unify.css') }}">
+    <link rel="stylesheet" href="{{ asset('moka-v2/css/header-unify.css') }}?v={{ filemtime(public_path('moka-v2/css/header-unify.css')) }}">
     <link rel="stylesheet" href="{{ asset('/moka-v2/css/home.css') }}">
     <link rel="stylesheet" href="{{ asset('/moka-v2/css/listings.css') }}">
     <link rel="stylesheet" href="{{ asset('/moka-v2/css/pages.css') }}">
