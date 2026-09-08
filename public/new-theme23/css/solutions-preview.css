@@ -139,3 +139,6 @@ a:hover .sx-more svg { transform: translateX(3px); }
     .sx-card { padding: 24px 20px; }
     .sx-split { padding: 28px 22px; border-radius: 20px; }
 }
+.sx-table td .sx-yes { display: block; margin-bottom: 2px; }
+.sx-swipe { display: none; font-size: 13px; color: var(--blog-muted); margin: 10px 0 0; }
+@media (max-width: 860px) { .sx-swipe { display: block; } }

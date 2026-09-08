@@ -124,6 +124,7 @@
                         </tbody>
                     </table>
                 </div>
+                <p class="sx-swipe">Swipe sideways to see the full comparison.</p>
             </div>
         </section>
 
