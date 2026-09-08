@@ -27,6 +27,34 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'penang-short-term-rental-rules-2026',
+            'view'        => 'penang-short-term-rental-rules-2026',
+            'title'       => 'Penang Short-Term Rental Rules 2026: Licences, Fees and Which Units Qualify | MOKA',
+            'heading'     => 'Penang’s new short-term rental by-laws: what owners need to know',
+            'description' => 'Penang’s Private Short-term Accommodation By-Laws 2026 explained: which properties can be licensed on the island and the mainland, the 75% building consent, fees from RM1,000 a year, and the 1 November 2026 deadline.',
+            'published'   => '2026-09-09',
+            'updated'     => '2026-09-09',
+            'image'       => 'images/layout/og-cover.jpg',
+            'read_time'   => 7,
+            'cta_heading' => 'Own a unit in Penang?',
+            'cta_body'    => 'MOKA handles building consent, licensing and reporting for the owners we manage. Ask us where your unit stands.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
+            'slug'        => 'working-with-building-management-and-authorities',
+            'view'        => 'working-with-building-management-and-authorities',
+            'title'       => 'How Airbnb Hosts Should Work With Building Management and Local Authorities in Malaysia | MOKA',
+            'heading'     => 'How to keep your JMB, your guards and the council on your side',
+            'description' => 'The building decides whether you can host. A practical guide for Malaysian short-stay hosts on consent, guest registration, house rules, licensing and the daily habits that keep a JMB or MC happy.',
+            'published'   => '2026-09-09',
+            'updated'     => '2026-09-09',
+            'image'       => 'images/layout/og-cover.jpg',
+            'read_time'   => 7,
+        ],
+
+        [
             'slug'        => 'airbnb-management-kuala-lumpur-owner-guide',
             'view'        => 'airbnb-management-kuala-lumpur-owner-guide',
             'title'       => 'Airbnb Management in Kuala Lumpur: A Property Owner’s Guide | MOKA',

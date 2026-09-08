@@ -22,7 +22,7 @@
         .app-auth{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 20px 24px}
         .app-auth__brand{text-align:center;margin-bottom:26px}
         .app-auth__brand img{height:64px;width:auto}
-        .app-auth__brand p{margin:12px 0 0;color:rgba(255,255,255,.78);font-size:15px}
+        .app-auth__brand p{margin:12px 0 0;color:rgba(255,255,255,.78);font-size:15px;text-align:center}
         .app-auth .acct-card{margin:0 auto;max-width:440px;box-shadow:0 18px 50px rgba(0,0,0,.28);border:0}
         .app-auth__help{text-align:center;color:rgba(255,255,255,.75);font-size:14.5px;margin:22px 0 0;padding:0 8px}
         .app-auth__help a{color:#fff;font-family:SemiBold;text-decoration:none}
