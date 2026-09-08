@@ -1,23 +1,39 @@
-@extends('v2.partial.layout')
-@section('title', 'New Password — MOKA')
+{{-- New password form. Route: /password/reset/{token} → Auth\ResetPasswordController. --}}
+@extends('auth.newTheme.layout')
+@section('seo_title', 'New Password | MOKA')
+@section('seo_description', 'Choose a new password for your MOKA owner account.')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/account23.css') }}?v={{ filemtime(public_path('new-theme23/css/account23.css')) }}">
+    <meta name="robots" content="noindex">
+@endpush
+
 @section('content')
-<section style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:80px 20px;">
-    <div style="background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.12);padding:48px;width:100%;max-width:440px;">
-        <h1 style="font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:32px;color:#003d3c;">New password</h1>
-        <form method="POST" action="/password/reset">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="email" value="{{ $email }}">
-            <div style="margin-bottom:20px;">
-                <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:.9rem;">New password</label>
-                <input type="password" name="password" required style="width:100%;padding:12px 16px;border:1.5px solid #d1d5db;border-radius:10px;font-size:1rem;outline:none;box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom:28px;">
-                <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:.9rem;">Confirm password</label>
-                <input type="password" name="password_confirmation" required style="width:100%;padding:12px 16px;border:1.5px solid #d1d5db;border-radius:10px;font-size:1rem;outline:none;box-sizing:border-box;">
-            </div>
-            <button type="submit" style="width:100%;padding:14px;background:#003d3c;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;">Reset Password</button>
-        </form>
+    @include('auth.newTheme.partials.header')
+
+    <div class="blog-hero acct-hero">
+        <div class="blog-hero__inner">
+            <div class="blog-hero__eyebrow">Hosts</div>
+            <h1>Choose a new password</h1>
+            <p class="blog-hero__meta">Pick something at least 8 characters long.</p>
+        </div>
     </div>
-</section>
+
+    <div class="acct-body">
+        <div class="acct-card">
+            @if($errors->any())<div class="err">{{ $errors->first() }}</div>@endif
+            <form method="POST" action="/password/reset">
+                @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+                <input type="hidden" name="email" value="{{ $email }}">
+                <label for="r-password">New password</label>
+                <input id="r-password" type="password" name="password" required autocomplete="new-password">
+                <label for="r-confirm">Confirm password</label>
+                <input id="r-confirm" type="password" name="password_confirmation" required autocomplete="new-password">
+                <button type="submit">Save new password</button>
+            </form>
+            <p class="foot"><a href="/login">Back to sign in</a></p>
+        </div>
+    </div>
 @endsection

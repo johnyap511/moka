@@ -19,6 +19,8 @@
     .ct-ok{background:#e8f4f3;border-left:4px solid var(--blog-teal);padding:14px 18px;border-radius:0 10px 10px 0;margin-bottom:22px;font-size:16px;color:var(--blog-teal)}
     .ct-side .sol-card{margin-bottom:16px}
     .ct-side p{font-size:16.5px;line-height:1.6;color:#33403f;margin:0 0 6px}
+    .ct-side .sol-card--teal h3{color:#fff}
+    .ct-side .sol-card--teal p{color:rgba(255,255,255,.88);margin-bottom:16px}
     .ct-side a{color:var(--blog-teal);font-family:SemiBold;text-decoration:none}
     .ct-side a:hover{color:var(--blog-orange)}
     .ct-side .k{font-family:SemiBold;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--blog-orange);margin:0 0 6px}

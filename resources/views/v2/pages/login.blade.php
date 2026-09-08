@@ -1,40 +1,43 @@
-@extends('v2.partial.layout')
-@section('title', 'Login — MOKA')
+{{-- Hosts log in. Route: /login → Auth\LoginController. Homepage template, blog styling. --}}
+@extends('auth.newTheme.layout')
+@section('seo_title', 'Hosts Log In | MOKA')
+@section('seo_description', 'Sign in to your MOKA owner account to see bookings, calendar and revenue for your units.')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}">
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/account23.css') }}?v={{ filemtime(public_path('new-theme23/css/account23.css')) }}">
+    <meta name="robots" content="noindex">
+@endpush
 
 @section('content')
-<section style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:80px 20px;">
-    <div style="background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.12);padding:48px;width:100%;max-width:440px;">
-        <h1 style="font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:8px;color:#003d3c;">Welcome back</h1>
-        <p style="color:#6b7280;margin-bottom:32px;">Sign in to your MOKA owner account.</p>
+    @include('auth.newTheme.partials.header')
 
-        @if($errors->any())
-            <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:.9rem;">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form method="POST" action="/login">
-            @csrf
-            <div style="margin-bottom:20px;">
-                <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:.9rem;">Email address</label>
-                <input type="email" name="email" value="{{ old('email') }}" required
-                       style="width:100%;padding:12px 16px;border:1.5px solid #d1d5db;border-radius:10px;font-size:1rem;outline:none;box-sizing:border-box;"
-                       placeholder="you@example.com">
-            </div>
-            <div style="margin-bottom:28px;">
-                <label style="display:block;font-weight:600;color:#374151;margin-bottom:6px;font-size:.9rem;">Password</label>
-                <input type="password" name="password" required
-                       style="width:100%;padding:12px 16px;border:1.5px solid #d1d5db;border-radius:10px;font-size:1rem;outline:none;box-sizing:border-box;"
-                       placeholder="••••••••">
-            </div>
-            <button type="submit"
-                    style="width:100%;padding:14px;background:#003d3c;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;">
-                Sign In
-            </button>
-        </form>
-        <p style="text-align:center;margin-top:24px;color:#6b7280;font-size:.9rem;">
-            Don't have an account? <a href="/register" style="color:#003d3c;font-weight:600;">Register</a>
-        </p>
+    <div class="blog-hero acct-hero">
+        <div class="blog-hero__inner">
+            <div class="blog-hero__eyebrow">Hosts</div>
+            <h1>Welcome back</h1>
+            <p class="blog-hero__meta">Sign in to see your bookings, calendar and revenue.</p>
+        </div>
     </div>
-</section>
+
+    <div class="acct-body">
+        <div class="acct-card">
+            @if($errors->any())<div class="err">{{ $errors->first() }}</div>@endif
+            @if(session('status'))<div class="ok">{{ session('status') }}</div>@endif
+            <form method="POST" action="/login">
+                @csrf
+                <label for="l-email">Email address</label>
+                <input id="l-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                <label for="l-password">Password</label>
+                <input id="l-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                <div class="row">
+                    <label><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
+                    <a href="/password/reset">Forgot password?</a>
+                </div>
+                <button type="submit">Sign in</button>
+            </form>
+            <p class="foot">Not a MOKA host yet? <a href="/get/estimate">Get a free estimate</a></p>
+        </div>
+        <p class="acct-help">Trouble signing in? <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or email <a href="mailto:hello@homemoka.com">hello@homemoka.com</a>.</p>
+    </div>
 @endsection
