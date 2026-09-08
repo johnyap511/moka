@@ -67,40 +67,42 @@
             });
 </script>
 <script>
-    
-    // Bedrooms count
+    // Bedrooms counter (estimate form: homepage, estimate page). Guarded so
+    // pages without the form do not stop here.
     let bedPlus = document.getElementById("bed_plus");
     let bedMinus = document.getElementById("bed_minus");
     let bed_count = document.getElementById("bed_count");
     bed_count_number = 1;
-    bedPlus.addEventListener("click", ()=>{
-        bed_count_number++
-        bed_count.innerHTML = `${bed_count_number} Bedrooms`;
-    });
-    bedMinus.addEventListener("click", ()=>{
-        if(bed_count_number > 1){
-            bed_count_number--
+    if (bedPlus && bedMinus && bed_count) {
+        bedPlus.addEventListener("click", ()=>{
+            bed_count_number++
             bed_count.innerHTML = `${bed_count_number} Bedrooms`;
-        }
-    });
+        });
+        bedMinus.addEventListener("click", ()=>{
+            if(bed_count_number > 1){
+                bed_count_number--
+                bed_count.innerHTML = `${bed_count_number} Bedrooms`;
+            }
+        });
+    }
 
-    $(document).ready(function () { 
+    $(document).ready(function () {
         $('.inc243n1').on('click', function () {
-            // console.log(`${bed_count_number} Bedrooms`);
             $('#bedroomInput23').empty();
             $('#bedroomInput23').val(`${bed_count_number} Bedrooms`);
          });
       });
 
-    // Smarter Management image
-    let imageContainer = document.querySelector(".img-tab").children;
+    // Smarter Management image tabs (services page). Guarded likewise.
+    let imageTab = document.querySelector(".img-tab");
+    let imageContainer = imageTab ? imageTab.children : [];
     function changeImage(index) {
         for (const i of imageContainer) {
-            i.classList.add("d-none");            
+            i.classList.add("d-none");
         }
-        imageContainer[index].classList.remove("d-none");
+        if (imageContainer[index]) imageContainer[index].classList.remove("d-none");
     }
-    changeImage(0);
+    if (imageTab) changeImage(0);
 </script>
 
 @stack('scripts')

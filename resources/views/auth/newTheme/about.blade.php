@@ -1188,6 +1188,9 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+    @include('auth.newTheme.partials.carousels')
+@endpush
 @if($errors->has('email') || $errors->has('password'))
 <script id="loninModal-reopen">
 // A failed sign-in comes back to this page; reopen the popup so the message is seen.
