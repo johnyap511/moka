@@ -1,0 +1,19 @@
+{
+  "id": "/home",
+  "name": "MOKA Owner Portal",
+  "short_name": "MOKA",
+  "description": "Your bookings, calendar and revenue for units managed by MOKA.",
+  "start_url": "/home?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#004a49",
+  "theme_color": "#004a49",
+  "lang": "en",
+  "icons": [
+    { "src": "/images/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/images/app/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/images/app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

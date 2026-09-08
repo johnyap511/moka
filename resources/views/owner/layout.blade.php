@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Owner') — MOKA</title>
+@include('partials.pwa')
 @include('partials.favicon')
 <style>
 :root{
@@ -295,6 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+@include('partials.pwa-install')
 @stack('scripts')
 </body>
 </html>
