@@ -27,6 +27,7 @@
                         </p>
                         <p>
                             <a href = "mailto:hello@homemoka.com">E: hello@homemoka.com</a>
+                            <br><a href="https://share.google/pLkG6DaCGgnjUA4mj" target="_blank" rel="noopener">Find us on Google</a>
                         </p>
                     </div>
                 </div>
