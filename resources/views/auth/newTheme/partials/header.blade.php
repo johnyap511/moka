@@ -23,8 +23,9 @@
                         <li class="nav-item"><a href="/about">About Us</a></li>
                         <li class="nav-item"><a href="/blog">Blog</a></li>
                         <!-- <li class="nav-item" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</li> -->
-                        <li class="nav-item cursor-pointer" data-bs-toggle="modal" data-bs-target="#loninModal">
-                            Log In
+                        {{-- Opens the login pop-up on pages that carry it; on pages that do not (the blog), goes to the login page. --}}
+                        <li class="nav-item cursor-pointer">
+                            <a href="/login" onclick="var m=document.getElementById('loninModal'); if (m && window.bootstrap) { event.preventDefault(); bootstrap.Modal.getOrCreateInstance(m).show(); }">Log In</a>
                         </li>
                         <li class="nav-item d-none d-lg-block">
                             <a href="/get/estimate" target="_blank" class="get-est-btn">Get a quick estimate (Free)</a>
