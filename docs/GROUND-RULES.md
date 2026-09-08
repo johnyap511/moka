@@ -52,3 +52,7 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
     Company rooms ("<Hotel> Extra Room n") are the only exception and belong to MOKA, not to an owner.
 22. Day-use / hourly stays (eZee check-in = check-out) are MOKA company revenue: assigned to the hotel's company room, never on
     an owner's calendar or statement; 0 nights, rate blank, room charge + SST in the total, "Day use" in Remarks.
+23. Pool profit sharing (confirmed 8 Sep 2026): a unit of type "group" belongs to a pool. The pool's month = room revenue at the
+    stamped rate for the nights in the month + cleaning fees of stays arriving in the month, excluding SST; the M&A fee is not
+    deducted. An owner's share = the unit's pool weight ÷ the pool's total weight; weight follows unit size (e.g. 900 for a
+    3-bedroom, 600 for a studio; equal weights where units are the same size). The owner portal shows pool figures and the share.

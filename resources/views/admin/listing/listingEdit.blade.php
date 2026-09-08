@@ -168,6 +168,10 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="form-group">
+                    <label class="form-label" for="pool_weight">Pool weight <span style="color:var(--text-secondary);font-weight:400">(pooled units only: by size, e.g. 900 for a 3BR, 600 for a studio; 1 = equal share)</span></label>
+                    <input type="number" step="0.01" min="0" id="pool_weight" name="pool_weight" class="form-input" value="{{ old('pool_weight', $listing->pool_weight ?? 1) }}">
+                </div>
             </div>
 
             <div id="groupSection" style="{{ old('type', $listing->type) === 'group' ? '' : 'display:none' }}">

@@ -113,6 +113,14 @@
 
 {{-- The grid is production's: three tiles and two donuts, then three figures
      beside the comparison panel, then the two trend charts. --}}
+@if(!empty($pool))
+<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:14px;line-height:1.5">
+    <b>Pool profit sharing · {{ $pool['group']->name ?? 'Pool' }}</b> · {{ $pool['units'] }} units.
+    Your unit's weight is {{ rtrim(rtrim(number_format($pool['weight'], 2), '0'), '.') }} of {{ rtrim(rtrim(number_format($pool['total_weight'], 2), '0'), '.') }} ({{ number_format($pool['share'] * 100, 2) }}%).
+    @if(!empty($poolMonth))Pool revenue this month RM {{ number_format($poolMonth['base'], 2) }} (room RM {{ number_format($poolMonth['room'], 2) }} + cleaning RM {{ number_format($poolMonth['cleaning'], 2) }}, before SST); your share RM {{ number_format($monthRevenue, 2) }}.@endif
+    Bookings, occupancy and rates below are for the whole pool.
+</div>
+@endif
 <div class="db-main">
 
     {{-- 1 --}}
@@ -121,7 +129,7 @@
             <i class="fa-solid fa-calendar-days"></i>
             <div>
                 <h3>{{ $bookingCount }}</h3>
-                <p>Booking</p>
+                <p>{{ !empty($pool) ? 'Pool bookings' : 'Booking' }}</p>
             </div>
         </div>
     </div>
@@ -132,7 +140,7 @@
             <i class="fa-solid fa-hand-holding-dollar"></i>
             <div>
                 <h3>RM {{ number_format($monthRevenue, 2) }}</h3>
-                <p>Revenue</p>
+                <p>{{ !empty($pool) ? 'Your pool share' : 'Revenue' }}</p>
             </div>
         </div>
     </div>
@@ -143,7 +151,7 @@
             <i class="fa-solid fa-user-group"></i>
             <div>
                 <h3>{{ $occupancy }}%</h3>
-                <p>Occupancy</p>
+                <p>{{ !empty($pool) ? 'Pool occupancy' : 'Occupancy' }}</p>
             </div>
         </div>
     </div>
@@ -198,7 +206,7 @@
     <div>
         <div class="price-digit">
             <h3>RM {{ number_format($accumulatedSales, 2) }}</h3>
-            <p>Accumulated Sales<br>Based on {{ $selDate->year }}</p>
+            <p>{{ !empty($pool) ? 'Accumulated pool share' : 'Accumulated Sales' }}<br>Based on {{ $selDate->year }}</p>
         </div>
     </div>
 
