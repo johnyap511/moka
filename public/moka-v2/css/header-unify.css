@@ -2,7 +2,7 @@
    bold, green bar, white outlined "Get a quick estimate (Free)" pill. */
 @font-face{font-family:"MokaHeadBold";src:url(/new-theme23/fonts/SourceSansPro-Bold.woff2) format("woff2"),url(/new-theme23/fonts/SourceSansPro-Bold.ttf) format("truetype");font-display:swap}
 .moka-header, .moka-header .header-nav a, .moka-header .header-login-btn, .moka-header .header-cta, .mobile-drawer, .mobile-nav-link { font-family: "MokaHeadBold", "Source Sans Pro", -apple-system, "Segoe UI", sans-serif !important; }
-.moka-header.transparent, .moka-header.solid, .moka-header.scrolled { background-color: #004a49 !important; backdrop-filter: none !important; box-shadow: none !important; }
+.moka-header, .moka-header.is-transparent, .moka-header.is-solid, .moka-header.is-scrolled, .moka-header.transparent, .moka-header.solid, .moka-header.scrolled { background-color: #004a49 !important; backdrop-filter: none !important; box-shadow: none !important; }
 .moka-header .header-nav a { color: #fff !important; font-size: 19px !important; font-weight: 700 !important; letter-spacing: 0 !important; opacity: 1 !important; }
 .moka-header .header-nav a:hover, .moka-header .header-nav a.active { color: #fff !important; opacity: .85 !important; background: transparent !important; }
 .moka-header .header-nav a.active::after { display: none !important; }
