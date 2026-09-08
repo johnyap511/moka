@@ -1,6 +1,6 @@
         <header class="fix-header">
         <nav class="navbar navbar-expand-lg p-0" id="main_header">
-            <div data-aos="fadeInUp" data-aos-duration="200" data-aos-offset="0" class="container-fluid main-header py-2 py-lg-3 px-3 px-lg-4">
+            <div class="container-fluid main-header py-2 py-lg-3 px-3 px-lg-4">
                 <div class="d-flex align-items-center justify-content-between flex-grow-1">
                     <div class="d-flex align-items-center">
                         <a href="/" class=" border-lg-none"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="logo" class="logo-main"></a>
@@ -36,6 +36,7 @@
             </div>
         </nav>
 </header>
+<style>#main_header.moka-scrolled{background-color:#004a49 !important}</style>
 <script>
 // Header behaviour from the homepage, for every page that uses this header:
 // fixed at the top, and it takes the brand colour once the page is scrolled.
@@ -43,7 +44,7 @@
     var header = document.getElementById('main_header');
     if (!header || header.dataset.scrollBound) return;
     header.dataset.scrollBound = '1';
-    function paint() { header.classList.toggle('bg-orange', window.scrollY > 5); }
+    function paint() { header.classList.toggle('moka-scrolled', window.scrollY > 5); }
     window.addEventListener('scroll', paint, { passive: true });
     paint();
 })();
