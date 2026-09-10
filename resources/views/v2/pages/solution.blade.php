@@ -32,16 +32,13 @@
     $bySlug = collect($all)->keyBy('slug');
     $group  = collect($groups)->filter(fn ($slugs) => in_array($page['slug'], $slugs))->keys()->first();
     $siblings = $group ? $groups[$group] : ['for-homeowners', 'for-property-investors', 'for-property-developers', 'for-property-agents'];
-    $photos = ['new-theme23/images/projects/the-valley/1.jpg', 'new-theme23/images/projects/skyvogue/1.jpg', 'new-theme23/images/projects/skyawani-4/1.jpg', 'new-theme23/images/projects/the-valley/7.jpg', 'new-theme23/images/projects/skyvogue/4.jpg', 'new-theme23/images/projects/skyawani-4/5.jpg'];
-    $webp = fn ($img) => asset(preg_replace('/\.jpg$/', '.webp', $img));
-    $offset = crc32($page['slug']) % count($photos);
 @endphp
 
 @section('content')
     @include('auth.newTheme.partials.header')
 
-    <div class="blog-hero sol-hero sol-hero--split">
-        <div class="sol-hero__grid">
+    <div class="blog-hero sol-hero">
+        <div class="sol-hero__grid sol-hero__grid--single">
             <div class="blog-hero__inner">
                 <div class="blog-hero__eyebrow">{{ $page['eyebrow'] }}</div>
                 <h1>{!! $page['h1'] !!}</h1>
@@ -51,12 +48,6 @@
                     <a href="/contact" class="white-btn">Talk to us</a>
                 </div>
             </div>
-            <div class="sol-hero__art">
-                <picture>
-                    <source srcset="{{ $webp($photos[$offset]) }}" type="image/webp">
-                    <img src="{{ asset($photos[$offset]) }}" alt="" width="1600" height="1000" loading="eager">
-                </picture>
-            </div>
         </div>
     </div>
 
@@ -64,22 +55,14 @@
         <div class="sol-body__inner">
             <div class="sol-main">
                 @foreach($page['sections'] as $i => $s)
-                    @php $hasList = !empty($s['bullets']); $photo = $photos[($offset + $i + 1) % count($photos)]; @endphp
-                    <div class="sol-block {{ $hasList ? 'sol-block--list' : 'sol-block--note' }} {{ $i % 2 ? 'sol-block--flip' : '' }}">
+                    @php $hasList = !empty($s['bullets']); @endphp
+                    <div class="sol-block {{ $hasList ? 'sol-block--list' : 'sol-block--note' }}">
                         <div class="sol-block__text">
                             <div class="sol-block__num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
                             <h2>{{ $s['h2'] }}</h2>
                             @if(!empty($s['p']))<p>{{ $s['p'] }}</p>@endif
                             @if($hasList)<ul class="sol-check">@foreach($s['bullets'] as $b)<li>{{ $b }}</li>@endforeach</ul>@endif
                         </div>
-                        @if($hasList)
-                        <div class="sol-block__media">
-                            <picture>
-                                <source srcset="{{ $webp($photo) }}" type="image/webp">
-                                <img src="{{ asset($photo) }}" alt="" loading="lazy" width="1600" height="1000">
-                            </picture>
-                        </div>
-                        @endif
                     </div>
                 @endforeach
 

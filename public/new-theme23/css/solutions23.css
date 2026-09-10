@@ -88,3 +88,11 @@
     .sol-block__media { order: -1; }
 }
 @media (max-width: 600px) { .sol-block { padding: 28px 0; } .sol-block--note { padding: 22px; } }
+
+/* Solution pages without photos: single column blocks, two-column check lists */
+.sol-hero__grid--single { grid-template-columns: 1fr; }
+.sol-hero__grid--single .blog-hero__inner { max-width: 760px; }
+.sol-block--list { grid-template-columns: 1fr; }
+.sol-block--list .sol-check { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin-top: 12px; }
+.sol-block--list .sol-check li { font-size: 16px; }
+@media (max-width: 700px) { .sol-block--list .sol-check { grid-template-columns: 1fr; } }
