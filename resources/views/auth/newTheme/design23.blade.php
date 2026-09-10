@@ -11,10 +11,12 @@
     $wa = 'https://wa.me/message/GJMYMABOT7CSG1?text=' . rawurlencode('Hi Innspace, I would like a renovation quotation.');
     $renovated = ['The Valley', 'Sky Meridien', 'Sky Awani 3', 'Sky Awani 4', 'Sky Awani 5', 'Sky Awani 6', 'Vesta', 'Curvo', 'SkyVogue'];
     $projects = [
-        ['slug' => 'the-valley', 'name' => 'The Valley', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
-        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
-        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
+        ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished owner units and the SkyWorld showroom. Warm timber, soft neutrals and storage worked into every wall.', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units. Light kitchens, built-in wardrobes and calm bedrooms designed for families and long stays.', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
+        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package. Layered lighting, a curved sofa, walnut joinery and forest-green tiles.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
     ];
+    $photos = [];
+    foreach ($projects as $p) { foreach ($p['rooms'] as $idx => $room) { $photos[] = ['slug' => $p['slug'], 'k' => $idx + 1, 'name' => $p['name'], 'room' => $room, 'blurb' => $p['blurb']]; } }
 @endphp
 
 @section('content')
@@ -99,28 +101,44 @@
     <section class="inn-section inn-section--cream" id="projects">
         <div class="container">
             <h2 class="heading-orange-1 text-center">Completed renovation projects in KL</h2>
-            <p class="inn-lead text-center">Owner units and showrooms across SkyWorld developments in Kuala Lumpur.</p>
-            <ul class="inn-list">
+            <p class="inn-lead text-center">Nine SkyWorld developments in Kuala Lumpur, from single owner units to full showrooms.</p>
+            <ul class="inn-index" aria-label="Developments renovated by Innspace">
                 @foreach($renovated as $r)<li>{{ $r }}</li>@endforeach
             </ul>
-            <div class="inn-carousel-wrap">
-            <div class="owl-carousel inn-carousel" id="innCarousel">
-                @foreach($projects as $p)
-                    @foreach($p['rooms'] as $idx => $room)
-                        @php $k = $idx + 1; @endphp
-                        <a class="inn-photo" href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }} · {{ $room }}">
-                            <picture>
-                                <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.webp') }}" type="image/webp">
-                                <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.jpg') }}" alt="{{ $p['name'] }} {{ strtolower($room) }}, renovation by Innspace" loading="lazy" width="720" height="540">
-                            </picture>
-                            <span class="inn-photo__cap"><b>{{ $p['name'] }}</b>{{ $room }}</span>
-                        </a>
-                    @endforeach
+
+            <div class="inn-show" id="innShow">
+                <div class="inn-show__stage">
+                    <picture>
+                        <source id="innStageWebp" srcset="{{ asset('new-theme23/images/projects/' . $photos[0]['slug'] . '/1.webp') }}" type="image/webp">
+                        <img id="innStageImg" src="{{ asset('new-theme23/images/projects/' . $photos[0]['slug'] . '/1.jpg') }}" alt="{{ $photos[0]['name'] }} {{ strtolower($photos[0]['room']) }}, renovation by Innspace" width="1600" height="1000">
+                    </picture>
+                    <button type="button" class="inn-show__arrow inn-show__arrow--prev" id="innPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+                    <button type="button" class="inn-show__arrow inn-show__arrow--next" id="innNext" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+                    <button type="button" class="inn-show__zoom" id="innZoom" aria-label="View full size"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                </div>
+                <div class="inn-show__panel">
+                    <div>
+                        <div class="inn-show__eyebrow">Project <span id="innCount">1</span> of {{ count($photos) }}</div>
+                        <h3 id="innName">{{ $photos[0]['name'] }}</h3>
+                        <div class="inn-show__room" id="innRoom">{{ $photos[0]['room'] }}</div>
+                        <p id="innBlurb">{{ $photos[0]['blurb'] }}</p>
+                    </div>
+                    <div class="inn-show__foot">
+                        <a href="{{ $wa }}" target="_blank" rel="noopener" class="inn-btn">Chat us for a quotation</a>
+                        <span class="inn-show__hint">Fully furnished units: The Valley, Sky Awani 4, SkyVogue</span>
+                    </div>
+                </div>
+            </div>
+            <div class="inn-thumbs" id="innThumbs" role="tablist" aria-label="Project photos">
+                @foreach($photos as $i => $ph)
+                    <button type="button" class="{{ $i === 0 ? 'active' : '' }}" data-i="{{ $i }}" data-slug="{{ $ph['slug'] }}" data-k="{{ $ph['k'] }}" data-name="{{ $ph['name'] }}" data-room="{{ $ph['room'] }}" data-blurb="{{ $ph['blurb'] }}" aria-label="{{ $ph['name'] }}, {{ $ph['room'] }}">
+                        <picture>
+                            <source srcset="{{ asset('new-theme23/images/projects/' . $ph['slug'] . '/' . $ph['k'] . '-thumb.webp') }}" type="image/webp">
+                            <img src="{{ asset('new-theme23/images/projects/' . $ph['slug'] . '/' . $ph['k'] . '-thumb.jpg') }}" alt="" loading="lazy" width="720" height="540">
+                        </picture>
+                    </button>
                 @endforeach
             </div>
-                <div class="inn-carousel-nav" id="innCarouselNav"></div>
-            </div>
-            <p class="inn-more">Tap a photo to view it full size. Fully furnished units shown: The Valley, Sky Awani 4 and SkyVogue.</p>
         </div>
     </section>
 
@@ -197,30 +215,46 @@
 @push('scripts')
 <script>
 (function () {
-    if (window.jQuery && jQuery.fn.owlCarousel) {
-        jQuery('#innCarousel').owlCarousel({
-            loop: true, margin: 18, nav: true, dots: true, autoplay: true, autoplayTimeout: 4500, autoplayHoverPause: true, autoWidth: false,
-            navText: ["<img src='/new-theme23/images/Asset 26.png' alt='prev'>", "<img src='/new-theme23/images/Asset 27.png' alt='next'>"],
-            navContainer: '#innCarouselNav',
-            responsive: { 0: { items: 1, stagePadding: 24 }, 768: { items: 2 }, 1200: { items: 3 } }
-        });
+    var base = "{{ asset('new-theme23/images/projects') }}/";
+    var thumbs = Array.prototype.slice.call(document.querySelectorAll('#innThumbs button')), cur = 0, timer = null;
+    var img = document.getElementById('innStageImg'), webp = document.getElementById('innStageWebp');
+    var lb = document.getElementById('innLightbox'), lbImg = lb.querySelector('img'), cap = lb.querySelector('.cap');
+    function show(i, user) {
+        cur = (i + thumbs.length) % thumbs.length; var t = thumbs[cur], d = t.dataset;
+        img.style.opacity = 0;
+        setTimeout(function () {
+            webp.srcset = base + d.slug + '/' + d.k + '.webp'; img.src = base + d.slug + '/' + d.k + '.jpg';
+            img.alt = d.name + ' ' + d.room.toLowerCase() + ', renovation by Innspace';
+            document.getElementById('innCount').textContent = cur + 1;
+            document.getElementById('innName').textContent = d.name;
+            document.getElementById('innRoom').textContent = d.room;
+            document.getElementById('innBlurb').textContent = d.blurb;
+            img.onload = function () { img.style.opacity = 1; };
+        }, 180);
+        thumbs.forEach(function (b) { b.classList.remove('active'); });
+        t.classList.add('active');
+        t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: user ? 'smooth' : 'auto' });
+        if (user) restart();
     }
-    var lb = document.getElementById('innLightbox'), img = lb.querySelector('img'), cap = lb.querySelector('.cap'), list = [], cur = 0;
-    function show(i) { cur = (i + list.length) % list.length; var a = list[cur]; img.src = a.dataset.full || a.href; cap.textContent = a.dataset.caption + ' · ' + (cur + 1) + ' / ' + list.length; }
-    document.addEventListener('click', function (e) {
-        var a = e.target.closest && e.target.closest('.inn-photo'); if (!a) return;
-        e.preventDefault();
-        var all = Array.prototype.slice.call(document.querySelectorAll('#innCarousel .owl-item:not(.cloned) .inn-photo'));
-        if (!all.length) all = Array.prototype.slice.call(document.querySelectorAll('#innCarousel .inn-photo'));
-        list = all; var i = all.findIndex(function (x) { return x.href === a.href; }); show(i < 0 ? 0 : i);
-        lb.classList.add('open'); document.body.style.overflow = 'hidden';
-    });
-    function close() { lb.classList.remove('open'); document.body.style.overflow = ''; img.src = ''; }
-    lb.querySelector('.x').addEventListener('click', close);
-    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
-    lb.querySelector('.prev').addEventListener('click', function () { show(cur - 1); });
-    lb.querySelector('.next').addEventListener('click', function () { show(cur + 1); });
-    document.addEventListener('keydown', function (e) { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+    function restart() { clearInterval(timer); timer = setInterval(function () { show(cur + 1); }, 5500); }
+    thumbs.forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.i, true); }); });
+    document.getElementById('innPrev').addEventListener('click', function () { show(cur - 1, true); });
+    document.getElementById('innNext').addEventListener('click', function () { show(cur + 1, true); });
+    var stage = document.querySelector('.inn-show__stage');
+    stage.addEventListener('mouseenter', function () { clearInterval(timer); });
+    stage.addEventListener('mouseleave', restart);
+    var sx = 0; stage.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
+    stage.addEventListener('touchend', function (e) { var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1), true); });
+    function openLb() { var d = thumbs[cur].dataset; lbImg.src = base + d.slug + '/' + d.k + '.webp'; cap.textContent = d.name + ' · ' + d.room + ' · ' + (cur + 1) + ' / ' + thumbs.length; lb.classList.add('open'); document.body.style.overflow = 'hidden'; clearInterval(timer); }
+    function closeLb() { lb.classList.remove('open'); document.body.style.overflow = ''; lbImg.src = ''; restart(); }
+    document.getElementById('innZoom').addEventListener('click', openLb);
+    img.addEventListener('click', openLb);
+    lb.querySelector('.x').addEventListener('click', closeLb);
+    lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
+    lb.querySelector('.prev').addEventListener('click', function () { show(cur - 1); var d = thumbs[cur].dataset; lbImg.src = base + d.slug + '/' + d.k + '.webp'; cap.textContent = d.name + ' · ' + d.room + ' · ' + (cur + 1) + ' / ' + thumbs.length; });
+    lb.querySelector('.next').addEventListener('click', function () { show(cur + 1); var d = thumbs[cur].dataset; lbImg.src = base + d.slug + '/' + d.k + '.webp'; cap.textContent = d.name + ' · ' + d.room + ' · ' + (cur + 1) + ' / ' + thumbs.length; });
+    document.addEventListener('keydown', function (e) { if (lb.classList.contains('open')) { if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') lb.querySelector('.prev').click(); if (e.key === 'ArrowRight') lb.querySelector('.next').click(); } });
+    restart();
 })();
 </script>
 @endpush
