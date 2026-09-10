@@ -69,6 +69,7 @@
 <h2>Cookies</h2>
 <p>Cookies are small files containing information which are downloaded to your device when you visit the Website. We use cookies to recognise your preference information, keep track of your bookings and purchases and facilitate site administration. If you continue to browse the Website without changing your web browsers or device settings that control cookies, you agree to receive cookies when you use the services on the Website.</p>
 <p>Most web browsers automatically accept cookies, but, if you prefer, you may set your browser to prevent it from accepting cookies. The &ldquo;help&rdquo; portion of the toolbar on most browsers will tell you how to disable cookies.</p>
+<p><strong>What we set today.</strong> As at 11 September 2026 the Website sets two cookies of its own: a session cookie that keeps you signed in and remembers your place as you move between pages, and a security token that protects the forms you submit. Both are strictly necessary, are not used to track you, and expire two hours after your visit. The chat widget on the Website is provided by respond.io and sets its own cookies to keep a conversation open; those are governed by respond.io’s privacy policy. We do not currently run advertising or analytics tags. If we add them, we will update this section and ask for your consent where the law requires it.</p>
 <p>We use the following type of cookies on the Website:</p>
 <ul>
 <li>Site functionality cookies</li>
