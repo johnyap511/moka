@@ -52,7 +52,7 @@
                         $roomTotal = (float) ($book->price_night ?? 0) * (int) ($book->nights ?? 0);
                         $maFee     = (float) ($book->ota_fee ?? 0);
                         $ownerTotal = $roomTotal + (float) ($book->sst ?? 0);
-                        $net        = $ownerTotal - $maFee;
+                        $net        = $roomTotal - $maFee; // SST is tax, not the owner's; M&A fee comes off the room
                     @endphp
                     <tr>
                         <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Room ({{ (int) ($book->nights ?? 0) }} {{ Str::plural('night', (int) ($book->nights ?? 0)) }})</td>
@@ -67,7 +67,11 @@
                         <td style="padding:10px 0;font-weight:700;font-size:16px;color:var(--teal)">RM {{ number_format($ownerTotal, 2) }}</td>
                     </tr>
                     <tr>
-                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">M&amp;A Fee</td>
+                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Less SST</td>
+                        <td style="padding:8px 0;color:#b91c1c">&minus; RM {{ number_format($book->sst ?? 0, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Less M&amp;A Fee</td>
                         <td style="padding:8px 0;color:#b91c1c">&minus; RM {{ number_format($maFee, 2) }}</td>
                     </tr>
                     <tr style="border-top:1px solid var(--border)">
