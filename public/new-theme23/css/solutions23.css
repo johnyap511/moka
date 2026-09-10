@@ -57,3 +57,34 @@
     .sol-body { padding: 40px 18px 24px; }
     .sol-hero__actions .primary-btn, .sol-hero__actions .white-btn { width: 100%; text-align: center; }
 }
+
+/* ---- Solution page, scannable layout ---- */
+.sol-hero--split { padding-bottom: 56px; }
+.sol-hero__grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 48px; align-items: center; }
+.sol-hero--split .blog-hero__inner { max-width: none; margin: 0; }
+.sol-hero--split .blog-hero__meta { font-size: 17.5px; line-height: 1.55; }
+.sol-hero__art img { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; border-radius: 22px; display: block; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+.sol-block { display: grid; grid-template-columns: 1fr; gap: 28px; padding: 36px 0; border-bottom: 1px solid var(--blog-rule); align-items: center; }
+.sol-block--list { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
+.sol-block--flip .sol-block__text { order: 2; }
+.sol-block:first-child { padding-top: 0; }
+.sol-block__num { font-family: Bold; font-size: 13px; letter-spacing: .14em; color: var(--blog-orange); margin-bottom: 8px; }
+.sol-block__text h2 { margin: 0 0 10px; }
+.sol-block__text p { font-size: 17px; line-height: 1.65; margin: 0 0 14px; text-align: left; }
+.sol-block--note { background: var(--blog-cream); border-radius: 18px; padding: 28px 30px; border-bottom: 0; margin: 12px 0; }
+.sol-block--note .sol-block__text p { margin-bottom: 0; }
+.sol-block__media img { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; border-radius: 18px; display: block; }
+.sol-check { grid-template-columns: 1fr; }
+.sol-check li { font-size: 16px; line-height: 1.5; text-align: left; }
+.sol-faq { padding-top: 36px; }
+.sol-faq h2 { margin-bottom: 16px; }
+.sol-nav__all { color: var(--blog-orange) !important; }
+.sol-nav__all::after { content: "→" !important; color: var(--blog-orange) !important; }
+@media (max-width: 900px) {
+    .sol-hero__grid { grid-template-columns: 1fr; gap: 28px; }
+    .sol-hero__art { max-width: 520px; }
+    .sol-block--list { grid-template-columns: 1fr; }
+    .sol-block--flip .sol-block__text { order: 0; }
+    .sol-block__media { order: -1; }
+}
+@media (max-width: 600px) { .sol-block { padding: 28px 0; } .sol-block--note { padding: 22px; } }

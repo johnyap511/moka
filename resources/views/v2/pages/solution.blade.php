@@ -23,17 +23,39 @@
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 
+@php
+    $groups = [
+        'For you'      => ['for-homeowners', 'for-property-investors', 'for-property-developers', 'for-property-agents'],
+        'By stay type' => ['airbnb-management-malaysia', 'short-term-rental-management', 'monthly-rental', 'corporate-housing'],
+        'By city'      => ['airbnb-management-kuala-lumpur', 'airbnb-management-selangor', 'airbnb-management-penang', 'airbnb-management-johor-bahru', 'airbnb-management-kota-kinabalu'],
+    ];
+    $bySlug = collect($all)->keyBy('slug');
+    $group  = collect($groups)->filter(fn ($slugs) => in_array($page['slug'], $slugs))->keys()->first();
+    $siblings = $group ? $groups[$group] : ['for-homeowners', 'for-property-investors', 'for-property-developers', 'for-property-agents'];
+    $photos = ['new-theme23/images/projects/the-valley/1.jpg', 'new-theme23/images/projects/skyvogue/1.jpg', 'new-theme23/images/projects/skyawani-4/1.jpg', 'new-theme23/images/projects/the-valley/7.jpg', 'new-theme23/images/projects/skyvogue/4.jpg', 'new-theme23/images/projects/skyawani-4/5.jpg'];
+    $webp = fn ($img) => asset(preg_replace('/\.jpg$/', '.webp', $img));
+    $offset = crc32($page['slug']) % count($photos);
+@endphp
+
 @section('content')
     @include('auth.newTheme.partials.header')
 
-    <div class="blog-hero sol-hero">
-        <div class="blog-hero__inner">
-            <div class="blog-hero__eyebrow">{{ $page['eyebrow'] }}</div>
-            <h1>{!! $page['h1'] !!}</h1>
-            <p class="blog-hero__meta">{{ $page['sub'] }}</p>
-            <div class="sol-hero__actions">
-                <a href="/get/estimate" target="_blank" rel="noopener" class="primary-btn">Get a free estimate</a>
-                <a href="/contact" class="white-btn">Talk to us</a>
+    <div class="blog-hero sol-hero sol-hero--split">
+        <div class="sol-hero__grid">
+            <div class="blog-hero__inner">
+                <div class="blog-hero__eyebrow">{{ $page['eyebrow'] }}</div>
+                <h1>{!! $page['h1'] !!}</h1>
+                <p class="blog-hero__meta">{{ $page['sub'] }}</p>
+                <div class="sol-hero__actions">
+                    <a href="/get/estimate" target="_blank" rel="noopener" class="primary-btn">Get a free estimate</a>
+                    <a href="/contact" class="white-btn">Talk to us</a>
+                </div>
+            </div>
+            <div class="sol-hero__art">
+                <picture>
+                    <source srcset="{{ $webp($photos[$offset]) }}" type="image/webp">
+                    <img src="{{ asset($photos[$offset]) }}" alt="" width="1600" height="1000" loading="eager">
+                </picture>
             </div>
         </div>
     </div>
@@ -41,16 +63,28 @@
     <div class="sol-body">
         <div class="sol-body__inner">
             <div class="sol-main">
-                @foreach($page['sections'] as $s)
-                <div class="sol-section">
-                    <h2>{{ $s['h2'] }}</h2>
-                    @if(!empty($s['p']))<p>{{ $s['p'] }}</p>@endif
-                    @if(!empty($s['bullets']))<ul class="sol-check">@foreach($s['bullets'] as $b)<li>{{ $b }}</li>@endforeach</ul>@endif
-                </div>
+                @foreach($page['sections'] as $i => $s)
+                    @php $hasList = !empty($s['bullets']); $photo = $photos[($offset + $i + 1) % count($photos)]; @endphp
+                    <div class="sol-block {{ $hasList ? 'sol-block--list' : 'sol-block--note' }} {{ $i % 2 ? 'sol-block--flip' : '' }}">
+                        <div class="sol-block__text">
+                            <div class="sol-block__num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
+                            <h2>{{ $s['h2'] }}</h2>
+                            @if(!empty($s['p']))<p>{{ $s['p'] }}</p>@endif
+                            @if($hasList)<ul class="sol-check">@foreach($s['bullets'] as $b)<li>{{ $b }}</li>@endforeach</ul>@endif
+                        </div>
+                        @if($hasList)
+                        <div class="sol-block__media">
+                            <picture>
+                                <source srcset="{{ $webp($photo) }}" type="image/webp">
+                                <img src="{{ asset($photo) }}" alt="" loading="lazy" width="1600" height="1000">
+                            </picture>
+                        </div>
+                        @endif
+                    </div>
                 @endforeach
 
                 @if(!empty($page['faqs']))
-                <div class="sol-section sol-faq">
+                <div class="sol-faq">
                     <h2>Questions owners ask</h2>
                     @foreach($page['faqs'] as $f)
                     <details><summary>{{ $f['q'] }}</summary><p>{{ $f['a'] }}</p></details>
@@ -66,11 +100,12 @@
                     <a href="/get/estimate" target="_blank" rel="noopener" class="blog-cta__btn">Get a free estimate</a>
                 </div>
                 <div class="sol-card">
-                    <h3>MOKA for</h3>
-                    <nav class="sol-nav" aria-label="Solutions">
-                        @foreach($all as $p)
-                            <a href="/solutions/{{ $p['slug'] }}" class="{{ $p['slug'] === $page['slug'] ? 'cur' : '' }}">{{ $p['label'] }}</a>
+                    <h3>{{ $group ?: 'MOKA for' }}</h3>
+                    <nav class="sol-nav" aria-label="Related solutions">
+                        @foreach($siblings as $slug)
+                            @if($bySlug->has($slug))<a href="/solutions/{{ $slug }}" class="{{ $slug === $page['slug'] ? 'cur' : '' }}">{{ $bySlug[$slug]['label'] }}</a>@endif
                         @endforeach
+                        <a href="/solutions" class="sol-nav__all">All solutions and locations</a>
                     </nav>
                 </div>
             </aside>
