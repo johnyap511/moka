@@ -47,3 +47,6 @@
 .bottom-banner .primary-btn,.bottom-banner .white-btn{text-decoration:none;display:inline-block;margin:6px 8px}
 @media (max-width:991px){.inn-grid{grid-template-columns:repeat(3,1fr)}.inn-steps{grid-template-columns:repeat(2,1fr)}.inn-finance{grid-template-columns:1fr;padding:36px}.inn-section{padding:64px 0}}
 @media (max-width:600px){.inn-hero{min-height:0;padding:120px 0 60px}.inn-hero p{font-size:17px}.inn-hero .primary-btn,.inn-hero .white-btn{display:block;width:100%;min-width:0;font-size:20px;margin:0 0 12px}.inn-grid{grid-template-columns:repeat(2,1fr);gap:10px}.inn-steps{grid-template-columns:1fr}.inn-stats h2{font-size:26px}.inn-tab{font-size:15px;padding:8px 16px}.inn-finance{padding:28px 22px}.inn-section{padding:52px 0}.inn-lead{font-size:17px}}
+.inn-finance .pill,.inn-finance .pill span{color:#fff}
+.inn-card p,.inn-card li,.inn-step p,.inn-finance p,.inn-hero p,.inn-more{text-align:left}
+.inn-more{text-align:center}
