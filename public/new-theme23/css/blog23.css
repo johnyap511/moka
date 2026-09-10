@@ -202,3 +202,8 @@
 .blog-hero__meta time { color: rgba(255,255,255,.85); }
 .blog-body__inner--article .blog-cta h2::before, .blog-body__inner--article .blog-related h2::before { display: none; }
 .blog-body__inner--article p, .blog-body__inner--article li { text-align: left; }
+/* Phone fixes: grid children must be allowed to shrink below their content (tables, wide images) */
+.blog-layout > *, .blog-feature > *, .blog-body__inner--article, .blog-feature__media, .blog-feature__body { min-width: 0; max-width: 100%; }
+.blog-feature__media img, .blog-cover img, .blog-figure img, .blog-card__media img { max-width: 100%; height: auto; }
+.blog-body__inner--article .blog-table-wrap { max-width: 100%; }
+@media (max-width: 600px) { .blog-hero--article, .blog-hero--index { padding-top: 140px; } .blog-body__inner--article { max-width: 100%; } }
