@@ -72,3 +72,7 @@
 .inn-finance .pill,.inn-finance .pill span{color:#fff}
 .inn-card p,.inn-card li,.inn-step p,.inn-finance p,.inn-hero p,.inn-more{text-align:left}
 .inn-more{text-align:center}
+.inn-card--sm{padding:24px 20px;gap:8px}
+.inn-card--sm h3{font-size:19px}
+.inn-card--sm p{font-size:15px}
+@media (max-width:600px){.inn-card--sm{padding:18px 14px}.inn-card--sm h3{font-size:17px}.inn-card--sm p{font-size:14px}}

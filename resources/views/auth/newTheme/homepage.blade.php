@@ -1,6 +1,6 @@
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Airbnb & Short-Stay Property Management in Malaysia | MOKA')
-@section('seo_description', 'MOKA manages your Airbnb and short-stay property end to end — renovation, listing, professional photography, price optimisation, guest vetting and housekeeping.')
+@section('seo_title', 'Homestay & Airbnb Management in KL | Serviced Apartments & Short-Stay Hotel-Style Living | MOKA')
+@section('seo_description', 'MOKA runs homestay and Airbnb units in Kuala Lumpur and across Malaysia: serviced apartments and serviced residences managed like a hotel, with listing, pricing, guest vetting and housekeeping. Free income estimate for owners.')
 @section('seo_canonical', url('/'))
 
 @section('content')
@@ -919,6 +919,18 @@
             <a href="/about"><button class="primary-btn">About Us </button> </a>
         </div>
     </div>
+    {{-- Search copy: homestay, Airbnb, serviced apartments in KL --}}
+    <section class="container py-5" id="kl-homestay">
+        <h2 class="heading-orange-1 text-center">Homestay and serviced apartments in KL, run like a hotel</h2>
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-9" style="font-size:18px;line-height:1.7;color:var(--body-text)">
+                <p>MOKA manages <strong>homestay and Airbnb units in Kuala Lumpur</strong> and across Malaysia for the owners who hold them. A KL homestay run by MOKA is a <strong>serviced apartment</strong> or <strong>serviced residence</strong> operated to hotel standards: professional photography and listings on Airbnb, Booking.com and Agoda, daily pricing, guest vetting, 24-hour guest support, hotel-grade housekeeping and linen between every stay.</p>
+                <p>For owners, that means a unit that earns like a hotel room without the work of running one, with every booking visible in the owner portal and revenue paid monthly. Read how we run <a href="/solutions/airbnb-management-malaysia">Airbnb management</a>, <a href="/solutions/short-term-rental-management">short-term rental for condos and serviced apartments</a>, <a href="/solutions/monthly-rental">monthly and weekly stays</a> and <a href="/solutions/corporate-housing">corporate housing</a>.</p>
+                <p>Travelling to Kuala Lumpur? Guests can book MOKA-managed homestays and serviced apartments directly at <a href="https://staymoka.com/" target="_blank" rel="noopener">staymoka.com</a>, at rates below comparable hotels, with self check-in and a real kitchen.</p>
+            </div>
+        </div>
+    </section>
+
     <div class="bottom-banner mt-5 py-5">
         <div class="container">
             <h2 class="heading-white-2 text-center">Find out how much your property could earn!</h2>
@@ -940,3 +952,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endif
+
+@push('schema')
+<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => [
+    ['@type' => 'Question', 'name' => 'Is a KL homestay cheaper than a hotel?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Usually. A MOKA-managed homestay or serviced apartment in Kuala Lumpur is priced below a comparable hotel room, with more space, a kitchen and self check-in, while being cleaned and serviced to hotel standards.']],
+    ['@type' => 'Question', 'name' => 'Does MOKA manage serviced apartments and serviced residences?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Yes. MOKA manages serviced apartments, serviced residences and condominium units in Kuala Lumpur, Selangor, Penang, Johor Bahru and Kota Kinabalu as short-stay, monthly and corporate housing for their owners.']],
+    ['@type' => 'Question', 'name' => 'How do I list my KL unit on Airbnb with MOKA?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Request a free income estimate on homemoka.com. MOKA then handles styling, photography, listings on Airbnb, Booking.com and Agoda, pricing, guests and housekeeping, and pays owners monthly.']],
+]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+@endpush

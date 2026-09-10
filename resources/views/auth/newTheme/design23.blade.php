@@ -1,6 +1,6 @@
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Renovation & Interior Design by Innspace | SkyWorld Solution+ Panel Renovator | MOKA')
-@section('seo_description', 'Innspace, MOKA’s sister company: 8 years of renovation and custom interior design for Malaysian homeowners, panel renovator on SkyWorld Solution+, renovation before vacant possession, MyDeco financing with Maybank. Chat for a quotation.')
+@section('seo_title', 'Renovation & Interior Design in KL | Innspace by MOKA, SkyWorld Solution+ Panel Renovator')
+@section('seo_description', 'KL renovation and interior design by Innspace, MOKA’s sister company and SkyWorld Solution+ panel renovator: renovate before VP, premium custom ID packages, MyDeco financing, plus handyman services for owners in Kuala Lumpur: AC servicing, repairs, painting touch-up and cabinet restoration.')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('new-theme23/css/designs23.css') }}?v={{ filemtime(public_path('new-theme23/css/designs23.css')) }}">
@@ -36,7 +36,7 @@
     <section class="inn-hero" style="background-image:url('{{ asset('new-theme23/images/projects/hero.webp') }}')">
         <div class="container">
             <img src="{{ asset('new-theme23/images/innspace-logo-white.png') }}?v={{ filemtime(public_path('new-theme23/images/innspace-logo-white.png')) }}" alt="Innspace" class="inn-hero__logo">
-            <div class="inn-eyebrow">Innspace, a MOKA company</div>
+            <div class="inn-eyebrow">Innspace, a MOKA company · Kuala Lumpur</div>
             <h1>Renovation and interior design, finished before you move in</h1>
             <p>Eight years of renovation for Malaysian homeowners, panel renovator on SkyWorld Solution+, and one of the first in the market to renovate before vacant possession. Quality you can see, with a warranty behind it.</p>
             <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
@@ -92,8 +92,8 @@
     {{-- Projects --}}
     <section class="inn-section inn-section--cream" id="projects">
         <div class="container">
-            <h2 class="heading-orange-1 text-center">Completed projects</h2>
-            <p class="inn-lead text-center">Real units and showrooms across SkyWorld developments. Tap a photo to view it full size.</p>
+            <h2 class="heading-orange-1 text-center">Completed renovation projects in KL</h2>
+            <p class="inn-lead text-center">Real units and showrooms across SkyWorld developments in Kuala Lumpur. Tap a photo to view it full size.</p>
             <div class="inn-tabs" role="tablist">
                 @foreach($projects as $i => $p)
                     <button type="button" class="inn-tab {{ $i === 0 ? 'active' : '' }}" data-project="{{ $p['slug'] }}" role="tab" aria-selected="{{ $i === 0 ? 'true' : 'false' }}">{{ $p['name'] }}</button>
@@ -130,6 +130,21 @@
                 <div class="inn-step"><h3>Renovation</h3><p>Works run to a schedule, before VP where the developer allows, with site supervision and photo updates.</p></div>
                 <div class="inn-step"><h3>Handover and warranty</h3><p>A cleaned, finished home, a defect walk-through together, and a warranty on the work we did.</p></div>
             </div>
+        </div>
+    </section>
+
+    {{-- Handyman --}}
+    <section class="inn-section" id="handyman">
+        <div class="container">
+            <h2 class="heading-orange-1 text-center">Handyman services in KL for owners</h2>
+            <p class="inn-lead text-center">The same team that renovates also keeps units in shape. For units under MOKA management, and for KL homeowners on request.</p>
+            <div class="row g-4">
+                <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">AC</div><h3>Air-conditioner servicing</h3><p>Chemical wash, gas top-up, fault diagnosis and replacement, scheduled so guests and tenants are never left in a warm unit.</p></div></div>
+                <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">FIX</div><h3>Repairs</h3><p>Plumbing leaks, electrical faults, door locks, water heaters, fittings and fixtures, attended by our own handymen.</p></div></div>
+                <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">PAINT</div><h3>Painting touch-up</h3><p>Scuffs, marks and wear between tenancies, colour-matched and touched up, or a full repaint when a unit turns over.</p></div></div>
+                <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">WOOD</div><h3>Cabinet restoration</h3><p>Kitchen and wardrobe cabinets re-laminated, re-hinged and repaired rather than replaced, keeping the original design.</p></div></div>
+            </div>
+            <p class="text-center mt-4" style="font-size:16px;color:var(--green)">Owners with MOKA can raise a job from the owner portal. Others, <a href="{{ $wa }}" target="_blank" rel="noopener" style="color:var(--orange);font-family:SemiBold">chat with us on WhatsApp</a>.</p>
         </div>
     </section>
 
@@ -196,4 +211,12 @@
     document.addEventListener('keydown', function (e) { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
 })();
 </script>
+@endpush
+
+@push('schema')
+<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@graph' => [
+    ['@type' => 'HomeAndConstructionBusiness', '@id' => url('/designs') . '#innspace', 'name' => 'Innspace by MOKA', 'alternateName' => 'Inn Space Interior', 'parentOrganization' => ['@id' => url('/') . '#organization'], 'url' => url('/designs'), 'image' => asset('new-theme23/images/projects/hero.jpg'), 'areaServed' => ['Kuala Lumpur', 'Selangor'], 'telephone' => '+60367892288', 'email' => 'hello@homemoka.com',
+        'makesOffer' => array_map(fn ($n) => ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => $n, 'areaServed' => 'Kuala Lumpur']], ['Home renovation in KL', 'Interior design in KL', 'Renovation before vacant possession', 'Custom interior design packages', 'Air-conditioner servicing', 'Home repairs', 'Painting touch-up', 'Cabinet restoration'])],
+    ['@type' => 'BreadcrumbList', 'itemListElement' => [['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')], ['@type' => 'ListItem', 'position' => 2, 'name' => 'Renovation and interior design', 'item' => url('/designs')]]],
+]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
