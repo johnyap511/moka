@@ -71,7 +71,7 @@
 <li>If, as a Guest, you wish to cancel a booking, either prior to or after arriving at the Accommodation, the Guest will be subjected to the Company&rsquo;s cancellation &amp; refund policy.</li>
 </ul>
 <ul>
-<li>If a Host cancels a booking, (i) the Company will refund the Total Price for such booking to the Guest within [14] working days from the time of cancellation; and (ii) the Guest will receive an email confirming the cancellation and other related information. If a Host cancels a confirmed booking and you, as a Guest, have not received&nbsp; an&nbsp; email&nbsp; or&nbsp; other&nbsp; communication&nbsp; from&nbsp; the Company,&nbsp; please contact the Company at [+603 9765 9315] or email [hello@homemoka.com].</li>
+<li>If a Host cancels a booking, (i) the Company will refund the Total Price for such booking to the Guest within 14 working days from the time of cancellation; and (ii) the Guest will receive an email confirming the cancellation and other related information. If a Host cancels a confirmed booking and you, as a Guest, have not received&nbsp; an&nbsp; email&nbsp; or&nbsp; other&nbsp; communication&nbsp; from&nbsp; the Company,&nbsp; please contact the Company at +603 6789 2288 or email hello@homemoka.com.</li>
 </ul>
 <ul>
 <li>In certain circumstances, the Company may decide, in its sole discretion, that it is necessary or desirable to cancel a booking made via the Website. The Company will refund to the Guest all of the amounts charged to the Guest. You agree that the Company and the relevant Guest or Host will not have any liability for such cancellations or refunds.</li>

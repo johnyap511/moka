@@ -100,8 +100,8 @@
 <h2>Contact Us</h2>
 <p>For any questions or concerns regarding your privacy, you may contact us using the following details:</p>
 <p>Address: 11.1, 11th Floor Menara Lien Hoe, 8, Persiaran Tropicana, 47410 Petaling Jaya, Selangor</p>
-<p>Email: [hello@homemoka.com]</p>
-<p>Contact No.: [+603 9765 9315]</p>
+<p>Email: hello@homemoka.com</p>
+<p>Contact No.: +603 6789 2288</p>
 <p>We will acknowledge and investigate any complaint about the way we manage Personal Information (including a complaint that We have breached your rights under applicable privacy laws).</p>
 <ul>
 <li>
