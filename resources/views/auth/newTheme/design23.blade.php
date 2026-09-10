@@ -1,789 +1,176 @@
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Our Designs | Property Renovation & Interior Styling | MOKA')
-@section('seo_description', 'See how MOKA renovates and styles Malaysian properties for short-stay hosting — interiors designed to photograph well and earn more.')
+@section('seo_title', 'Renovation & Interior Design by Innspace | SkyWorld Solution+ Panel Renovator | MOKA')
+@section('seo_description', 'Innspace, MOKA’s sister company: 8 years of renovation and custom interior design for Malaysian homeowners, panel renovator on SkyWorld Solution+, renovation before vacant possession, MyDeco financing with Maybank. Chat for a quotation.')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('new-theme23/css/designs23.css') }}?v={{ filemtime(public_path('new-theme23/css/designs23.css')) }}">
+@endpush
+
+@php
+    $wa = 'https://wa.me/message/GJMYMABOT7CSG1?text=' . rawurlencode('Hi Innspace, I would like a renovation quotation.');
+    $projects = [
+        ['slug' => 'the-valley', 'name' => 'The Valley', 'n' => 8, 'blurb' => 'Fully furnished units and the SkyWorld showroom, warm timber and soft neutrals.'],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'n' => 8, 'blurb' => 'Showroom and owner units: light kitchens, built-in storage, calm bedrooms.'],
+        ['slug' => 'skyawani-5', 'name' => 'Sky Awani 5', 'n' => 6, 'blurb' => 'Kitchen packages in sage and oak, with full-height cabinetry.'],
+        ['slug' => 'curvo', 'name' => 'Curvo', 'n' => 6, 'blurb' => 'Walnut joinery, cove lighting and island kitchens with city views.'],
+        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'n' => 6, 'blurb' => 'A premium custom ID package: layered lighting, curved sofa, walnut and forest green.'],
+    ];
+@endphp
 
 @section('content')
-    <div class="design-banner-outer">
+    <div>
     @include('auth.newTheme.partials.header')
 <script>
     // change header color on scroll
     let header = document.getElementById("main_header");
-
-
     header.classList.remove("bg-orange");
     window.addEventListener("scroll", ()=>{
-        if(window.scrollY > 5){
-            header.classList.add("bg-orange");
-            header.style.boxShadow = "0px 0px 20px -3px rgba(0,0,0,0.1)";
-        }
-        else{
-            header.classList.remove("bg-orange");
-            header.style.boxShadow = "none";
-        }
+        if(window.scrollY > 5){ header.classList.add("bg-orange"); header.style.boxShadow = "0px 0px 20px -3px rgba(0,0,0,0.1)"; }
+        else{ header.classList.remove("bg-orange"); header.style.boxShadow = "none"; }
     })
-
-    // rotate menu expand btn
-    let menuExpand = (e) => {
-        let expandIcon = e.querySelector(".fa-chevron-up");
-        console.log(e)
-        expandIcon.classList.toggle("active");
-    }
+    let menuExpand = (e) => { let expandIcon = e.querySelector(".fa-chevron-up"); expandIcon.classList.toggle("active"); }
 </script>
-<div>
-    <div class="modal" id="loninModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Log In</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+    {{-- Hero --}}
+    <section class="inn-hero" style="background-image:url('{{ asset('new-theme23/images/projects/hero.webp') }}')">
+        <div class="container">
+            <img src="{{ asset('new-theme23/images/innspace-logo-white.png') }}" alt="Innspace" class="inn-hero__logo" width="240" height="60">
+            <div class="inn-eyebrow">Innspace, a MOKA company</div>
+            <h1>Renovation and interior design, finished before you move in</h1>
+            <p>Eight years of renovation for Malaysian homeowners, panel renovator on SkyWorld Solution+, and one of the first in the market to renovate before vacant possession. Quality you can see, with a warranty behind it.</p>
+            <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
+            <a href="#projects" class="white-btn">See our projects</a>
+        </div>
+    </section>
+
+    {{-- Trust strip --}}
+    <section class="inn-stats">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-6 col-md-3"><h2>8 years</h2><p>Renovation experience</p></div>
+                <div class="col-6 col-md-3"><h2>Warranty</h2><p>On every project we hand over</p></div>
+                <div class="col-6 col-md-3"><h2>Solution+</h2><p>SkyWorld panel renovator</p></div>
+                <div class="col-6 col-md-3"><h2>Before VP</h2><p>Move in on handover day</p></div>
+            </div>
+        </div>
+    </section>
+
+    {{-- What we do --}}
+    <section class="inn-section">
+        <div class="container">
+            <h2 class="heading-orange-1 text-center">What Innspace does</h2>
+            <p class="inn-lead text-center">Three ways to get a home that is ready to live in, or ready to earn, from one accountable team.</p>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="inn-card"><div class="num">01</div><h3>Renovation before vacant possession</h3><p>Design and works are completed inside the developer's pre-VP schedule, so you collect your keys to a finished, cleaned home. No months of instalments on an empty unit.</p><ul><li>Defects logged before we touch a surface</li><li>Sequenced with the developer, not the lift queue</li><li>Move in, or start earning, on VP day</li></ul></div></div>
+                <div class="col-md-4"><div class="inn-card"><div class="num">02</div><h3>Premium custom ID packages</h3><p>A design developed for your unit and how you live in it: space planning, joinery, lighting, materials and styling, presented in drawings and 3D so you approve the real thing.</p><ul><li>Custom design, not a package on a floor plan</li><li>Fixed scope and quote before works begin</li><li>Durable finishes for family or rental use</li></ul></div></div>
+                <div class="col-md-4"><div class="inn-card"><div class="num">03</div><h3>Full renovation with warranty</h3><p>Wet works, electrical, plaster ceilings, built-ins, flooring and painting, supervised on site through to handover, with a warranty on the work we deliver.</p><ul><li>Eight years of completed projects</li><li>Vetted panel renovator on Solution+</li><li>One team, accountable for the result</li></ul></div></div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Projects --}}
+    <section class="inn-section inn-section--cream" id="projects">
+        <div class="container">
+            <h2 class="heading-orange-1 text-center">Completed projects</h2>
+            <p class="inn-lead text-center">Real units and showrooms across SkyWorld developments. Tap a photo to view it full size.</p>
+            <div class="inn-tabs" role="tablist">
+                @foreach($projects as $i => $p)
+                    <button type="button" class="inn-tab {{ $i === 0 ? 'active' : '' }}" data-project="{{ $p['slug'] }}" role="tab" aria-selected="{{ $i === 0 ? 'true' : 'false' }}">{{ $p['name'] }}</button>
+                @endforeach
+            </div>
+            @foreach($projects as $i => $p)
+                <div class="inn-project" data-project="{{ $p['slug'] }}" @if($i !== 0) hidden @endif>
+                    <p class="text-center" style="color:var(--green);font-size:17px;margin:0 0 20px">{{ $p['blurb'] }}</p>
+                    <div class="inn-grid">
+                        @for($k = 1; $k <= $p['n']; $k++)
+                            <a href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }}">
+                                <picture>
+                                    <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.webp') }}" type="image/webp">
+                                    <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.jpg') }}" alt="{{ $p['name'] }} renovation by Innspace, photo {{ $k }}" loading="lazy" width="720" height="540">
+                                </picture>
+                            </a>
+                        @endfor
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form action="/login" method="post">
-                        @csrf
-                        @error('email')<p class="text-danger mb-2" role="alert">{{ $message }}</p>@enderror
-                        <input type="email" name="email" placeholder="Email or phone number" value="{{ old('email') }}" required>
-                        <input type="password" name="password" placeholder="Enter your password" required>
-                        <a href="/designs#">
-                            <p class="text-danger text-end" data-bs-toggle="modal" data-bs-target="#forgetPasswordModal">Forget Password ?</p>
-                        </a>
-                        <button type="submit" class="primary-btn w-100">Log In</button>
-                    </form>
-                    <p class="mt-4 mb-3">Don't have account <a href="/designs#" class="text-decoration-underline" data-bs-toggle="modal" data-bs-target="#signupModal"> Sign Up </a></p>
+            @endforeach
+            <p class="inn-more">Also completed: <span>Sky Meridien</span> · <span>Sky Awani 3</span> · <span>Sky Awani 6</span> · <span>Vesta</span></p>
+        </div>
+    </section>
+
+    {{-- How it works --}}
+    <section class="inn-section">
+        <div class="container">
+            <h2 class="heading-orange-1 text-center">How it works</h2>
+            <p class="inn-lead text-center">From first chat to handover, the same four steps whether it is a single room or a whole unit before VP.</p>
+            <div class="inn-steps">
+                <div class="inn-step"><h3>Chat and brief</h3><p>Send us your unit, floor plan and how you will use the home. We reply with what is possible and a first budget range.</p></div>
+                <div class="inn-step"><h3>Design and quote</h3><p>Space planning, materials and 3D views for your approval, then a fixed scope and quote. No variation surprises.</p></div>
+                <div class="inn-step"><h3>Renovation</h3><p>Works run to a schedule, before VP where the developer allows, with site supervision and photo updates.</p></div>
+                <div class="inn-step"><h3>Handover and warranty</h3><p>A cleaned, finished home, a defect walk-through together, and a warranty on the work we did.</p></div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Financing --}}
+    <section class="inn-section inn-section--cream" style="padding-top:0">
+        <div class="container">
+            <div class="inn-finance">
+                <div>
+                    <h2>Pay for it with MyDeco, through Solution+</h2>
+                    <p>SkyWorld buyers can fund the renovation with Maybank's MyDeco facility offered through Solution+, on top of the home loan rather than from savings. Arranging it early is what makes a pre-VP schedule possible.</p>
+                    <p style="font-size:15px;opacity:.8">Terms and eligibility are set by SkyWorld and Maybank and change over time. Confirm the current numbers with them before you plan around them.</p>
+                </div>
+                <div>
+                    <span class="pill">SkyWorld Solution+ panel renovator</span>
+                    <span class="pill">Maybank MyDeco financing</span>
+                    <span class="pill">Renovate before VP</span>
+                    <span class="pill">Custom ID packages</span>
+                    <span class="pill">Warranty on our work</span>
                 </div>
             </div>
+        </div>
+    </section>
+
+    {{-- CTA --}}
+    <div class="bottom-banner py-5">
+        <div class="container text-center">
+            <h2 class="heading-white-2">Chat with us and get a quotation</h2>
+            <p class="text-white-1 mt-3 mb-4" style="font-size:19px">Send your unit number and floor plan. We reply with what can be done, and by when.</p>
+            <a href="{{ $wa }}" target="_blank" rel="noopener" class="white-btn">Chat on WhatsApp</a>
+            <a href="/get/estimate" target="_blank" rel="noopener" class="primary-btn" style="border:3px solid #fff">Get a quick estimate</a>
         </div>
     </div>
 
-    <div class="modal" id="signupModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sing Up</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="/register" method="post">
-                        @csrf                        <div class="phone-input-sec">
-                            <div class="me-select">
-                                <select name="country_code" required>
-                                <option value="60">Malaysia (+60)</option>
-<option value="93">Afghanistan (+93)</option>
-<option value="358">Aland Islands (+358)</option>
-<option value="355">Albania (+355)</option>
-<option value="213">Algeria (+213)</option>
-<option value="1684">American Samoa (+1684)</option>
-<option value="376">Andorra (+376)</option>
-<option value="244">Angola (+244)</option>
-<option value="1264">Anguilla (+1264)</option>
-<option value="1268">Antigua and Barbuda (+1268)</option>
-<option value="54">Argentina (+54)</option>
-<option value="374">Armenia (+374)</option>
-<option value="297">Aruba (+297)</option>
-<option value="61">Australia (+61)</option>
-<option value="43">Austria (+43)</option>
-<option value="994">Azerbaijan (+994)</option>
-<option value="1242">Bahamas (+1242)</option>
-<option value="973">Bahrain (+973)</option>
-<option value="880">Bangladesh (+880)</option>
-<option value="1246">Barbados (+1246)</option>
-<option value="375">Belarus (+375)</option>
-<option value="32">Belgium (+32)</option>
-<option value="501">Belize (+501)</option>
-<option value="229">Benin (+229)</option>
-<option value="1441">Bermuda (+1441)</option>
-<option value="975">Bhutan (+975)</option>
-<option value="591">Bolivia (+591)</option>
-<option value="599">Bonaire, Sint Eustatius and Saba (+599)</option>
-<option value="387">Bosnia and Herzegovina (+387)</option>
-<option value="267">Botswana (+267)</option>
-<option value="55">Brazil (+55)</option>
-<option value="246">British Indian Ocean Territory (+246)</option>
-<option value="673">Brunei Darussalam (+673)</option>
-<option value="359">Bulgaria (+359)</option>
-<option value="226">Burkina Faso (+226)</option>
-<option value="257">Burundi (+257)</option>
-<option value="855">Cambodia (+855)</option>
-<option value="237">Cameroon (+237)</option>
-<option value="1">Canada (+1)</option>
-<option value="238">Cape Verde (+238)</option>
-<option value="1345">Cayman Islands (+1345)</option>
-<option value="236">Central African Republic (+236)</option>
-<option value="235">Chad (+235)</option>
-<option value="56">Chile (+56)</option>
-<option value="86">China (+86)</option>
-<option value="61">Christmas Island (+61)</option>
-<option value="672">Cocos (Keeling) Islands (+672)</option>
-<option value="57">Colombia (+57)</option>
-<option value="269">Comoros (+269)</option>
-<option value="242">Congo (+242)</option>
-<option value="242">Congo, the Democratic Republic of the (+242)</option>
-<option value="682">Cook Islands (+682)</option>
-<option value="506">Costa Rica (+506)</option>
-<option value="225">Cote D'Ivoire (+225)</option>
-<option value="385">Croatia (+385)</option>
-<option value="53">Cuba (+53)</option>
-<option value="599">Curacao (+599)</option>
-<option value="357">Cyprus (+357)</option>
-<option value="420">Czech Republic (+420)</option>
-<option value="45">Denmark (+45)</option>
-<option value="253">Djibouti (+253)</option>
-<option value="1767">Dominica (+1767)</option>
-<option value="1809">Dominican Republic (+1809)</option>
-<option value="593">Ecuador (+593)</option>
-<option value="20">Egypt (+20)</option>
-<option value="503">El Salvador (+503)</option>
-<option value="240">Equatorial Guinea (+240)</option>
-<option value="291">Eritrea (+291)</option>
-<option value="372">Estonia (+372)</option>
-<option value="251">Ethiopia (+251)</option>
-<option value="500">Falkland Islands (Malvinas) (+500)</option>
-<option value="298">Faroe Islands (+298)</option>
-<option value="679">Fiji (+679)</option>
-<option value="358">Finland (+358)</option>
-<option value="33">France (+33)</option>
-<option value="594">French Guiana (+594)</option>
-<option value="689">French Polynesia (+689)</option>
-<option value="241">Gabon (+241)</option>
-<option value="220">Gambia (+220)</option>
-<option value="995">Georgia (+995)</option>
-<option value="49">Germany (+49)</option>
-<option value="233">Ghana (+233)</option>
-<option value="350">Gibraltar (+350)</option>
-<option value="30">Greece (+30)</option>
-<option value="299">Greenland (+299)</option>
-<option value="1473">Grenada (+1473)</option>
-<option value="590">Guadeloupe (+590)</option>
-<option value="1671">Guam (+1671)</option>
-<option value="502">Guatemala (+502)</option>
-<option value="44">Guernsey (+44)</option>
-<option value="224">Guinea (+224)</option>
-<option value="245">Guinea-Bissau (+245)</option>
-<option value="592">Guyana (+592)</option>
-<option value="509">Haiti (+509)</option>
-<option value="39">Holy See (Vatican City State) (+39)</option>
-<option value="504">Honduras (+504)</option>
-<option value="852">Hong Kong (+852)</option>
-<option value="36">Hungary (+36)</option>
-<option value="354">Iceland (+354)</option>
-<option value="91">India (+91)</option>
-<option value="62">Indonesia (+62)</option>
-<option value="98">Iran, Islamic Republic of (+98)</option>
-<option value="964">Iraq (+964)</option>
-<option value="353">Ireland (+353)</option>
-<option value="44">Isle of Man (+44)</option>
-<option value="972">Israel (+972)</option>
-<option value="39">Italy (+39)</option>
-<option value="1876">Jamaica (+1876)</option>
-<option value="81">Japan (+81)</option>
-<option value="44">Jersey (+44)</option>
-<option value="962">Jordan (+962)</option>
-<option value="7">Kazakhstan (+7)</option>
-<option value="254">Kenya (+254)</option>
-<option value="686">Kiribati (+686)</option>
-<option value="850">Korea, Democratic People"s Republic of (+850)</option>
-<option value="82">Korea, Republic of (+82)</option>
-<option value="381">Kosovo (+381)</option>
-<option value="965">Kuwait (+965)</option>
-<option value="996">Kyrgyzstan (+996)</option>
-<option value="856">Lao People's Democratic Republic (+856)</option>
-<option value="371">Latvia (+371)</option>
-<option value="961">Lebanon (+961)</option>
-<option value="266">Lesotho (+266)</option>
-<option value="231">Liberia (+231)</option>
-<option value="218">Libyan Arab Jamahiriya (+218)</option>
-<option value="423">Liechtenstein (+423)</option>
-<option value="370">Lithuania (+370)</option>
-<option value="352">Luxembourg (+352)</option>
-<option value="853">Macao (+853)</option>
-<option value="389">Macedonia, the Former Yugoslav Republic of (+389)</option>
-<option value="261">Madagascar (+261)</option>
-<option value="265">Malawi (+265)</option>
-<option value="960">Maldives (+960)</option>
-<option value="223">Mali (+223)</option>
-<option value="356">Malta (+356)</option>
-<option value="692">Marshall Islands (+692)</option>
-<option value="596">Martinique (+596)</option>
-<option value="222">Mauritania (+222)</option>
-<option value="230">Mauritius (+230)</option>
-<option value="269">Mayotte (+269)</option>
-<option value="52">Mexico (+52)</option>
-<option value="691">Micronesia, Federated States of (+691)</option>
-<option value="373">Moldova, Republic of (+373)</option>
-<option value="377">Monaco (+377)</option>
-<option value="976">Mongolia (+976)</option>
-<option value="382">Montenegro (+382)</option>
-<option value="1664">Montserrat (+1664)</option>
-<option value="212">Morocco (+212)</option>
-<option value="258">Mozambique (+258)</option>
-<option value="95">Myanmar (+95)</option>
-<option value="264">Namibia (+264)</option>
-<option value="674">Nauru (+674)</option>
-<option value="977">Nepal (+977)</option>
-<option value="31">Netherlands (+31)</option>
-<option value="599">Netherlands Antilles (+599)</option>
-<option value="687">New Caledonia (+687)</option>
-<option value="64">New Zealand (+64)</option>
-<option value="505">Nicaragua (+505)</option>
-<option value="227">Niger (+227)</option>
-<option value="234">Nigeria (+234)</option>
-<option value="683">Niue (+683)</option>
-<option value="672">Norfolk Island (+672)</option>
-<option value="1670">Northern Mariana Islands (+1670)</option>
-<option value="47">Norway (+47)</option>
-<option value="968">Oman (+968)</option>
-<option value="92">Pakistan (+92)</option>
-<option value="680">Palau (+680)</option>
-<option value="970">Palestinian Territory, Occupied (+970)</option>
-<option value="507">Panama (+507)</option>
-<option value="675">Papua New Guinea (+675)</option>
-<option value="595">Paraguay (+595)</option>
-<option value="51">Peru (+51)</option>
-<option value="63">Philippines (+63)</option>
-<option value="64">Pitcairn (+64)</option>
-<option value="48">Poland (+48)</option>
-<option value="351">Portugal (+351)</option>
-<option value="1787">Puerto Rico (+1787)</option>
-<option value="974">Qatar (+974)</option>
-<option value="262">Reunion (+262)</option>
-<option value="40">Romania (+40)</option>
-<option value="70">Russian Federation (+70)</option>
-<option value="250">Rwanda (+250)</option>
-<option value="590">Saint Barthelemy (+590)</option>
-<option value="290">Saint Helena (+290)</option>
-<option value="1869">Saint Kitts and Nevis (+1869)</option>
-<option value="1758">Saint Lucia (+1758)</option>
-<option value="590">Saint Martin (+590)</option>
-<option value="508">Saint Pierre and Miquelon (+508)</option>
-<option value="1784">Saint Vincent and the Grenadines (+1784)</option>
-<option value="684">Samoa (+684)</option>
-<option value="378">San Marino (+378)</option>
-<option value="239">Sao Tome and Principe (+239)</option>
-<option value="966">Saudi Arabia (+966)</option>
-<option value="221">Senegal (+221)</option>
-<option value="381">Serbia (+381)</option>
-<option value="381">Serbia and Montenegro (+381)</option>
-<option value="248">Seychelles (+248)</option>
-<option value="232">Sierra Leone (+232)</option>
-<option value="65">Singapore (+65)</option>
-<option value="1">Sint Maarten (+1)</option>
-<option value="421">Slovakia (+421)</option>
-<option value="386">Slovenia (+386)</option>
-<option value="677">Solomon Islands (+677)</option>
-<option value="252">Somalia (+252)</option>
-<option value="27">South Africa (+27)</option>
-<option value="500">South Georgia and the South Sandwich Islands (+500)</option>
-<option value="211">South Sudan (+211)</option>
-<option value="34">Spain (+34)</option>
-<option value="94">Sri Lanka (+94)</option>
-<option value="249">Sudan (+249)</option>
-<option value="597">Suriname (+597)</option>
-<option value="47">Svalbard and Jan Mayen (+47)</option>
-<option value="268">Swaziland (+268)</option>
-<option value="46">Sweden (+46)</option>
-<option value="41">Switzerland (+41)</option>
-<option value="963">Syrian Arab Republic (+963)</option>
-<option value="886">Taiwan, Province of China (+886)</option>
-<option value="992">Tajikistan (+992)</option>
-<option value="255">Tanzania, United Republic of (+255)</option>
-<option value="66">Thailand (+66)</option>
-<option value="670">Timor-Leste (+670)</option>
-<option value="228">Togo (+228)</option>
-<option value="690">Tokelau (+690)</option>
-<option value="676">Tonga (+676)</option>
-<option value="1868">Trinidad and Tobago (+1868)</option>
-<option value="216">Tunisia (+216)</option>
-<option value="90">Turkey (+90)</option>
-<option value="7370">Turkmenistan (+7370)</option>
-<option value="1649">Turks and Caicos Islands (+1649)</option>
-<option value="688">Tuvalu (+688)</option>
-<option value="256">Uganda (+256)</option>
-<option value="380">Ukraine (+380)</option>
-<option value="971">United Arab Emirates (+971)</option>
-<option value="44">United Kingdom (+44)</option>
-<option value="1">United States (+1)</option>
-<option value="1">United States Minor Outlying Islands (+1)</option>
-<option value="598">Uruguay (+598)</option>
-<option value="998">Uzbekistan (+998)</option>
-<option value="678">Vanuatu (+678)</option>
-<option value="58">Venezuela (+58)</option>
-<option value="84">Viet Nam (+84)</option>
-<option value="1284">Virgin Islands, British (+1284)</option>
-<option value="1340">Virgin Islands, U.s. (+1340)</option>
-<option value="681">Wallis and Futuna (+681)</option>
-<option value="212">Western Sahara (+212)</option>
-<option value="967">Yemen (+967)</option>
-<option value="260">Zambia (+260)</option>
-<option value="263">Zimbabwe (+263)</option>                                </select>
-                            </div>
-                            <input type="text" name="phone" placeholder="Enter phone number">
-                        </div>
-
-                        <input type="text" placeholder="Enter your name" name="name" required>
-                        <input type="email" placeholder="Enter your email" name="email" required>
-                        <input type="password" placeholder="Enter your password" name="password" required>
-                        <button type="submit" class="primary-btn w-100">Continue</button>
-                    </form>
-                    <p class="my-4">Already have an account <a href="/designs#" class="text-decoration-underline" data-bs-toggle="modal" data-bs-target="#loninModal"> Log in </a>
-                    </p>
-                    <button class="green-btn w-100 mb-3" data-bs-toggle="modal" data-bs-target="#signupOwnerModal">Sign Up as Owner</button>
-                </div>
-            </div>
-        </div>
+    <div class="inn-lightbox" id="innLightbox" role="dialog" aria-label="Photo">
+        <button type="button" class="x" aria-label="Close">&times;</button>
+        <button type="button" class="prev" aria-label="Previous">&#8249;</button>
+        <img src="" alt="">
+        <button type="button" class="next" aria-label="Next">&#8250;</button>
+        <div class="cap"></div>
     </div>
-
-    <div class="modal" id="signupOwnerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sing Up as Owner</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="/register/owner" method="post">
-                        @csrf                    <div class="phone-input-sec">
-                        <div class="me-select">
-                            <select name="country_code" required>
-                               <option value="60">Malaysia (+60)</option>
-<option value="93">Afghanistan (+93)</option>
-<option value="358">Aland Islands (+358)</option>
-<option value="355">Albania (+355)</option>
-<option value="213">Algeria (+213)</option>
-<option value="1684">American Samoa (+1684)</option>
-<option value="376">Andorra (+376)</option>
-<option value="244">Angola (+244)</option>
-<option value="1264">Anguilla (+1264)</option>
-<option value="1268">Antigua and Barbuda (+1268)</option>
-<option value="54">Argentina (+54)</option>
-<option value="374">Armenia (+374)</option>
-<option value="297">Aruba (+297)</option>
-<option value="61">Australia (+61)</option>
-<option value="43">Austria (+43)</option>
-<option value="994">Azerbaijan (+994)</option>
-<option value="1242">Bahamas (+1242)</option>
-<option value="973">Bahrain (+973)</option>
-<option value="880">Bangladesh (+880)</option>
-<option value="1246">Barbados (+1246)</option>
-<option value="375">Belarus (+375)</option>
-<option value="32">Belgium (+32)</option>
-<option value="501">Belize (+501)</option>
-<option value="229">Benin (+229)</option>
-<option value="1441">Bermuda (+1441)</option>
-<option value="975">Bhutan (+975)</option>
-<option value="591">Bolivia (+591)</option>
-<option value="599">Bonaire, Sint Eustatius and Saba (+599)</option>
-<option value="387">Bosnia and Herzegovina (+387)</option>
-<option value="267">Botswana (+267)</option>
-<option value="55">Brazil (+55)</option>
-<option value="246">British Indian Ocean Territory (+246)</option>
-<option value="673">Brunei Darussalam (+673)</option>
-<option value="359">Bulgaria (+359)</option>
-<option value="226">Burkina Faso (+226)</option>
-<option value="257">Burundi (+257)</option>
-<option value="855">Cambodia (+855)</option>
-<option value="237">Cameroon (+237)</option>
-<option value="1">Canada (+1)</option>
-<option value="238">Cape Verde (+238)</option>
-<option value="1345">Cayman Islands (+1345)</option>
-<option value="236">Central African Republic (+236)</option>
-<option value="235">Chad (+235)</option>
-<option value="56">Chile (+56)</option>
-<option value="86">China (+86)</option>
-<option value="61">Christmas Island (+61)</option>
-<option value="672">Cocos (Keeling) Islands (+672)</option>
-<option value="57">Colombia (+57)</option>
-<option value="269">Comoros (+269)</option>
-<option value="242">Congo (+242)</option>
-<option value="242">Congo, the Democratic Republic of the (+242)</option>
-<option value="682">Cook Islands (+682)</option>
-<option value="506">Costa Rica (+506)</option>
-<option value="225">Cote D'Ivoire (+225)</option>
-<option value="385">Croatia (+385)</option>
-<option value="53">Cuba (+53)</option>
-<option value="599">Curacao (+599)</option>
-<option value="357">Cyprus (+357)</option>
-<option value="420">Czech Republic (+420)</option>
-<option value="45">Denmark (+45)</option>
-<option value="253">Djibouti (+253)</option>
-<option value="1767">Dominica (+1767)</option>
-<option value="1809">Dominican Republic (+1809)</option>
-<option value="593">Ecuador (+593)</option>
-<option value="20">Egypt (+20)</option>
-<option value="503">El Salvador (+503)</option>
-<option value="240">Equatorial Guinea (+240)</option>
-<option value="291">Eritrea (+291)</option>
-<option value="372">Estonia (+372)</option>
-<option value="251">Ethiopia (+251)</option>
-<option value="500">Falkland Islands (Malvinas) (+500)</option>
-<option value="298">Faroe Islands (+298)</option>
-<option value="679">Fiji (+679)</option>
-<option value="358">Finland (+358)</option>
-<option value="33">France (+33)</option>
-<option value="594">French Guiana (+594)</option>
-<option value="689">French Polynesia (+689)</option>
-<option value="241">Gabon (+241)</option>
-<option value="220">Gambia (+220)</option>
-<option value="995">Georgia (+995)</option>
-<option value="49">Germany (+49)</option>
-<option value="233">Ghana (+233)</option>
-<option value="350">Gibraltar (+350)</option>
-<option value="30">Greece (+30)</option>
-<option value="299">Greenland (+299)</option>
-<option value="1473">Grenada (+1473)</option>
-<option value="590">Guadeloupe (+590)</option>
-<option value="1671">Guam (+1671)</option>
-<option value="502">Guatemala (+502)</option>
-<option value="44">Guernsey (+44)</option>
-<option value="224">Guinea (+224)</option>
-<option value="245">Guinea-Bissau (+245)</option>
-<option value="592">Guyana (+592)</option>
-<option value="509">Haiti (+509)</option>
-<option value="39">Holy See (Vatican City State) (+39)</option>
-<option value="504">Honduras (+504)</option>
-<option value="852">Hong Kong (+852)</option>
-<option value="36">Hungary (+36)</option>
-<option value="354">Iceland (+354)</option>
-<option value="91">India (+91)</option>
-<option value="62">Indonesia (+62)</option>
-<option value="98">Iran, Islamic Republic of (+98)</option>
-<option value="964">Iraq (+964)</option>
-<option value="353">Ireland (+353)</option>
-<option value="44">Isle of Man (+44)</option>
-<option value="972">Israel (+972)</option>
-<option value="39">Italy (+39)</option>
-<option value="1876">Jamaica (+1876)</option>
-<option value="81">Japan (+81)</option>
-<option value="44">Jersey (+44)</option>
-<option value="962">Jordan (+962)</option>
-<option value="7">Kazakhstan (+7)</option>
-<option value="254">Kenya (+254)</option>
-<option value="686">Kiribati (+686)</option>
-<option value="850">Korea, Democratic People"s Republic of (+850)</option>
-<option value="82">Korea, Republic of (+82)</option>
-<option value="381">Kosovo (+381)</option>
-<option value="965">Kuwait (+965)</option>
-<option value="996">Kyrgyzstan (+996)</option>
-<option value="856">Lao People's Democratic Republic (+856)</option>
-<option value="371">Latvia (+371)</option>
-<option value="961">Lebanon (+961)</option>
-<option value="266">Lesotho (+266)</option>
-<option value="231">Liberia (+231)</option>
-<option value="218">Libyan Arab Jamahiriya (+218)</option>
-<option value="423">Liechtenstein (+423)</option>
-<option value="370">Lithuania (+370)</option>
-<option value="352">Luxembourg (+352)</option>
-<option value="853">Macao (+853)</option>
-<option value="389">Macedonia, the Former Yugoslav Republic of (+389)</option>
-<option value="261">Madagascar (+261)</option>
-<option value="265">Malawi (+265)</option>
-<option value="960">Maldives (+960)</option>
-<option value="223">Mali (+223)</option>
-<option value="356">Malta (+356)</option>
-<option value="692">Marshall Islands (+692)</option>
-<option value="596">Martinique (+596)</option>
-<option value="222">Mauritania (+222)</option>
-<option value="230">Mauritius (+230)</option>
-<option value="269">Mayotte (+269)</option>
-<option value="52">Mexico (+52)</option>
-<option value="691">Micronesia, Federated States of (+691)</option>
-<option value="373">Moldova, Republic of (+373)</option>
-<option value="377">Monaco (+377)</option>
-<option value="976">Mongolia (+976)</option>
-<option value="382">Montenegro (+382)</option>
-<option value="1664">Montserrat (+1664)</option>
-<option value="212">Morocco (+212)</option>
-<option value="258">Mozambique (+258)</option>
-<option value="95">Myanmar (+95)</option>
-<option value="264">Namibia (+264)</option>
-<option value="674">Nauru (+674)</option>
-<option value="977">Nepal (+977)</option>
-<option value="31">Netherlands (+31)</option>
-<option value="599">Netherlands Antilles (+599)</option>
-<option value="687">New Caledonia (+687)</option>
-<option value="64">New Zealand (+64)</option>
-<option value="505">Nicaragua (+505)</option>
-<option value="227">Niger (+227)</option>
-<option value="234">Nigeria (+234)</option>
-<option value="683">Niue (+683)</option>
-<option value="672">Norfolk Island (+672)</option>
-<option value="1670">Northern Mariana Islands (+1670)</option>
-<option value="47">Norway (+47)</option>
-<option value="968">Oman (+968)</option>
-<option value="92">Pakistan (+92)</option>
-<option value="680">Palau (+680)</option>
-<option value="970">Palestinian Territory, Occupied (+970)</option>
-<option value="507">Panama (+507)</option>
-<option value="675">Papua New Guinea (+675)</option>
-<option value="595">Paraguay (+595)</option>
-<option value="51">Peru (+51)</option>
-<option value="63">Philippines (+63)</option>
-<option value="64">Pitcairn (+64)</option>
-<option value="48">Poland (+48)</option>
-<option value="351">Portugal (+351)</option>
-<option value="1787">Puerto Rico (+1787)</option>
-<option value="974">Qatar (+974)</option>
-<option value="262">Reunion (+262)</option>
-<option value="40">Romania (+40)</option>
-<option value="70">Russian Federation (+70)</option>
-<option value="250">Rwanda (+250)</option>
-<option value="590">Saint Barthelemy (+590)</option>
-<option value="290">Saint Helena (+290)</option>
-<option value="1869">Saint Kitts and Nevis (+1869)</option>
-<option value="1758">Saint Lucia (+1758)</option>
-<option value="590">Saint Martin (+590)</option>
-<option value="508">Saint Pierre and Miquelon (+508)</option>
-<option value="1784">Saint Vincent and the Grenadines (+1784)</option>
-<option value="684">Samoa (+684)</option>
-<option value="378">San Marino (+378)</option>
-<option value="239">Sao Tome and Principe (+239)</option>
-<option value="966">Saudi Arabia (+966)</option>
-<option value="221">Senegal (+221)</option>
-<option value="381">Serbia (+381)</option>
-<option value="381">Serbia and Montenegro (+381)</option>
-<option value="248">Seychelles (+248)</option>
-<option value="232">Sierra Leone (+232)</option>
-<option value="65">Singapore (+65)</option>
-<option value="1">Sint Maarten (+1)</option>
-<option value="421">Slovakia (+421)</option>
-<option value="386">Slovenia (+386)</option>
-<option value="677">Solomon Islands (+677)</option>
-<option value="252">Somalia (+252)</option>
-<option value="27">South Africa (+27)</option>
-<option value="500">South Georgia and the South Sandwich Islands (+500)</option>
-<option value="211">South Sudan (+211)</option>
-<option value="34">Spain (+34)</option>
-<option value="94">Sri Lanka (+94)</option>
-<option value="249">Sudan (+249)</option>
-<option value="597">Suriname (+597)</option>
-<option value="47">Svalbard and Jan Mayen (+47)</option>
-<option value="268">Swaziland (+268)</option>
-<option value="46">Sweden (+46)</option>
-<option value="41">Switzerland (+41)</option>
-<option value="963">Syrian Arab Republic (+963)</option>
-<option value="886">Taiwan, Province of China (+886)</option>
-<option value="992">Tajikistan (+992)</option>
-<option value="255">Tanzania, United Republic of (+255)</option>
-<option value="66">Thailand (+66)</option>
-<option value="670">Timor-Leste (+670)</option>
-<option value="228">Togo (+228)</option>
-<option value="690">Tokelau (+690)</option>
-<option value="676">Tonga (+676)</option>
-<option value="1868">Trinidad and Tobago (+1868)</option>
-<option value="216">Tunisia (+216)</option>
-<option value="90">Turkey (+90)</option>
-<option value="7370">Turkmenistan (+7370)</option>
-<option value="1649">Turks and Caicos Islands (+1649)</option>
-<option value="688">Tuvalu (+688)</option>
-<option value="256">Uganda (+256)</option>
-<option value="380">Ukraine (+380)</option>
-<option value="971">United Arab Emirates (+971)</option>
-<option value="44">United Kingdom (+44)</option>
-<option value="1">United States (+1)</option>
-<option value="1">United States Minor Outlying Islands (+1)</option>
-<option value="598">Uruguay (+598)</option>
-<option value="998">Uzbekistan (+998)</option>
-<option value="678">Vanuatu (+678)</option>
-<option value="58">Venezuela (+58)</option>
-<option value="84">Viet Nam (+84)</option>
-<option value="1284">Virgin Islands, British (+1284)</option>
-<option value="1340">Virgin Islands, U.s. (+1340)</option>
-<option value="681">Wallis and Futuna (+681)</option>
-<option value="212">Western Sahara (+212)</option>
-<option value="967">Yemen (+967)</option>
-<option value="260">Zambia (+260)</option>
-<option value="263">Zimbabwe (+263)</option>                            </select>
-                         </div>
-                        <input type="text" name="phone" placeholder="Enter phone number">
-                    </div>
-
-                    <input type="text" placeholder="Enter your name" name="name" required>
-                    <input type="email" placeholder="Enter your email" name="email" required>
-                    <input type="password" placeholder="Enter your password" name="password" required>
-                    <input type="text" placeholder="Property address" name="address" required>
-                    <button type="submit" class="primary-btn mb-3 w-100">Continue</button>
-                    </form>
-                    <a href="/get/estimate"><button type="button" class="green-btn w-100 mb-3">Get Estimate Now</button></a>
-                    
-                </div>
-            </div>
-        </div>
     </div>
-
-    <div class="modal" id="forgetPasswordModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Forget Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="/forget/password" method="post">
-                        @csrf                    <input type="text" placeholder="Enter your email" name="email" required>
-                    <button type="submit" class="primary-btn w-100 mb-3">Get Reset Link</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>        <div class="d-flex flex-column align-items-center">
-            <div class="col-sm-6 col-md-6 col-lg-6">
-                <h1 class="heading-white-1 mrt text-center px-2">
-                    Discover a range of Unique Interior Design Themes
-                 </h1>
-                 <h4 class="heading-white-1 fs_25 text-center mt-4 px-5">Brought to you by our design team, INN Space</h4>
-                 <div class="d-flex flex-column align-items-center justify-content-center mt-4 ml-5">
-                 <img src="{{ asset('new-theme23/images/Asset%2047.png') }}"/>
-                 </div>
-              </div>
-           </div>
-         </div>
-    <div class="section-height">
-        <div class="container my-5 py-5">
-            <div class="d-flex flex-column flex-md-row align-items-center">
-                <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                    <h2 class="heading-orange-2 mb-4">
-                        Elevate Your Property's Value
-                        with Our Unique Designs
-                    </h2>
-                    <p class="text-green-1" style="letter-spacing: -0.3px;">
-                        Our unique designs cater to individual preferences
-                        while strategically boosting the market appeal of
-                        your unit. Whether you're renovating for personal
-                        use or investment purposes, our services ensure
-                        your property's aesthetics and value are elevated
-                        to their fullest potential.
-                    </p>
-                </div>
-                <div class="col-md-6 py-3 ps-md-4 ps-lg-5">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2044.png') }}" alt="" srcset="" data-aos="fade-left" class="w-100 ps-lg-5 aos-init aos-animate">
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white section-height">
-      <div class="container my-5 py-5">
-        <div class="d-flex flex-column flex-md-row align-items-center">
-            <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2045.png') }}" alt="" srcset="" data-aos="fade-right" class="w-100 pe-lg-5 aos-init aos-animate">
-            </div>
-            <div class="col-md-6 py-3 ps-md-4 ps-lg-5 make-order-first">
-                <h2 class="heading-orange-2 mb-4">
-                    How it Works
-                </h2>
-                <p class="text-green-1" style="letter-spacing: -0.3px;">
-                    Each design includes essentials like lighting,
-                    feature walls, and key furniture but can be
-                    personalized to your liking. We aim to make your
-                    home a reflection of your personality and needs.
-                    <br/>
-                    <br/>
-                    For more details, get in touch with us!
-                </p>
-                <div class="d-flex mt-2">
-                    <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank">
-                        <button class="primary-btn">Chat with us now</button>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
- </div>
- 
-    <div class="section-height-1">
-        <div class="container py-2">
-            <h1 class="heading-orange-1 text-center">
-                Designs Tailored for You</h1>
-                <div class="d-flex flex-wrap orange-card-parent my-">
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom.png') }}" alt="" srcset="">
-                            <div class="overlay-text">Modern Zen</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%201.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Contemporary Art</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%202.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Wooden Serenity</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex flex-wrap orange-card-parent my-">
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%203.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Contemporary Chic</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%204.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Industrial Luxe</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%205.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Chic Woodcraft</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex flex-wrap orange-card-parent my-">
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%206.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Eclectic Design</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%207.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Epicurean Elegance</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 col-lg-4 p-3">
-                        <div class="orange-card-1">
-                            <img loading="lazy" class="img-fluid" src="{{ asset('new-theme23/images/master%20bedroom%209.jpg') }}" alt="" srcset="">
-                            <div class="overlay-text">Modern Serenity</div>
-                        </div>
-                    </div>
-                </div>
-
-              <div class="btn-design mt-5">
-                <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank">
-                    <button class="primary-btn">Chat with us now</button>
-                </a>
-                    <a href="/get/estimate" target="_blank">
-                        <button class="primary-btn">Why MOKA?</button>
-                    </a>
-               </div>
-            </div>
-        </div>
-        <div class="bottom-banner mt-5 py-5">
-            <div class="container">
-                <h2 class="heading-white-2 text-center">Find out how much your property could earn!</h2>
-                <div class="d-flex justify-content-center mt-5">
-                    <a href="/get/estimate" target="_blank">
-                        <button class="white-btn-1 px-2">Get a quick estimate (Free)</button>
-                    </a>
-                </div>
-                <p class="text-white-2 m-0 text-center mt-5">Takes just 30 seconds.</p>
-            </div>
-        </div>
-</div>
 @endsection
-@if($errors->has('email') || $errors->has('password'))
-<script id="loninModal-reopen">
-// A failed sign-in comes back to this page; reopen the popup so the message is seen.
-document.addEventListener('DOMContentLoaded', function () {
-    var el = document.getElementById('loninModal');
-    if (el && window.bootstrap) { new bootstrap.Modal(el).show(); }
-});
+
+@push('scripts')
+<script>
+(function () {
+    var tabs = document.querySelectorAll('.inn-tab'), panels = document.querySelectorAll('.inn-project');
+    tabs.forEach(function (t) { t.addEventListener('click', function () {
+        tabs.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
+        t.classList.add('active'); t.setAttribute('aria-selected', 'true');
+        panels.forEach(function (p) { p.hidden = p.dataset.project !== t.dataset.project; });
+    }); });
+    var lb = document.getElementById('innLightbox'), img = lb.querySelector('img'), cap = lb.querySelector('.cap'), list = [], cur = 0;
+    function show(i) { cur = (i + list.length) % list.length; var a = list[cur]; img.src = a.dataset.full || a.href; cap.textContent = a.dataset.caption + ' · ' + (cur + 1) + ' / ' + list.length; }
+    document.querySelectorAll('.inn-grid a').forEach(function (a) { a.addEventListener('click', function (e) {
+        e.preventDefault(); list = Array.prototype.slice.call(a.closest('.inn-grid').querySelectorAll('a')); show(list.indexOf(a)); lb.classList.add('open'); document.body.style.overflow = 'hidden';
+    }); });
+    function close() { lb.classList.remove('open'); document.body.style.overflow = ''; img.src = ''; }
+    lb.querySelector('.x').addEventListener('click', close);
+    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    lb.querySelector('.prev').addEventListener('click', function () { show(cur - 1); });
+    lb.querySelector('.next').addEventListener('click', function () { show(cur + 1); });
+    document.addEventListener('keydown', function (e) { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+})();
 </script>
-@endif
+@endpush

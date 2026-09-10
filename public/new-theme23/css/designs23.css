@@ -1,0 +1,49 @@
+/* Our Designs / Innspace page. Built on the theme's own tokens: --orange, --green, Source Sans (Bold / SemiBold / SansPro_Regular). */
+.inn-hero{position:relative;min-height:92vh;display:flex;align-items:center;background:var(--green) center/cover no-repeat;color:#fff;padding:140px 0 90px}
+.inn-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,40,40,.82) 0%,rgba(0,40,40,.55) 55%,rgba(0,40,40,.25) 100%)}
+.inn-hero .container{position:relative}
+.inn-hero__logo{height:60px;width:auto;margin-bottom:26px;display:block}
+.inn-eyebrow{font-family:SemiBold;letter-spacing:.14em;text-transform:uppercase;font-size:14px;color:#fff;opacity:.85;margin-bottom:14px}
+.inn-hero h1{font-family:Bold;font-size:clamp(34px,4.6vw,58px);line-height:1.08;margin:0 0 18px;max-width:14ch}
+.inn-hero p{font-size:20px;line-height:1.55;max-width:600px;margin:0 0 30px;color:rgba(255,255,255,.9)}
+.inn-hero .primary-btn,.inn-hero .white-btn{text-decoration:none;display:inline-block;text-align:center;margin:0 12px 12px 0}
+.inn-stats{background:#f1f1f2}
+.inn-stats .row>div{padding:34px 20px}
+.inn-stats h2{font-family:Bold;color:var(--green);font-size:30px;margin:0}
+.inn-stats p{color:var(--green);font-size:17px;margin:6px 0 0}
+.inn-section{padding:90px 0}
+.inn-section--cream{background:#fff7f0}
+.inn-section h2.heading-orange-1{font-size:clamp(30px,3.6vw,46px);margin-bottom:12px}
+.inn-lead{font-size:19px;color:var(--body-text);max-width:760px;margin:0 auto 46px;line-height:1.6}
+.inn-card{background:#fff;border:1px solid var(--orange);border-radius:27px;padding:34px 30px;height:100%;display:flex;flex-direction:column;gap:12px}
+.inn-card .num{font-family:Bold;color:var(--orange);font-size:14px;letter-spacing:.14em}
+.inn-card h3{font-family:Bold;color:var(--green);font-size:24px;margin:0}
+.inn-card p{font-size:17px;line-height:1.6;color:var(--body-text);margin:0}
+.inn-card ul{margin:0;padding-left:18px;color:var(--body-text);font-size:16px;line-height:1.6}
+.inn-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 30px}
+.inn-tab{border:2px solid var(--orange);background:#fff;color:var(--orange);font-family:Bold;font-size:17px;border-radius:100px;padding:9px 22px;cursor:pointer}
+.inn-tab.active{background:var(--orange);color:#fff}
+.inn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.inn-grid a{display:block;aspect-ratio:4/3;overflow:hidden;border-radius:18px;background:#eee}
+.inn-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.inn-grid a:hover img{transform:scale(1.04)}
+.inn-more{margin-top:26px;color:var(--green);font-size:16px;text-align:center}
+.inn-more span{font-family:SemiBold}
+.inn-steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.inn-step{position:relative;padding:30px 26px;background:#fff;border-radius:27px;border:1px solid #e6e6e6}
+.inn-step::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:Bold;font-size:44px;color:var(--orange);opacity:.35;display:block;margin-bottom:8px;line-height:1}
+.inn-step h3{font-family:Bold;color:var(--green);font-size:21px;margin:0 0 8px}
+.inn-step p{font-size:16px;line-height:1.6;color:var(--body-text);margin:0}
+.inn-finance{background:var(--green);color:#fff;border-radius:27px;padding:50px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
+.inn-finance h2{font-family:Bold;font-size:clamp(26px,3vw,38px);margin:0 0 14px;color:#fff}
+.inn-finance p{font-size:18px;line-height:1.6;color:rgba(255,255,255,.88);margin:0 0 10px}
+.inn-finance .pill{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:100px;padding:8px 18px;font-family:SemiBold;font-size:15px;margin:6px 8px 0 0}
+.inn-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center}
+.inn-lightbox.open{display:flex}
+.inn-lightbox img{max-width:92vw;max-height:86vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.inn-lightbox button{position:absolute;background:rgba(255,255,255,.12);color:#fff;border:0;width:52px;height:52px;border-radius:50%;font-size:26px;cursor:pointer}
+.inn-lightbox .x{top:18px;right:18px}.inn-lightbox .prev{left:14px;top:50%;transform:translateY(-50%)}.inn-lightbox .next{right:14px;top:50%;transform:translateY(-50%)}
+.inn-lightbox .cap{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#fff;font-size:15px;opacity:.85}
+.bottom-banner .primary-btn,.bottom-banner .white-btn{text-decoration:none;display:inline-block;margin:6px 8px}
+@media (max-width:991px){.inn-grid{grid-template-columns:repeat(3,1fr)}.inn-steps{grid-template-columns:repeat(2,1fr)}.inn-finance{grid-template-columns:1fr;padding:36px}.inn-section{padding:64px 0}}
+@media (max-width:600px){.inn-hero{min-height:0;padding:120px 0 60px}.inn-hero p{font-size:17px}.inn-hero .primary-btn,.inn-hero .white-btn{display:block;width:100%;min-width:0;font-size:20px;margin:0 0 12px}.inn-grid{grid-template-columns:repeat(2,1fr);gap:10px}.inn-steps{grid-template-columns:1fr}.inn-stats h2{font-size:26px}.inn-tab{font-size:15px;padding:8px 16px}.inn-finance{padding:28px 22px}.inn-section{padding:52px 0}.inn-lead{font-size:17px}}
