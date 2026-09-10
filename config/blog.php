@@ -17,7 +17,8 @@
 | 'description' meta description and the excerpt on the index
 | 'published'   ISO date, used for sorting, display and article:published_time
 | 'updated'     ISO date, used for sitemap <lastmod>
-| 'image'       social card, relative to public/
+| 'image'       card and social image, relative to public/ (a 1600px project photo; the card uses its -thumb.webp)
+| 'topic'       Hosting, Renovation or Regulations; drives the filter chips on the index
 | 'read_time'   rough minutes, shown on the index
 |
 */
@@ -34,7 +35,8 @@ return [
             'description' => 'How SkyWorld’s Solution+ Early Bird event worked, why renovating before vacant possession saves owners months of empty instalments, and how MOKA’s custom interior design fits inside the developer’s pre-VP schedule.',
             'published'   => '2026-09-09',
             'updated'     => '2026-09-09',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/the-valley/1.jpg',
+            'topic'       => 'Renovation',
             'read_time'   => 6,
             'cta_heading' => 'Collecting keys from SkyWorld soon?',
             'cta_body'    => 'Send us your unit number and floor plan and we will tell you what can be finished before your VP date.',
@@ -50,7 +52,8 @@ return [
             'description' => 'Penang’s Private Short-term Accommodation By-Laws 2026 explained: which properties can be licensed on the island and the mainland, the 75% building consent, fees from RM1,000 a year, and the 1 November 2026 deadline.',
             'published'   => '2026-09-09',
             'updated'     => '2026-09-09',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/skyvogue/1.jpg',
+            'topic'       => 'Regulations',
             'read_time'   => 7,
             'cta_heading' => 'Own a unit in Penang?',
             'cta_body'    => 'MOKA handles building consent, licensing and reporting for the owners we manage. Ask us where your unit stands.',
@@ -66,7 +69,8 @@ return [
             'description' => 'The building decides whether you can host. A practical guide for Malaysian short-stay hosts on consent, guest registration, house rules, licensing and the daily habits that keep a JMB or MC happy.',
             'published'   => '2026-09-09',
             'updated'     => '2026-09-09',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/skyawani-4/1.jpg',
+            'topic'       => 'Regulations',
             'read_time'   => 7,
         ],
 
@@ -78,7 +82,8 @@ return [
             'description' => 'What a short-stay management company actually does for a KL condo, how fees are usually structured, and the questions to ask before you hand over your keys.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/the-valley/3.jpg',
+            'topic'       => 'Hosting',
             'read_time'   => 7,
         ],
 
@@ -90,7 +95,8 @@ return [
             'description' => 'MOKA is a listed renovation partner on SkyWorld’s Solution+ marketplace. Eight years of renovation experience, custom design and full interior design services — plus how MyDeco financing works.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/skyvogue/4.jpg',
+            'topic'       => 'Renovation',
             'read_time'   => 8,
             'cta_heading' => 'Planning your renovation?',
             'cta_body'    => 'Talk to the MOKA design team about a custom design for your home.',
@@ -106,7 +112,8 @@ return [
             'description' => 'Short-stay pays more per night but costs more to run, and not every unit suits it. A practical framework for Malaysian owners weighing the two.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/the-valley/6.jpg',
+            'topic'       => 'Hosting',
             'read_time'   => 8,
         ],
 
@@ -118,7 +125,8 @@ return [
             'description' => 'Where furnishing budget earns its keep, what guests complain about most, and the details that quietly decide whether your listing gets five stars.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/skyawani-4/3.jpg',
+            'topic'       => 'Renovation',
             'read_time'   => 7,
         ],
 
@@ -130,7 +138,8 @@ return [
             'description' => 'Defect inspection, utilities, access cards, building rules and insurance — the handover steps that decide how quickly a new unit can start earning.',
             'published'   => '2026-09-01',
             'updated'     => '2026-09-01',
-            'image'       => 'images/layout/og-cover.jpg',
+            'image'       => 'new-theme23/images/projects/skyawani-4/5.jpg',
+            'topic'       => 'Hosting',
             'read_time'   => 6,
         ],
 
