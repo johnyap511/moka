@@ -162,3 +162,8 @@ a:hover .sx-more svg { transform: translateX(3px); }
     .sx-step::before { font-size: 36px; right: 18px; top: 18px; }
     .sx-cta p { font-size: 16.5px; }
 }
+/* The split band: the picture is the grid item (overrides the site-wide picture{display:contents}) */
+.sx-split > picture { display: block; min-width: 0; }
+.sx-split > picture > source { display: none; }
+.sx-split img { max-height: 380px; object-fit: cover; }
+@media (max-width: 1024px) { .sx-split img { max-height: 320px; } }
