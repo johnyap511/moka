@@ -47,13 +47,11 @@
 
     {{-- Trust strip --}}
     <section class="inn-stats">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-6 col-md-3"><h2>8 years</h2><p>Renovation experience</p></div>
-                <div class="col-6 col-md-3"><h2>Warranty</h2><p>On every project we hand over</p></div>
-                <div class="col-6 col-md-3"><h2>Solution+</h2><p>SkyWorld panel renovator</p></div>
-                <div class="col-6 col-md-3"><h2>Before VP</h2><p>Move in on handover day</p></div>
-            </div>
+        <div class="inn-stats__grid">
+            <div><h2>8 years</h2><p>Renovation experience</p></div>
+            <div><h2>Warranty</h2><p>On every project we hand over</p></div>
+            <div><h2>Solution+</h2><p>SkyWorld panel renovator</p></div>
+            <div><h2>Before VP</h2><p>Move in on handover day</p></div>
         </div>
     </section>
 
