@@ -9,12 +9,11 @@
 
 @php
     $wa = 'https://wa.me/message/GJMYMABOT7CSG1?text=' . rawurlencode('Hi Innspace, I would like a renovation quotation.');
+    $renovated = ['The Valley', 'Sky Meridien', 'Sky Awani 3', 'Sky Awani 4', 'Sky Awani 5', 'Sky Awani 6', 'Vesta', 'Curvo', 'SkyVogue'];
     $projects = [
-        ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished units and the SkyWorld showroom, warm timber and soft neutrals.', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
-        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units: light kitchens, built-in storage, calm bedrooms.', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
-        ['slug' => 'skyawani-5', 'name' => 'Sky Awani 5', 'blurb' => 'Kitchen packages in sage and oak, with full-height cabinetry.', 'rooms' => ['Kitchen', 'Kitchen', 'Kitchen', 'Kitchen', 'Kitchen', 'Kitchen']],
-        ['slug' => 'curvo', 'name' => 'Curvo', 'blurb' => 'Walnut joinery, cove lighting and island kitchens with city views.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Kitchen island', 'Living', 'Wardrobe']],
-        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package: layered lighting, curved sofa, walnut and forest green.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
+        ['slug' => 'the-valley', 'name' => 'The Valley', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
+        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
     ];
 @endphp
 
@@ -77,6 +76,12 @@
                     <div class="inn-eyebrow inn-eyebrow--orange">SkyWorld Solution+ panel renovator</div>
                     <h2 class="heading-orange-1">Selected on quality. Safer for you.</h2>
                     <p>Innspace is one of the renovators SkyWorld appointed to its Solution+ marketplace after vetting our work. For an owner that means a contractor who was chosen on quality, works inside the developer's own rules and standards, and answers to SkyWorld as well as to you.</p>
+                    <div class="inn-partners">
+                        <span>Appointed panel renovator</span>
+                        <img src="{{ asset('new-theme23/images/innspace-logo.png') }}?v={{ filemtime(public_path('new-theme23/images/innspace-logo.png')) }}" alt="Innspace" class="inn-partners__inn">
+                        <img src="{{ asset('new-theme23/images/logo-skyworld.png') }}" alt="SkyWorld" class="inn-partners__sw">
+                        <img src="{{ asset('new-theme23/images/logo-solution-plus.png') }}" alt="Solution+ by SkyWorld" class="inn-partners__sp">
+                    </div>
                     <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
                 </div>
                 <ul class="inn-checklist">
@@ -93,30 +98,29 @@
     <section class="inn-section inn-section--cream" id="projects">
         <div class="container">
             <h2 class="heading-orange-1 text-center">Completed renovation projects in KL</h2>
-            <p class="inn-lead text-center">Real units and showrooms across SkyWorld developments in Kuala Lumpur. Tap a photo to view it full size.</p>
-            <div class="inn-tabs" role="tablist">
-                @foreach($projects as $i => $p)
-                    <button type="button" class="inn-tab {{ $i === 0 ? 'active' : '' }}" data-project="{{ $p['slug'] }}" role="tab" aria-selected="{{ $i === 0 ? 'true' : 'false' }}">{{ $p['name'] }}</button>
+            <p class="inn-lead text-center">Owner units and showrooms across SkyWorld developments in Kuala Lumpur.</p>
+            <ul class="inn-list">
+                @foreach($renovated as $r)<li>{{ $r }}</li>@endforeach
+            </ul>
+        </div>
+        <div class="inn-carousel-wrap">
+            <div class="owl-carousel inn-carousel" id="innCarousel">
+                @foreach($projects as $p)
+                    @foreach($p['rooms'] as $idx => $room)
+                        @php $k = $idx + 1; @endphp
+                        <a class="inn-photo" href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }} · {{ $room }}">
+                            <picture>
+                                <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.webp') }}" type="image/webp">
+                                <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.jpg') }}" alt="{{ $p['name'] }} {{ strtolower($room) }}, renovation by Innspace" loading="lazy" width="720" height="540">
+                            </picture>
+                            <span class="inn-photo__cap"><b>{{ $p['name'] }}</b>{{ $room }}</span>
+                        </a>
+                    @endforeach
                 @endforeach
             </div>
-            @foreach($projects as $i => $p)
-                <div class="inn-project" data-project="{{ $p['slug'] }}" @if($i !== 0) hidden @endif>
-                    <p class="text-center" style="color:var(--green);font-size:17px;margin:0 0 20px">{{ $p['blurb'] }}</p>
-                    <div class="inn-grid" data-count="{{ count($p['rooms']) }}">
-                        @foreach($p['rooms'] as $idx => $room)
-                            @php $k = $idx + 1; @endphp
-                            <a href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }} · {{ $room }}" data-room="{{ $room }}">
-                                <picture>
-                                    <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . ($k === 1 ? $k : $k . '-thumb') . '.webp') }}" type="image/webp">
-                                    <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . ($k === 1 ? $k : $k . '-thumb') . '.jpg') }}" alt="{{ $p['name'] }} {{ strtolower($room) }}, renovation by Innspace" loading="lazy">
-                                </picture>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-            <p class="inn-more">Also completed: <span>Sky Meridien</span> · <span>Sky Awani 3</span> · <span>Sky Awani 6</span> · <span>Vesta</span></p>
+            <div class="inn-carousel-nav" id="innCarouselNav"></div>
         </div>
+        <p class="inn-more">Tap a photo to view it full size. Fully furnished units shown: The Valley, Sky Awani 4 and SkyVogue.</p>
     </section>
 
     {{-- How it works --}}
@@ -192,17 +196,24 @@
 @push('scripts')
 <script>
 (function () {
-    var tabs = document.querySelectorAll('.inn-tab'), panels = document.querySelectorAll('.inn-project');
-    tabs.forEach(function (t) { t.addEventListener('click', function () {
-        tabs.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
-        t.classList.add('active'); t.setAttribute('aria-selected', 'true');
-        panels.forEach(function (p) { p.hidden = p.dataset.project !== t.dataset.project; });
-    }); });
+    if (window.jQuery && jQuery.fn.owlCarousel) {
+        jQuery('#innCarousel').owlCarousel({
+            loop: true, margin: 18, nav: true, dots: true, autoplay: true, autoplayTimeout: 4500, autoplayHoverPause: true, autoWidth: false,
+            navText: ["<img src='/new-theme23/images/Asset 26.png' alt='prev'>", "<img src='/new-theme23/images/Asset 27.png' alt='next'>"],
+            navContainer: '#innCarouselNav',
+            responsive: { 0: { items: 1, stagePadding: 24 }, 768: { items: 2 }, 1200: { items: 3 } }
+        });
+    }
     var lb = document.getElementById('innLightbox'), img = lb.querySelector('img'), cap = lb.querySelector('.cap'), list = [], cur = 0;
     function show(i) { cur = (i + list.length) % list.length; var a = list[cur]; img.src = a.dataset.full || a.href; cap.textContent = a.dataset.caption + ' · ' + (cur + 1) + ' / ' + list.length; }
-    document.querySelectorAll('.inn-grid a').forEach(function (a) { a.addEventListener('click', function (e) {
-        e.preventDefault(); list = Array.prototype.slice.call(a.closest('.inn-grid').querySelectorAll('a')); show(list.indexOf(a)); lb.classList.add('open'); document.body.style.overflow = 'hidden';
-    }); });
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('.inn-photo'); if (!a) return;
+        e.preventDefault();
+        var all = Array.prototype.slice.call(document.querySelectorAll('#innCarousel .owl-item:not(.cloned) .inn-photo'));
+        if (!all.length) all = Array.prototype.slice.call(document.querySelectorAll('#innCarousel .inn-photo'));
+        list = all; var i = all.findIndex(function (x) { return x.href === a.href; }); show(i < 0 ? 0 : i);
+        lb.classList.add('open'); document.body.style.overflow = 'hidden';
+    });
     function close() { lb.classList.remove('open'); document.body.style.overflow = ''; img.src = ''; }
     lb.querySelector('.x').addEventListener('click', close);
     lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
