@@ -198,3 +198,7 @@
 .blog-related--wide { max-width: 1040px; margin: 52px auto 0; }
 @media (max-width: 991px) { .blog-layout { grid-template-columns: 1fr; gap: 32px; } .blog-aside { position: static; } .blog-toc { display: none; } .blog-body__inner--article { max-width: 760px; } .blog-cover { margin-top: -90px; } .blog-hero--article { padding-bottom: 120px; } }
 @media (max-width: 600px) { .blog-cover { padding: 0 14px; margin-top: -70px; } .blog-cover img { border-radius: 16px; aspect-ratio: 16/10; } .blog-hero--article { padding-bottom: 96px; } .blog-body__inner--article > p.blog-lede::first-letter { font-size: 2.8em; } }
+.blog-hero__meta time, .blog-hero__meta span { color: inherit; }
+.blog-hero__meta time { color: rgba(255,255,255,.85); }
+.blog-body__inner--article .blog-cta h2::before, .blog-body__inner--article .blog-related h2::before { display: none; }
+.blog-body__inner--article p, .blog-body__inner--article li { text-align: left; }
