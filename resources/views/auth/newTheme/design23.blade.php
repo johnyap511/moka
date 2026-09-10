@@ -4,6 +4,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('new-theme23/css/designs23.css') }}?v={{ filemtime(public_path('new-theme23/css/designs23.css')) }}">
+    @if(request('flat'))<style>.inn-hero{min-height:0;padding:130px 0 70px}</style>@endif {{-- review aid: ?flat=1 shortens the hero for full-page captures --}}
 @endpush
 
 @php
@@ -34,7 +35,7 @@
     {{-- Hero --}}
     <section class="inn-hero" style="background-image:url('{{ asset('new-theme23/images/projects/hero.webp') }}')">
         <div class="container">
-            <img src="{{ asset('new-theme23/images/innspace-logo-white.png') }}" alt="Innspace" class="inn-hero__logo">
+            <img src="{{ asset('new-theme23/images/innspace-logo-white.png') }}?v={{ filemtime(public_path('new-theme23/images/innspace-logo-white.png')) }}" alt="Innspace" class="inn-hero__logo">
             <div class="inn-eyebrow">Innspace, a MOKA company</div>
             <h1>Renovation and interior design, finished before you move in</h1>
             <p>Eight years of renovation for Malaysian homeowners, panel renovator on SkyWorld Solution+, and one of the first in the market to renovate before vacant possession. Quality you can see, with a warranty behind it.</p>
