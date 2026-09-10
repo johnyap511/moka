@@ -83,7 +83,6 @@
                             <img src="{{ asset('new-theme23/images/logo-skyworld.png') }}?v={{ filemtime(public_path('new-theme23/images/logo-skyworld.png')) }}" alt="SkyWorld" class="inn-partners__sw">
                         </div>
                     </div>
-                    <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
                 </div>
                 <ul class="inn-checklist">
                     <li><span class="tick"></span><div><b>Vetted, not found online</b><small>Appointed by the developer after reviewing our completed projects.</small></div></li>
@@ -122,7 +121,7 @@
                         <p id="innBlurb">{{ $photos[0]['blurb'] }}</p>
                     </div>
                     <div class="inn-show__foot">
-                        <a href="{{ $wa }}" target="_blank" rel="noopener" class="inn-btn">Chat us for a quotation</a>
+                        <a href="{{ $wa }}" target="_blank" rel="noopener" class="inn-show__link">Talk to us about a similar renovation <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                         <span class="inn-show__hint">Fully furnished units: The Valley, Sky Awani 4, SkyVogue</span>
                     </div>
                 </div>
@@ -253,6 +252,8 @@
     lb.querySelector('.next').addEventListener('click', function () { show(cur + 1); var d = thumbs[cur].dataset; lbImg.src = base + d.slug + '/' + d.k + '.webp'; cap.textContent = d.name + ' · ' + d.room + ' · ' + (cur + 1) + ' / ' + thumbs.length; });
     document.addEventListener('keydown', function (e) { if (lb.classList.contains('open')) { if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') lb.querySelector('.prev').click(); if (e.key === 'ArrowRight') lb.querySelector('.next').click(); } });
     restart();
+    document.addEventListener('contextmenu', function (e) { if (e.target.closest('.inn-show__stage, .inn-thumbs, .inn-lightbox, .inn-hero')) e.preventDefault(); });
+    document.addEventListener('dragstart', function (e) { if (e.target.tagName === 'IMG') e.preventDefault(); });
 })();
 </script>
 @endpush

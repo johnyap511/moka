@@ -80,7 +80,7 @@
 @media (max-width:600px){.inn-card--sm{padding:18px 14px}.inn-card--sm h3{font-size:17px}.inn-card--sm p{font-size:14px}}
 
 /* ---- Partners ---- */
-.inn-partners{margin:0 0 28px;padding:22px 26px;border:1px solid #e6e6e6;border-radius:18px;background:#fff;display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.inn-partners{margin:0;padding:22px 26px;border:1px solid #e6e6e6;border-radius:18px;background:#fff;display:flex;flex-direction:column;gap:16px;align-items:flex-start}
 .inn-partners span{font-family:SemiBold;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
 .inn-partners__logos{display:flex;align-items:center;gap:40px;flex-wrap:wrap}
 .inn-partners img{width:auto;display:block}
@@ -117,3 +117,10 @@
 .inn-thumbs button.active{opacity:1;border-color:var(--orange)}
 @media (max-width:991px){.inn-show{grid-template-columns:1fr}.inn-show__panel{padding:28px}.inn-partners__logos{gap:28px}.inn-partners .inn-partners__sp{height:50px}.inn-partners .inn-partners__sw{height:56px}}
 @media (max-width:600px){.inn-index li{font-size:16px;padding:4px 14px}.inn-index li+li::before{width:5px;height:5px;left:-2px}.inn-show__stage{aspect-ratio:4/3;border-radius:18px}.inn-show__panel{border-radius:18px;padding:22px}.inn-show__arrow{width:40px;height:40px}.inn-thumbs button{flex-basis:96px}.inn-partners{padding:18px}.inn-partners__logos{gap:20px}.inn-partners .inn-partners__sp{height:42px}.inn-partners .inn-partners__sw{height:46px}}
+
+.inn-show__link{display:inline-flex;align-items:center;gap:8px;color:#fff;font-family:Bold;font-size:16px;text-decoration:none;border-bottom:2px solid var(--orange);padding-bottom:3px}
+.inn-show__link svg{width:18px;height:18px;stroke:var(--orange);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.inn-show__link:hover{color:#fff}.inn-show__link:hover svg{transform:translateX(4px)}
+/* Photo protection: no drag, no right-click save, no long-press save on phones. */
+.inn-show__stage img,.inn-thumbs img,.inn-hero,.blog-feature__media img,.blog-card__media img,.inn-lightbox img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+.inn-show__stage,.inn-thumbs button,.inn-lightbox{pointer-events:auto}
