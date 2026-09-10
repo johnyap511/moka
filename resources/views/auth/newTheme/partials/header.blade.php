@@ -17,7 +17,7 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav header-menu fs-5" id="navbarNav">
                         <li class="nav-item"><a href="https://staymoka.com/">Book now</a></li>
-                        <li class="nav-item"><a href="/homepage">Why MOKA?</a></li>
+                        <li class="nav-item"><a href="/">Why MOKA?</a></li>
                         <li class="nav-item"><a href="/service">Our Services</a></li>
                         <li class="nav-item"><a href="/solutions">Our Solutions</a></li>
                         <li class="nav-item"><a href="/designs">Our Designs</a></li>

@@ -52,7 +52,7 @@ class WebController extends Controller
         if (!empty($request->alert)) {
             \Session::put('error', $request->alert);
         }
-        return view('auth.newTheme.home', compact('listingIds', 'modal', 'listingIdsCount'));
+        return view('auth.newTheme.homepage', compact('listingIds', 'modal', 'listingIdsCount'));
     }
 
     /**

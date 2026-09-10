@@ -23,7 +23,7 @@ Route::middleware('lang')->group(function () {
 
     /* ── Public Pages ───────────────────────────────────────────────── */
     Route::get('/',             'Auth\WebController@newHome');
-    Route::get('/homepage',     'Auth\WebController@newHomepage');
+    Route::get('/homepage',     fn () => redirect('/', 301)); // one homepage address for search engines
     Route::get('/about',        'Auth\WebController@newAbout');
     Route::get('/solutions',        'Auth\WebController@solutions');
     Route::get('/solutions/preview', fn () => redirect('/solutions', 301));

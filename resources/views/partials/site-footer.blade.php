@@ -50,7 +50,7 @@
             <div>
                 <h4>Company</h4>
                 <ul class="mk-primary">
-                    <li><a href="/homepage">Why MOKA?</a></li>
+                    <li><a href="/">Why MOKA?</a></li>
                     <li><a href="/service">Our Services</a></li>
                     <li><a href="/designs">Our Designs</a></li>
                     <li><a href="/about">About Us</a></li>
@@ -93,7 +93,7 @@
         </div>
         <div class="mk-bottom">
             <div class="mk-brand">
-                <a href="/homepage" aria-label="MOKA home"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="MOKA" loading="lazy"></a>
+                <a href="/" aria-label="MOKA home"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="MOKA" loading="lazy"></a>
                 <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka. All rights reserved.</p>
             </div>
             <form class="mk-news" method="POST" action="/subscribe" aria-label="Newsletter">
