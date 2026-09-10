@@ -55,7 +55,6 @@
                     @php
                         $roomTotal = (float) ($book->price_night ?? 0) * (int) ($book->nights ?? 0);
                         $maFee     = (float) ($book->ota_fee ?? 0);
-                        $maPct     = $roomTotal > 0 ? round($maFee / $roomTotal * 100, 1) : null;
                         $net       = (float) ($book->price ?? 0) - $maFee;
                     @endphp
                     <tr>
@@ -77,7 +76,7 @@
                         <td style="padding:10px 0;font-weight:700;font-size:16px;color:var(--teal)">RM {{ number_format($book->price ?? 0, 2) }}</td>
                     </tr>
                     <tr>
-                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">M&amp;A Fee{{ $maPct !== null ? ' (' . rtrim(rtrim(number_format($maPct, 1), '0'), '.') . '% of room)' : '' }}</td>
+                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">M&amp;A Fee</td>
                         <td style="padding:8px 0;color:#b91c1c">&minus; RM {{ number_format($maFee, 2) }}</td>
                     </tr>
                     <tr style="border-top:1px solid var(--border)">
