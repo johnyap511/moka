@@ -11,12 +11,12 @@
     $wa = 'https://wa.me/message/GJMYMABOT7CSG1?text=' . rawurlencode('Hi Innspace, I would like a renovation quotation.');
     $renovated = ['The Valley', 'Sky Meridien', 'Sky Awani 3', 'Sky Awani 4', 'Sky Awani 5', 'Sky Awani 6', 'Vesta', 'Curvo', 'SkyVogue'];
     $projects = [
-        ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished owner units and the SkyWorld showroom. Warm timber, soft neutrals and storage worked into every wall.', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
-        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units. Light kitchens, built-in wardrobes and calm bedrooms designed for families and long stays.', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
-        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package. Layered lighting, a curved sofa, walnut joinery and forest-green tiles.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
+        ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished owner units and the SkyWorld showroom. Warm timber, soft neutrals and storage worked into every wall.', 'shots' => [1 => 'Living', 2 => 'Living', 5 => 'Dining', 7 => 'Kitchen']],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units. Light kitchens, built-in wardrobes and calm bedrooms designed for families and long stays.', 'shots' => [1 => 'Living and dining', 2 => 'Living', 3 => 'Dining', 4 => 'Bedroom', 5 => 'Kitchen', 6 => 'Bedroom', 7 => 'Dining', 8 => 'Living']],
+        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package. Layered lighting, a curved sofa, walnut joinery and forest-green tiles.', 'shots' => [1 => 'Living', 2 => 'Living', 3 => 'Kitchen', 4 => 'Dining', 5 => 'Bedroom', 6 => 'Dining']],
     ];
     $photos = [];
-    foreach ($projects as $p) { foreach ($p['rooms'] as $idx => $room) { $photos[] = ['slug' => $p['slug'], 'k' => $idx + 1, 'name' => $p['name'], 'room' => $room, 'blurb' => $p['blurb']]; } }
+    foreach ($projects as $p) { foreach ($p['shots'] as $k => $room) { $photos[] = ['slug' => $p['slug'], 'k' => $k, 'name' => $p['name'], 'room' => $room, 'blurb' => $p['blurb']]; } }
 @endphp
 
 @section('content')
