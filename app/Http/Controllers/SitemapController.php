@@ -13,16 +13,16 @@ class SitemapController extends Controller
      * canonicalises to it, so listing both would split ranking signals.
      */
     private const STATIC_PAGES = [
-        ['path' => '/',             'priority' => '1.0', 'changefreq' => 'weekly'],
-        ['path' => '/service',      'priority' => '0.9', 'changefreq' => 'monthly'],
-        ['path' => '/solutions',    'priority' => '0.9', 'changefreq' => 'monthly'],
-        ['path' => '/blog',         'priority' => '0.8', 'changefreq' => 'weekly'],
-        ['path' => '/get/estimate', 'priority' => '0.9', 'changefreq' => 'monthly'],
-        ['path' => '/about',        'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['path' => '/designs',      'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['path' => '/contact',      'priority' => '0.6', 'changefreq' => 'yearly'],
-        ['path' => '/policy',       'priority' => '0.3', 'changefreq' => 'yearly'],
-        ['path' => '/terms',        'priority' => '0.3', 'changefreq' => 'yearly'],
+        ['path' => '/',             'priority' => '1.0', 'changefreq' => 'weekly',  'lastmod' => '2026-09-11'],
+        ['path' => '/service',      'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => '2026-09-10'],
+        ['path' => '/solutions',    'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => '2026-09-11'],
+        ['path' => '/blog',         'priority' => '0.8', 'changefreq' => 'weekly',  'lastmod' => '2026-09-11'],
+        ['path' => '/get/estimate', 'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => '2026-09-08'],
+        ['path' => '/about',        'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => '2026-09-10'],
+        ['path' => '/designs',      'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => '2026-09-11'],
+        ['path' => '/contact',      'priority' => '0.6', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
+        ['path' => '/policy',       'priority' => '0.3', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
+        ['path' => '/terms',        'priority' => '0.3', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
     ];
 
     public function index()
