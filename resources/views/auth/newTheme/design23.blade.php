@@ -56,7 +56,7 @@
     </section>
 
     {{-- What we do --}}
-    <section class="inn-section">
+    <section class="inn-section" id="services">
         <div class="container">
             <h2 class="heading-orange-1 text-center">What Innspace does</h2>
             <p class="inn-lead text-center">Three ways to get a home that is ready to live in, or ready to earn, from one accountable team.</p>
@@ -98,7 +98,7 @@
     </section>
 
     {{-- How it works --}}
-    <section class="inn-section">
+    <section class="inn-section" id="how">
         <div class="container">
             <h2 class="heading-orange-1 text-center">How it works</h2>
             <p class="inn-lead text-center">From first chat to handover, the same four steps whether it is a single room or a whole unit before VP.</p>
@@ -112,7 +112,7 @@
     </section>
 
     {{-- Financing --}}
-    <section class="inn-section inn-section--cream" style="padding-top:0">
+    <section class="inn-section inn-section--cream" id="financing" style="padding-top:0">
         <div class="container">
             <div class="inn-finance">
                 <div>
@@ -132,7 +132,7 @@
     </section>
 
     {{-- CTA --}}
-    <div class="bottom-banner py-5">
+    <div class="bottom-banner py-5" id="quote">
         <div class="container text-center">
             <h2 class="heading-white-2">Chat with us and get a quotation</h2>
             <p class="text-white-1 mt-3 mb-4" style="font-size:19px">Send your unit number and floor plan. We reply with what can be done, and by when.</p>
