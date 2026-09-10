@@ -106,7 +106,27 @@
             </div>
         </section>
 
-        <section class="sx-sec sx-sec--cream">
+        {{-- Where we operate --}}
+        <section class="sx-sec sx-sec--cream" id="locations">
+            <div class="sx-in">
+                <div class="sx-head">
+                    <h2>Where <em>we operate</em></h2>
+                    <p>Local teams, the same standards and the same owner portal in every city. Pick your area for what units there earn and the rules that apply.</p>
+                </div>
+                <div class="sx-aud sx-aud--cities">
+                    @foreach([['airbnb-management-kuala-lumpur','Kuala Lumpur','KLCC, Bukit Bintang, Bangsar South, Cheras, Setapak'],['airbnb-management-selangor','Selangor','Petaling Jaya, Subang, Setia Alam, Sepang and KLIA'],['airbnb-management-penang','Penang','George Town, Bayan Lepas and the mainland, licensed under the 2026 by-laws'],['airbnb-management-johor-bahru','Johor Bahru','JB city, Iskandar Puteri and Medini for the Singapore market'],['airbnb-management-kota-kinabalu','Kota Kinabalu','City centre, Jesselton and Likas']] as [$slug,$city,$desc])
+                    <a href="/solutions/{{ $slug }}">
+                        <div class="sx-ico sx-ico--orange"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg></div>
+                        <h3>{{ $city }}</h3>
+                        <p>{{ $desc }}</p>
+                        <span class="sx-more">Airbnb management in {{ $city }} {!! $arrow !!}</span>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section class="sx-sec sx-sec--white">
             <div class="sx-in">
                 <div class="sx-head">
                     <h2>Which one <em>fits your unit?</em></h2>
@@ -127,7 +147,7 @@
             </div>
         </section>
 
-        <section class="sx-sec sx-sec--white">
+        <section class="sx-sec sx-sec--cream">
             <div class="sx-in">
                 <div class="sx-split">
                     <div>
