@@ -79,7 +79,9 @@
                 'telephone'   => '+60 3 6789 2288',
                 'email'       => 'hello@homemoka.com',
                 // Google Business Profile ("EkoCheras by Moka", knowledge graph /g/11frnkj_bz) and the share link Sam gave on 8 Sep 2026.
-                'sameAs'      => ['https://share.google/pLkG6DaCGgnjUA4mj', 'https://www.google.com/search?kgmid=/g/11frnkj_bz'],
+                'sameAs'      => ['https://share.google/pLkG6DaCGgnjUA4mj', 'https://www.google.com/search?kgmid=/g/11frnkj_bz', 'https://www.tiktok.com/@mokahomemy', 'https://www.facebook.com/mokahomemy', 'https://www.instagram.com/mokahomemy', 'https://www.linkedin.com/company/mokahomemy', 'https://www.youtube.com/channel/UCO6k7qYO2JRv9ML48bKx_Rw', 'https://staymoka.com/'],
+                'address'     => ['@type' => 'PostalAddress', 'streetAddress' => 'Menara Lien Hoe, Tropicana', 'addressLocality' => 'Petaling Jaya', 'addressRegion' => 'Selangor', 'postalCode' => '47410', 'addressCountry' => 'MY'],
+                'contactPoint' => ['@type' => 'ContactPoint', 'telephone' => '+60 3 6789 2288', 'contactType' => 'sales', 'areaServed' => 'MY', 'availableLanguage' => ['en', 'ms', 'zh']],
             ],
             [
                 '@type'      => 'WebSite',
