@@ -48,14 +48,11 @@
                         <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Price / Night</td>
                         <td style="padding:8px 0">RM {{ number_format($book->price_night ?? 0, 2) }}</td>
                     </tr>
-                    <tr>
-                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Cleaning Fee</td>
-                        <td style="padding:8px 0">RM {{ number_format($book->cleaning_fee ?? 0, 2) }}</td>
-                    </tr>
                     @php
                         $roomTotal = (float) ($book->price_night ?? 0) * (int) ($book->nights ?? 0);
                         $maFee     = (float) ($book->ota_fee ?? 0);
-                        $net       = (float) ($book->price ?? 0) - $maFee;
+                        $ownerTotal = $roomTotal + (float) ($book->sst ?? 0);
+                        $net        = $ownerTotal - $maFee;
                     @endphp
                     <tr>
                         <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Room ({{ (int) ($book->nights ?? 0) }} {{ Str::plural('night', (int) ($book->nights ?? 0)) }})</td>
@@ -65,15 +62,9 @@
                         <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">SST</td>
                         <td style="padding:8px 0">RM {{ number_format($book->sst ?? 0, 2) }}</td>
                     </tr>
-                    @if((float) ($book->sst_cf ?? 0) > 0)
-                    <tr>
-                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">SST on cleaning</td>
-                        <td style="padding:8px 0">RM {{ number_format($book->sst_cf, 2) }}</td>
-                    </tr>
-                    @endif
                     <tr style="border-top:1px solid var(--border)">
                         <td style="padding:10px 0;font-weight:600">Total Amount</td>
-                        <td style="padding:10px 0;font-weight:700;font-size:16px;color:var(--teal)">RM {{ number_format($book->price ?? 0, 2) }}</td>
+                        <td style="padding:10px 0;font-weight:700;font-size:16px;color:var(--teal)">RM {{ number_format($ownerTotal, 2) }}</td>
                     </tr>
                     <tr>
                         <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">M&amp;A Fee</td>
