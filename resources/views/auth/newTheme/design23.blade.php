@@ -144,7 +144,7 @@
                 <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">PAINT</div><h3>Painting touch-up</h3><p>Scuffs, marks and wear between tenancies, colour-matched and touched up, or a full repaint when a unit turns over.</p></div></div>
                 <div class="col-6 col-lg-3"><div class="inn-card inn-card--sm"><div class="num">WOOD</div><h3>Cabinet restoration</h3><p>Kitchen and wardrobe cabinets re-laminated, re-hinged and repaired rather than replaced, keeping the original design.</p></div></div>
             </div>
-            <p class="text-center mt-4" style="font-size:16px;color:var(--green)">Owners with MOKA can raise a job from the owner portal. Others, <a href="{{ $wa }}" target="_blank" rel="noopener" style="color:var(--orange);font-family:SemiBold">chat with us on WhatsApp</a>.</p>
+            <p class="text-center mt-4" style="font-size:16px;color:var(--green)">Owners with MOKA can ask their account manager. Others, <a href="{{ $wa }}" target="_blank" rel="noopener" style="color:var(--orange);font-family:SemiBold">chat with us on WhatsApp</a>.</p>
         </div>
     </section>
 
