@@ -59,3 +59,10 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 24. Guest profiles (8 Sep 2026): one profile per guest, built from eZee's name, email, mobile and country. A stay is matched
     to an existing profile by email, then mobile, then full name only when neither side has any contact detail. Names carry
     no counter; the old "NUR56" style names are cleaned. Nothing is merged on name alone when a phone or email exists.
+
+## 25. Stays parked on Extra Rooms are reviewed, never moved (10 Sep 2026)
+The front desk parks a finished or extended stay on an eZee "Extra Room". eZee then reports only that room. The sync never
+moves a booking from a real unit to an Extra Room. When eZee's dates or amount drift for such a stay, or when a stay of one
+night or more is created on an Extra Room, a Needs Review item is raised: staff read eZee's Room Charges and Split the stay,
+unit nights to the owner's unit, parked nights on the Extra Room as company revenue. Day use (start = end) stays on the
+company room under rule 22.

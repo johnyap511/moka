@@ -178,6 +178,22 @@ class EzeeAutoAssign
             // unit stays there, and one already on any extra room of the
             // property stays where it is.
             if (self::isExtraRoom($listing) && (int) $booking->listing_id !== (int) $listing->id) {
+                // The front desk parks a finished or extended stay on an extra
+                // room, so EZEE's dates or amount may now cover nights the guest
+                // was charged for beyond the unit. Those nights are company
+                // revenue and belong on the extra room as a split piece, which
+                // only a person reading EZEE's Room Charges can confirm. The
+                // placement on the unit is never touched (rule 20).
+                $drift  = $this->dateDrift($ezeeBooking, $booking);
+                $amount = $this->amountDrift($ezeeBooking, $booking);
+                if ($drift || $amount) {
+                    $this->review($ezeeBooking, $listing, sprintf(
+                        'EZEE now reports this stay on %s while booking #%d sits on %s (%s to %s). %s Check Room Charges in EZEE: nights charged on the extra room are company revenue, so split the tail onto %s and keep the unit nights on the unit. Nothing was moved.',
+                        $ezeeBooking->RoomName, $booking->id, optional(Listing::withoutGlobalScope('notArchived')->find($booking->listing_id))->name ?? 'its unit',
+                        $booking->check_in, $booking->check_out,
+                        $drift ?: 'The amount differs from ours.', $listing->name));
+                    continue;
+                }
                 $this->tally['unchanged']++;
                 continue;
             }
@@ -298,11 +314,22 @@ class EzeeAutoAssign
 
         $how = 'Matched on EZEE room ' . $ezeeBooking->RoomName;
         if (!empty($overlap)) {
-            Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $listing, $how . ' (extra room, shared night)'));
-
-            return;
+            $created = Booking::withoutOverlapCheck(fn () => $this->create($ezeeBooking, $listing, $how . ' (extra room, shared night)'));
+        } else {
+            $created = $this->create($ezeeBooking, $listing, $how);
         }
-        $this->create($ezeeBooking, $listing, $how);
+
+        // A stay of one night or more that EZEE reports on an extra room was
+        // almost always in a real unit first and parked there by the front
+        // desk afterwards. It is created here so the revenue is captured, and
+        // raised for a person to read EZEE's Room Charges and split the unit
+        // nights back to the owner. Day use (start = end) is handled above and
+        // belongs on the company room.
+        if ($created && self::isExtraRoom($listing) && (string) $ezeeBooking->Start !== (string) $ezeeBooking->End) {
+            $this->review($ezeeBooking, $listing, sprintf(
+                'Created booking #%d on %s because EZEE reports that room, so no owner is credited. Check Room Charges in EZEE for the unit the guest actually stayed in, then Split: unit nights to the owner\'s unit, parked nights stay on %s as company revenue.',
+                $created->id, $listing->name, $listing->name));
+        }
     }
 
     /**
