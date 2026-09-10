@@ -15,7 +15,7 @@
 .inn-section--cream{background:#fff7f0}
 .inn-section h2.heading-orange-1{font-size:clamp(30px,3.6vw,46px);margin-bottom:12px}
 .inn-lead{font-size:19px;color:var(--body-text);max-width:760px;margin:0 auto 46px;line-height:1.6}
-.inn-card{background:#fff;border:1px solid var(--orange);border-radius:27px;padding:34px 30px;height:100%;display:flex;flex-direction:column;gap:12px}
+.inn-card{background:#fff;border:1px solid var(--orange);border-radius:27px;padding:32px 28px;height:100%;display:flex;flex-direction:column;gap:12px}
 .inn-card .num{font-family:Bold;color:var(--orange);font-size:14px;letter-spacing:.14em}
 .inn-card h3{font-family:Bold;color:var(--green);font-size:24px;margin:0}
 .inn-card p{font-size:17px;line-height:1.6;color:var(--body-text);margin:0}
@@ -33,14 +33,14 @@
 .inn-grid a::after{content:attr(data-room);position:absolute;left:14px;bottom:12px;color:#fff;font-family:SemiBold;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:100px;background:rgba(0,74,73,.72);backdrop-filter:blur(4px)}
 .inn-grid a:nth-child(1)::after{font-size:14px;padding:8px 14px}
 .inn-grid a::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(0,0,0,.35) 100%);pointer-events:none;z-index:1}
-.inn-more{margin-top:26px;color:var(--green);font-size:16px;text-align:center}
+.inn-more{margin:28px 0 0;color:var(--green);font-size:16px;text-align:center}
 .inn-more span{font-family:SemiBold}
-.inn-steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
-.inn-step{position:relative;padding:30px 26px;background:#fff;border-radius:27px;border:1px solid #e6e6e6}
+.inn-steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.inn-step{position:relative;padding:32px 28px;background:#fff;border-radius:27px;border:1px solid #e6e6e6}
 .inn-step::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:Bold;font-size:44px;color:var(--orange);opacity:.35;display:block;margin-bottom:8px;line-height:1}
 .inn-step h3{font-family:Bold;color:var(--green);font-size:21px;margin:0 0 8px}
 .inn-step p{font-size:16px;line-height:1.6;color:var(--body-text);margin:0}
-.inn-finance{background:var(--green);color:#fff;border-radius:27px;padding:50px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
+.inn-finance{background:var(--green);color:#fff;border-radius:27px;padding:48px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
 .inn-finance h2{font-family:Bold;font-size:clamp(26px,3vw,38px);margin:0 0 14px;color:#fff}
 .inn-finance p{font-size:18px;line-height:1.6;color:rgba(255,255,255,.88);margin:0 0 10px}
 .inn-facts{list-style:none;margin:0;padding:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:18px;overflow:hidden}
@@ -77,9 +77,9 @@
 .inn-card--sm p{font-size:15px}
 @media (max-width:600px){.inn-card--sm{padding:18px 14px}.inn-card--sm h3{font-size:17px}.inn-card--sm p{font-size:14px}}
 /* property list, carousel, partner logos */
-.inn-list{list-style:none;margin:0 auto 34px;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px 12px;max-width:900px}
+.inn-list{list-style:none;margin:0 auto 40px;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px 12px;max-width:900px}
 .inn-list li{border:2px solid var(--green);color:var(--green);font-family:SemiBold;font-size:16px;border-radius:100px;padding:8px 20px;background:#fff}
-.inn-carousel-wrap{position:relative;padding:0 24px}
+.inn-carousel-wrap{position:relative}
 .inn-carousel .inn-photo{position:relative;display:block;border-radius:18px;overflow:hidden;aspect-ratio:4/3;background:#eee}
 .inn-carousel .inn-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
 .inn-carousel .inn-photo:hover img{transform:scale(1.05)}
@@ -92,10 +92,10 @@
 .inn-carousel .owl-dots{text-align:center;margin-top:14px}
 .inn-carousel .owl-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ffd0b0;margin:0 4px;border:0}
 .inn-carousel .owl-dot.active{background:var(--orange)}
-.inn-partners{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin:0 0 26px;padding:16px 20px;border:1px solid #e6e6e6;border-radius:18px;background:#fff}
-.inn-partners span{font-family:SemiBold;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-right:4px}
-.inn-partners img{height:34px;width:auto}
-.inn-partners .inn-partners__inn{height:30px}
-.inn-partners .inn-partners__sw{height:40px}
-.inn-partners .inn-partners__sp{height:36px}
-@media (max-width:600px){.inn-list li{font-size:14px;padding:7px 14px}.inn-carousel-wrap{padding:0 8px}.inn-partners{gap:14px;padding:14px}.inn-partners img{height:28px}.inn-partners .inn-partners__sw{height:32px}}
+.inn-partners{margin:0 0 28px;padding:22px 24px;border:1px solid #e6e6e6;border-radius:18px;background:#fff;display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.inn-partners span{font-family:SemiBold;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
+.inn-partners__logos{display:flex;align-items:center;gap:36px;flex-wrap:wrap}
+.inn-partners img{width:auto;display:block}
+.inn-partners .inn-partners__sp{height:58px}
+.inn-partners .inn-partners__sw{height:64px}
+@media (max-width:600px){.inn-list li{font-size:14px;padding:7px 14px}.inn-partners{padding:18px}.inn-partners__logos{gap:22px}.inn-partners .inn-partners__sp{height:44px}.inn-partners .inn-partners__sw{height:48px}}

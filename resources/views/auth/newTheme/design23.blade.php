@@ -77,10 +77,11 @@
                     <h2 class="heading-orange-1">Selected on quality. Safer for you.</h2>
                     <p>Innspace is one of the renovators SkyWorld appointed to its Solution+ marketplace after vetting our work. For an owner that means a contractor who was chosen on quality, works inside the developer's own rules and standards, and answers to SkyWorld as well as to you.</p>
                     <div class="inn-partners">
-                        <span>Appointed panel renovator</span>
-                        <img src="{{ asset('new-theme23/images/innspace-logo.png') }}?v={{ filemtime(public_path('new-theme23/images/innspace-logo.png')) }}" alt="Innspace" class="inn-partners__inn">
-                        <img src="{{ asset('new-theme23/images/logo-skyworld.png') }}" alt="SkyWorld" class="inn-partners__sw">
-                        <img src="{{ asset('new-theme23/images/logo-solution-plus.png') }}" alt="Solution+ by SkyWorld" class="inn-partners__sp">
+                        <span>Panel renovator appointed by</span>
+                        <div class="inn-partners__logos">
+                            <img src="{{ asset('new-theme23/images/logo-solution-plus.png') }}?v={{ filemtime(public_path('new-theme23/images/logo-solution-plus.png')) }}" alt="Solution+ by SkyWorld" class="inn-partners__sp">
+                            <img src="{{ asset('new-theme23/images/logo-skyworld.png') }}?v={{ filemtime(public_path('new-theme23/images/logo-skyworld.png')) }}" alt="SkyWorld" class="inn-partners__sw">
+                        </div>
                     </div>
                     <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
                 </div>
@@ -102,8 +103,7 @@
             <ul class="inn-list">
                 @foreach($renovated as $r)<li>{{ $r }}</li>@endforeach
             </ul>
-        </div>
-        <div class="inn-carousel-wrap">
+            <div class="inn-carousel-wrap">
             <div class="owl-carousel inn-carousel" id="innCarousel">
                 @foreach($projects as $p)
                     @foreach($p['rooms'] as $idx => $room)
@@ -118,9 +118,10 @@
                     @endforeach
                 @endforeach
             </div>
-            <div class="inn-carousel-nav" id="innCarouselNav"></div>
+                <div class="inn-carousel-nav" id="innCarouselNav"></div>
+            </div>
+            <p class="inn-more">Tap a photo to view it full size. Fully furnished units shown: The Valley, Sky Awani 4 and SkyVogue.</p>
         </div>
-        <p class="inn-more">Tap a photo to view it full size. Fully furnished units shown: The Valley, Sky Awani 4 and SkyVogue.</p>
     </section>
 
     {{-- How it works --}}
@@ -153,7 +154,7 @@
     </section>
 
     {{-- Financing --}}
-    <section class="inn-section inn-section--cream" id="financing" style="padding-top:0">
+    <section class="inn-section inn-section--cream" id="financing">
         <div class="container">
             <div class="inn-finance">
                 <div>
