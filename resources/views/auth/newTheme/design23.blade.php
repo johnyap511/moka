@@ -12,8 +12,8 @@
     $renovated = ['The Valley', 'Sky Meridien', 'Sky Awani 3', 'Sky Awani 4', 'Sky Awani 5', 'Sky Awani 6', 'Vesta', 'Curvo', 'SkyVogue'];
     $projects = [
         ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished owner units and the SkyWorld showroom. Warm timber, soft neutrals and storage worked into every wall.', 'shots' => [1 => 'Living', 2 => 'Living', 5 => 'Dining', 7 => 'Kitchen']],
-        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units. Light kitchens, built-in wardrobes and calm bedrooms designed for families and long stays.', 'shots' => [1 => 'Living and dining', 2 => 'Living', 3 => 'Dining', 4 => 'Bedroom', 5 => 'Kitchen', 6 => 'Bedroom', 7 => 'Dining', 8 => 'Living']],
         ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package. Layered lighting, a curved sofa, walnut joinery and forest-green tiles.', 'shots' => [1 => 'Living', 2 => 'Living', 3 => 'Kitchen', 4 => 'Dining', 5 => 'Bedroom', 6 => 'Dining']],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units. Light kitchens, built-in wardrobes and calm bedrooms designed for families and long stays.', 'shots' => [1 => 'Living and dining', 2 => 'Living', 3 => 'Dining', 4 => 'Bedroom', 5 => 'Kitchen', 6 => 'Bedroom', 7 => 'Dining', 8 => 'Living']],
     ];
     $photos = [];
     foreach ($projects as $p) { foreach ($p['shots'] as $k => $room) { $photos[] = ['slug' => $p['slug'], 'k' => $k, 'name' => $p['name'], 'room' => $room, 'blurb' => $p['blurb']]; } }
