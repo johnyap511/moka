@@ -83,7 +83,6 @@
                             <img src="{{ asset('new-theme23/images/logo-skyworld.png') }}?v={{ filemtime(public_path('new-theme23/images/logo-skyworld.png')) }}" alt="SkyWorld" class="inn-partners__sw">
                         </div>
                     </div>
-                    <p class="inn-legal">Innspace and the Innspace logo are trademarks of Moka Venture Sdn Bhd, a MOKA® company. SkyWorld and Solution+ are marks of their respective owners, shown with permission as an appointed panel renovator.</p>
                 </div>
                 <ul class="inn-checklist">
                     <li><span class="tick"></span><div><b>Vetted, not found online</b><small>Appointed by the developer after reviewing our completed projects.</small></div></li>
