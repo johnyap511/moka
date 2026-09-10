@@ -230,10 +230,13 @@
         }, 180);
         thumbs.forEach(function (b) { b.classList.remove('active'); });
         t.classList.add('active');
-        t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: user ? 'smooth' : 'auto' });
+        var strip = document.getElementById('innThumbs');
+        strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: user ? 'smooth' : 'auto' }); // sideways only, never the page
         if (user) restart();
     }
-    function restart() { clearInterval(timer); timer = setInterval(function () { show(cur + 1); }, 5500); }
+    var visible = false;
+    function restart() { clearInterval(timer); timer = setInterval(function () { if (visible && !document.hidden) show(cur + 1); }, 5500); }
+    if ('IntersectionObserver' in window) { new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }, { threshold: 0.3 }).observe(document.getElementById('innShow')); } else { visible = true; }
     thumbs.forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.i, true); }); });
     document.getElementById('innPrev').addEventListener('click', function () { show(cur - 1, true); });
     document.getElementById('innNext').addEventListener('click', function () { show(cur + 1, true); });
