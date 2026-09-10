@@ -58,8 +58,8 @@
                         <td style="padding:8px 0">RM {{ number_format($roomTotal, 2) }}</td>
                     </tr>
                     <tr>
-                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">Less M&amp;A Fee</td>
-                        <td style="padding:8px 0;color:#b91c1c">&minus; RM {{ number_format($maFee, 2) }}</td>
+                        <td style="padding:8px 0;color:var(--text-secondary);font-size:13px">(-) M&amp;A Fee</td>
+                        <td style="padding:8px 0;color:#b91c1c">(-) RM {{ number_format($maFee, 2) }}</td>
                     </tr>
                     <tr style="border-top:1px solid var(--border)">
                         <td style="padding:10px 0;font-weight:600">Net to owner</td>
