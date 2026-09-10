@@ -97,7 +97,7 @@
         <div class="mk-bottom">
             <div class="mk-brand">
                 <a href="/" aria-label="MOKA home"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="MOKA" loading="lazy"></a>
-                <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka. All rights reserved.</p>
+                <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka Venture Sdn Bhd. All rights reserved.</p>
             </div>
             <form class="mk-news" method="POST" action="/subscribe" aria-label="Newsletter">
                 @csrf
