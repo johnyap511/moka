@@ -10,11 +10,11 @@
 @php
     $wa = 'https://wa.me/message/GJMYMABOT7CSG1?text=' . rawurlencode('Hi Innspace, I would like a renovation quotation.');
     $projects = [
-        ['slug' => 'the-valley', 'name' => 'The Valley', 'n' => 8, 'blurb' => 'Fully furnished units and the SkyWorld showroom, warm timber and soft neutrals.'],
-        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'n' => 8, 'blurb' => 'Showroom and owner units: light kitchens, built-in storage, calm bedrooms.'],
-        ['slug' => 'skyawani-5', 'name' => 'Sky Awani 5', 'n' => 6, 'blurb' => 'Kitchen packages in sage and oak, with full-height cabinetry.'],
-        ['slug' => 'curvo', 'name' => 'Curvo', 'n' => 6, 'blurb' => 'Walnut joinery, cove lighting and island kitchens with city views.'],
-        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'n' => 6, 'blurb' => 'A premium custom ID package: layered lighting, curved sofa, walnut and forest green.'],
+        ['slug' => 'the-valley', 'name' => 'The Valley', 'blurb' => 'Fully furnished units and the SkyWorld showroom, warm timber and soft neutrals.', 'rooms' => ['Living', 'Living', 'Living', 'Kitchen', 'Dining', 'Living', 'Kitchen', 'Bedroom']],
+        ['slug' => 'skyawani-4', 'name' => 'Sky Awani 4', 'blurb' => 'Showroom and owner units: light kitchens, built-in storage, calm bedrooms.', 'rooms' => ['Living and dining', 'Living', 'Dining', 'Bedroom', 'Kitchen', 'Bedroom', 'Dining', 'Living']],
+        ['slug' => 'skyawani-5', 'name' => 'Sky Awani 5', 'blurb' => 'Kitchen packages in sage and oak, with full-height cabinetry.', 'rooms' => ['Kitchen', 'Kitchen', 'Kitchen', 'Kitchen', 'Kitchen', 'Kitchen']],
+        ['slug' => 'curvo', 'name' => 'Curvo', 'blurb' => 'Walnut joinery, cove lighting and island kitchens with city views.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Kitchen island', 'Living', 'Wardrobe']],
+        ['slug' => 'skyvogue', 'name' => 'SkyVogue', 'blurb' => 'A premium custom ID package: layered lighting, curved sofa, walnut and forest green.', 'rooms' => ['Living', 'Living', 'Kitchen', 'Dining', 'Bedroom', 'Dining']],
     ];
 @endphp
 
@@ -69,6 +69,26 @@
         </div>
     </section>
 
+    {{-- Panel renovator --}}
+    <section class="inn-section inn-panel" id="panel">
+        <div class="container">
+            <div class="inn-panel__grid">
+                <div>
+                    <div class="inn-eyebrow inn-eyebrow--orange">SkyWorld Solution+ panel renovator</div>
+                    <h2 class="heading-orange-1">Selected on quality. Safer for you.</h2>
+                    <p>Innspace is one of the renovators SkyWorld appointed to its Solution+ marketplace after vetting our work. For an owner that means a contractor who was chosen on quality, works inside the developer's own rules and standards, and answers to SkyWorld as well as to you.</p>
+                    <a href="{{ $wa }}" target="_blank" rel="noopener" class="primary-btn">Chat us for a quotation</a>
+                </div>
+                <ul class="inn-checklist">
+                    <li><span class="tick"></span><div><b>Vetted, not found online</b><small>Appointed by the developer after reviewing our completed projects.</small></div></li>
+                    <li><span class="tick"></span><div><b>Works to the developer's standards</b><small>Site rules, renovation windows and building procedures are already part of how we work.</small></div></li>
+                    <li><span class="tick"></span><div><b>Accountable twice over</b><small>To SkyWorld through Solution+, and to you through our warranty.</small></div></li>
+                    <li><span class="tick"></span><div><b>Defects protected</b><small>Developer defects are logged before we touch a surface, so your defect liability cover is preserved.</small></div></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
     {{-- Projects --}}
     <section class="inn-section inn-section--cream" id="projects">
         <div class="container">
@@ -82,15 +102,16 @@
             @foreach($projects as $i => $p)
                 <div class="inn-project" data-project="{{ $p['slug'] }}" @if($i !== 0) hidden @endif>
                     <p class="text-center" style="color:var(--green);font-size:17px;margin:0 0 20px">{{ $p['blurb'] }}</p>
-                    <div class="inn-grid">
-                        @for($k = 1; $k <= $p['n']; $k++)
-                            <a href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }}">
+                    <div class="inn-grid" data-count="{{ count($p['rooms']) }}">
+                        @foreach($p['rooms'] as $idx => $room)
+                            @php $k = $idx + 1; @endphp
+                            <a href="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.jpg') }}" data-full="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '.webp') }}" data-caption="{{ $p['name'] }} · {{ $room }}" data-room="{{ $room }}">
                                 <picture>
-                                    <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.webp') }}" type="image/webp">
-                                    <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . $k . '-thumb.jpg') }}" alt="{{ $p['name'] }} renovation by Innspace, photo {{ $k }}" loading="lazy" width="720" height="540">
+                                    <source srcset="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . ($k === 1 ? $k : $k . '-thumb') . '.webp') }}" type="image/webp">
+                                    <img src="{{ asset('new-theme23/images/projects/' . $p['slug'] . '/' . ($k === 1 ? $k : $k . '-thumb') . '.jpg') }}" alt="{{ $p['name'] }} {{ strtolower($room) }}, renovation by Innspace" loading="lazy">
                                 </picture>
                             </a>
-                        @endfor
+                        @endforeach
                     </div>
                 </div>
             @endforeach
@@ -121,12 +142,13 @@
                     <p>SkyWorld buyers can fund the renovation with Maybank's MyDeco facility offered through Solution+, on top of the home loan rather than from savings. Arranging it early is what makes a pre-VP schedule possible.</p>
                     <p style="font-size:15px;opacity:.8">Terms and eligibility are set by SkyWorld and Maybank and change over time. Confirm the current numbers with them before you plan around them.</p>
                 </div>
-                <div>
-                    <span class="pill">SkyWorld Solution+ panel renovator</span>
-                    <span class="pill">Maybank MyDeco financing</span>
-                    <span class="pill">Renovate before VP</span>
-                    <span class="pill">Custom ID packages</span>
-                    <span class="pill">Warranty on our work</span>
+                <ul class="inn-facts">
+                    <li><b>Facility</b><span>Maybank MyDeco, through SkyWorld Solution+</span></li>
+                    <li><b>Who</b><span>SkyWorld homebuyers with a Maybank home loan</span></li>
+                    <li><b>Covers</b><span>Renovation and interior design by a panel renovator</span></li>
+                    <li><b>When to apply</b><span>Before the design is finalised, so the pre-VP slot holds</span></li>
+                    <li><b>We help with</b><span>The quotation and documents the application needs</span></li>
+                </ul>
                 </div>
             </div>
         </div>

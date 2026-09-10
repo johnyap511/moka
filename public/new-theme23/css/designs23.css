@@ -23,10 +23,16 @@
 .inn-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 30px}
 .inn-tab{border:2px solid var(--orange);background:#fff;color:var(--orange);font-family:Bold;font-size:17px;border-radius:100px;padding:9px 22px;cursor:pointer}
 .inn-tab.active{background:var(--orange);color:#fff}
-.inn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.inn-grid a{display:block;aspect-ratio:4/3;overflow:hidden;border-radius:18px;background:#eee}
-.inn-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
-.inn-grid a:hover img{transform:scale(1.04)}
+.inn-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:220px;gap:14px}
+.inn-grid a{position:relative;display:block;overflow:hidden;border-radius:18px;background:#eee}
+.inn-grid a:nth-child(1){grid-column:span 2;grid-row:span 2}
+.inn-grid[data-count="8"] a:nth-child(6){grid-column:span 2}
+.inn-grid[data-count="6"] a:nth-child(6){grid-column:span 4;grid-row:span 1}
+.inn-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.inn-grid a:hover img{transform:scale(1.05)}
+.inn-grid a::after{content:attr(data-room);position:absolute;left:14px;bottom:12px;color:#fff;font-family:SemiBold;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:100px;background:rgba(0,74,73,.72);backdrop-filter:blur(4px)}
+.inn-grid a:nth-child(1)::after{font-size:14px;padding:8px 14px}
+.inn-grid a::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(0,0,0,.35) 100%);pointer-events:none;z-index:1}
 .inn-more{margin-top:26px;color:var(--green);font-size:16px;text-align:center}
 .inn-more span{font-family:SemiBold}
 .inn-steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
@@ -37,7 +43,23 @@
 .inn-finance{background:var(--green);color:#fff;border-radius:27px;padding:50px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
 .inn-finance h2{font-family:Bold;font-size:clamp(26px,3vw,38px);margin:0 0 14px;color:#fff}
 .inn-finance p{font-size:18px;line-height:1.6;color:rgba(255,255,255,.88);margin:0 0 10px}
-.inn-finance .pill{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:100px;padding:8px 18px;font-family:SemiBold;font-size:15px;margin:6px 8px 0 0}
+.inn-facts{list-style:none;margin:0;padding:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:18px;overflow:hidden}
+.inn-facts li{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.14);align-items:start}
+.inn-facts li:last-child{border-bottom:0}
+.inn-facts b{font-family:Bold;color:#fff;font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding-top:2px}
+.inn-facts span{color:rgba(255,255,255,.9);font-size:16px;line-height:1.45}
+.inn-panel{background:#fff}
+.inn-panel__grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.inn-panel h2.heading-orange-1{text-align:left;font-size:clamp(30px,3.4vw,44px);margin-bottom:16px}
+.inn-panel p{font-size:18px;line-height:1.65;color:var(--body-text);margin:0 0 26px;text-align:left}
+.inn-panel .primary-btn{text-decoration:none;display:inline-block;text-align:center}
+.inn-eyebrow--orange{color:var(--orange);opacity:1}
+.inn-checklist{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.inn-checklist li{display:flex;gap:16px;align-items:flex-start;background:#fff7f0;border:1px solid #ffd9bf;border-radius:18px;padding:18px 20px}
+.inn-checklist .tick{flex:none;width:30px;height:30px;border-radius:50%;background:var(--orange);position:relative;margin-top:2px}
+.inn-checklist .tick::after{content:"";position:absolute;left:10px;top:6px;width:8px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg)}
+.inn-checklist b{display:block;font-family:Bold;color:var(--green);font-size:18px;margin-bottom:3px}
+.inn-checklist small{display:block;font-size:15px;line-height:1.5;color:var(--body-text)}
 .inn-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center}
 .inn-lightbox.open{display:flex}
 .inn-lightbox img{max-width:92vw;max-height:86vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -45,8 +67,8 @@
 .inn-lightbox .x{top:18px;right:18px}.inn-lightbox .prev{left:14px;top:50%;transform:translateY(-50%)}.inn-lightbox .next{right:14px;top:50%;transform:translateY(-50%)}
 .inn-lightbox .cap{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#fff;font-size:15px;opacity:.85}
 .bottom-banner .primary-btn,.bottom-banner .white-btn{text-decoration:none;display:inline-block;margin:6px 8px}
-@media (max-width:991px){.inn-grid{grid-template-columns:repeat(3,1fr)}.inn-steps{grid-template-columns:repeat(2,1fr)}.inn-finance{grid-template-columns:1fr;padding:36px}.inn-section{padding:64px 0}}
-@media (max-width:600px){.inn-hero{min-height:0;padding:120px 0 60px}.inn-hero p{font-size:17px}.inn-hero .primary-btn,.inn-hero .white-btn{display:block;width:100%;min-width:0;font-size:20px;margin:0 0 12px}.inn-grid{grid-template-columns:repeat(2,1fr);gap:10px}.inn-steps{grid-template-columns:1fr}.inn-stats h2{font-size:26px}.inn-tab{font-size:15px;padding:8px 16px}.inn-finance{padding:28px 22px}.inn-section{padding:52px 0}.inn-lead{font-size:17px}}
+@media (max-width:991px){.inn-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:190px}.inn-grid[data-count="8"] a:nth-child(6),.inn-grid[data-count="6"] a:nth-child(6){grid-column:span 2}.inn-panel__grid{grid-template-columns:1fr;gap:30px}.inn-steps{grid-template-columns:repeat(2,1fr)}.inn-finance{grid-template-columns:1fr;padding:36px}.inn-section{padding:64px 0}}
+@media (max-width:600px){.inn-hero{min-height:0;padding:120px 0 60px}.inn-hero p{font-size:17px}.inn-hero .primary-btn,.inn-hero .white-btn{display:block;width:100%;min-width:0;font-size:20px;margin:0 0 12px}.inn-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:150px;gap:10px}.inn-grid a:nth-child(1){grid-column:span 2;grid-row:span 2}.inn-facts li{grid-template-columns:1fr;gap:4px;padding:12px 16px}.inn-steps{grid-template-columns:1fr}.inn-stats h2{font-size:26px}.inn-tab{font-size:15px;padding:8px 16px}.inn-finance{padding:28px 22px}.inn-section{padding:52px 0}.inn-lead{font-size:17px}}
 .inn-finance .pill,.inn-finance .pill span{color:#fff}
 .inn-card p,.inn-card li,.inn-step p,.inn-finance p,.inn-hero p,.inn-more{text-align:left}
 .inn-more{text-align:center}
