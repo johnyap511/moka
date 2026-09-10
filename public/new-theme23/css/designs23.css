@@ -124,3 +124,5 @@
 /* Photo protection: no drag, no right-click save, no long-press save on phones. */
 .inn-show__stage img,.inn-thumbs img,.inn-hero,.blog-feature__media img,.blog-card__media img,.inn-lightbox img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none}
 .inn-show__stage,.inn-thumbs button,.inn-lightbox{pointer-events:auto}
+
+.inn-legal{font-size:12.5px;line-height:1.5;color:#7a8583;margin:12px 0 0;text-align:left}

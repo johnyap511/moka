@@ -97,6 +97,7 @@
 <li>The Company recommends the Hosts to obtain appropriate insurance for their accommodation. Please review any insurance policy that you may have for your accommodation carefully, and in particular please make sure that you are familiar with and understand any exclusions to, and any deductibles that may apply for, such insurance policy, including, but not limited to, whether or not your insurance policy will cover the actions or inactions of Guests (and the individuals the Guest invites to the Accommodation, if applicable) while at your accommodation.</li>
 </ul>
 <h2>Intellectual Property Right</h2>
+<p>MOKA® and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. Innspace and the Innspace logo are trademarks of Moka Venture Sdn Bhd. They may not be reproduced, imitated or used in any name, listing, advertisement, website, social media account or messaging profile without our written permission. We act against impersonation: MOKA communicates only from @homemoka.com email addresses, our published telephone numbers and our verified social media accounts, and never asks for deposits or payments to personal bank accounts. Report suspected misuse to hello@homemoka.com.</p>
 <ul>
 <li>You acknowledge and agree that all copyright, database rights, trademarks and all other intellectual property rights or other property rights relating to the Website, including but not limited to content, in whichever form, and lay out, shall remain at all times vested in us or their respective owner.</li>
 </ul>

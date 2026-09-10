@@ -29,6 +29,7 @@
 .mk-footer .mk-brand{display:flex;align-items:center;gap:18px}
 .mk-footer .mk-brand img{height:54px;width:auto;display:block}
 .mk-footer .mk-brand p{font-family:"MokaFooterReg","Source Sans Pro",sans-serif;font-size:14px;line-height:1.5;color:rgba(255,255,255,.82)}
+.mk-footer .mk-legal{display:block;margin-top:8px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.62);max-width:520px}
 .mk-footer .mk-news label{display:block;font-family:"MokaFooterBold",sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#ff6b35;margin:0 0 10px}
 .mk-footer .mk-news-row{display:flex;height:46px;max-width:380px;border-radius:100px;overflow:hidden;border:1px solid rgba(255,255,255,.35)}
 .mk-footer .mk-news-row input{flex:1;min-width:0;height:100%;background:rgba(255,255,255,.06);border:0;outline:0;color:#fff;padding:0 18px;font-family:"MokaFooterReg",sans-serif;font-size:15px}
@@ -97,7 +98,7 @@
         <div class="mk-bottom">
             <div class="mk-brand">
                 <a href="/" aria-label="MOKA home"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="MOKA" loading="lazy"></a>
-                <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka Venture Sdn Bhd. All rights reserved.</p>
+                <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka Venture Sdn Bhd. All rights reserved.<br><span class="mk-legal">MOKA® and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. Beware of impersonation: we only communicate from @homemoka.com addresses and +603 6789 2288, and never ask for payment to personal accounts.</span></p>
             </div>
             <form class="mk-news" method="POST" action="/subscribe" aria-label="Newsletter">
                 @csrf
