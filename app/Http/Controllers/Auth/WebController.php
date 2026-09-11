@@ -552,6 +552,16 @@ class WebController extends Controller
             'type'    => 'required',
         ]);
         $data = $request->only('name', 'email', 'phone', 'address', 'bedroom', 'type');
+        // A repeat of the same enquiry within ten minutes (double-taps, refreshes) is thanked but not stored or emailed again.
+        $phoneDigits = preg_replace('/\D+/', '', (string) $data['phone']);
+        $recent = \App\OtherModel\PropertyEstimate::where('created_at', '>=', now()->subMinutes(10))
+            ->where(function ($q) use ($data, $phoneDigits) {
+                $q->where('email', $data['email']);
+                if (strlen($phoneDigits) >= 8) { $q->orWhere('phone', 'like', '%' . substr($phoneDigits, -8)); }
+            })->exists();
+        if ($recent) {
+            return back()->with('success', 'Thank you! We already have your request and will contact you shortly.');
+        }
         \App\OtherModel\PropertyEstimate::create($data);
         // The enquiry is saved first; the email is best-effort so the owner never sees a failure.
         try {
