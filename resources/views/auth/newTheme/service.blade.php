@@ -952,9 +952,9 @@
       </div>
     </div>
        <div class="container section-height my-5 py-5">
-            <h1 class="heading-orange-1 text-center">
+            <h2 class="heading-orange-1 text-center">
                 Smarter Management with MOKA Dashboard
-            </h1>
+            </h2>
             <div class="d-flex flex-column flex-md-row align-items-center mt-4">
                 <div class="img-tab w-100 h-100 d-flex justify-content-center">
                     <img loading="lazy" src="{{ asset('new-theme23/images/1.png') }}" alt="" srcset="" class="w-50">
@@ -995,9 +995,9 @@
         </div>
     <div class="bg-white section-height">
       <div class="container my-5 py-5">
-        <h1 class="heading-orange-1 text-center">
+        <h2 class="heading-orange-1 text-center">
             How We Work
-        </h1>
+        </h2>
         <p class="text-orange-1 text-center">Our simple 4-steps process.</p>
         <div class="d-flex flex-wrap orange-card-parent my-4">
             <div class="col-12 col-md-6 col-lg-3 p-3">

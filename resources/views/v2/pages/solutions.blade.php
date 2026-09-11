@@ -3,7 +3,7 @@
     Homepage template; styles in new-theme23/css/solutions-index23.css.
 --}}
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Property Management Solutions in Malaysia: Airbnb, Short-Stay, Monthly Rental, Corporate Housing | MOKA')
+@section('seo_title', 'Property Management Solutions in Malaysia | MOKA')
 @section('seo_description', 'MOKA for homeowners, investors, developers and agents: Airbnb and short-term rental management, monthly and weekly rental, corporate housing and renovation across Malaysia.')
 
 @push('styles')

@@ -35,15 +35,15 @@ Route::middleware('lang')->group(function () {
     Route::get('/service',      'Auth\WebController@HomeService');
     Route::get('/designs',      'Auth\WebController@HomeDesigns');
     Route::get('/get/estimate', 'Auth\WebController@estimate');
-    Route::post('/estimate',    'Auth\WebController@submitEstimate')->name('estimate.submit');
+    Route::post('/estimate',    'Auth\WebController@submitEstimate')->name('estimate.submit')->middleware('throttle:10,1');
     Route::get('/language/{lang}', 'Auth\HomeController@setLanguage');
 
     /* ── Public Info Pages ──────────────────────────────────────────── */
     Route::get('/contact',         'Auth\WebController@contact');
-    Route::post('/contact',        'Auth\WebController@contactStore');
+    Route::post('/contact',        'Auth\WebController@contactStore')->middleware('throttle:10,1');
     Route::get('/policy',          'Auth\WebController@policy');
     Route::get('/terms',           'Auth\WebController@terms');
-    Route::post('/subscribe',      'Auth\WebController@subscribe');
+    Route::post('/subscribe',      'Auth\WebController@subscribe')->middleware('throttle:10,1');
     Route::get('/announcement',    'Admin\OwnerController@announcement');
 
     /* ── Property Search & Detail ───────────────────────────────────── */

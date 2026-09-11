@@ -102,6 +102,7 @@
             </div>
             <form class="mk-news" method="POST" action="/subscribe" aria-label="Newsletter">
                 @csrf
+                    <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
                 <label for="mk-news-email">Stay in the loop</label>
                 <div class="mk-news-row"><input id="mk-news-email" type="email" name="email" placeholder="Your email address" required><button type="submit">Subscribe</button></div>
             </form>

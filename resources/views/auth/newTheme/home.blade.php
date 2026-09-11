@@ -636,7 +636,8 @@
                     <div class="form-sec">
                         <p class="font-semi-bold font-white fs_13 mb-2">Income estimate:</p>
                         <form method="post" action="/estimate" class="banner-form">
-                            @csrf                            <input type="hidden" name="type" value="estimate">
+                            @csrf
+                    <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">                            <input type="hidden" name="type" value="estimate">
                             <input type="text" placeholder="Name" name="name" required>
                             <input type="text" placeholder="Type address" name="address" required>
                             <input type="email" placeholder="Email address"  name="email" required>

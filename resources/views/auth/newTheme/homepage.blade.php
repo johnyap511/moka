@@ -1,6 +1,6 @@
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Homestay & Airbnb Management in KL | Serviced Apartments & Short-Stay Hotel-Style Living | MOKA')
-@section('seo_description', 'MOKA runs homestay and Airbnb units in Kuala Lumpur and across Malaysia: serviced apartments and serviced residences managed like a hotel, with listing, pricing, guest vetting and housekeeping. Free income estimate for owners.')
+@section('seo_title', 'Homestay & Airbnb Management in KL, Malaysia | MOKA')
+@section('seo_description', 'MOKA runs homestay and Airbnb units in KL and across Malaysia: serviced apartments managed like a hotel, with listing, pricing, guests and housekeeping. Free estimate.')
 @section('seo_canonical', url('/'))
 
 @section('content')
@@ -637,7 +637,8 @@
                     <div class="form-sec">
                         <p class="font-semi-bold font-white fs_13 mb-2">Income estimate:</p>
                         <form method="post" action="/estimate" class="banner-form">
-                            @csrf                            <input type="hidden" name="type" value="estimate">
+                            @csrf
+                    <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">                            <input type="hidden" name="type" value="estimate">
                             <input type="text" placeholder="Type address" name="address" required>
                             <input type="email" placeholder="Email address"  name="email" required>
                             <input type="text" placeholder="Mobile number" name="phone" required>
@@ -664,7 +665,7 @@
         </div>
     </div>
     <div class="container section-height my-5 py-5">
-        <h1 class="heading-green-1 mb-0 text-center mb-5">Why Choose MOKA?</h1>
+        <h2 class="heading-green-1 mb-0 text-center mb-5">Why Choose MOKA?</h2>
         <div class="d-flex flex-column flex-md-row align-items-center">
             <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
                 <picture><source srcset="{{ asset('new-theme23/images/Asset%202.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%202.png') }}" alt="" srcset="" class="w-100"></picture>
@@ -817,9 +818,9 @@
         </div>
     </div>
     <div class="container section-height my-5 py-5">
-        <h1 class="heading-orange-1 text-center">
+        <h2 class="heading-orange-1 text-center">
             Smarter Management with MOKA Dashboard
-        </h1>
+        </h2>
         <div class="d-flex flex-column flex-md-row align-items-center mt-4">
             <div class="col-md-6 d-flex justify-content-center py-3">
                 <picture><source srcset="{{ asset('new-theme23/images/Asset%205.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%205.png') }}" alt="" srcset="" class="w-50"></picture>
@@ -856,9 +857,9 @@
     </div>
     <div class="bg-white section-height">
         <div class="container my-5 py-5">
-            <h1 class="heading-orange-1 text-center">
+            <h2 class="heading-orange-1 text-center">
                 How We Work
-            </h1>
+            </h2>
             <p class="text-orange-1 text-center">Our simple 4-steps process.</p>
             <div class="d-flex flex-wrap orange-card-parent my-4">
                 <div class="col-12 col-md-6 col-lg-3 p-3">
@@ -911,9 +912,9 @@
         </div>
     </div>
     <div class="container my-5 py-5">
-        <h1 class="heading-orange-1 text-center">
+        <h2 class="heading-orange-1 text-center">
             Our Partners
-        </h1>
+        </h2>
         <picture><source srcset="{{ asset('new-theme23/images/Asset%206.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%206.png') }}" alt="" class="mt-5 pt-3 w-100"></picture>
         <div class="d-flex justify-content-center mt-5 pt-4">
             <a href="/about"><button class="primary-btn">About Us </button> </a>

@@ -638,7 +638,8 @@
                     <div>
                         <p class="font-semi-bold font-white fs_13 mb-2">Income estimate:</p>
                         <form method="post" action="/estimate" class="banner-form">
-                            @csrf                            <input type="hidden" name="type" value="estimate">
+                            @csrf
+                    <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">                            <input type="hidden" name="type" value="estimate">
                             <input type="text" placeholder="Name" name="name" required>
                             <input type="text" placeholder="Type address" name="address" required>
                             <input type="email" placeholder="Email address"  name="email" required>
@@ -663,17 +664,17 @@
                     <!-- <img src="{{ asset('new-theme23/images/Asset 1.png') }}" alt="" srcset="" class="w-100 ps-lg-5"> -->
                     <div class="d-flex flex-column flex-sm-row flex-md-column align-items-center gap-3 gap-md-5">
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img loading="lazy" src="{{ asset('new-theme/images/iconp1.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp1.svg') }}" alt="" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">Earn more, work less</span>
                         </div>
                         
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img loading="lazy" src="{{ asset('new-theme/images/iconp2.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp2.svg') }}" alt="" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">Complete host management</span>
                         </div>
                         
                         <div class="d-flex flex-column align-items-center gap-3">
-                            <img loading="lazy" src="{{ asset('new-theme/images/iconp3.svg') }}" style="height:70px;" />
+                            <img loading="lazy" src="{{ asset('new-theme/images/iconp3.svg') }}" alt="" style="height:70px;" />
                             <span class="text-center font-white font-bold fs_18">You’re always in control</span>
                         </div>
                     </div>

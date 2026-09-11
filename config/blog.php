@@ -30,7 +30,7 @@ return [
         [
             'slug'        => 'skyworld-solution-plus-early-bird-renovate-before-vp',
             'view'        => 'skyworld-solution-plus-early-bird-renovate-before-vp',
-            'title'       => 'SkyWorld Solution+ Early Bird: Renovate Before VP, Move In on Handover Day | MOKA',
+            'title'       => 'Solution+ Early Bird: Renovate Before VP | MOKA',
             'heading'     => 'Solution+ Early Bird: renovated before VP, ready to move in on handover day',
             'description' => 'How SkyWorld’s Solution+ Early Bird event worked, why renovating before vacant possession saves owners months of empty instalments, and how MOKA’s custom interior design fits inside the developer’s pre-VP schedule.',
             'published'   => '2026-09-09',
@@ -47,7 +47,7 @@ return [
         [
             'slug'        => 'penang-short-term-rental-rules-2026',
             'view'        => 'penang-short-term-rental-rules-2026',
-            'title'       => 'Penang Short-Term Rental Rules 2026: Licences, Fees and Which Units Qualify | MOKA',
+            'title'       => 'Penang Short-Term Rental Rules 2026 Explained | MOKA',
             'heading'     => 'Penang’s new short-term rental by-laws: what owners need to know',
             'description' => 'Penang’s Private Short-term Accommodation By-Laws 2026 explained: which properties can be licensed on the island and the mainland, the 75% building consent, fees from RM1,000 a year, and the 1 November 2026 deadline.',
             'published'   => '2026-09-09',
@@ -64,7 +64,7 @@ return [
         [
             'slug'        => 'working-with-building-management-and-authorities',
             'view'        => 'working-with-building-management-and-authorities',
-            'title'       => 'How Airbnb Hosts Should Work With Building Management and Local Authorities in Malaysia | MOKA',
+            'title'       => 'Working With Your JMB and the Council as a Host | MOKA',
             'heading'     => 'How to keep your JMB, your guards and the council on your side',
             'description' => 'The building decides whether you can host. A practical guide for Malaysian short-stay hosts on consent, guest registration, house rules, licensing and the daily habits that keep a JMB or MC happy.',
             'published'   => '2026-09-09',

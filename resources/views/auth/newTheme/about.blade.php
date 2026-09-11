@@ -758,9 +758,9 @@
         </div>
     </div>
     <div class="container">
-        <h1 class="heading-orange-1 text-center">
+        <h2 class="heading-orange-1 text-center">
             Our Portfolio
-        </h1>
+        </h2>
         <p class="fs_25 text-center">
             We currently have a total of 12 portfolios and we are striving for more
         </p>
@@ -824,9 +824,9 @@
     </div>
     <div class="bg-white section-height">
         <div class="container my-5 py-5">
-            <h1 class="heading-orange-1 text-center">
+            <h2 class="heading-orange-1 text-center">
                 Here's what our clients are saying about us
-            </h1>
+            </h2>
             <p class="fs_18 font-semi-bold text-center my-4">
                 Rated 4.8 out of 5 from <strong class="link-yellow font-semi-bold">Guest Reviews</strong>
             </p>
@@ -1169,9 +1169,9 @@
     </div>
     <div class="bg-white pb-5">
         <div class="container mt-5 py-5">
-            <h1 class="heading-orange-1 text-center">
+            <h2 class="heading-orange-1 text-center">
                 Our Partners
-            </h1>
+            </h2>
             <picture><source srcset="{{ asset('new-theme23/images/Asset%206.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%206.png') }}" alt="" class="mt-5 pt-3 w-100"></picture>
         </div>
     </div>

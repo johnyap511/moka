@@ -1,6 +1,6 @@
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Renovation & Interior Design in KL | Innspace by MOKA, SkyWorld Solution+ Panel Renovator')
-@section('seo_description', 'KL renovation and interior design by Innspace, MOKA’s sister company and SkyWorld Solution+ panel renovator: renovate before VP, premium custom ID packages, MyDeco financing, plus handyman services for owners in Kuala Lumpur: AC servicing, repairs, painting touch-up and cabinet restoration.')
+@section('seo_title', 'Renovation & Interior Design in KL | Innspace by MOKA')
+@section('seo_description', 'KL renovation and interior design by Innspace, MOKA’s sister company and SkyWorld Solution+ panel renovator: renovate before VP, custom ID packages, MyDeco financing, handyman services.')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('new-theme23/css/designs23.css') }}?v={{ filemtime(public_path('new-theme23/css/designs23.css')) }}">

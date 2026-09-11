@@ -127,6 +127,7 @@ class WebController extends Controller
      */
     public function contactStore(Request $request)
     {
+        if ($request->filled('website_url')) { return back(); } // honeypot: real visitors never see this field
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email',
@@ -160,6 +161,7 @@ class WebController extends Controller
      */
     public function subscribe(Request $request)
     {
+        if ($request->filled('website_url')) { return back(); } // honeypot: real visitors never see this field
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
         ]);
@@ -540,6 +542,7 @@ class WebController extends Controller
 
     public function submitEstimate(Request $request)
     {
+        if ($request->filled('website_url')) { return back(); } // honeypot: real visitors never see this field
         $request->validate([
             'name'    => 'required|string|max:255',
             'email'   => 'required|email|max:150',
