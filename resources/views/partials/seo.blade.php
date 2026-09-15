@@ -88,6 +88,7 @@
                 '@id'        => url('/') . '/#website',
                 'url'        => url('/'),
                 'name'       => 'MOKA',
+                'alternateName' => ['homemoka', 'Home MOKA', 'MOKA Malaysia'],
                 'publisher'  => ['@id' => url('/') . '/#organization'],
                 'inLanguage' => 'en-MY',
             ],

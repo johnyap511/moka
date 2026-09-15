@@ -32,6 +32,13 @@ Route::middleware('lang')->group(function () {
     foreach (['/properties' => '/solutions/short-term-rental-management', '/property' => '/solutions/short-term-rental-management', '/listings' => '/solutions/short-term-rental-management', '/short-stay-listing' => '/solutions/short-term-rental-management', '/short-stay' => '/solutions/short-term-rental-management', '/rent' => '/solutions/monthly-rental', '/hosts' => '/get/estimate', '/host' => '/get/estimate', '/services' => '/service', '/faq' => '/service', '/menu' => '/'] as $from => $to) {
         Route::redirect($from, $to, 301);
     }
+    // Old-site URLs still in Google's index (Sep 2026): guest listing pages live on staymoka.com now.
+    foreach (['/properties/short' => '/solutions/short-term-rental-management', '/list/property' => '/get/estimate', '/new/about' => '/about', '/new/home' => '/', '/new/services' => '/service', '/new/designs' => '/designs', '/new/contact' => '/contact', '/new/blog' => '/blog'] as $from => $to) {
+        Route::redirect($from, $to, 301);
+    }
+    Route::get('/property/popular', fn () => redirect('https://staymoka.com/', 301));
+    Route::get('/property/detail/{key}', fn () => redirect('https://staymoka.com/', 301));
+    Route::get('/new/{any}', fn () => redirect('/', 301))->where('any', '.*');
     Route::get('/service',      'Auth\WebController@HomeService');
     Route::get('/designs',      'Auth\WebController@HomeDesigns');
     Route::get('/get/estimate', 'Auth\WebController@estimate');
