@@ -97,8 +97,25 @@ Config entry, added at the TOP of the `'posts'` array in `config/blog.php` (newe
     'cta_url'     => '/get/estimate',
 ],
 ```
-Images: pick a photo that exists in `public/new-theme23/images/projects/` and has a `-thumb.webp` beside it
-(folders: the-valley, skyvogue, skyawani-4, skyawani-5, curvo). Rotate so consecutive posts differ.
+Images: every post has a cover ('image') and two in-article figures ('figures', a list of [path, caption]).
+**No photo may be used twice across the whole blog**, as a cover or a figure. Before choosing, list every
+'image' and 'figures' path already in config/blog.php and exclude them. Choose from:
+- Stock library `public/new-theme23/images/blog/` (Unsplash-licensed, provenance in manifest.txt there): city,
+  travel, event, keys, planning and renovation subjects. Use the base name with .jpg, e.g.
+  `new-theme23/images/blog/kk-beach-sunset.jpg`.
+- Project photos `public/new-theme23/images/projects/<folder>/<n>.jpg` (folders the-valley, skyvogue,
+  skyawani-4, skyawani-5, curvo), captioned "A MOKA-managed unit at ..." or "Innspace interior at ...".
+Every path you use must have .webp, -thumb.jpg and -thumb.webp beside it (all library and project photos do).
+Do not download new photos in the routine. If nothing unused fits the story, use the closest unused photo and
+write "Needs a new photo: <subject>" under "Check before publishing" in the PR so a person adds one.
+Config entry with figures:
+```php
+    'image'       => 'new-theme23/images/blog/kl-skyline-night.jpg',
+    'figures'     => [
+        ['new-theme23/images/blog/singapore-marina-bay.jpg', 'Caption in plain words'],
+        ['new-theme23/images/projects/skyawani-5/2.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+    ],
+```
 CTA URLs: `/get/estimate` for owners, `/contact` for developers and agents, `/designs` for renovation.
 
 Slugs must be unique; check the existing entries. Run `php -l` on the view and on config/blog.php before

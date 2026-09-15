@@ -50,6 +50,7 @@
         'Hosting'     => [['new-theme23/images/projects/the-valley/2.jpg', 'A MOKA-managed unit at The Valley'], ['new-theme23/images/projects/skyawani-4/2.jpg', 'Living area, Sky Awani 4']],
         'Regulations' => [['new-theme23/images/projects/skyawani-4/6.jpg', 'Bedroom, Sky Awani 4'], ['new-theme23/images/projects/skyawani-4/1.jpg', 'Living and dining, Sky Awani 4']],
     ][$topic] ?? [['new-theme23/images/projects/the-valley/1.jpg', 'A MOKA-managed unit at The Valley']];
+    $figures = $post['figures'] ?? $figures;
     $figures = array_values(array_filter($figures, fn ($f) => $f[0] !== $post['image']));
     $share = rawurlencode($post['heading'] . ' ' . route('blog.show', $post['slug']));
     $webp = fn ($img) => asset(preg_replace('/\.jpg$/', '.webp', $img));
