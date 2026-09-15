@@ -32,7 +32,7 @@ return [
             'view'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 16 Sep 2026 | MOKA',
             'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 16 September 2026',
-            'description' => 'Singapore arrivals up 4.39%, F1 back at Sepang on 2 to 4 October, Penang licences due 1 November, Selangor’s 180-night cap still a proposal. What each means for you.',
+            'description' => 'Singapore arrivals up 4.39%, F1 back at Sepang on 2 to 4 October, Penang licences due 1 November, Selangor’s 180-night cap still a proposal. What it means for you.',
             'published'   => '2026-09-16',
             'updated'     => '2026-09-16',
             'image'       => 'new-theme23/images/projects/skyvogue/2.jpg',
