@@ -183,7 +183,7 @@
                     <span class="section-label text-orange">Flexibility</span>
                     <h3 class="display-md text-teal" style="margin-block:var(--space-3) var(--space-5);">A Hybrid Rental Solution</h3>
                     <p class="body-lg" style="color:var(--gray-500);">Short-stay, mid-stay and long-stay — we blend the right mix to maximise your occupancy and revenue all year round. More opportunities, more profit.</p>
-                    <a href="{{ url('/homepage') }}" class="btn btn-outline-teal btn-sm" style="margin-top:var(--space-6);">Find Out More →</a>
+                    <a href="{{ url('/') }}" class="btn btn-outline-teal btn-sm" style="margin-top:var(--space-6);">Find Out More →</a>
                 </div>
             </div>
 

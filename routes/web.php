@@ -36,6 +36,8 @@ Route::middleware('lang')->group(function () {
     foreach (['/properties/short' => '/solutions/short-term-rental-management', '/list/property' => '/get/estimate', '/new/about' => '/about', '/new/home' => '/', '/new/services' => '/service', '/new/designs' => '/designs', '/new/contact' => '/contact', '/new/blog' => '/blog'] as $from => $to) {
         Route::redirect($from, $to, 301);
     }
+    Route::redirect('/get/consultation', '/get/estimate', 301);
+    Route::redirect('/properties/long', '/solutions/monthly-rental', 301);
     Route::get('/property/popular', fn () => redirect('https://staymoka.com/', 301));
     Route::get('/property/detail/{key}', fn () => redirect('https://staymoka.com/', 301));
     Route::get('/new/{any}', fn () => redirect('/', 301))->where('any', '.*');
@@ -70,7 +72,7 @@ Route::middleware('lang')->group(function () {
         // The old site's sign-in address, still saved in owners' phones:
         // /home?modal=login. Signed-in visitors go to their own dashboard,
         // everyone else to the login page.
-        Route::get('/home', function () {
+            Route::get('/home', fn () => request('source') === 'app' ? redirect('/login?app=1') : redirect('/', 301));
             if (auth()->check()) {
                 $u = auth()->user();
                 return redirect($u->hasRole('admin') ? '/admin/dashboard' : ($u->hasRole('owner') ? '/owner/dashboard' : '/home/dashboard'));

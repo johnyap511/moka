@@ -148,7 +148,7 @@
                             </div>
                             <h2>You're all set!</h2>
                             <p>{{ session('success') }}</p>
-                            <a href="{{ url('/homepage') }}" class="btn btn-teal">Back to Home</a>
+                            <a href="{{ url('/') }}" class="btn btn-teal">Back to Home</a>
                         </div>
                     </div>
                     @endif

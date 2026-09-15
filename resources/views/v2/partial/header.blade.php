@@ -11,7 +11,7 @@ $transparent = $headerTransparent ?? false;
 $currentPath = request()->path();
 $navItems = [
     ['href' => 'https://staymoka.com/', 'label' => 'Book now',      'external' => true],
-    ['href' => url('/homepage'),        'label' => 'Why MOKA?'],
+    ['href' => url('/'),        'label' => 'Why MOKA?'],
     ['href' => url('/service'),         'label' => 'Our Services'],
     ['href' => url('/solutions'),       'label' => 'Our Solutions'],
     ['href' => url('/designs'),         'label' => 'Our Designs'],
@@ -25,7 +25,7 @@ $navItems = [
         <div class="header-inner">
 
             {{-- Logo --}}
-            <a href="{{ url('/homepage') }}" class="header-logo" aria-label="MOKA — Home">
+            <a href="{{ url('/') }}" class="header-logo" aria-label="MOKA — Home">
                 <img src="{{ asset('/new-theme23/images/logo.png') }}"
                      alt="MOKA"
                      width="76"
@@ -92,7 +92,7 @@ $navItems = [
 {{-- Mobile Drawer --}}
 <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true" role="dialog" aria-label="Mobile navigation">
     <div class="mobile-drawer-header">
-        <a href="{{ url('/homepage') }}" class="mobile-drawer-logo" aria-label="MOKA Home">
+        <a href="{{ url('/') }}" class="mobile-drawer-logo" aria-label="MOKA Home">
             <img src="{{ asset('/new-theme23/images/logo.png') }}" alt="MOKA" width="64" height="38">
         </a>
         <button class="mobile-drawer-close" id="drawerClose" aria-label="Close navigation menu">
