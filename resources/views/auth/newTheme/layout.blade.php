@@ -9,7 +9,6 @@
     @include('partials.favicon')
 
 
-    <!-- <link rel="stylesheet" href="{{ asset('css/star-rating-svg.css') }}" type="text/css"> -->
 
     <link rel="stylesheet" href="{{ asset('new-theme23/owlcarousel/owl.carousel.min.css') }}">
     <link rel="stylesheet" href="{{ asset('new-theme23/owlcarousel/owl.theme.default.min.css') }}">

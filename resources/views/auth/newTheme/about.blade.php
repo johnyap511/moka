@@ -767,53 +767,53 @@
         <div class="my-5 py-4 px-5 position-relative">
             <div class="owl-carousel owl-theme" id="portfolio_carousel">
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Arte%20Cheras%20(Night%20view).jpg') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Arte%20Cheras%20(Night%20view).webp') }}" alt="Arte Cheras at night">
                     <p class="text-green-2 p-4">
                         EkoCheras Service Apartment,
                         Jalan Cheras
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2023.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2023.webp') }}" alt="">
                     <p class="text-green-2 p-4">
                         Bell Suites, Sunsuria City,
                         Sepang
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2024.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2024.webp') }}" alt="">
                     <p class="text-green-2 p-4">
                         Damai 88 Serviced Residence,
                         Jalan Ampang
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2025.png') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2025.webp') }}" alt="">
                     <p class="text-green-2 p-4">
                         Concerto North Kiara,
                         Dutamas
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/KL%20Gateway%20Premium%20Residence.jpg') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/KL%20Gateway%20Premium%20Residence.webp') }}" alt="KL Gateway Premium Residence">
                     <p class="text-green-2 p-4">
                         KL Gateway Premium Residence
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Queensville.jpg') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Queensville.webp') }}" alt="Queensville">
                     <p class="text-green-2 p-4">
                         Queensville
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Trion%20KL.jpg') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Trion%20KL.webp') }}" alt="Trion KL">
                     <p class="text-green-2 p-4">
                         Trion KL
                     </p>
                 </div>
                 <div class="portfolio-card">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/UNA.jpg') }}" alt="" srcset="">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/UNA.webp') }}" alt="UNA Residence">
                     <p class="text-green-2 p-4">
                         UNA
                     </p>
@@ -1139,7 +1139,7 @@
     <div data-aos="fadeInUp" class="container section-height my-5 py-5">
         <div class="d-flex flex-column flex-md-row align-items-center">
             <div class="col-md-6 py-3 pe-md-4 pe-lg-5">
-                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2021.png') }}" alt="" srcset="" data-aos="fade-right" class="w-100 pe-lg-5">
+                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2021.webp') }}" alt="MOKA team illustration" width="1000" height="1000" data-aos="fade-right" class="w-100 pe-lg-5">
             </div>
             <div class="col-md-6 py-3 ps-md-4 ps-lg-5 make-order-first">
                 <h2 class="heading-orange-1 mb-4">
