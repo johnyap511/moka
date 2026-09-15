@@ -598,3 +598,6 @@ hr {
   }
 /* <picture> wrappers (WebP) must not affect layout: the inner img keeps its width classes. */
 picture { display: contents; }
+
+/* Images with width/height attributes keep their aspect ratio when CSS sets the width */
+img[width][height] { height: auto; }

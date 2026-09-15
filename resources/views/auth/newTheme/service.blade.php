@@ -725,7 +725,7 @@
                     </div>
                 </div>
                 <div class="col-lg-5 py-3 ps-md-4 ps-lg-5">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2049.png') }}" alt="" srcset="" data-aos="fade-left" class="w-100">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2049.webp') }}" alt="" width="379" height="358" data-aos="fade-left" class="w-100">
                 </div>
             </div>
         </div>
@@ -734,7 +734,7 @@
        <div class="container my-5 py-5">
         <div class="d-flex flex-column flex-lg-row align-items-center">
             <div class="col-lg-5 py-3 pe-md-4 pe-lg-5">
-                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2040.png') }}" alt="" srcset="" data-aos="fade-right" class="w-100">
+                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2040.webp') }}" alt="Team reviewing property performance on laptops and tablets" width="1000" height="941" data-aos="fade-right" class="w-100">
             </div>
             <div class="col-lg-7 py-3 make-order-lg-first">
                 <h2 class="heading-orange-2 mb-4">
@@ -875,7 +875,7 @@
                     </div>
                 </div>
                 <div class="col-lg-5 py-3 ps-md-4 ps-lg-5">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2041.png') }}" alt="" srcset="" data-aos="fade-left" class="w-100">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2041.webp') }}" alt="" width="361" height="342" data-aos="fade-left" class="w-100">
                 </div>
             </div>
         </div>
@@ -883,7 +883,7 @@
        <div class="container my-5 py-5">
           <div class="d-flex flex-column flex-lg-row align-items-center">
             <div class="col-lg-5 py-3 pe-md-4 pe-lg-5">
-                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2042.png') }}" alt="" srcset="" data-aos="fade-right" class="w-100">
+                <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2042.webp') }}" alt="" width="361" height="342" data-aos="fade-right" class="w-100">
             </div>
             <div class="col-lg-7 py-3 make-order-lg-first">
                 <h2 class="heading-orange-2 mb-4">
@@ -957,11 +957,11 @@
             </h2>
             <div class="d-flex flex-column flex-md-row align-items-center mt-4">
                 <div class="img-tab w-100 h-100 d-flex justify-content-center">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/1.png') }}" alt="" srcset="" class="w-50">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/2.png') }}" alt="" srcset="" class="w-50">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/3.png') }}" alt="" srcset="" class="w-50">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/4.png') }}" alt="" srcset="" class="w-50">
-                    <img loading="lazy" src="{{ asset('new-theme23/images/5.png') }}" alt="" srcset="" class="w-50">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/1.webp') }}" alt="MOKA owner app screen" width="600" height="1133" class="w-50">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/2.webp') }}" alt="MOKA owner app screen" width="600" height="1133" class="w-50">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/3.webp') }}" alt="MOKA owner app screen" width="600" height="1133" class="w-50">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/4.webp') }}" alt="MOKA owner app screen" width="600" height="1133" class="w-50">
+                    <img loading="lazy" src="{{ asset('new-theme23/images/5.webp') }}" alt="MOKA owner app screen" width="600" height="1133" class="w-50">
                 </div>
                 <div class="col-md-6 py-3">
                     <p class="text-green-1">
