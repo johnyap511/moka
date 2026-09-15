@@ -36,6 +36,8 @@ Route::middleware('lang')->group(function () {
     foreach (['/properties/short' => '/solutions/short-term-rental-management', '/list/property' => '/get/estimate', '/new/about' => '/about', '/new/home' => '/', '/new/services' => '/service', '/new/designs' => '/designs', '/new/contact' => '/contact', '/new/blog' => '/blog'] as $from => $to) {
         Route::redirect($from, $to, 301);
     }
+    Route::redirect('/get/consultation', '/get/estimate', 301);
+    Route::redirect('/properties/long', '/solutions/monthly-rental', 301);
     Route::get('/property/popular', fn () => redirect('https://staymoka.com/', 301));
     Route::get('/property/detail/{key}', fn () => redirect('https://staymoka.com/', 301));
     Route::get('/new/{any}', fn () => redirect('/', 301))->where('any', '.*');
@@ -75,7 +77,9 @@ Route::middleware('lang')->group(function () {
                 $u = auth()->user();
                 return redirect($u->hasRole('admin') ? '/admin/dashboard' : ($u->hasRole('owner') ? '/owner/dashboard' : '/home/dashboard'));
             }
-            return redirect(request('source') === 'app' ? '/login?app=1' : '/login');
+            if (request('source') === 'app') { return redirect('/login?app=1'); }
+            if (request()->has('modal')) { return redirect('/login'); }
+            return redirect('/', 301); // for everyone else /home is the old homepage address
         });
         Route::get('/login',               'Auth\LoginController@showLoginForm')->name('login');
         Route::post('/login',              'Auth\LoginController@login')->middleware('throttle:10,1');
