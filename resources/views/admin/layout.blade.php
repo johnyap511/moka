@@ -627,9 +627,13 @@ document.addEventListener('keydown', function (e) {
 // sideways inside its wrapper, instead of squeezing every cell to a sliver.
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.content table').forEach(function (t) {
-        if (t.style.minWidth || t.closest('.fc')) return;
-        var cols = (t.tHead && t.tHead.rows[0]) ? t.tHead.rows[0].cells.length : (t.rows[0] ? t.rows[0].cells.length : 0);
-        if (cols >= 5) t.style.minWidth = Math.max(640, cols * 120) + 'px';
+        if (t.style.minWidth || t.closest('.fc') || t.closest('.rv-mode')) return;
+        var row = (t.tHead && t.tHead.rows[0]) ? t.tHead.rows[0] : t.rows[0];
+        // Count only the columns actually shown, and give each less room on a desktop, where a
+        // nine-column list should fit its card instead of scrolling sideways (18 Sep 2026).
+        var cols = row ? Array.prototype.filter.call(row.cells, function (c) { return getComputedStyle(c).display !== 'none'; }).length : 0;
+        var per = window.innerWidth >= 1100 ? 84 : 120;
+        if (cols >= 5) t.style.minWidth = Math.max(640, cols * per) + 'px';
         var wrap = t.parentElement;
         if (wrap && getComputedStyle(wrap).overflowX !== 'auto' && getComputedStyle(wrap).overflowX !== 'scroll') wrap.style.overflowX = 'auto';
     });
