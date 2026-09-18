@@ -58,10 +58,15 @@ class Kernel extends ConsoleKernel
         // Daily (7 Sep 2026): a void in eZee sends no event, so absence is the only
         // signal. Runs before the 06:00 auto-assign; unassigned reservations are
         // retired, assigned ones go to Needs Review.
-        $schedule->command('ezee:sweep-cancelled')
-            ->dailyAt('05:00')
-            ->withoutOverlapping()
-            ->runInBackground();
+        // PAUSED 18 Sep 2026: while auto-assign was down (10–18 Sep) the sweep retired 112
+        // unassigned reservations as "absent", most of them real stays that later checked
+        // out, and eZee's booking list also omits live monthly tenancies. Absence from that
+        // list is not proof of a void. Stays off until the pull is proven complete; run by
+        // hand with --dry-run only. See docs/HANDOFF-2026-09-04.md (18 Sep).
+        // $schedule->command('ezee:sweep-cancelled')
+        //     ->dailyAt('05:00')
+        //     ->withoutOverlapping()
+        //     ->runInBackground();
 
         // Same stay keyed twice goes to Needs Review (7 Sep 2026).
         $schedule->command('moka:duplicates')->dailyAt('05:30')->withoutOverlapping();
