@@ -219,9 +219,13 @@
 .rv-help__grid b{font-size:12.5px}
 .rv-help__grid span{font-size:12px;opacity:.85}
 .rv-mode th:nth-child(1),.rv-mode td:nth-child(1),.rv-mode th:nth-child(8),.rv-mode td:nth-child(8),.rv-mode th:nth-child(9),.rv-mode td:nth-child(9),.rv-mode th:nth-child(10),.rv-mode td:nth-child(10){display:none}
-.rv-mode table{min-width:980px}
+.table-wrap.wide.rv-mode table{min-width:0;width:100%;table-layout:auto}
 .rv-actions-h{min-width:210px}
-.rv-mode .rv-actions-h{min-width:430px}
+.table-wrap.rv-mode .rv-actions-h{min-width:0;width:44%}
+/* this table fits its box, so nothing needs pinning */
+.table-wrap.rv-mode.tw-sticky th:last-child,.table-wrap.rv-mode.tw-sticky td:last-child{position:static;box-shadow:none}
+.rv-mode td{font-size:12.5px}
+.rv-mode th:nth-child(11),.rv-mode td:nth-child(11){white-space:normal;width:84px;color:var(--text-secondary);font-size:11.5px}
 .rv-mode td:last-child .btn{white-space:nowrap}
 .rv-why{font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.5;padding:6px 8px;background:#f8fafc;border-radius:6px}
 
