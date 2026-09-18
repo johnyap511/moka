@@ -69,7 +69,7 @@
             </div>
             <div class="ls-facts">
                 <div class="ls-fact"><div class="k">Base rate</div><div class="v">RM {{ number_format($listing->default_price ?? 0) }}<span style="font-weight:400;font-size:11px;color:var(--text-secondary)"> / night</span></div></div>
-                <div class="ls-fact"><div class="k">Unit no.</div><div class="v">#{{ $listing->id }}</div></div>
+                <div class="ls-fact"><div class="k">Unit</div><div class="v">{{ trim(\Illuminate\Support\Str::after((string) $listing->name, ' ')) ?: $listing->name }}</div></div>
             </div>
         </div>
         <div class="ls-actions">

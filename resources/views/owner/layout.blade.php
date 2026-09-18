@@ -166,14 +166,19 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
 .app-sheet svg{width:20px;height:20px;stroke:var(--text-secondary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .app-sheet .danger{color:#b91c1c}.app-sheet .danger svg{stroke:#b91c1c}
 @media (max-width:768px){
-  html{-webkit-text-size-adjust:100%}
+  /* iPhone home-screen app: with the translucent status bar iOS measures the page one status bar
+     short, so a bar fixed to bottom:0 floats above the screen edge with the grey page showing
+     under it. Making the page that much taller puts the bottom back where the screen ends. */
+  html{-webkit-text-size-adjust:100%;min-height:calc(100% + env(safe-area-inset-top))}
   body{overscroll-behavior-y:none;background:var(--bg)}
   .sidebar,.sidebar-overlay,.mobile-bar{display:none!important}
   .app-top{display:flex}
   .app-tabs{display:grid}
+  /* and if any sliver is ever left under the tabs, it is white like the bar, never grey */
+  .app-tabs::after{content:'';position:absolute;left:0;right:0;top:100%;height:160px;background:#fff}
   .content{margin-left:0;padding:calc(52px + env(safe-area-inset-top) + 14px) 14px calc(60px + env(safe-area-inset-bottom) + 18px);min-height:100vh;min-height:100dvh}
   .page-header{margin-bottom:14px}
-  .page-header h1{display:none}
+  .page-header h1,.ls-head h1{display:none}
   .page-header p{margin-top:0}
   .alert{margin-bottom:14px}
   .a2hs{bottom:calc(66px + env(safe-area-inset-bottom))!important}
