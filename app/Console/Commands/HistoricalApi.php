@@ -469,6 +469,11 @@ class HistoricalApi extends Command
                                             } else {
                                                 $totalExtraCharge = $reserve_array_value['TotalExtraCharge'];
                                             }
+                                            // 18 Sep 2026: this branch never set these, so every hourly run died with
+                                            // "Undefined variable $extraChargeTax" once a new reservation appeared here.
+                                            $extraChargeTax = \App\Support\EzeePricing::extraChargeTax($reserve_array_value);
+                                            $extraCharges = \App\Support\EzeePricing::extraChargeList($reserve_array_value);
+                                            $extraCharges = $extraCharges === null ? null : json_encode($extraCharges);
 
                                             if (is_array($reserve_array_value['TotalPayment'])) {
                                                 $totalPayment = NULL;
