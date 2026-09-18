@@ -31,6 +31,25 @@
 .eb-strip .v{font-weight:600}
 .eb-note{display:flex;gap:10px;align-items:flex-start;padding:12px 20px;background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;font-size:13px;line-height:1.5}
 .eb-note button{margin-left:auto;white-space:nowrap}
+.eb-note--slim{align-items:center;padding:9px 20px}
+.eb-note__txt{flex:1;min-width:0}
+.eb-why{display:inline}
+.eb-why summary{display:inline;cursor:pointer;color:inherit;text-decoration:underline;text-underline-offset:2px;margin-left:4px;list-style:none}
+.eb-why summary::-webkit-details-marker{display:none}
+.eb-why[open]{display:block;margin-top:6px;font-size:12.5px;line-height:1.5;opacity:.9}
+.eb-why[open] summary{margin-left:0;margin-right:6px}
+.eb-stay{margin-top:10px;max-width:760px}
+.eb-stay__head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:13px;color:var(--text-secondary);margin-bottom:6px}
+.eb-stay__head b{color:var(--text-primary,#111);font-size:14px}
+.eb-stay__n{margin-left:auto;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+.eb-stay__bar{display:flex;gap:4px}
+.eb-stay__seg{display:block;min-width:0;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:inherit;text-decoration:none;line-height:1.3;overflow:hidden}
+.eb-stay__seg b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eb-stay__seg span{display:block;font-size:11.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eb-stay__seg:hover{border-color:#0b8a6f}
+.eb-stay__seg.is-cur{background:#0b5a4a;border-color:#0b5a4a;color:#fff}
+.eb-stay__seg.is-cur span{color:rgba(255,255,255,.8)}
+@media (max-width:640px){.eb-stay__bar{flex-direction:column}.eb-stay__seg{flex:none!important}.eb-note--slim{flex-wrap:wrap}.eb-note--slim button{margin-left:30px}}
 .eb-section{padding:18px 20px 4px}
 .eb-section + .eb-section{border-top:1px solid var(--border)}
 .eb-section h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin:0 0 14px}
@@ -83,14 +102,23 @@
         @endphp
         @if($whole->count() > 1)
             @php
-                $wIn = $whole->min('check_in'); $wOut = $whole->max('check_out');
+                $wSorted = $whole->sortBy('check_in')->values();
+                $wIn = $wSorted->first()->check_in; $wOut = $wSorted->max('check_out');
                 $wNights = (int) \Carbon\Carbon::parse($wIn)->diffInDays(\Carbon\Carbon::parse($wOut));
-                $pos = $whole->sortBy('check_in')->values()->search(fn ($x) => $x->id == $book->id);
+                $short = fn ($d) => \Carbon\Carbon::parse($d)->format('j M');
             @endphp
-            <p style="margin-top:4px;padding:6px 10px;border-radius:8px;background:#eef6f3;color:#0b5a4a;font-size:13px;display:inline-block">
-                <b>Whole stay: {{ $fmt($wIn) }} → {{ $fmt($wOut) }} · {{ $wNights }} nights · RM {{ number_format($whole->sum('price'), 2) }}</b>,
-                kept as {{ $whole->count() }} pieces (one per calendar month or room). This is piece {{ $pos === false ? '?' : $pos + 1 }} of {{ $whole->count() }}; the others are listed under “Unit &amp; room moves” below.
-            </p>
+            <div class="eb-stay" title="A long stay is kept as one booking per calendar month or room, so each month's revenue lands on that month's statement.">
+                <div class="eb-stay__head"><b>{{ $wNights }}-night stay</b><span>{{ $short($wIn) }} → {{ $short($wOut) }} {{ \Carbon\Carbon::parse($wOut)->format('Y') }}</span><span>RM {{ number_format($whole->sum('price'), 2) }}</span><span class="eb-stay__n">{{ $whole->count() }} pieces</span></div>
+                <div class="eb-stay__bar">
+                    @foreach($wSorted as $i => $w)
+                        @php $n = max(1, (int) \Carbon\Carbon::parse($w->check_in)->diffInDays(\Carbon\Carbon::parse($w->check_out))); @endphp
+                        <a href="/admin/book/{{ $w->id }}/edit" class="eb-stay__seg {{ $w->id == $book->id ? 'is-cur' : '' }}" style="flex:{{ $n }} 1 0">
+                            <b>{{ $short($w->check_in) }} – {{ $short($w->check_out) }}</b>
+                            <span>{{ $n }} night{{ $n == 1 ? '' : 's' }} · RM {{ number_format($w->price, 2) }}{{ $w->listing_id != $book->listing_id ? ' · ' . ($w->listing->name ?? '') : '' }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
         @endif
     </div>
     <div class="flex gap-2">
@@ -101,12 +129,7 @@
     </div>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success" style="margin-bottom:16px">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-    <div class="alert alert-error" style="margin-bottom:16px">{{ session('error') }}</div>
-@endif
+{{-- success and error flashes are printed once, by admin.layout --}}
 @if($errors->any())
     <div class="alert alert-error" style="margin-bottom:16px">
         <ul style="margin:0;padding-left:18px">
@@ -141,9 +164,11 @@
     </div>
     @endif
     @if($ezee && !$frozen)
-    <div class="eb-note" id="eb-note">
+    <div class="eb-note eb-note--slim" id="eb-note">
         <span>🔒</span>
-        <span><b>Amounts follow eZee.</b> Rate, cleaning fee, SST and total on this booking are set from eZee's record and re-applied by the hourly sync, so a figure changed here is overwritten unless eZee changes too. To correct a figure, change it in eZee. Guest details, dates and remarks can be edited here.</span>
+        <span class="eb-note__txt"><b>Amounts follow eZee.</b> To change a figure, change it in eZee.
+            <details class="eb-why"><summary>Why?</summary>Rate, cleaning fee, SST and total come from eZee's record and are re-applied by the hourly sync, so a figure changed here is overwritten unless eZee changes too. Guest details, dates and remarks can be edited here.</details>
+        </span>
         <button type="button" class="btn btn-secondary btn-sm" onclick="unlockAmounts(this)">Edit amounts anyway</button>
     </div>
     @endif

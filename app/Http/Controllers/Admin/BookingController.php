@@ -1038,9 +1038,10 @@ private function getActionButtons($book)
                 ->where('folio_no', $book->folio_no)
                 ->where('check_in', '<', $request->check_out)->where('check_out', '>', $request->check_in)->orderBy('check_in')->first();
             if ($sibling) {
+                $d = fn ($x) => \Carbon\Carbon::parse($x)->format('j M');
                 return redirect()->back()->withInput()->with('error', sprintf(
-                    'Nothing to change: this stay is already complete in Homemoka. Those nights are on its other piece, booking #%d (%s to %s). A long stay is kept as one booking per calendar month, so this piece runs %s to %s and #%d covers the rest. Do not cancel either piece.',
-                    $sibling->id, $sibling->check_in, $sibling->check_out, $book->check_in, $book->check_out, $sibling->id
+                    'This stay is already complete. %s – %s is on its other piece, #%d. Do not cancel either piece.',
+                    $d($sibling->check_in), $d($sibling->check_out), $sibling->id
                 ));
             }
         }
@@ -1058,15 +1059,16 @@ private function getActionButtons($book)
                 // Say which booking is in the way. When it is the next piece of this same stay
                 // (same folio), the stay is already complete and nothing needs changing.
                 if ($book2->folio_no && $book2->folio_no === $book->folio_no) {
+                    $d = fn ($x) => \Carbon\Carbon::parse($x)->format('j M');
                     return back()->with('error', sprintf(
-                        'Nothing to change: this stay is already complete in Homemoka. The nights you are adding are on its next piece, booking #%d (%s to %s). A long stay is kept as one booking per calendar month, so this piece ends on %s and #%d carries on from there.',
-                        $book2->id, $book2->check_in, $book2->check_out, $book->check_out, $book2->id
+                        'This stay is already complete. %s – %s is on its other piece, #%d. Do not cancel either piece.',
+                        $d($book2->check_in), $d($book2->check_out), $book2->id
                     ))->withInput();
                 }
                 $g = optional(User::find($book2->user_id));
                 return back()->with('error', sprintf(
-                    'These dates are not available: booking #%d (%s, %s to %s) is already on this unit.',
-                    $book2->id, trim(($g->name ?? '') . ' ' . ($g->last_name ?? '')) ?: 'guest', $book2->check_in, $book2->check_out
+                    'Not available: #%d (%s, %s – %s) is already on this unit.',
+                    $book2->id, trim(($g->name ?? '') . ' ' . ($g->last_name ?? '')) ?: 'guest', \Carbon\Carbon::parse($book2->check_in)->format('j M'), \Carbon\Carbon::parse($book2->check_out)->format('j M')
                 ))->withInput();
             }
         }
