@@ -1008,7 +1008,13 @@ private function getActionButtons($book)
      */
     public function update(Request $request, $id)
     {
-        if (\App\Support\Lock::isLocked($book->check_in ?? null) && !\App\Support\Lock::unlocked($request->user(), $request->input('unlock_password'))) {
+        // Load first: the lock check and the duplicate check below both read the booking.
+        // (18 Sep 2026: this line sat after them, so every save died with "Undefined variable $book".)
+        $book = Booking::find($id);
+        if (empty($book)) {
+            return back()->with('error', 'Booking not found.');
+        }
+        if (\App\Support\Lock::isLocked($book->check_in) && !\App\Support\Lock::unlocked($request->user(), $request->input('unlock_password'))) {
             return redirect()->back()->withInput()->with('error', \App\Support\Lock::refusal());
         }
         $validator = Validator::make($request->all(), [
@@ -1031,7 +1037,6 @@ private function getActionButtons($book)
         if ($bookData['check_out'] <= $bookData['check_in']) {
             return back()->with('error', 'The check out should be bigger than check in!')->withInput();
         }
-        $book = Booking::find($id);
 
         $today = date("Y-m-d");
         $books = Booking::where([['listing_id', $book->listing_id], ['status', 5], ['check_out', '>=', $today]])->get();
