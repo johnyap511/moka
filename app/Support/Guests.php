@@ -51,7 +51,7 @@ class Guests
 
         $user = User::create([
             'name' => $first, 'last_name' => $last, 'email' => $email, 'phone' => $eb->Mobile ? trim((string) $eb->Mobile) : null,
-            'country_code' => $eb->Country ? trim((string) $eb->Country) : null, 'ezee_tmp' => 1,
+            'country_code' => $eb->Country ? trim((string) $eb->Country) : '60', 'ezee_tmp' => 1, // users.country_code is NOT NULL (default 60); a null here aborted the stay (18 Sep 2026)
         ]);
         if ($role = Role::find(2)) {
             $user->attachRole($role);
