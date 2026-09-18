@@ -37,12 +37,16 @@
 </div>
 
 @if($method === 'conflict')
-<div class="alert" style="margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:13px">
-    These reservations could not be assigned because the unit was already occupied over those nights.
-    Nothing was changed. Read the room history on the EZEE calendar, name the pattern, then use the
-    matching control: <b>Room history</b> when the first nights were in another unit or an extra room,
-    <b>Accept EZEE dates</b> when the stay was shortened or extended, <b>No unit</b> for an extra-guest
-    room, <b>Reassign</b> to move the whole booking. Nothing is typed by hand.
+<div class="rv-help">
+    <div class="rv-help__lead"><b>Nothing here was changed.</b> Each stay below could not be placed because the unit was already taken. Check the room history in eZee, then pick the button that matches.</div>
+    <div class="rv-help__grid">
+        <div><b>Room history</b><span>First nights were in another unit or an extra room</span></div>
+        <div><b>Accept eZee dates</b><span>The stay was shortened or extended</span></div>
+        <div><b>Reassign</b><span>Move the whole booking to another unit</span></div>
+        <div><b>No unit</b><span>An extra-guest “room” that needs no unit</span></div>
+        <div><b>Voided in eZee</b><span>You checked eZee and it is cancelled there</span></div>
+        <div><b>Mark done</b><span>Already sorted out by hand</span></div>
+    </div>
 </div>
 @endif
 
@@ -53,7 +57,7 @@
         <span class="text-sm text-secondary">{{ number_format($logs->total()) }} records</span>
         @endif
     </div>
-    <div class="table-wrap wide">
+    <div class="table-wrap wide {{ $method === 'conflict' ? 'rv-mode' : '' }}">
         <table>
             <thead>
                 <tr>
@@ -69,7 +73,7 @@
                     <th>Method</th>
                     <th>By</th>
                     <th>Date</th>
-                    <th style="width:210px">Actions</th>
+                    <th class="rv-actions-h">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -83,8 +87,8 @@
                     <td class="text-nowrap"><code>{{ $eb->SubBookingId ?? '—' }}</code></td>
                     <td>{{ $eb ? $eb->FirstName.' '.$eb->LastName : '—' }}</td>
                     <td>{{ $eb->RoomName ?? ($eb->RoomTypeName ?? '—') }}</td>
-                    <td>{{ $eb->Start ?? '—' }}</td>
-                    <td>{{ $eb->End ?? '—' }}</td>
+                    <td class="text-nowrap">{{ $eb && $eb->Start ? \Carbon\Carbon::parse($eb->Start)->format('j M Y') : '—' }}</td>
+                    <td class="text-nowrap">{{ $eb && $eb->End ? \Carbon\Carbon::parse($eb->End)->format('j M Y') : '—' }}</td>
                     <td>{{ $log->listing->name ?? '—' }}</td>
                     <td>
                         @if($log->old_listing_id)
@@ -104,7 +108,7 @@
                                 $blockId = preg_match_all('/[Bb]ooking #(\d+)/', (string) $log->note, $bm) ? (int) end($bm[1]) : null;
                                 $blocker = $blockId ? ($bookingMap[$blockId] ?? null) : null;
                             @endphp
-                            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5">
+                            <div class="rv-why">
                                 @if($ours)
                                     Ours: {{ $ours->check_in }} → {{ $ours->check_out }} on {{ $ours->listing->name ?? '#'.$ours->listing_id }}
                                     @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
@@ -207,6 +211,20 @@
 @push('scripts')
 <style>
 .table-wrap.wide td{vertical-align:top}
+/* Needs Review: fewer columns, one tidy row of actions, help as a legend (18 Sep 2026) */
+.rv-help{margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;font-size:13px;color:#78350f}
+.rv-help__lead{margin-bottom:10px;line-height:1.5}
+.rv-help__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 18px}
+.rv-help__grid div{display:flex;flex-direction:column;line-height:1.35}
+.rv-help__grid b{font-size:12.5px}
+.rv-help__grid span{font-size:12px;opacity:.85}
+.rv-mode th:nth-child(1),.rv-mode td:nth-child(1),.rv-mode th:nth-child(8),.rv-mode td:nth-child(8),.rv-mode th:nth-child(9),.rv-mode td:nth-child(9),.rv-mode th:nth-child(10),.rv-mode td:nth-child(10){display:none}
+.rv-mode table{min-width:980px}
+.rv-actions-h{min-width:210px}
+.rv-mode .rv-actions-h{min-width:430px}
+.rv-mode td:last-child .btn{white-space:nowrap}
+.rv-why{font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.5;padding:6px 8px;background:#f8fafc;border-radius:6px}
+
 .review-panel { margin-top:8px; padding:10px; border:1px solid var(--border, #e5e7eb); border-radius:6px; background:var(--bg-secondary, #f9fafb); font-size:12px; }
 .review-panel-title { font-size:11px; margin-bottom:6px; }
 .review-panel input, .review-panel select { font-size:12px; padding:4px 6px; }

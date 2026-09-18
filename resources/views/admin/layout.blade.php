@@ -160,6 +160,10 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .table-wrap{-webkit-overflow-scrolling:touch}
 .table-wrap table{min-width:640px}
 .table-wrap.wide table{min-width:1100px}
+/* A wide table scrolls sideways; its Actions column stays pinned so buttons are never cut off. */
+.tw-sticky th:last-child,.tw-sticky td:last-child{position:sticky;right:0;background:#fff;box-shadow:-8px 0 10px -8px rgba(15,23,42,.18);z-index:1}
+.tw-sticky thead th:last-child{background:var(--bg-secondary,#f8fafc)}
+@media (max-width:768px){.tw-sticky th:last-child,.tw-sticky td:last-child{position:static;box-shadow:none}}
 @media (max-width:1024px){
   .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:none;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
   .sidebar-footer{margin-top:12px}
@@ -632,5 +636,16 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @stack('scripts')
+<script>
+/* Pin the last column of any table whose last heading is Action(s)/Manage and that is wider than its box. */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.table-wrap').forEach(function (w) {
+        var t = w.querySelector('table'); if (!t) return;
+        var h = t.querySelectorAll('thead th'); if (!h.length) return;
+        var last = (h[h.length - 1].textContent || '').trim().toLowerCase();
+        if (/^(actions?|manage)$/.test(last) && t.scrollWidth > w.clientWidth + 4) { w.classList.add('tw-sticky'); }
+    });
+});
+</script>
 </body>
 </html>
