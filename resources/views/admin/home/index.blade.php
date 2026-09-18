@@ -29,6 +29,34 @@
     </div>
 </div>
 
+@php
+    $todayStr   = now()->toDateString();
+    $needReview = \App\EzeeAssignmentLog::where('method', 'conflict')->whereNull('resolved_at')->count();
+    $unassigned = \App\OtherModel\EzeeBooking::whereNull('book_id')->where('status', 5)->whereNotNull('RoomName')->where('RoomName', '<>', '')->where('End', '>=', $todayStr)->count();
+    $arrivals   = \App\Booking::where('status', 5)->whereDate('check_in', $todayStr)->count();
+    $departures = \App\Booking::where('status', 5)->whereDate('check_out', $todayStr)->count();
+@endphp
+<div class="dash-today">
+    <a href="/admin/ezee/assignment-log?method=conflict" class="dash-today__item {{ $needReview ? 'is-warn' : 'is-ok' }}">
+        <b>{{ $needReview }}</b><span>need review</span><small>{{ $needReview ? 'Stays that could not be placed. Open the list →' : 'Nothing waiting' }}</small>
+    </a>
+    <a href="/admin/ezee/unassigned_booking" class="dash-today__item {{ $unassigned ? 'is-warn' : 'is-ok' }}">
+        <b>{{ $unassigned }}</b><span>eZee stays without a unit</span><small>{{ $unassigned ? 'Roomed in eZee, not yet on a calendar →' : 'All roomed stays are placed' }}</small>
+    </a>
+    <a href="/admin/book" class="dash-today__item"><b>{{ $arrivals }}</b><span>check-ins today</span><small>{{ now()->format('D j M') }}</small></a>
+    <a href="/admin/book" class="dash-today__item"><b>{{ $departures }}</b><span>check-outs today</span><small>{{ now()->format('D j M') }}</small></a>
+</div>
+<style>
+.dash-today{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:18px}
+.dash-today__item{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface,#fff);text-decoration:none;color:inherit}
+.dash-today__item b{font-size:26px;line-height:1.1}
+.dash-today__item span{font-weight:600;font-size:13.5px}
+.dash-today__item small{color:var(--text-secondary);font-size:12px}
+.dash-today__item.is-warn{border-color:#fcd34d;background:#fffbeb}
+.dash-today__item.is-warn b{color:#b45309}
+.dash-today__item.is-ok b{color:#047857}
+.dash-today__item:hover{border-color:#0b8a6f}
+</style>
 <div class="stats-grid">
     <div class="stat-card">
         <div class="val">{{ $activeListings }}</div>

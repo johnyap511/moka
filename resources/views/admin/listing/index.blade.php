@@ -73,7 +73,7 @@
         </form>
     </div>
 
-    <div class="table-wrap">
+    <div class="table-wrap" data-enhance="page" data-search-input="#searchInput">
         <table id="listingsTable">
             <thead>
                 <tr>
@@ -134,19 +134,20 @@
                     <td>
                         <div class="actions">
                             <a href="/admin/listing/{{ $listing->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
-                            <a href="/admin/listing/{{ $listing->id }}/images" class="btn btn-secondary btn-sm">Images</a>
                             <a href="/admin/listing/{{ $listing->id }}/price" class="btn btn-secondary btn-sm">Pricing</a>
-                            <a href="/admin/listing/{{ $listing->id }}/details" class="btn btn-secondary btn-sm">Details</a>
-                            <button type="button" class="btn btn-secondary btn-sm"
-                                    onclick="setArchived(this, {{ $listing->id }}, {{ $showArchived ? 'false' : 'true' }})">
-                                {{ $showArchived ? 'Restore' : 'Archive' }}
-                            </button>
-                            <form action="/admin/listing/{{ $listing->id }}" method="POST"
-                                  onsubmit="return confirm('Delete this listing? This cannot be undone.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
+                            <details class="row-more">
+                                <summary class="btn btn-secondary btn-sm">More ▾</summary>
+                                <div class="row-more__menu">
+                                    <a href="/admin/listing/{{ $listing->id }}/images">Images</a>
+                                    <a href="/admin/listing/{{ $listing->id }}/details">Details</a>
+                                    <button type="button" onclick="setArchived(this, {{ $listing->id }}, {{ $showArchived ? 'false' : 'true' }})">{{ $showArchived ? 'Restore' : 'Archive' }}</button>
+                                    <form action="/admin/listing/{{ $listing->id }}" method="POST" onsubmit="return confirm('Delete this listing? This cannot be undone.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="is-danger">Delete listing…</button>
+                                    </form>
+                                </div>
+                            </details>
                         </div>
                     </td>
                 </tr>
@@ -168,22 +169,7 @@
 
 @endsection
 
-@push('scripts')
-<script>
-// Client-side filter for instant search
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-    searchInput.addEventListener('input', function () {
-        const q = this.value.toLowerCase().trim();
-        document.querySelectorAll('.listing-row').forEach(function (row) {
-            if (!q) { row.style.display = ''; return; }
-            const haystack = (row.dataset.title || '') + ' ' + (row.dataset.name || '') + ' ' + (row.dataset.address || '');
-            row.style.display = haystack.includes(q) ? '' : 'none';
-        });
-    });
-}
-</script>
-@endpush
+{{-- instant search and paging come from data-enhance on the table wrapper (admin.layout) --}}
 
 <script>
 // Archive and status changes happen in place. A form post reloaded the page and

@@ -160,6 +160,21 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .table-wrap{-webkit-overflow-scrolling:touch}
 .table-wrap table{min-width:640px}
 .table-wrap.wide table{min-width:1100px}
+/* Search + paging for long lists (data-enhance), and the row "More" menu */
+.tw-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary)}
+.tw-tools select{border:1px solid var(--border);border-radius:8px;padding:4px 8px;font:inherit;background:var(--surface);color:var(--text)}
+.tw-tools .tw-pages{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tw-tools button[disabled]{opacity:.45;cursor:default}
+.tw-search{padding:12px 16px 0}
+.tw-empty{padding:28px 16px;text-align:center;color:var(--text-secondary);font-size:13.5px}
+.row-more{position:relative;display:inline-block}
+.row-more>summary{list-style:none;cursor:pointer}
+.row-more>summary::-webkit-details-marker{display:none}
+.row-more__menu{position:fixed;z-index:60;min-width:168px;background:var(--surface,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 28px rgba(15,23,42,.16);padding:6px;display:flex;flex-direction:column;gap:2px}
+.row-more__menu a,.row-more__menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:7px;font:inherit;font-size:13px;color:var(--text);cursor:pointer;text-decoration:none}
+.row-more__menu a:hover,.row-more__menu button:hover{background:var(--bg-secondary,#f1f5f9)}
+.row-more__menu .is-danger{color:#b91c1c;border-top:1px solid var(--border);border-radius:0 0 7px 7px;margin-top:4px;padding-top:10px}
+.row-more__menu form{margin:0}
 /* A wide table scrolls sideways; its Actions column stays pinned so buttons are never cut off. */
 .tw-sticky th:last-child,.tw-sticky td:last-child{position:sticky;right:0;background:#fff;box-shadow:-8px 0 10px -8px rgba(15,23,42,.18);z-index:1}
 .tw-sticky thead th:last-child{background:var(--bg-secondary,#f8fafc)}
@@ -650,6 +665,73 @@ document.addEventListener('DOMContentLoaded', function () {
         if (/^(actions?|manage)$/.test(last) && t.scrollWidth > w.clientWidth + 4) { w.classList.add('tw-sticky'); }
     });
 });
+</script>
+<script>
+/* Long lists: data-enhance="search page" on a .table-wrap adds instant search and paging in the
+   browser. Rows are only shown or hidden (style.display), nothing is sent anywhere. */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.table-wrap[data-enhance]').forEach(function (w) {
+        var t = w.querySelector('table'); if (!t || !t.tBodies[0]) return;
+        var rows = [].slice.call(t.tBodies[0].rows).filter(function (r) { return !r.querySelector('td[colspan]'); });
+        if (rows.length < 2) return;
+        var opts = w.getAttribute('data-enhance'), size = 25, page = 1, q = '';
+        try { size = parseInt(localStorage.getItem('mokaPageSize'), 10) || 25; } catch (e) {}
+        var input = w.getAttribute('data-search-input') ? document.querySelector(w.getAttribute('data-search-input')) : null;
+        if (!input && /search/.test(opts)) {
+            var sb = document.createElement('div'); sb.className = 'tw-search';
+            sb.innerHTML = '<div class="search-bar"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg><input type="text" placeholder="' + (w.getAttribute('data-search-placeholder') || 'Search…') + '" aria-label="Search this list"></div>';
+            w.parentNode.insertBefore(sb, w); input = sb.querySelector('input');
+        }
+        var bar = document.createElement('div'); bar.className = 'tw-tools';
+        bar.innerHTML = '<span class="tw-info"></span><label>Rows <select><option>25</option><option>50</option><option>100</option><option value="100000">All</option></select></label><span class="tw-pages"><button type="button" class="btn btn-secondary btn-sm tw-prev">← Prev</button><span class="tw-pageno"></span><button type="button" class="btn btn-secondary btn-sm tw-next">Next →</button></span>';
+        w.parentNode.insertBefore(bar, w.nextSibling);
+        var empty = document.createElement('div'); empty.className = 'tw-empty'; empty.hidden = true; empty.textContent = 'Nothing matches that search.';
+        w.parentNode.insertBefore(empty, bar);
+        var sel = bar.querySelector('select'); sel.value = String(size); if (sel.value !== String(size)) { sel.value = '25'; size = 25; }
+        function hay(r) { if (!r.__h) { var d = ''; for (var k in r.dataset) d += ' ' + r.dataset[k]; r.__h = (r.textContent + d).toLowerCase(); } return r.__h; }
+        function render() {
+            var m = rows.filter(function (r) { return !q || hay(r).indexOf(q) !== -1; });
+            var pages = Math.max(1, Math.ceil(m.length / size)); if (page > pages) page = pages;
+            rows.forEach(function (r) { r.style.display = 'none'; });
+            m.slice((page - 1) * size, page * size).forEach(function (r) { r.style.display = ''; });
+            var from = m.length ? (page - 1) * size + 1 : 0, to = Math.min(page * size, m.length);
+            bar.querySelector('.tw-info').textContent = 'Showing ' + from + '–' + to + ' of ' + m.length + (q ? ' matching' : '') + (m.length !== rows.length ? ' (' + rows.length + ' in total)' : '');
+            bar.querySelector('.tw-pageno').textContent = 'Page ' + page + ' of ' + pages;
+            bar.querySelector('.tw-prev').disabled = page <= 1; bar.querySelector('.tw-next').disabled = page >= pages;
+            empty.hidden = m.length > 0;
+            var all = document.getElementById('select-all'); if (all) all.checked = false;
+        }
+        bar.querySelector('.tw-prev').onclick = function () { page--; render(); w.scrollIntoView({block: 'nearest'}); };
+        bar.querySelector('.tw-next').onclick = function () { page++; render(); w.scrollIntoView({block: 'nearest'}); };
+        sel.onchange = function () { size = parseInt(sel.value, 10); page = 1; try { localStorage.setItem('mokaPageSize', sel.value); } catch (e) {} render(); };
+        if (input) { q = (input.value || '').toLowerCase().trim(); input.addEventListener('input', function () { q = this.value.toLowerCase().trim(); page = 1; render(); }); }
+        render();
+    });
+});
+/* Dates written as 2026-09-18 read better as 18 Sep 2026. Display only: the original stays in the tooltip. */
+document.addEventListener('DOMContentLoaded', function () {
+    var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], re = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::\d{2})?)?$/;
+    document.querySelectorAll('.content td, .content td *, .content [data-date]').forEach(function (el) {
+        if (el.children.length || el.closest('[data-raw-dates]') || /^(INPUT|SELECT|TEXTAREA|OPTION|CODE|SCRIPT)$/.test(el.tagName)) return;
+        var raw = (el.textContent || '').trim(), m = re.exec(raw); if (!m) return;
+        var mo = parseInt(m[2], 10); if (mo < 1 || mo > 12) return;
+        el.textContent = parseInt(m[3], 10) + ' ' + M[mo - 1] + ' ' + m[1] + (m[4] ? ', ' + m[4] + ':' + m[5] : '');
+        if (!el.title) el.title = raw;
+        el.style.whiteSpace = 'nowrap';
+    });
+});
+/* Row "More" menus: placed with fixed positioning so a scrolling table never clips them. */
+document.addEventListener('toggle', function (e) {
+    var d = e.target; if (!d.classList || !d.classList.contains('row-more')) return;
+    if (!d.open) return;
+    document.querySelectorAll('details.row-more[open]').forEach(function (o) { if (o !== d) o.open = false; });
+    var menu = d.querySelector('.row-more__menu'), r = d.querySelector('summary').getBoundingClientRect();
+    menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
+    var below = r.bottom + 6, h = menu.offsetHeight;
+    menu.style.top = (below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 6) : below) + 'px';
+}, true);
+document.addEventListener('click', function (e) { if (!e.target.closest('details.row-more')) document.querySelectorAll('details.row-more[open]').forEach(function (o) { o.open = false; }); });
+window.addEventListener('scroll', function () { document.querySelectorAll('details.row-more[open]').forEach(function (o) { o.open = false; }); }, true);
 </script>
 </body>
 </html>
