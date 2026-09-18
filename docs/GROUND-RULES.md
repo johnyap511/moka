@@ -66,3 +66,12 @@ moves a booking from a real unit to an Extra Room. When eZee's dates or amount d
 night or more is created on an Extra Room, a Needs Review item is raised: staff read eZee's Room Charges and Split the stay,
 unit nights to the owner's unit, parked nights on the Extra Room as company revenue. Day use (start = end) stays on the
 company room under rule 22.
+
+## 26. Transactions keyed after night audit have no RES and never reach the sync (18 Sep 2026)
+When the front desk inserts a transaction after the night audit, eZee gives it a folio (FN…) but no reservation number
+(RES…). The booking feed the sync reads is keyed by RES, so such a stay is invisible to Homemoka: it will not appear on
+the unit's calendar or on the owner's statement unless a person keys it. Rule: any stay that shows a folio but no RES in
+the eZee report must be added by hand on the Bookings screen with that folio number, the same day it is noticed.
+Month-end check: compare the eZee folio list against Homemoka by folio, not only by RES (example: FN32646, H-03-06,
+11 Sep 2026). Cancellation is never inferred from a stay being absent from eZee's booking-list download; that download
+omits live reservations (RES31133 proven live on 18 Sep 2026), so the daily sweep is switched off.
