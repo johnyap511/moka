@@ -1031,6 +1031,19 @@ private function getActionButtons($book)
         $data = $request->only("name", "last_name", "email", "phone");
         $bookData = $request->only("folio_no", "check_in", "check_out", "adult", "infant", 'price_night', 'cleaning_fee', 'ota_fee', 'sst', 'sst_cf', 'discount_fee', 'price', "remark", "source", "category");
         $bookData['is_split'] = $request->boolean('is_split');
+        // The next or previous piece of this same stay (same folio, same unit) is not a duplicate
+        // and must never be cancelled to make room: a long stay is one booking per calendar month.
+        if ($request->folio_no && $request->folio_no === $book->folio_no) {
+            $sibling = Booking::where('listing_id', $book->listing_id)->where('status', 5)->where('id', '<>', $book->id)
+                ->where('folio_no', $book->folio_no)
+                ->where('check_in', '<', $request->check_out)->where('check_out', '>', $request->check_in)->orderBy('check_in')->first();
+            if ($sibling) {
+                return redirect()->back()->withInput()->with('error', sprintf(
+                    'Nothing to change: this stay is already complete in Homemoka. Those nights are on its other piece, booking #%d (%s to %s). A long stay is kept as one booking per calendar month, so this piece runs %s to %s and #%d covers the rest. Do not cancel either piece.',
+                    $sibling->id, $sibling->check_in, $sibling->check_out, $book->check_in, $book->check_out, $sibling->id
+                ));
+            }
+        }
         if ($dup = \App\Support\Duplicates::find((int) $book->listing_id, $request->check_in, $request->check_out, $request->folio_no, trim($request->name . ' ' . $request->last_name), (int) $book->id)) {
             return redirect()->back()->withInput()->with('error', \App\Support\Duplicates::message($dup));
         }
