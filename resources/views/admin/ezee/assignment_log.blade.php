@@ -219,13 +219,18 @@
 .rv-help__grid b{font-size:12.5px}
 .rv-help__grid span{font-size:12px;opacity:.85}
 .rv-mode th:nth-child(1),.rv-mode td:nth-child(1),.rv-mode th:nth-child(8),.rv-mode td:nth-child(8),.rv-mode th:nth-child(9),.rv-mode td:nth-child(9),.rv-mode th:nth-child(10),.rv-mode td:nth-child(10){display:none}
-.table-wrap.wide.rv-mode table{min-width:0;width:100%;table-layout:auto}
-.rv-actions-h{min-width:210px}
-.table-wrap.rv-mode .rv-actions-h{min-width:0;width:44%}
-/* this table fits its box, so nothing needs pinning */
+.table-wrap.wide.rv-mode table{min-width:0;width:100%;display:block}
+/* Each review item is two lines: the stay across the top, then why it is stuck and the
+   buttons underneath at full width, so nothing is squeezed into a 200px column. */
+.rv-mode thead,.rv-mode tbody{display:block}
+.rv-mode thead tr,.rv-mode tbody tr{display:grid;grid-template-columns:120px 1.5fr 1.1fr 110px 110px 1.4fr;align-items:start}
+.rv-mode th:nth-child(11),.rv-mode td:nth-child(11),.rv-mode thead th:last-child{display:none}
+.rv-mode tbody td{border-bottom:0}
+.rv-mode tbody tr{border-bottom:1px solid var(--border,#e5e7eb);padding:4px 0 10px}
+.rv-mode tbody td:last-child{grid-column:1/-1;padding-top:2px}
+.rv-mode tbody td[colspan]{grid-column:1/-1}
+.rv-mode tbody td:nth-child(2) code{font-size:12.5px;font-weight:600}
 .table-wrap.rv-mode.tw-sticky th:last-child,.table-wrap.rv-mode.tw-sticky td:last-child{position:static;box-shadow:none}
-.rv-mode td{font-size:12.5px}
-.rv-mode th:nth-child(11),.rv-mode td:nth-child(11){white-space:normal;width:84px;color:var(--text-secondary);font-size:11.5px}
 .rv-mode td:last-child .btn{white-space:nowrap}
 .rv-why{font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.5;padding:6px 8px;background:#f8fafc;border-radius:6px}
 
