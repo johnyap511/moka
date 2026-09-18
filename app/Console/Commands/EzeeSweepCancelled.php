@@ -71,11 +71,12 @@ class EzeeSweepCancelled extends Command
         if ($flagged) {
             $this->newLine();
             $this->warn(count($flagged) . ' booking(s) are cancelled in EZEE but still on an owner calendar:');
-            foreach (array_slice($flagged, 0, 25) as $line) {
+            $limit = $dryRun ? count($flagged) : 25; // a dry run is for reading, so print everything
+            foreach (array_slice($flagged, 0, $limit) as $line) {
                 $this->line('  ' . $line);
             }
-            if (count($flagged) > 25) {
-                $this->line('  ...and ' . (count($flagged) - 25) . ' more');
+            if (count($flagged) > $limit) {
+                $this->line('  ...and ' . (count($flagged) - $limit) . ' more');
             }
             $this->newLine();
             $this->line('Re-run with --retire-assigned to cancel these too. Left alone by default,');
