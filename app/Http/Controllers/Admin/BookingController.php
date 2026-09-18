@@ -1042,7 +1042,19 @@ private function getActionButtons($book)
         $books = Booking::where([['listing_id', $book->listing_id], ['status', 5], ['check_out', '>=', $today]])->get();
         foreach ($books as $book2) {
             if ($book2->id != $id && $book2->check_in < $bookData['check_out'] && $book2->check_out > $bookData['check_in']) {
-                return back()->with('error', 'These dates are not available!')->withInput();
+                // Say which booking is in the way. When it is the next piece of this same stay
+                // (same folio), the stay is already complete and nothing needs changing.
+                if ($book2->folio_no && $book2->folio_no === $book->folio_no) {
+                    return back()->with('error', sprintf(
+                        'Nothing to change: this stay is already complete in Homemoka. The nights you are adding are on its next piece, booking #%d (%s to %s). A long stay is kept as one booking per calendar month, so this piece ends on %s and #%d carries on from there.',
+                        $book2->id, $book2->check_in, $book2->check_out, $book->check_out, $book2->id
+                    ))->withInput();
+                }
+                $g = optional(User::find($book2->user_id));
+                return back()->with('error', sprintf(
+                    'These dates are not available: booking #%d (%s, %s to %s) is already on this unit.',
+                    $book2->id, trim(($g->name ?? '') . ' ' . ($g->last_name ?? '')) ?: 'guest', $book2->check_in, $book2->check_out
+                ))->withInput();
             }
         }
 

@@ -76,6 +76,22 @@
     <div>
         <h1>Edit Booking #{{ $book->id }}</h1>
         <p>{{ $listing->name ?? 'No unit' }} · {{ $fmt($book->check_in) }} → {{ $fmt($book->check_out) }} · {{ $nights }} night{{ $nights == 1 ? '' : 's' }}</p>
+        @php
+            // A long stay is kept as one booking per calendar month. Say so up front, so nobody
+            // tries to stretch this piece over nights that already sit on the next one.
+            $whole = isset($pieces) ? collect($pieces)->where('status', 5) : collect();
+        @endphp
+        @if($whole->count() > 1)
+            @php
+                $wIn = $whole->min('check_in'); $wOut = $whole->max('check_out');
+                $wNights = (int) \Carbon\Carbon::parse($wIn)->diffInDays(\Carbon\Carbon::parse($wOut));
+                $pos = $whole->sortBy('check_in')->values()->search(fn ($x) => $x->id == $book->id);
+            @endphp
+            <p style="margin-top:4px;padding:6px 10px;border-radius:8px;background:#eef6f3;color:#0b5a4a;font-size:13px;display:inline-block">
+                <b>Whole stay: {{ $fmt($wIn) }} → {{ $fmt($wOut) }} · {{ $wNights }} nights · RM {{ number_format($whole->sum('price'), 2) }}</b>,
+                kept as {{ $whole->count() }} pieces (one per calendar month or room). This is piece {{ $pos === false ? '?' : $pos + 1 }} of {{ $whole->count() }}; the others are listed under “Unit &amp; room moves” below.
+            </p>
+        @endif
     </div>
     <div class="flex gap-2">
         <a href="/admin/book/{{ $book->id }}" class="btn btn-secondary">
