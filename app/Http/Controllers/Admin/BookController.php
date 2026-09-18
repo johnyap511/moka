@@ -125,10 +125,16 @@ class BookController extends Controller
             }
         }
         // dd("okey");
+        // Match a guest only on a value that was actually entered. An empty email used to
+        // match the first account with no email (#10), attach the booking to it and rename it.
+        $user = null;
         if (!empty($request->phone)) {
             $user = User::where('phone', $request->phone)->first();
-        } else {
+        } elseif (!empty($request->email)) {
             $user = User::where('email', $request->email)->first();
+        }
+        if ($user && \App\Support\Guests::isShared($user)) {
+            $user = null;
         }
 
         if (empty($user)) {

@@ -1046,25 +1046,45 @@ private function getActionButtons($book)
             }
         }
 
+        // Match a guest only on a value that was actually entered (see Guests::isShared).
+        $user = null;
         if (!empty($request->phone)) {
             $user = User::where('phone', $request->phone)->first();
-        } else {
+        } elseif (!empty($request->email)) {
             $user = User::where('email', $request->email)->first();
+        }
+        if ($user && \App\Support\Guests::isShared($user)) {
+            $user = null;
+        }
+        // Nothing to match on: keep this booking's own guest and apply the edited name to
+        // it, unless that guest is the shared placeholder, in which case a new one is made.
+        if (empty($user)) {
+            $current = User::find($book->user_id);
+            if ($current && !\App\Support\Guests::isShared($current)) {
+                $current->update(array_filter($data, fn ($v) => $v !== null && $v !== ''));
+                $user = $current;
+                $keptGuest = true;
+            }
         }
 
         $ezeeBooking = EzeeBooking::where('book_id', $id)->first();
-        if (empty($user) && empty($ezeeBooking)) {
+        if (!empty($keptGuest)) {
+            // guest already handled above
+        } elseif (empty($user) && empty($ezeeBooking)) {
             if (empty($request->name)) {
                 $data['name'] = '';
             }
             $user = User::create($data);
             $role = Role::find(2);
             $user->attachRole($role);
+        } elseif (empty($user) && !empty($ezeeBooking)) {
+            // eZee-linked booking sitting on the shared placeholder: give it its real guest.
+            $user = \App\Support\Guests::profileFor($ezeeBooking);
         } elseif (!empty($user)) {
             $user->update($data);
         }
 
-        $bookData['user_id'] = $user->id ?? null;
+        $bookData['user_id'] = $user->id ?? $book->user_id;
         //        $bookData['listing_id'] = $id;
         if (!isset($bookData['infant'])) {
             $bookData['infant'] = 0;

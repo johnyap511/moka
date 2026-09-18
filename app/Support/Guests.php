@@ -78,4 +78,18 @@ class Guests
         $d = preg_replace('/\D+/', '', (string) $phone);
         return strlen($d) >= 8 ? $d : null;
     }
+
+    /**
+     * A shared placeholder account: no email, no phone, and many bookings hanging off it
+     * (user #10 carried 3,653 by Sep 2026). A booking form must never attach to one or
+     * rename it: `where('email', null)` used to match it whenever a booking was saved
+     * without phone and email, and the last guest keyed became the name on every one of them.
+     */
+    public static function isShared($user): bool
+    {
+        if (!$user || !empty($user->email) || !empty($user->phone)) {
+            return false;
+        }
+        return \App\Booking::withoutGlobalScopes()->where('user_id', $user->id)->count() > 50; // a true placeholder, not a tenant with a dozen monthly pieces
+    }
 }
