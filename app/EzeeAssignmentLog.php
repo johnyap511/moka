@@ -36,4 +36,10 @@ class EzeeAssignmentLog extends Model
     {
         return $this->belongsTo(User::class, 'assigned_by');
     }
+
+    /** Never let a long note abort an assignment run again (column is TEXT since 18 Sep 2026). */
+    public function setNoteAttribute($value): void
+    {
+        $this->attributes['note'] = $value === null ? null : mb_substr((string) $value, 0, 60000);
+    }
 }
