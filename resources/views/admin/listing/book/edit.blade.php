@@ -85,6 +85,9 @@
   .eb-quick .btn{flex:1 1 45%;justify-content:center}
   .eb-note{flex-direction:column}
   .eb-note button{margin-left:0;width:100%}
+  .eb-note.eb-note--slim{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:6px 8px;padding:10px 14px}
+  .eb-note.eb-note--slim .eb-note__txt{flex:1 1 0;min-width:0;text-align:left}
+  .eb-note.eb-note--slim button{width:auto;margin-left:26px;flex:0 0 auto}
 }
 </style>
 @endpush
