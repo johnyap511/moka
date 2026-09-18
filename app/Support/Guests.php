@@ -44,14 +44,14 @@ class Guests
             if ($last !== '' && (string) $user->last_name !== $last) $fill['last_name'] = $last;
             if (!$user->email && $email) $fill['email'] = $email;
             if (!$user->phone && $eb->Mobile) $fill['phone'] = trim((string) $eb->Mobile);
-            if (!$user->country_code && $eb->Country) $fill['country_code'] = trim((string) $eb->Country);
+            if (!$user->country_code && $eb->Country) $fill['country_code'] = mb_substr(trim((string) $eb->Country), 0, 10);
             if ($fill) User::where('id', $user->id)->update($fill);
             return $user->fresh();
         }
 
         $user = User::create([
             'name' => $first, 'last_name' => $last, 'email' => $email, 'phone' => $eb->Mobile ? trim((string) $eb->Mobile) : null,
-            'country_code' => $eb->Country ? trim((string) $eb->Country) : '60', 'ezee_tmp' => 1, // users.country_code is NOT NULL (default 60); a null here aborted the stay (18 Sep 2026)
+            'country_code' => $eb->Country ? mb_substr(trim((string) $eb->Country), 0, 10) : '60', 'ezee_tmp' => 1, // users.country_code is NOT NULL (default 60); a null here aborted the stay (18 Sep 2026)
         ]);
         if ($role = Role::find(2)) {
             $user->attachRole($role);
