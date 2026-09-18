@@ -752,9 +752,10 @@ class EzeeAutoAssign
         return EzeeBooking::where('SubBookingId', $ezeeBooking->SubBookingId)
             ->where('id', '<>', $ezeeBooking->id)
             ->whereRaw('SUBSTR(TransactionId, 1, 5) <> ?', [substr((string) $ezeeBooking->TransactionId, 0, 5)])
-            ->where('End', $ezeeBooking->End)
-            ->where('RoomName', $ezeeBooking->RoomName)
             ->where('Start', '>', $ezeeBooking->Start)
+            // The true owner's row keeps changing (a room move, an extension),
+            // so any two of end date, room and amount still in common is enough.
+            ->whereRaw('((`End` <=> ?) + (RoomName <=> ?) + (TotalAmountAfterTax <=> ?)) >= 2', [$ezeeBooking->End, $ezeeBooking->RoomName, $ezeeBooking->TotalAmountAfterTax])
             ->exists();
     }
 
