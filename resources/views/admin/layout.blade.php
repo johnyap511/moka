@@ -168,7 +168,8 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
 .tw-search{padding:12px 16px 0}
 .tw-empty{padding:28px 16px;text-align:center;color:var(--text-secondary);font-size:13.5px}
 .row-more{position:relative;display:inline-block}
-.row-more>summary{list-style:none;cursor:pointer}
+.row-more>summary{list-style:none;cursor:pointer;white-space:nowrap}
+.actions .btn{white-space:nowrap}
 .row-more>summary::-webkit-details-marker{display:none}
 .row-more__menu{position:fixed;z-index:60;min-width:168px;background:var(--surface,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 28px rgba(15,23,42,.16);padding:6px;display:flex;flex-direction:column;gap:2px}
 .row-more__menu a,.row-more__menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:7px;font:inherit;font-size:13px;color:var(--text);cursor:pointer;text-decoration:none}
