@@ -75,3 +75,11 @@ the eZee report must be added by hand on the Bookings screen with that folio num
 Month-end check: compare the eZee folio list against Homemoka by folio, not only by RES (example: FN32646, H-03-06,
 11 Sep 2026). Cancellation is never inferred from a stay being absent from eZee's booking-list download; that download
 omits live reservations (RES31133 proven live on 18 Sep 2026), so the daily sweep is switched off.
+
+## 27. Once a month's report has gone to owners, that month's data does not change (Sam, 21 Sep 2026)
+When the monthly report for a month has been sent to owners, every booking in that month stays exactly as reported:
+no repair, re-price, re-assignment, cancellation or restore, by a job or by a person fixing a bug. Corrections are made
+only in months that have not been reported yet. If a mistake is found in a reported month, it is written down
+(what, which booking, how much) and Sam decides whether it is carried as an adjustment in the next open month; the
+old month itself is left as it is. Before any data fix, check the check-in month first. This sits on top of rule 17:
+rule 17 is what the system enforces on its own, rule 27 is what people and repair scripts must follow as well.
