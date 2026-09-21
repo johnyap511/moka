@@ -83,3 +83,6 @@ only in months that have not been reported yet. If a mistake is found in a repor
 (what, which booking, how much) and Sam decides whether it is carried as an adjustment in the next open month; the
 old month itself is left as it is. Before any data fix, check the check-in month first. This sits on top of rule 17:
 rule 17 is what the system enforces on its own, rule 27 is what people and repair scripts must follow as well.
+Since 21 Sep 2026 the system enforces it too: `config/moka.php` → `reported_through` holds the last reported month
+(now 2026-08). That month and everything before it is stamped: jobs skip it and staff need a super admin password.
+Month-end step: when the next report goes out, move `reported_through` forward one month and deploy.
