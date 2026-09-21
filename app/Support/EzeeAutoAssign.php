@@ -241,11 +241,11 @@ class EzeeAutoAssign
                 continue;
             }
 
-            $this->guard(fn () => $this->move($ezeeBooking, $booking, $listing), $ezeeBooking);
+            $this->guard(fn () => $this->move($ezeeBooking, $booking, $listing), $ezeeBooking, $listing);
         }
 
         foreach ($pending as [$ezeeBooking, $listing]) {
-            $this->guard(fn () => $this->assign($ezeeBooking, $listing), $ezeeBooking);
+            $this->guard(fn () => $this->assign($ezeeBooking, $listing), $ezeeBooking, $listing);
         }
 
         $this->closeStaleConflicts();
@@ -257,7 +257,7 @@ class EzeeAutoAssign
      * One unusable booking must not abort a run that is assigning many others,
      * so each is isolated and its failure recorded rather than thrown.
      */
-    private function guard(callable $work, EzeeBooking $ezeeBooking): void
+    private function guard(callable $work, EzeeBooking $ezeeBooking, ?Listing $listing = null): void
     {
         try {
             $work();
@@ -269,6 +269,21 @@ class EzeeAutoAssign
                 'error'  => $e->getMessage(),
             ];
             Log::error('EZEE assign failed for booking ' . $ezeeBooking->SubBookingId . ': ' . $e->getMessage());
+
+            // A stay that fails every hour was invisible to staff (RES4232, RES4349,
+            // 21 Sep 2026). Raise it once for review; a person decides, nothing is moved.
+            try {
+                $this->conflictedNow[$ezeeBooking->id] = true;
+                if ($listing && !$this->dryRun && !EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)->where('method', 'conflict')->whereNull('resolved_at')->exists()) {
+                    EzeeAssignmentLog::create([
+                        'ezee_booking_id' => $ezeeBooking->id, 'listing_id' => $listing->id, 'old_listing_id' => null, 'assigned_by' => null, 'method' => 'conflict',
+                        'note' => sprintf('Could not place %s on %s for %s → %s: %s Check in EZEE which guest really has the unit on those nights, then Reassign or Accept EZEE dates on the right one. Nothing was changed.',
+                            $ezeeBooking->SubBookingId, $listing ? $listing->name : ($ezeeBooking->RoomName ?: 'its unit'), $ezeeBooking->Start, $ezeeBooking->End, $e->getMessage()),
+                    ]);
+                }
+            } catch (\Throwable $ignored) {
+                // The review item is a courtesy; it must never stop the run.
+            }
         }
     }
 
