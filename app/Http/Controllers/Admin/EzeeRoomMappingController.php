@@ -385,6 +385,72 @@ class EzeeRoomMappingController extends Controller
     }
 
     /**
+     * A review row whose two bookings are the same stay keyed twice. Staff pick the
+     * copy to cancel; the other stays. Nothing is deleted. Refused when the two are
+     * pieces of one stay, when each is tied to its own eZee reservation (that is a
+     * void in eZee, not a duplicate), and in a stamped month (ground rules 17, 27).
+     */
+    public function markDuplicate(Request $request, $logId)
+    {
+        $request->validate(['cancel_id' => 'required|integer', 'keep_id' => 'required|integer|different:cancel_id', 'reason' => 'required|string|max:160']);
+
+        $log = EzeeAssignmentLog::findOrFail($logId);
+        $eb  = EzeeBooking::find($log->ezee_booking_id);
+
+        // Only the bookings this review row is about may be touched.
+        preg_match_all('/[Bb]ooking #(\d+)|and #(\d+)/', (string) $log->note, $m);
+        $allowed = array_filter(array_map('intval', array_merge($m[1], $m[2], [$eb->book_id ?? 0])));
+        $cancelId = (int) $request->input('cancel_id');
+        $keepId   = (int) $request->input('keep_id');
+        if (!in_array($cancelId, $allowed, true) || !in_array($keepId, $allowed, true)) {
+            return response()->json(['ok' => false, 'message' => 'Those bookings are not part of this review item.'], 422);
+        }
+
+        $cancel = Booking::withoutGlobalScopes()->find($cancelId);
+        $keep   = Booking::withoutGlobalScopes()->find($keepId);
+        if (!$cancel || !$keep || (int) $cancel->status === 1 || (int) $keep->status === 1) {
+            return response()->json(['ok' => false, 'message' => 'One of the two bookings is missing or already cancelled. Open it and check.'], 422);
+        }
+        if (Lock::isLocked($cancel->check_in) || Lock::isLocked($keep->check_in)) {
+            return response()->json(['ok' => false, 'message' => 'This stay is in a month already reported to owners, so nothing is changed (ground rule 27). Write down both booking numbers and tell Sam.'], 422);
+        }
+        if ($cancel->check_in >= $keep->check_out || $keep->check_in >= $cancel->check_out) {
+            return response()->json(['ok' => false, 'message' => 'These two bookings do not share any night, so they look like two pieces of one stay, not a duplicate. Nothing was cancelled.'], 422);
+        }
+
+        $cancelLink = EzeeBooking::where('book_id', $cancel->id)->where('status', '<>', 1)->first();
+        $keepLink   = EzeeBooking::where('book_id', $keep->id)->where('status', '<>', 1)->first();
+        if ($cancelLink && $keepLink && $cancelLink->id !== $keepLink->id) {
+            return response()->json(['ok' => false, 'message' => sprintf('Each booking is tied to its own eZee reservation (%s and %s). If one of them is void in eZee, use "Voided in eZee" on that one instead.', $cancelLink->SubBookingId, $keepLink->SubBookingId)], 422);
+        }
+
+        $reason = trim($request->input('reason'));
+        $by     = Auth::user()->name ?? ('user #' . Auth::id());
+        $stamp  = now()->format('d M Y H:i');
+
+        DB::transaction(function () use ($log, $cancel, $keep, $cancelLink, $keepLink, $reason, $by, $stamp) {
+            DB::table('bookings')->where('id', $cancel->id)->update([
+                'status'     => 1,
+                'remark'     => mb_substr(trim((string) $cancel->remark . ' | duplicate of #' . $keep->id . ', cancelled by ' . $by . ' ' . $stamp . ': ' . $reason), 0, 255),
+                'updated_at' => now(),
+            ]);
+            // The eZee reservation follows the copy that stays.
+            if ($cancelLink && !$keepLink) {
+                EzeeBooking::where('id', $cancelLink->id)->update(['book_id' => $keep->id]);
+            }
+            EzeeAssignmentLog::create([
+                'ezee_booking_id' => $log->ezee_booking_id, 'listing_id' => $keep->listing_id, 'old_listing_id' => null, 'assigned_by' => Auth::id(), 'method' => 'cancelled',
+                'note' => sprintf('Duplicate, confirmed by %s on %s: booking #%d cancelled, #%d kept%s. %s', $by, $stamp, $cancel->id, $keep->id, ($cancelLink && !$keepLink) ? ' and now tied to ' . $cancelLink->SubBookingId : '', $reason),
+            ]);
+            EzeeAssignmentLog::where('id', $log->id)->update(['resolved_at' => now(), 'resolved_by' => Auth::id(), 'resolution_note' => 'Duplicate: #' . $cancel->id . ' cancelled, #' . $keep->id . ' kept (' . $by . ')']);
+            DataLog::create(['related_id' => $cancel->id, 'title' => 'Duplicate cancelled', 'status' => 'done',
+                'data' => json_encode(['cancelled' => $cancel->id, 'kept' => $keep->id, 'relinked' => ($cancelLink && !$keepLink) ? $cancelLink->SubBookingId : null, 'reason' => $reason, 'by' => $by])]);
+        });
+
+        return response()->json(['ok' => true, 'message' => 'Booking #' . $cancel->id . ' cancelled as a duplicate. #' . $keep->id . ' stays. Nothing was deleted.']);
+    }
+
+    /**
      * Swap the units of two bookings in one step. Done by hand this takes three
      * moves (park one in an extra room, move the other, move the first back) and
      * can be left half done. Here both move inside one transaction, the clash
@@ -687,7 +753,8 @@ class EzeeRoomMappingController extends Controller
         // booking that blocked the assignment, so the pattern can be named
         // without leaving the screen.
         $bookIds = $ezeeMap->pluck('book_id')->filter();
-        $blockedIds = $logs->map(fn ($l) => preg_match('/booking #(\d+)/', (string) $l->note, $m) ? (int) $m[1] : null)->filter();
+        // Every booking a note names ("booking #1 … and #2"), so the review row can show both sides.
+        $blockedIds = $logs->flatMap(fn ($l) => preg_match_all('/(?:[Bb]ooking |and )#(\d+)/', (string) $l->note, $m) ? array_map('intval', $m[1]) : [])->filter();
         $bookingMap = Booking::withoutGlobalScopes()->whereIn('id', $bookIds->merge($blockedIds)->unique())
             ->with('listing')->get(['id', 'listing_id', 'folio_no', 'check_in', 'check_out', 'status', 'source'])->keyBy('id');
 

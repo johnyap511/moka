@@ -38,15 +38,18 @@
 
 @if($method === 'conflict')
 <div class="rv-help">
-    <div class="rv-help__lead"><b>Nothing here was changed.</b> Each stay below could not be placed because the unit was already taken. Check the room history in eZee, then pick the button that matches.</div>
+    <div class="rv-help__lead"><b>How to use this page.</b> Each box below is one stay the system could not sort out by itself, and <b>nothing has been changed yet</b>. Read “What to do”, check the stay in eZee, then press the green button. If you are not sure, leave it and ask.</div>
+    <details class="rv-help__more"><summary>What does each button do?</summary>
     <div class="rv-help__grid">
-        <div><b>Room history</b><span>First nights were in another unit or an extra room</span></div>
-        <div><b>Accept eZee dates</b><span>The stay was shortened or extended</span></div>
-        <div><b>Reassign</b><span>Move the whole booking to another unit</span></div>
-        <div><b>No unit</b><span>An extra-guest “room” that needs no unit</span></div>
-        <div><b>Voided in eZee</b><span>You checked eZee and it is cancelled there</span></div>
-        <div><b>Mark done</b><span>Already sorted out by hand</span></div>
+        <div><b>Accept eZee dates</b><span>The stay was shortened, extended or moved to other dates in eZee</span></div>
+        <div><b>Move to another unit</b><span>The whole stay belongs in a different unit</span></div>
+        <div><b>Some nights elsewhere</b><span>Part of the stay was in another unit or an extra room</span></div>
+        <div><b>Mark as duplicate</b><span>The same stay was keyed twice: cancels the extra copy, keeps the other</span></div>
+        <div><b>Cancelled in eZee</b><span>You checked eZee and it is voided or cancelled there: cancels it here too</span></div>
+        <div><b>Needs no unit</b><span>An extra-guest “room” that needs no unit</span></div>
+        <div><b>Mark done</b><span>Already sorted out by hand; only takes it off this list</span></div>
     </div>
+    </details>
 </div>
 @endif
 
@@ -108,37 +111,93 @@
                                 $blockId = preg_match_all('/[Bb]ooking #(\d+)/', (string) $log->note, $bm) ? (int) end($bm[1]) : null;
                                 $blocker = $blockId ? ($bookingMap[$blockId] ?? null) : null;
                             @endphp
-                            <div class="rv-why">
-                                @if($ours)
-                                    Ours: {{ $ours->check_in }} → {{ $ours->check_out }} on {{ $ours->listing->name ?? '#'.$ours->listing_id }}
-                                    @if($ours->check_in != $eb->Start || $ours->check_out != $eb->End)
-                                        <span style="color:#b45309">(EZEE says {{ $eb->Start }} → {{ $eb->End }})</span>
+                            @php
+                                $note = (string) $log->note;
+                                $fmt  = fn ($d) => $d ? \Carbon\Carbon::parse($d)->format('j M') : '—';
+                                $datesDiffer = $ours && ($ours->check_in != $eb->Start || $ours->check_out != $eb->End);
+                                if (str_starts_with($note, 'Possible duplicate'))        { $kind = 'dup'; }
+                                elseif (str_starts_with($note, 'Room swap applied'))     { $kind = 'swap'; }
+                                elseif (str_starts_with($note, 'Dates changed in EZEE')) { $kind = 'dates'; }
+                                elseif (str_starts_with($note, 'EZEE cancelled'))        { $kind = 'cancelled'; }
+                                elseif (str_starts_with($note, 'EZEE now charges'))      { $kind = 'amounts'; }
+                                elseif (stripos($note, 'Extra Room') !== false && stripos($note, 'split') !== false) { $kind = 'extra'; }
+                                elseif (stripos($note, 'already occupies') !== false || str_starts_with($note, 'Could not')) { $kind = 'clash'; }
+                                else { $kind = 'other'; }
+                                $kinds = [
+                                    'clash'     => ['Two stays want the same unit', '#b45309', 'Open eZee and see who really has this unit on these nights. Usually one guest was moved to another room, or the dates changed. Fix the one that is wrong.', $datesDiffer ? ['dates', 'reassign'] : ['reassign']],
+                                    'dates'     => ['eZee changed the dates', '#1d4ed8', 'Check the stay in eZee. If the new dates are right, accept them.', ['dates']],
+                                    'swap'      => ['Rooms were swapped in eZee (already done here)', '#047857', 'Nothing to fix. Look at both guests in eZee, and if the rooms match, mark it done.', ['done']],
+                                    'cancelled' => ['Cancelled in eZee, still live here', '#b91c1c', 'Check eZee. If it really is cancelled there, cancel it here too.', ['voided']],
+                                    'amounts'   => ['The amount differs from eZee', '#1d4ed8', 'Check the folio in eZee. If eZee is right, use its amounts.', ['amounts']],
+                                    'extra'     => ['Guest spent nights in an extra room', '#7c3aed', 'Read Room Charges in eZee, then put the extra-room nights on the extra room and the unit nights on the unit.', ['history']],
+                                    'dup'       => ['Possible duplicate booking', '#b91c1c', 'Open both bookings. If they are the same stay keyed twice, mark the extra copy as duplicate. If they are two parts of one stay, mark it done.', ['duplicate']],
+                                    'other'     => ['Needs a person to check', '#475569', 'Read the system note below and check the stay in eZee.', []],
+                                ];
+                                [$kTitle, $kColor, $kDo, $kPrimary] = $kinds[$kind];
+                                // The two bookings a duplicate is chosen from: the ones the note names, else ours and the blocker.
+                                preg_match_all('/(?:[Bb]ooking |and )#(\d+)/', $note, $nm);
+                                $pair = collect(array_map('intval', $nm[1]))->push($ours->id ?? null)->filter()->unique()->map(fn ($id) => $bookingMap[$id] ?? null)->filter()->filter(fn ($b) => (int) $b->status !== 1)->take(2)->values();
+                            @endphp
+                            <div class="rv-card" style="border-left-color:{{ $kColor }}">
+                                <div class="rv-card__title" style="color:{{ $kColor }}">{{ $kTitle }}</div>
+                                <div class="rv-facts">
+                                    <div><span>eZee says</span><b>{{ $eb->RoomName ?: 'no room yet' }}</b> · {{ $fmt($eb->Start) }} → {{ $fmt($eb->End) }}</div>
+                                    <div><span>Homemoka has</span>
+                                        @if($ours)
+                                            <a href="/admin/book/{{ $ours->id }}/edit#unit-card">#{{ $ours->id }}</a> · <b>{{ $ours->listing->name ?? '#'.$ours->listing_id }}</b> · {{ $fmt($ours->check_in) }} → {{ $fmt($ours->check_out) }}{{ (int) $ours->status === 1 ? ' (cancelled)' : '' }}
+                                            @if($datesDiffer)<em class="rv-flag">dates differ</em>@endif
+                                        @else
+                                            nothing yet (not on the calendar)
+                                        @endif
+                                    </div>
+                                    @if($blocker && (!$ours || $blocker->id !== $ours->id))
+                                    <div><span>In the way</span><a href="/admin/book/{{ $blocker->id }}/edit#unit-card">#{{ $blocker->id }}</a> · <b>{{ $blocker->listing->name ?? '#'.$blocker->listing_id }}</b> · {{ $fmt($blocker->check_in) }} → {{ $fmt($blocker->check_out) }} · {{ $blocker->source }}{{ $blocker->status == 1 ? ' (cancelled)' : '' }}</div>
                                     @endif
-                                    <br>
-                                @else
-                                    Not assigned yet.<br>
-                                @endif
-                                @if($blocker)
-                                    Blocked by #{{ $blocker->id }}: {{ $blocker->check_in }} → {{ $blocker->check_out }}, {{ $blocker->source }}{{ $blocker->status == 1 ? ' (cancelled)' : '' }}
-                                @endif
+                                </div>
+                                <div class="rv-do"><b>What to do:</b> {{ $kDo }}</div>
+                                <details class="rv-note"><summary>System note</summary>{{ $note }}</details>
                             </div>
                             @if(!$log->resolved_at)
-                            @php $linkDead = $eb && $eb->book_id && (!$ours || (int) $ours->status === 1); @endphp
-                            <div style="display:flex;gap:4px;flex-wrap:wrap">
-                                @if($ours)<a href="/admin/book/{{ $ours->id }}/edit#unit-card" class="btn btn-secondary btn-sm" title="Edit, cancel, reassign, split or swap this booking">Open #{{ $ours->id }}</a>@endif
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('hist-{{ $log->id }}')" title="Some nights were in another unit or an extra room">Room history</button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="acceptDates(this, {{ $log->ezee_booking_id }}, '{{ $eb->Start }}', '{{ $eb->End }}')" title="Move our dates to EZEE's; the stamped rate stands">Accept EZEE dates</button>
-                                @if(str_starts_with((string) $log->note, 'EZEE now charges'))
-                                <button type="button" class="btn btn-primary btn-sm" onclick="acceptAmounts(this, {{ $log->ezee_booking_id }})" title="Set this booking's rate, cleaning fee and SST to EZEE's current figures">Use EZEE amounts</button>
+                            @php
+                                $linkDead = $eb && $eb->book_id && (!$ours || (int) $ours->status === 1);
+                                $B = [];
+                                if ($ours) { $B['open'] = '<a href="/admin/book/'.$ours->id.'/edit#unit-card" class="btn %s btn-sm" title="Edit, cancel, reassign, split or swap this booking">Open #'.$ours->id.'</a>'; }
+                                $B['dates']    = '<button type="button" class="btn %s btn-sm" onclick="acceptDates(this, '.$log->ezee_booking_id.', \''.$eb->Start.'\', \''.$eb->End.'\')" title="Move our dates to eZee\'s; the stamped rate stands">Accept eZee dates</button>';
+                                $B['reassign'] = '<button type="button" class="btn %s btn-sm" onclick="togglePanel(\'reassign-'.$log->id.'\')" title="Move the whole booking to another unit">Move to another unit</button>';
+                                $B['history']  = '<button type="button" class="btn %s btn-sm" onclick="togglePanel(\'hist-'.$log->id.'\')" title="Some nights were in another unit or an extra room">Some nights elsewhere</button>';
+                                if (str_starts_with($note, 'EZEE now charges')) { $B['amounts'] = '<button type="button" class="btn %s btn-sm" onclick="acceptAmounts(this, '.$log->ezee_booking_id.')" title="Set this booking\'s rate, cleaning fee and SST to eZee\'s current figures">Use eZee amounts</button>'; }
+                                if ($pair->count() === 2) { $B['duplicate'] = '<button type="button" class="btn %s btn-sm" onclick="togglePanel(\'dup-'.$log->id.'\')" title="The same stay was keyed twice: cancel the extra copy">Mark as duplicate</button>'; }
+                                $B['voided']   = '<button type="button" class="btn %s btn-sm rv-danger" onclick="voidedInEzee(this, '.$log->ezee_booking_id.', \''.e($eb->SubBookingId).'\')" title="You checked eZee and this reservation is voided or cancelled there">Cancelled in eZee</button>';
+                                $B['nounit']   = '<button type="button" class="btn %s btn-sm" onclick="noUnit(this, '.$log->ezee_booking_id.')" title="Extra-guest room, needs no unit">Needs no unit</button>';
+                                if ($linkDead) { $B['restore'] = '<button type="button" class="btn %s btn-sm" onclick="restoreBooking(this, '.$log->ezee_booking_id.')" title="Bring back the cancelled booking eZee still reports">Restore</button>'; }
+                                $B['done']     = '<button type="button" class="btn %s btn-sm" onclick="setResolved(this, '.$log->id.', true)" title="Already sorted out; takes it off this list">Mark done</button>';
+                                $primary = array_values(array_filter($kPrimary, fn ($k) => isset($B[$k])));
+                                $always  = array_values(array_diff(array_filter(['open', 'done'], fn ($k) => isset($B[$k])), $primary));
+                                $rest    = array_values(array_diff(array_keys($B), $primary, $always));
+                            @endphp
+                            <div class="rv-actions">
+                                @foreach($primary as $k){!! sprintf($B[$k], 'btn-primary') !!}@endforeach
+                                @foreach($always as $k){!! sprintf($B[$k], 'btn-secondary') !!}@endforeach
+                                @if($rest)
+                                <details class="rv-more"><summary class="btn btn-secondary btn-sm">Other actions</summary>
+                                    <div class="rv-more__list">@foreach($rest as $k){!! sprintf($B[$k], 'btn-secondary') !!}@endforeach</div>
+                                </details>
                                 @endif
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="noUnit(this, {{ $log->ezee_booking_id }})" title="Extra-guest room, needs no unit">No unit</button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('reassign-{{ $log->id }}')" title="Move the whole booking to another unit">Reassign</button>
-                                <button type="button" class="btn btn-secondary btn-sm" style="color:#b91c1c;border-color:#fecaca" onclick="voidedInEzee(this, {{ $log->ezee_booking_id }}, '{{ $eb->SubBookingId }}')" title="You checked eZee and this reservation is voided or cancelled there">Voided in eZee</button>
-                                @if($linkDead)
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="restoreBooking(this, {{ $log->ezee_booking_id }})" title="Bring back the cancelled booking EZEE still reports">Restore</button>
-                                @endif
-                                <button type="button" class="btn btn-primary btn-sm" onclick="setResolved(this, {{ $log->id }}, true)">Mark done</button>
                             </div>
+                            @if($pair->count() === 2)
+                            <div id="dup-{{ $log->id }}" class="review-panel" style="display:none">
+                                <div class="review-panel-title"><b>Which one is the extra copy?</b> It will be cancelled, not deleted. The other one stays.</div>
+                                @foreach($pair as $i => $pb)
+                                <label class="rv-dup-opt"><input type="radio" name="dup-{{ $log->id }}" value="{{ $pb->id }}" data-other="{{ $pair[$i === 0 ? 1 : 0]->id }}">
+                                    Cancel <b>#{{ $pb->id }}</b> · {{ $pb->listing->name ?? '#'.$pb->listing_id }} · {{ $fmt($pb->check_in) }} → {{ $fmt($pb->check_out) }} · {{ $pb->source }}{{ ($eb && (int) $eb->book_id === (int) $pb->id) ? ' · tied to '.$eb->SubBookingId : '' }}</label>
+                                @endforeach
+                                <input type="text" id="dup-reason-{{ $log->id }}" placeholder="Why is it a duplicate? (required)" maxlength="160" style="width:100%;max-width:420px;margin:6px 0 8px">
+                                <div style="display:flex;gap:4px">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="markDuplicate(this, {{ $log->id }})">Cancel the selected copy</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="togglePanel('dup-{{ $log->id }}')">Close</button>
+                                </div>
+                            </div>
+                            @endif
                             <div id="hist-{{ $log->id }}" class="review-panel" style="display:none">
                                 <div class="review-panel-title">Nights the guest was <b>not</b> in {{ $eb->RoomName }}</div>
                                 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
@@ -232,6 +291,20 @@
 .rv-mode tbody td:nth-child(2) code{font-size:12.5px;font-weight:600}
 .table-wrap.rv-mode.tw-sticky th:last-child,.table-wrap.rv-mode.tw-sticky td:last-child{position:static;box-shadow:none}
 .rv-mode td:last-child .btn{white-space:nowrap}
+.rv-help__more{margin-top:2px}.rv-help__more summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
+.rv-card{border-left:4px solid #94a3b8;background:#f8fafc;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.5}
+.rv-card__title{font-weight:700;font-size:13.5px;margin-bottom:6px}
+.rv-facts{display:grid;gap:3px;margin-bottom:8px}
+.rv-facts>div>span{display:inline-block;min-width:104px;color:var(--text-secondary);font-size:12px}
+.rv-flag{font-style:normal;font-size:11px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:999px;padding:1px 8px;margin-left:6px}
+.rv-do{color:#0f172a}
+.rv-note{margin-top:6px;font-size:12px;color:var(--text-secondary)}.rv-note summary{cursor:pointer}
+.rv-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.rv-more{position:relative}.rv-more>summary{list-style:none;cursor:pointer}.rv-more>summary::-webkit-details-marker{display:none}.rv-more>summary::after{content:" ▾"}
+.rv-more__list{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px;border:1px dashed var(--border,#e5e7eb);border-radius:8px;background:#fff}
+.rv-danger{color:#b91c1c!important;border-color:#fecaca!important}
+.rv-dup-opt{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:12.5px;cursor:pointer}
+@media (max-width:700px){.rv-facts>div>span{display:block;min-width:0}}
 .rv-why{font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.5;padding:6px 8px;background:#f8fafc;border-radius:6px}
 
 .review-panel { margin-top:8px; padding:10px; border:1px solid var(--border, #e5e7eb); border-radius:6px; background:var(--bg-secondary, #f9fafb); font-size:12px; }
@@ -327,6 +400,14 @@ function voidedInEzee(btn, ezeeId, res) {
     if (reason === null) { return; }
     if (!reason.trim()) { alert('A reason is required.'); return; }
     postAction(btn, '/admin/ezee/booking/' + ezeeId + '/voided', { reason: reason.trim() }, 'Retired.');
+}
+function markDuplicate(btn, logId) {
+    var pick = document.querySelector('input[name="dup-' + logId + '"]:checked');
+    var reason = document.getElementById('dup-reason-' + logId).value.trim();
+    if (!pick) { alert('Choose which booking is the extra copy.'); return; }
+    if (!reason) { alert('Please say why it is a duplicate.'); return; }
+    if (!confirm('Cancel booking #' + pick.value + ' as a duplicate and keep #' + pick.dataset.other + '?\n\nNothing is deleted; the cancelled copy stays in the history.')) { return; }
+    postAction(btn, '/admin/ezee/review/' + logId + '/duplicate', { cancel_id: parseInt(pick.value, 10), keep_id: parseInt(pick.dataset.other, 10), reason: reason }, 'Done.');
 }
 function restoreBooking(btn, ezeeId) {
     if (!confirm('Restore the cancelled booking? EZEE still reports this stay.')) { return; }
