@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'southeast-asia-haze-2026-short-stay-hosting-guide',
+            'view'        => 'southeast-asia-haze-2026-short-stay-hosting-guide',
+            'title'       => 'Haze 2026: A Short-Stay Hosting Guide | MOKA',
+            'heading'     => 'What Southeast Asia’s haze means for your short-stay guests',
+            'description' => 'Haze from Indonesia’s fires has pushed over 30 Malaysian areas into unhealthy air this week. What the readings mean and what to change at your unit now.',
+            'published'   => '2026-09-21',
+            'updated'     => '2026-09-21',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/skyawani-5/3.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+                ['new-theme23/images/projects/skyvogue/6.jpg', 'Innspace interior at SkyVogue'],
+            ],
+            'topic'       => 'Hosting',
+            'read_time'   => 6,
+            'cta_heading' => 'Want your units watched through haze season?',
+            'cta_body'    => 'We check the API for every managed unit daily and message affected guests before they have to ask.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-21-september-2026',
+            'view'        => 'short-stay-news-malaysia-sea-21-september-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 21 Sep 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 21 September 2026',
+            'description' => 'Haze shuts down over 30 areas nationwide, Sabah tourism defies slump talk, RTS Link’s Singapore station is done, and a festival fills Melaka’s coast.',
+            'published'   => '2026-09-21',
+            'updated'     => '2026-09-21',
+            'image'       => 'new-theme23/images/blog/kk-beach-sunset.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/jb-city-traffic.jpg', 'Johor Bahru, a year ahead of the RTS Link’s 2027 opening'],
+                ['new-theme23/images/blog/singapore-supertrees.jpg', 'Singapore, tracking its own haze readings this week'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'view'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 16 Sep 2026 | MOKA',
