@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'muslim-friendly-hosting-malaysia-short-stay-guide',
+            'view'        => 'muslim-friendly-hosting-malaysia-short-stay-guide',
+            'title'       => 'Hosting Muslim-Friendly Guests in Malaysia | MOKA',
+            'heading'     => 'Hosting Muslim-friendly guests: what Malaysia\'s No. 1 ranking means for your listing',
+            'description' => 'Malaysia keeps its Global Muslim Travel Index No. 1 ranking for an 11th year. A practical guide to hosting Muslim-friendly guests in your short-stay unit.',
+            'published'   => '2026-09-15',
+            'updated'     => '2026-09-15',
+            'image'       => 'new-theme23/images/projects/skyawani-5/3.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/mount-kinabalu.jpg', 'Malaysia has topped the Global Muslim Travel Index for eleven years running'],
+                ['new-theme23/images/projects/curvo/2.jpg', 'Innspace interior at Curvo'],
+            ],
+            'topic'       => 'Hosting',
+            'read_time'   => 5,
+            'cta_heading' => 'Want your listing ready for this segment?',
+            'cta_body'    => 'We can walk through your unit and suggest low-cost additions that matter to Muslim-friendly travellers.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-15-september-2026',
+            'view'        => 'short-stay-news-malaysia-sea-15-september-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 15 Sep 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 15 September 2026',
+            'description' => 'A cultural festival packs Titiwangsa, Malaysia keeps its Muslim-friendly No.1 ranking, the property overhang grows, and Thailand halves its visa-free stay.',
+            'published'   => '2026-09-15',
+            'updated'     => '2026-09-15',
+            'image'       => 'new-theme23/images/blog/nasi-lemak.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/singapore-supertrees.jpg', 'Southeast Asia\'s travel and short-stay rules are moving at different speeds'],
+                ['new-theme23/images/blog/villa-pool.jpg', 'Malaysia\'s overhang of unsold completed homes is still climbing'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'view'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 16 Sep 2026 | MOKA',
