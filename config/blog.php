@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'malaysia-condo-overhang-2026-owner-guide',
+            'view'        => 'malaysia-condo-overhang-2026-owner-guide',
+            'title'       => 'Malaysia\'s Condo Overhang: What It Means for Owners | MOKA',
+            'heading'     => 'Malaysia\'s unsold-condo overhang, and what it means if you\'re not selling',
+            'description' => 'Rehda\'s 1H 2026 survey found 59% of developers hold unsold units. What the overhang means for owners deciding whether to sell, hold or convert to short-stay.',
+            'published'   => '2026-09-28',
+            'updated'     => '2026-09-28',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/skyawani-5/4.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+                ['new-theme23/images/projects/curvo/4.jpg', 'Innspace interior at Curvo'],
+            ],
+            'topic'       => 'Hosting',
+            'read_time'   => 6,
+            'cta_heading' => 'Sitting on an empty or newly-handed-over unit?',
+            'cta_body'    => 'Tell us the building and layout and we will give you a straight answer on whether short-stay makes sense for it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-28-september-2026',
+            'view'        => 'short-stay-news-malaysia-sea-28-september-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 28 Sep 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 28 September 2026',
+            'description' => 'F1 at Sepang is now bracketed by a race in Singapore, Sabah courts Beijing flights, Malaysia\'s condo overhang grows, and Cambodia\'s arrivals nearly halve.',
+            'published'   => '2026-09-28',
+            'updated'     => '2026-09-28',
+            'image'       => 'new-theme23/images/blog/kk-beach-sunset.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/mount-kinabalu.jpg', 'Sabah is courting more direct flights from China'],
+                ['new-theme23/images/blog/singapore-supertrees.jpg', 'Race weekends now bracket two countries: Sepang, then Singapore'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'view'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 16 Sep 2026 | MOKA',
