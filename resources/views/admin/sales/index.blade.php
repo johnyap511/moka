@@ -76,6 +76,9 @@
 </div>
 @endif
 
+@if(!$own && $rows && count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')))
+<div class="sc-banner"><b>KPI inputs for {{ $monthName }} not entered yet.</b> Sales figures are automatic; attendance, lateness and employment come from HR. Until they are entered everyone is treated as having met the attendance and punctuality KPIs. <a href="#kpi">Enter them now</a></div>
+@endif
 @if($own)
 <details class="sc-explain" {{ count($data['stays']) ? '' : 'open' }}>
     <summary>How it is calculated · what to do if a figure looks wrong</summary>
@@ -206,10 +209,10 @@
 @if($own)
 <p class="sc-foot">Reports uploaded to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
 @else
-<details class="sc-setup" {{ count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
-    <summary>KPI inputs for {{ $monthName }} (attendance, lateness, employment)</summary>
+<details class="sc-setup" id="kpi" {{ count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
+    <summary>Enter KPI inputs for {{ $monthName }}: attendance, lateness, employment</summary>
     <div class="card" style="margin-top:12px"><div class="card-body">
-        <p class="sc-help">From HR's records, per SOP §8: recorded absences after any approved Medical Exception (§8.3), whether any absence was without approval, accumulated lateness in minutes, and whether the person is under a disciplinary sanction affecting bonus. "Employed full month" decides who is counted in the 80% team threshold (§3.3). Confirmation dates are set under "Who can see what".{{ $final ? ' This month is final: change these only to correct the record of what was paid.' : '' }}</p>
+        <p class="sc-help">The RM15,000 sales KPI is checked automatically from eZee. These come from HR's clock-in and leave records (SOP §8): <b>Recorded absences</b> = MC, unpaid leave and unnotified no-shows, minus any approved Medical Exception (§8.3); <b>Absence without approval</b> = one instance means nil for the month; <b>Lateness</b> = minutes over the month against the shift start (over 120 = nil); <b>Disciplinary</b> = a live sanction affecting bonus (§9.4); <b>Employed full month</b> decides who is counted in the 80% team threshold (§3.3). Confirmation dates are set under "Who can see what". Save once per month, before the payroll run.{{ $final ? ' This month is final: change these only to correct the record of what was paid.' : '' }}</p>
         @if(admin_can('sales.manage'))
         <form method="post" action="{{ route('admin.sales.kpi') }}">
             @csrf<input type="hidden" name="ym" value="{{ $ym }}">
@@ -362,6 +365,7 @@
 .sc-bar{position:relative;height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:3px 0}.sc-bar i{position:absolute;left:0;top:0;bottom:0;background:#0f766e;border-radius:999px}.sc-bar u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
 .sc-chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;font-weight:600;font-style:normal;width:max-content}.sc-chip--final{background:#dcfce7;color:#166534}.sc-chip--prov{background:#fef3c7;color:#92400e}
 .sc-tile--main .sc-chip--prov{background:rgba(255,255,255,.18);color:#fff}.sc-tile--main .sc-chip--final{background:rgba(255,255,255,.25);color:#fff}
+.sc-banner{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#78350f}.sc-banner a{font-weight:600;color:#92400e}
 .sc-explain{background:#f8fafc;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px}
 .sc-explain summary{cursor:pointer;font-weight:600}.sc-explain ul{margin:6px 0 2px;padding-left:18px;line-height:1.5}.sc-explain li{margin:3px 0}
 .sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}.sc-grid--own{grid-template-columns:1fr}.sc-span2{grid-column:1/-1}

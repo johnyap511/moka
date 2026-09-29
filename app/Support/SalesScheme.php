@@ -39,14 +39,16 @@ class SalesScheme
         if (!$confirmedOn) {
             return 'full';
         }
-        if (substr($confirmedOn, 0, 7) >= $ym) {
+        if (substr($confirmedOn, 0, 7) > $ym) {
             return 'probation';
         }
-        // The transition is the three complete months after the month confirmation took effect.
-        $first = date('Y-m', strtotime(substr($confirmedOn, 0, 7) . '-01 +1 month'));
-        $last  = date('Y-m', strtotime(substr($confirmedOn, 0, 7) . '-01 +' . self::TRANSITION_MONTHS . ' months'));
+        // §3.2: the transition is the three complete calendar months after the month in
+        // which confirmation took effect; that (partial) month itself is disregarded for
+        // the count, so it is treated like the transition: eligible from the confirmation
+        // date, minimum waived. Nights before the confirmation date do not count (month()).
+        $last = date('Y-m', strtotime(substr($confirmedOn, 0, 7) . '-01 +' . self::TRANSITION_MONTHS . ' months'));
 
-        return ($ym >= $first && $ym <= $last) ? 'transition' : 'full';
+        return $ym <= $last ? 'transition' : 'full';
     }
 
     /**
@@ -59,6 +61,13 @@ class SalesScheme
         $persons = DB::table('sales_persons')->orderBy('name')->get()->keyBy('name');
         $sales   = DB::table('sales_transactions')->selectRaw('sales_person, SUM(net_amount) net, COUNT(*) nights, COUNT(DISTINCT CONCAT(hotel_code, "|", folio_no)) stays')
             ->where('payable', 1)->whereBetween('tran_date', [$ym . '-01', date('Y-m-t', strtotime($ym . '-01'))])->groupBy('sales_person')->get()->keyBy('sales_person');
+        // In the month of confirmation only nights posted from the confirmation date count.
+        foreach ($persons as $name => $p) {
+            if ($p->confirmed_on && substr($p->confirmed_on, 0, 7) === $ym && substr($p->confirmed_on, 8, 2) !== '01') {
+                $sales[$name] = DB::table('sales_transactions')->selectRaw('sales_person, SUM(net_amount) net, COUNT(*) nights, COUNT(DISTINCT CONCAT(hotel_code, "|", folio_no)) stays')
+                    ->where('payable', 1)->where('sales_person', $name)->whereBetween('tran_date', [$p->confirmed_on, date('Y-m-t', strtotime($ym . '-01'))])->groupBy('sales_person')->first();
+            }
+        }
         $kpis    = DB::table('sales_kpis')->where('ym', $ym)->get()->keyBy('sales_person_id');
         $adj     = DB::table('sales_adjustments')->where('ym', $ym)->get()->groupBy('sales_person_id');
 
