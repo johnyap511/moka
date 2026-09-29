@@ -101,7 +101,7 @@
                             </form>
                             @else{{ $sp->email ?: '—' }}@endif
                         </td>
-                        <td class="sc-note">@if(!$sp->user_id)<span class="sc-warn">no login yet</span>@elseif(empty($sp->admin_role))sees everyone (super admin)@else{{ ucfirst($sp->admin_role) }} role@endif</td>
+                        <td class="sc-note">@if(!$sp->user_id)<span class="sc-warn">no login yet</span>@elseif(empty($sp->admin_role))sees everyone (super admin)@else{{ ucfirst($sp->admin_role) }} role @endif</td>
                     </tr>
                 @endforeach
                 </tbody>
