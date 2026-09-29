@@ -312,9 +312,28 @@ class SalesCommission
             }
         }
 
+        // Cross-month stays: the nights posted in other months, so a person can see
+        // what was paid last month and what follows next month for the same stay.
         $rate = self::rate();
-        $people = [];
+        $keys = array_keys($stays);
+        if ($keys) {
+            $other = DB::table('sales_transactions')->selectRaw("hotel_code, folio_no, DATE_FORMAT(tran_date, '%Y-%m') ym, COUNT(*) nights, SUM(net_amount) net")
+                ->where('payable', 1)->where(fn ($w) => $w->where('tran_date', '<', $from)->orWhere('tran_date', '>', $to))
+                ->where(function ($w) use ($stays) {
+                    foreach ($stays as $s) {
+                        $w->orWhere(fn ($x) => $x->where('hotel_code', $s->hotel_code)->where('folio_no', $s->folio_no));
+                    }
+                })->groupBy('hotel_code', 'folio_no', 'ym')->orderBy('ym')->get();
+            foreach ($other as $o) {
+                $k = $o->hotel_code . '|' . $o->folio_no;
+                if (isset($stays[$k])) {
+                    $stays[$k]->other_months[] = (object) ['ym' => $o->ym, 'nights' => (int) $o->nights, 'net' => (float) $o->net, 'commission' => round((float) $o->net * $rate, 2), 'before' => $o->ym < substr($from, 0, 7)];
+                }
+            }
+        }
         foreach ($stays as $s) {
+            $s->other_months = $s->other_months ?? [];
+            $s->cross = $s->other_months || ($s->arrival && $s->arrival < $from) || ($s->departure && $s->departure > date('Y-m-d', strtotime($to . ' +1 day')));
             $s->commission = round($s->net * $rate, 2);
             $p = &$people[$s->sales_person];
             if (!$p) {

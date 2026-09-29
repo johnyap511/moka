@@ -22,7 +22,8 @@ class SalesCommissionController extends Controller
         $history = SalesCommission::history($person);
         $view = ['ym' => $ym, 'person' => $person, 'own' => $own, 'data' => $data, 'history' => $history, 'hotels' => SalesCommission::HOTELS,
             'prev' => date('Y-m', strtotime($ym . '-01 -1 month')), 'next' => date('Y-m', strtotime($ym . '-01 +1 month')),
-            'final' => SalesCommission::isFinal($ym), 'payout' => SalesCommission::payoutLabel($ym)];
+            'final' => SalesCommission::isFinal($ym), 'payout' => SalesCommission::payoutLabel($ym),
+            'coverage' => DB::table('sales_report_uploads')->select('hotel_code', DB::raw('MAX(period_to) last_day'), DB::raw('MAX(created_at) last_upload'))->groupBy('hotel_code')->get()->keyBy('hotel_code')];
 
         if ($all) {
             SalesCommission::syncPersons();
@@ -32,7 +33,6 @@ class SalesCommissionController extends Controller
                 ->select('sales_persons.id', 'sales_persons.name', 'sales_persons.user_id', 'users.email', 'users.admin_role')->orderBy('sales_persons.name')->get();
             $view['staff']    = DB::table('users')->join('role_user', 'role_user.user_id', '=', 'users.id')->where('role_user.role_id', 1)
                 ->whereNotNull('users.email')->select('users.id', 'users.name', 'users.email')->orderBy('users.email')->get();
-            $view['coverage'] = DB::table('sales_report_uploads')->select('hotel_code', DB::raw('MAX(period_to) last_day'), DB::raw('MAX(created_at) last_upload'))->groupBy('hotel_code')->get()->keyBy('hotel_code');
         }
 
         return view('admin.sales.index', $view);
