@@ -58,7 +58,7 @@
         <div class="sc-bar"><i style="width:{{ min(100, $st->sales / 300) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div>
         <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' to Tier ' . $nextTier[0] : '' }}</em></div>
     <div class="sc-tile"><span>Commission 2%</span><b>{{ $rm($st->personal) }}</b><em>{{ $gateText($st) }}{{ $st->pct < 1 && $st->gross > 0 ? ' · before KPI ' . $rm($st->gross) : '' }}</em></div>
-    <div class="sc-tile"><span>Team bonus share</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} counted staff reached it, shared by {{ $team['eligible'] }}@else No pool this month: under 80% of counted staff reached RM15,000 @endif </em></div>
+    <div class="sc-tile"><span>Team bonus share</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} counted staff reached it, shared by {{ $team['eligible'] }}@else No pool: {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k (need 80%) @endif </em></div>
     <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($st->deferred) }}</b><em>paid after year-end audit</em></div>
     @if(isset($deferred) && $deferred)
     <div class="sc-tile"><span>Deferred balance {{ $deferred[0]->year }}</span><b>{{ $rm($deferred[0]->outstanding) }}</b><em>{{ $rm($deferred[0]->accrued) }} accrued · {{ $rm($deferred[0]->paid) }} paid</em></div>
@@ -181,7 +181,7 @@
                     <td>{{ $s->guest }}<div class="sc-muted">{{ $s->source }}</div></td>
                     <td class="mono">{{ $s->res_no ?: 'no RES' }}<div class="sc-muted">{{ $s->folio_no }}</div></td>
                     <td>{{ $s->room }}<div class="sc-muted">{{ $s->property }}</div></td>
-                    <td class="text-nowrap">{{ $range($s->arrival, $s->departure) }}@if($s->cross)<div><em class="sc-badge">cross-month</em></div>@endif</td>
+                    <td class="sc-stay">{{ $range($s->arrival, $s->departure) }}@if($s->cross)<div><em class="sc-badge">cross-month</em></div>@endif</td>
                     <td class="num">{{ $s->nights }}<div class="sc-muted">{{ $fmt($s->first_night) }}{{ $s->nights > 1 ? ' – ' . $fmt($s->last_night) : '' }}</div></td>
                     <td class="num">{{ $rm($s->net) }}</td>
                     <td class="num">@if($s->warn)<span class="sc-warn">on hold</span>@else{{ $rm($s->commission) }}@endif</td>
@@ -364,14 +364,14 @@
 .sc-tile--main .sc-chip--prov{background:rgba(255,255,255,.18);color:#fff}.sc-tile--main .sc-chip--final{background:rgba(255,255,255,.25);color:#fff}
 .sc-explain{background:#f8fafc;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px}
 .sc-explain summary{cursor:pointer;font-weight:600}.sc-explain ul{margin:6px 0 2px;padding-left:18px;line-height:1.5}.sc-explain li{margin:3px 0}
-.sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}.sc-grid--own{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}.sc-span2{grid-column:1/-1}
+.sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}.sc-grid--own{grid-template-columns:1fr}.sc-span2{grid-column:1/-1}
 @media (max-width:900px){.sc-grid,.sc-grid--own{grid-template-columns:1fr}}
 .sc-h3{margin:0 0 8px;font-size:14px}
 .card .card-body{padding:12px 14px}
 .sc-table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.35}.sc-table th,.sc-table td{padding:5px 8px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;vertical-align:top}.sc-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap}
 .sc-table .num{text-align:right;white-space:nowrap}.sc-table tfoot th{text-transform:none;font-size:12.5px;color:inherit;border-top:2px solid var(--border,#e5e7eb)}
 .sc-small{font-size:12px}.sc-small th,.sc-small td{padding:4px 6px}
-.sc-stays__table{min-width:960px}.sc-stays__table td{white-space:nowrap}.sc-stays__table td.sc-note{white-space:normal;min-width:200px}
+.sc-stays__table{min-width:900px}.sc-stays__table td.mono,.sc-stays__table td.num,.sc-stays__table td.sc-stay{white-space:nowrap}.sc-stays__table td.sc-note{min-width:180px}
 .sc-kpi input[type=number],.sc-kpi input[type=text]{padding:3px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}
 .sc-muted{font-size:11.5px;color:var(--text-secondary)}.sc-empty{color:var(--text-secondary);padding:14px!important}
 .sc-help{font-size:12px;color:var(--text-secondary);line-height:1.45;margin:0 0 8px}
