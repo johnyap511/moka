@@ -11,4 +11,7 @@ return [
      * monthly report goes out. It can only lock more than rule 17 does, never less.
      */
     'reported_through' => env('MOKA_REPORTED_THROUGH', '2026-08'),
+
+    // Sales commission (Sam, 29 Sep 2026): 2% of room charges before SST, every sales person, every source.
+    'sales_commission_rate' => (float) env('MOKA_SALES_COMMISSION_RATE', 0.02),
 ];

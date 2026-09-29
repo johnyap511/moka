@@ -42,6 +42,10 @@ return [
         'Calendar' => [
             'calendar.view' => 'View & Export Calendar',
         ],
+        'Sales' => [
+            'sales.view'   => 'View sales commission (all sales persons)',
+            'sales.manage' => 'Upload eZee Transaction Detail Reports',
+        ],
     ],
     'roles' => [
         'super_admin' => [
@@ -71,6 +75,7 @@ return [
                 'listings.view',
                 'bookings.view',
                 'finance.view', 'finance.manage',
+                'sales.view', 'sales.manage',
             ],
         ],
         'operations' => [

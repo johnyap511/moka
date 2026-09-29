@@ -173,3 +173,7 @@ Route::post('/filemanager/organize', 'Admin\FileManagerController@organizeFiles'
 Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
     \UniSharp\LaravelFilemanager\Lfm::routes();
 });
+
+// Sales commission from eZee's Transaction Detail Report (29 Sep 2026)
+Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
+Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
