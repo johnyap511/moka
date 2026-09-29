@@ -177,3 +177,4 @@ Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']
 // Sales commission from eZee's Transaction Detail Report (29 Sep 2026)
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
+Route::post('/sales-commission/person', 'Admin\SalesCommissionController@mapPerson')->name('admin.sales.person');

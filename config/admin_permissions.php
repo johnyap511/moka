@@ -45,6 +45,7 @@ return [
         'Sales' => [
             'sales.view'   => 'View sales commission (all sales persons)',
             'sales.manage' => 'Upload eZee Transaction Detail Reports',
+            'sales.own'    => 'See own sales commission only',
         ],
     ],
     'roles' => [
@@ -64,6 +65,7 @@ return [
                 'bookings.view', 'bookings.manage',
                 'calendar.view',
                 'settings.view',
+                'sales.own',
             ],
         ],
         'finance' => [
@@ -88,6 +90,14 @@ return [
                 'bookings.view', 'bookings.manage',
                 'ezee.view', 'ezee.manage', 'ezee.delete', 'ezee.history',
                 'calendar.view',
+                'sales.own',
+            ],
+        ],
+        'sales' => [
+            'label'       => 'Sales Person',
+            'description' => 'Sees only their own sales commission',
+            'permissions' => [
+                'sales.own',
             ],
         ],
     ],

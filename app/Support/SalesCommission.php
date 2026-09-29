@@ -30,6 +30,61 @@ class SalesCommission
     private const NEEDED = ['Reservation #', 'Folio #', 'Arrival', 'Dept.', 'Room #', 'Guest Name', 'Business Source',
         'Sales Person Name', 'Booking Status', 'Transaction Date', 'Charge', 'Net Amount', 'Tax Amount', 'Gross Amount', 'Folio Status'];
 
+    /** The month a month's commission is paid: with the following month's salary. */
+    public static function payoutLabel(string $ym): string
+    {
+        return 'paid with the ' . date('F Y', strtotime($ym . '-01 +1 month')) . ' salary';
+    }
+
+    /** A month whose report has gone to owners is final (ground rule 27); later months are provisional. */
+    public static function isFinal(string $ym): bool
+    {
+        return Lock::isLocked($ym . '-01');
+    }
+
+    /**
+     * Every Sales Person name seen in uploads, with the staff login tied to it.
+     * A new name is tied automatically when exactly one admin login is
+     * name@homemoka.com; anything else is set by hand on the page.
+     */
+    public static function syncPersons(): void
+    {
+        $known = DB::table('sales_persons')->pluck('name')->all();
+        $new   = DB::table('sales_transactions')->distinct()->whereNotIn('sales_person', $known ?: [''])->pluck('sales_person');
+        foreach ($new as $name) {
+            $email = strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '@homemoka.com';
+            $ids   = DB::table('users')->join('role_user', 'role_user.user_id', '=', 'users.id')->where('role_user.role_id', 1)
+                ->whereRaw('LOWER(users.email) = ?', [$email])->pluck('users.id');
+            DB::table('sales_persons')->insertOrIgnore(['name' => $name, 'user_id' => $ids->count() === 1 ? $ids->first() : null, 'created_at' => now(), 'updated_at' => now()]);
+        }
+    }
+
+    /** The Sales Person name tied to a login, or null. */
+    public static function personFor($user): ?string
+    {
+        return $user ? DB::table('sales_persons')->where('user_id', $user->id)->value('name') : null;
+    }
+
+    /** Month-by-month totals for the last N months (one person, or everyone). */
+    public static function history(?string $person, int $months = 12): array
+    {
+        $from = date('Y-m-01', strtotime("-" . ($months - 1) . " months"));
+        $q = DB::table('sales_transactions')->selectRaw("DATE_FORMAT(tran_date, '%Y-%m') ym, COUNT(DISTINCT CONCAT(hotel_code, '|', folio_no)) stays, COUNT(*) nights, SUM(net_amount) net")
+            ->where('payable', 1)->where('tran_date', '>=', $from)->groupBy('ym')->orderByDesc('ym');
+        if ($person) {
+            $q->where('sales_person', $person);
+        }
+        $rate = self::rate();
+
+        return $q->get()->map(function ($r) use ($rate) {
+            $r->commission = round((float) $r->net * $rate, 2);
+            $r->final      = self::isFinal($r->ym);
+            $r->payout     = self::payoutLabel($r->ym);
+
+            return $r;
+        })->all();
+    }
+
     public static function rate(): float
     {
         return (float) config('moka.sales_commission_rate', 0.02);
@@ -195,6 +250,7 @@ class SalesCommission
                 DB::table('sales_transactions')->insert(array_map(fn ($r) => $r + ['upload_id' => $uploadId, 'hotel_code' => $hotel, 'created_at' => $now, 'updated_at' => $now], $chunk));
             }
             DB::table('sales_report_uploads')->where('id', $uploadId)->update(['rows_replaced' => $replaced]);
+            self::syncPersons();
 
             return DB::table('sales_report_uploads')->find($uploadId);
         });
