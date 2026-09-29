@@ -6,6 +6,7 @@
 @php
     $fmt = fn ($d) => $d ? \Carbon\Carbon::parse($d)->format('j M') : '—';
     $fmtY = fn ($d) => $d ? \Carbon\Carbon::parse($d)->format('j M Y') : '—';
+    $range = fn ($a, $b) => (!$a || !$b) ? $fmtY($a) . ' → ' . $fmtY($b) : (substr($a, 0, 4) === substr($b, 0, 4) ? $fmt($a) . ' → ' . $fmtY($b) : $fmtY($a) . ' → ' . $fmtY($b));
     $rm = fn ($v) => 'RM ' . number_format($v, 2);
     $rm0 = fn ($v) => 'RM ' . number_format($v, 0);
     $mon = fn ($m) => \Carbon\Carbon::parse($m . '-01')->format('M Y');
@@ -36,7 +37,7 @@
 <div class="sc-head">
     <div>
         <h1>{{ $own ? 'My Commission' : 'Sales Commission' }}</h1>
-        <p class="sc-sub">Front Desk Commission, Bonus &amp; KPI SOP v2.0: 2% of recognised direct-booking room charges (before SST), KPI gates, team bonus, 70% paid with the following month's salary and 30% deferred to after the year's audit. {!! $sopLink !!}</p>
+        <p class="sc-sub">2% of direct-booking room charges before SST · KPI gates · team bonus · 70% paid next month, 30% deferred to year end. {!! $sopLink !!}</p>
     </div>
     <div class="sc-nav">
         <a class="sc-nav__btn" href="{{ $q($prev) }}" title="{{ $mon($prev) }}">‹</a>
@@ -52,41 +53,40 @@
 @if($statement)
 @php $st = $statement; $nextTier = null; foreach ([1 => 15000, 2 => 20000, 3 => 30000] as $t => $min) { if ($st->sales < $min) { $nextTier = [$t, $min]; break; } } @endphp
 <div class="sc-tiles">
-    <div class="sc-tile sc-tile--main"><span>Payable with the {{ $nextMonth }} salary</span><b>{{ $rm($st->pay_now) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em><em>70% of commission and bonus{{ $st->adjustments != 0 ? ', ' . ($st->adjustments > 0 ? 'plus' : 'less') . ' adjustments ' . $rm(abs($st->adjustments)) : '' }}</em></div>
-    <div class="sc-tile"><span>Recognised direct sales, {{ $monthName }}</span><b>{{ $rm($st->sales) }}</b>
+    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary</span><b>{{ $rm($st->pay_now) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em><em>70% of commission + bonus{{ $st->adjustments != 0 ? ($st->adjustments > 0 ? ' + ' : ' − ') . $rm(abs($st->adjustments)) . ' adj.' : '' }}</em></div>
+    <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($st->sales) }}</b>
         <div class="sc-bar"><i style="width:{{ min(100, $st->sales / 300) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div>
-        <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' more to Tier ' . $nextTier[0] : ' · top tier' }}</em></div>
-    <div class="sc-tile"><span>Personal commission (2%)</span><b>{{ $rm($st->personal) }}</b><em>{{ $gateText($st) }}{{ $st->pct < 1 && $st->gross > 0 ? ' · before KPI: ' . $rm($st->gross) : '' }}</em></div>
+        <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' to Tier ' . $nextTier[0] : '' }}</em></div>
+    <div class="sc-tile"><span>Commission 2%</span><b>{{ $rm($st->personal) }}</b><em>{{ $gateText($st) }}{{ $st->pct < 1 && $st->gross > 0 ? ' · before KPI ' . $rm($st->gross) : '' }}</em></div>
     <div class="sc-tile"><span>Team bonus share</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} counted staff reached it, shared by {{ $team['eligible'] }}@else No pool this month: under 80% of counted staff reached RM15,000 @endif </em></div>
-    <div class="sc-tile"><span>Deferred this month (30%)</span><b>{{ $rm($st->deferred) }}</b><em>paid after the year's audited accounts</em></div>
+    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($st->deferred) }}</b><em>paid after year-end audit</em></div>
     @if(isset($deferred) && $deferred)
-    <div class="sc-tile"><span>Deferred outstanding, {{ $deferred[0]->year }}</span><b>{{ $rm($deferred[0]->outstanding) }}</b><em>{{ $rm($deferred[0]->accrued) }} accrued so far ({{ $rm($deferred[0]->final) }} from final months), {{ $rm($deferred[0]->paid) }} paid</em></div>
+    <div class="sc-tile"><span>Deferred balance {{ $deferred[0]->year }}</span><b>{{ $rm($deferred[0]->outstanding) }}</b><em>{{ $rm($deferred[0]->accrued) }} accrued · {{ $rm($deferred[0]->paid) }} paid</em></div>
     @endif
 </div>
-<p class="sc-muted" style="margin:-8px 0 14px">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : (' · confirmation date not recorded, ask the office to set it') }} · {{ $st->stays }} stay(s), {{ $st->nights }} night(s){{ $warnings ? ' · ' . $warnings . ' stay(s) on hold, ' . $rm($held) . ' not counted until the next report' : '' }}{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</p>
+<p class="sc-muted" style="margin:-6px 0 12px">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : ' · confirmation date not set' }} · {{ $st->stays }} stays, {{ $st->nights }} nights{{ $warnings ? ' · ' . $warnings . ' on hold (' . $rm($held) . ')' : '' }}</p>
 @else
 <div class="sc-tiles">
-    <div class="sc-tile sc-tile--main"><span>Payable with the {{ $nextMonth }} salary, everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }} · {{ $payout }}</em></div>
-    <div class="sc-tile"><span>Recognised direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'nights')) }} nights, {{ array_sum(array_column($data['people'], 'stays')) }} stays{{ $cross ? ', ' . $cross . ' cross-month' : '' }}</em></div>
-    <div class="sc-tile"><span>Personal commission after KPIs</span><b>{{ $rm($sum('personal')) }}</b><em>before KPIs: {{ $rm($sum('gross')) }}</em></div>
+    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary, everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }} · {{ $payout }}</em></div>
+    <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'stays')) }} stays, {{ array_sum(array_column($data['people'], 'nights')) }} nights</em></div>
+    <div class="sc-tile"><span>Commission 2% after KPIs</span><b>{{ $rm($sum('personal')) }}</b><em>before KPIs {{ $rm($sum('gross')) }}</em></div>
     <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }}, pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} reached it, {{ $team['eligible'] }} eligible @else No pool: under 80% of {{ $team['counted'] }} counted staff reached RM15,000 @endif </em></div>
-    <div class="sc-tile"><span>Deferred (30%)</span><b>{{ $rm($sum('deferred')) }}</b><em>paid after the year's audited accounts</em></div>
-    <div class="sc-tile {{ $warnings ? 'sc-tile--warn' : '' }}"><span>On hold</span><b>{{ $warnings ? $rm($held) : '—' }}</b><em>{{ $warnings ? $warnings . ' stay(s) changed in eZee since the last report' : 'nothing changed since the last report' }}</em></div>
+    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($sum('deferred')) }}</b><em>paid after year-end audit</em></div>
+    <div class="sc-tile {{ $warnings ? 'sc-tile--warn' : '' }}"><span>On hold</span><b>{{ $warnings ? $rm($held) : '—' }}</b><em>{{ $warnings ? $warnings . ' stays changed in eZee since last upload' : 'no changes since last upload' }}</em></div>
 </div>
 @endif
 
 @if($own)
 <details class="sc-explain" {{ count($data['stays']) ? '' : 'open' }}>
-    <summary>How this is worked out, and what to do if a figure looks wrong</summary>
+    <summary>How it is calculated · what to do if a figure looks wrong</summary>
     <ul>
-        <li><b>Recognised sales</b> are the room charges before SST of your direct bookings (Walk In, WhatsApp, phone, monthly and long-term rentals) that carry your name as Sales Person in eZee. OTA and agent bookings never count (SOP §2). Deposits, cleaning fees, early check-in, late check-out and other charges are not room charges.</li>
-        <li><b>Nights are counted by the date eZee posted them.</b> A stay across two months is split: the earlier nights were in last month's figures, the later ones are here. Such stays are marked <em class="sc-badge">cross-month</em> with the split shown.</li>
-        <li><b>Commission is 2%</b> of recognised sales (SOP §6), then the KPI gates apply in order (SOP §8.5): at least RM15,000 of recognised sales from your fourth month after confirmation, one recorded absence keeps 50%, two or more absences, an absence without approval, or more than 120 minutes of lateness in the month means nil.</li>
-        <li><b>Team bonus</b> (SOP §9): when at least 80% of counted staff reach a tier (RM15k, 20k, 30k) a pool of RM500, 1,000 or 2,000 is shared equally by everyone who reached RM15,000 and passed the KPIs.</li>
-        <li><b>70% is paid with the following month's salary; 30% is deferred</b> (SOP §11), accumulates through the calendar year and is paid after the year's audited accounts. Your deferred balance restarts each January; past years stay on record below.</li>
-        <li><b>A stay cancelled after it was paid</b> is clawed back from your next payout (SOP §12). It shows as an adjustment with the reason.</li>
-        <li><b>Figures come from eZee's Transaction Detail Report,</b> uploaded weekly. A stay missing? Check in eZee that the <b>Sales Person</b> on that reservation is your name, then ask the office to re-upload. Attendance and lateness come from HR's records.</li>
-        <li><b>Provisional</b> months can still move until the month is closed; <b>Final</b> months do not change. <b>Found a difference?</b> Tell the Operations Manager the RES or folio number and the night, within 7 days of your statement (SOP §14).</li>
+        <li><b>Direct sales</b> = room charges before SST of bookings with your name as Sales Person in eZee. OTA and agent bookings never count. Deposits, cleaning, early/late check-in, other charges are not room charges.</li>
+        <li><b>Nights count in the month eZee posted them.</b> A stay across two months is split; look for <em class="sc-badge">cross-month</em>.</li>
+        <li><b>2%</b> of direct sales, then the KPI gates: RM15,000 minimum (from your 4th month after confirmation), 1 recorded absence = 50%, 2+ absences, an unapproved absence or over 120 min lateness = nil.</li>
+        <li><b>Team bonus</b>: if 80% of the team reach RM15k / 20k / 30k, a pool of RM500 / 1,000 / 2,000 is shared by those who reached RM15k and passed the KPIs.</li>
+        <li><b>70% paid with next month's salary, 30% deferred</b> to after the year-end audit. The deferred balance restarts each January; past years stay on record.</li>
+        <li><b>Cancelled after payment</b> = clawed back from the next payout, shown as an adjustment.</li>
+        <li><b>A stay missing?</b> Check the Sales Person field on it in eZee, then ask the office to re-upload. <b>A figure wrong?</b> Tell the Operations Manager the RES or folio within 7 days.</li>
     </ul>
 </details>
 @endif
@@ -98,10 +98,10 @@
             <h3 class="sc-h3">By sales person, {{ $monthName }}</h3>
             <div class="table-wrap">
             <table class="sc-table">
-                <thead><tr><th>Sales person</th><th>Status</th><th class="num">Recognised sales</th><th>Tier</th><th>KPI result</th><th class="num">Personal 2%</th><th class="num">Team bonus</th><th class="num">Adjustments</th><th class="num">Pay now 70%</th><th class="num">Deferred 30%</th></tr></thead>
+                <thead><tr><th>Sales person</th><th>Status</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th></tr></thead>
                 <tbody>
                 @forelse($rows as $r)
-                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted">{{ ucfirst($r->status) }}{{ !$r->confirmed_on ? ' · confirmation date not set' : '' }}{{ !$r->kpi->entered && $r->status !== 'probation' ? ' · KPI not entered' : '' }}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
+                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted">{{ ucfirst($r->status) }}{!! !$r->confirmed_on ? '<br><span class="sc-warn">no confirmation date</span>' : '' !!}{!! !$r->kpi->entered && $r->status !== 'probation' ? '<br>KPI not entered' : '' !!}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
                         <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $rm($r->bonus) }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
                 @empty
                     <tr><td colspan="10" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
@@ -121,10 +121,10 @@
             <h3 class="sc-h3">Month by month{{ $person ? ', ' . $person : '' }}</h3>
             <div class="table-wrap">
             <table class="sc-table sc-small">
-                <thead><tr><th>Month</th><th class="num">Recognised sales</th><th>Tier</th>@if($person)<th>KPI</th>@endif<th class="num">Personal</th><th class="num">Team bonus</th><th class="num">Adjust.</th><th class="num">Paid 70%</th><th class="num">Deferred 30%</th><th>Status</th></tr></thead>
+                <thead><tr><th>Month</th><th class="num">Direct sales</th><th>Tier</th>@if($person)<th>KPI</th>@endif<th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th><th></th></tr></thead>
                 <tbody>
                 @forelse($history as $h)
-                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td><td>{{ $tierLabel($h->tier) }}</td>@if($person)<td class="sc-muted">{{ $h->pct === null ? '' : ($h->pct == 1 ? 'met' : ($h->pct == 0.5 ? '50%' : 'nil')) }}</td>@endif<td class="num">{{ $rm($h->personal) }}</td><td class="num">{{ $rm($h->bonus) }}</td><td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($h->pay_now) }}</b></td><td class="num">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span> <span class="sc-muted">{{ $h->payout }}</span></td></tr>
+                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td><td>{{ $tierLabel($h->tier) }}</td>@if($person)<td class="sc-muted">{{ $h->pct === null ? '' : ($h->pct == 1 ? 'met' : ($h->pct == 0.5 ? '50%' : 'nil')) }}</td>@endif<td class="num">{{ $rm($h->personal) }}</td><td class="num">{{ $rm($h->bonus) }}</td><td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($h->pay_now) }}</b></td><td class="num">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span></td></tr>
                 @empty
                     <tr><td colspan="10" class="sc-empty">Nothing yet.</td></tr>
                 @endforelse
@@ -137,10 +137,10 @@
     @if(isset($deferred))
     <div class="card">
         <div class="card-body">
-            <h3 class="sc-h3">Deferred commission (30%), by year</h3>
-            <p class="sc-help">Accumulates through the calendar year and is paid within 60 days of the audited accounts, subject to SOP §11.2. Only final months count as owed; provisional months are shown for reference.</p>
+            <h3 class="sc-h3">Deferred 30% by year</h3>
+            <p class="sc-help">Paid within 60 days of the year-end audit (SOP §11.2). Only final months count as owed.</p>
             <table class="sc-table sc-small">
-                <thead><tr><th>Year</th><th class="num">Accrued</th><th class="num">From final months</th><th class="num">Paid out</th><th class="num">Outstanding</th><th>Payouts</th></tr></thead>
+                <thead><tr><th>Year</th><th class="num">Accrued</th><th class="num">Final</th><th class="num">Paid</th><th class="num">Balance</th><th>Payouts</th></tr></thead>
                 <tbody>
                 @foreach($deferred as $d)
                     <tr><td>{{ $d->year }}</td><td class="num">{{ $rm($d->accrued) }}</td><td class="num">{{ $rm($d->final) }}</td><td class="num">{{ $rm($d->paid) }}</td><td class="num"><b>{{ $rm($d->outstanding) }}</b></td><td class="sc-note">@foreach($d->payouts as $po){{ $fmtY($po->paid_on) }}: {{ $rm($po->amount) }}{{ $po->note ? ' (' . $po->note . ')' : '' }}<br>@endforeach</td></tr>
@@ -168,39 +168,34 @@
 <div class="card sc-stays">
     <div class="card-body">
         <div class="sc-stays__head">
-            <h3 class="sc-h3">Stays in {{ $monthName }}{{ $person ? ', ' . $person : '' }}</h3>
-            <span class="sc-muted">{{ count($data['stays']) }} stay(s). A <em class="sc-badge">cross-month</em> stay shows how its nights split across months.</span>
+            <h3 class="sc-h3">Stays, {{ $monthName }}{{ $person ? ' · ' . $person : '' }}</h3>
+            <span class="sc-muted">{{ count($data['stays']) }} stays{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</span>
         </div>
         <div class="table-wrap">
         <table class="sc-table sc-stays__table" data-enhance="search" data-search-placeholder="Search guest, RES, folio or unit">
-            <thead><tr>@if(!$own)<th>Sales person</th>@endif<th>Guest</th><th>RES / Folio</th><th>Property · Unit</th><th>Stay (check-in → out)</th><th class="num">Nights this month</th><th class="num">Room charges</th><th class="num">2%</th><th>Note</th></tr></thead>
+            <thead><tr>@if(!$person)<th>Sales person</th>@endif<th>Guest</th><th>RES / Folio</th><th>Unit</th><th>Stay</th><th class="num">Nights</th><th class="num">Room charges</th><th class="num">2%</th><th>Note</th></tr></thead>
             <tbody>
             @forelse($data['stays'] as $s)
                 <tr class="{{ $s->warn ? 'sc-row-warn' : '' }}">
-                    @if(!$own)<td>{{ $s->sales_person }}</td>@endif
+                    @if(!$person)<td>{{ $s->sales_person }}</td>@endif
                     <td>{{ $s->guest }}<div class="sc-muted">{{ $s->source }}</div></td>
                     <td class="mono">{{ $s->res_no ?: 'no RES' }}<div class="sc-muted">{{ $s->folio_no }}</div></td>
-                    <td>{{ $s->property }}<div class="sc-muted">{{ $s->room }}</div></td>
-                    <td class="text-nowrap">{{ $fmt($s->arrival) }} → {{ $fmtY($s->departure) }}@if($s->cross)<div><em class="sc-badge">cross-month</em></div>@endif</td>
-                    <td class="num">{{ $s->nights }}<div class="sc-muted text-nowrap">{{ $fmt($s->first_night) }}{{ $s->nights > 1 ? ' – ' . $fmt($s->last_night) : '' }}</div></td>
+                    <td>{{ $s->room }}<div class="sc-muted">{{ $s->property }}</div></td>
+                    <td class="text-nowrap">{{ $range($s->arrival, $s->departure) }}@if($s->cross)<div><em class="sc-badge">cross-month</em></div>@endif</td>
+                    <td class="num">{{ $s->nights }}<div class="sc-muted">{{ $fmt($s->first_night) }}{{ $s->nights > 1 ? ' – ' . $fmt($s->last_night) : '' }}</div></td>
                     <td class="num">{{ $rm($s->net) }}</td>
                     <td class="num">@if($s->warn)<span class="sc-warn">on hold</span>@else{{ $rm($s->commission) }}@endif</td>
                     <td class="sc-note">
                         @if($s->warn)<div class="sc-warn">{{ $s->warn }}</div>@endif
                         @foreach($s->other_months as $o)
-                            <div>{{ $o->before ? 'Also' : 'Then' }} <b>{{ $o->nights }}</b> night{{ $o->nights == 1 ? '' : 's' }} in {{ $mon($o->ym) }}: {{ $rm($o->commission) }} {{ $o->before ? 'was in the ' . $mon($o->ym) . ' figures' : 'goes into the ' . $mon($o->ym) . ' figures' }}</div>
+                            <div>{{ $o->before ? 'Also' : 'Then' }} {{ $o->nights }} night{{ $o->nights == 1 ? '' : 's' }} in {{ \Carbon\Carbon::parse($o->ym . '-01')->format('M') }}: {{ $rm($o->commission) }}{{ $o->before ? ' (paid)' : '' }}</div>
                         @endforeach
-                        @if($s->cross && !$s->other_months && $s->departure && $s->departure > $data['to'])
-                            <div>Stay continues after {{ $monthName }}; those nights count next month once eZee posts them.</div>
-                        @endif
-                        @if($s->cross && !$s->other_months && $s->arrival && $s->arrival < $data['from'])
-                            <div>Nights before {{ $monthName }} are not in the uploaded reports.</div>
-                        @endif
-                        @if(!$s->warn && !$s->cross)<span class="sc-muted">{{ $s->status }}</span>@endif
+                        @if($s->cross && !$s->other_months && $s->departure && $s->departure > $data['to'])<div>Continues into {{ \Carbon\Carbon::parse($data['to'])->addMonth()->format('M') }}</div>@endif
+                        @if($s->cross && !$s->other_months && $s->arrival && $s->arrival < $data['from'])<div>Started before {{ \Carbon\Carbon::parse($data['from'])->format('M') }}</div>@endif
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="sc-empty">Nothing to show for {{ $monthName }}.</td></tr>
+                <tr><td colspan="9" class="sc-empty">Nothing for {{ $monthName }}.</td></tr>
             @endforelse
             </tbody>
         </table>
@@ -209,7 +204,7 @@
 </div>
 
 @if($own)
-<p class="sc-foot">Reports uploaded up to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
+<p class="sc-foot">Reports uploaded to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
 @else
 <details class="sc-setup" {{ count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
     <summary>KPI inputs for {{ $monthName }} (attendance, lateness, employment)</summary>
@@ -354,37 +349,39 @@
 
 @push('scripts')
 <style>
-.sc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
-.sc-head h1{margin:0 0 4px}.sc-sub{margin:0;font-size:13px;color:var(--text-secondary);max-width:720px;line-height:1.5}
-.sc-nav{display:flex;align-items:center;gap:6px}.sc-nav__btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;font-size:18px;color:inherit;text-decoration:none}.sc-nav__btn:hover{background:#f8fafc}
-.sc-nav__form{display:flex;gap:6px}.sc-nav__form input,.sc-nav__form select{padding:7px 9px;font-size:13px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff}
-.sc-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
-@media (max-width:900px){.sc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.sc-tiles{grid-template-columns:1fr}}
-.sc-tile{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:14px 16px;display:grid;gap:4px;align-content:start}
-.sc-tile span{font-size:12px;color:var(--text-secondary)}.sc-tile b{font-size:22px;line-height:1.2}.sc-tile em{font-style:normal;font-size:12px;color:var(--text-secondary);line-height:1.4}
-.sc-tile--main{background:#0f766e;border-color:#0f766e;color:#fff}.sc-tile--main span,.sc-tile--main em{color:rgba(255,255,255,.85)}.sc-tile--main b{font-size:26px}
+.sc-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.sc-head h1{margin:0 0 2px;font-size:20px}.sc-sub{margin:0;font-size:12.5px;color:var(--text-secondary);max-width:720px;line-height:1.45}
+.sc-nav{display:flex;align-items:center;gap:6px}.sc-nav__btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;font-size:17px;color:inherit;text-decoration:none}.sc-nav__btn:hover{background:#f8fafc}
+.sc-nav__form{display:flex;gap:6px}.sc-nav__form input,.sc-nav__form select{padding:6px 8px;font-size:13px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff}
+.sc-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media (max-width:1100px){.sc-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:640px){.sc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sc-tile{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;display:grid;gap:3px;align-content:start}
+.sc-tile span{font-size:11.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sc-tile b{font-size:19px;line-height:1.15}.sc-tile em{font-style:normal;font-size:11.5px;color:var(--text-secondary);line-height:1.35}
+.sc-tile--main{background:#0f766e;border-color:#0f766e;color:#fff}.sc-tile--main span,.sc-tile--main em{color:rgba(255,255,255,.85)}.sc-tile--main b{font-size:22px}
 .sc-tile--warn{border-color:#fcd34d;background:#fffbeb}
-.sc-bar{position:relative;height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:4px 0}.sc-bar i{position:absolute;left:0;top:0;bottom:0;background:#0f766e;border-radius:999px}.sc-bar u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
-.sc-chip{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:999px;font-weight:600;font-style:normal;width:max-content}.sc-chip--final{background:#dcfce7;color:#166534}.sc-chip--prov{background:#fef3c7;color:#92400e}
+.sc-bar{position:relative;height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:3px 0}.sc-bar i{position:absolute;left:0;top:0;bottom:0;background:#0f766e;border-radius:999px}.sc-bar u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+.sc-chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;font-weight:600;font-style:normal;width:max-content}.sc-chip--final{background:#dcfce7;color:#166534}.sc-chip--prov{background:#fef3c7;color:#92400e}
 .sc-tile--main .sc-chip--prov{background:rgba(255,255,255,.18);color:#fff}.sc-tile--main .sc-chip--final{background:rgba(255,255,255,.25);color:#fff}
-.sc-explain{background:#f8fafc;border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:13px}
-.sc-explain summary{cursor:pointer;font-weight:600}.sc-explain ul{margin:8px 0 2px;padding-left:18px;line-height:1.55}.sc-explain li{margin:4px 0}
-.sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}.sc-grid--own{grid-template-columns:1fr}.sc-span2{grid-column:1/-1}
-@media (max-width:900px){.sc-grid{grid-template-columns:1fr}}
-.sc-h3{margin:0 0 10px;font-size:15px}
-.sc-table{width:100%;border-collapse:collapse;font-size:13px}.sc-table th,.sc-table td{padding:8px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;vertical-align:top}.sc-table th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap}
-.sc-table .num{text-align:right;white-space:nowrap}.sc-table tfoot th{text-transform:none;font-size:13px;color:inherit;border-top:2px solid var(--border,#e5e7eb)}
-.sc-small{font-size:12.5px}.sc-small th,.sc-small td{padding:6px}
-.sc-kpi input[type=number],.sc-kpi input[type=text]{padding:4px 6px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:6px}
-.sc-muted{font-size:12px;color:var(--text-secondary)}.sc-empty{color:var(--text-secondary);padding:18px!important}
-.sc-help{font-size:12.5px;color:var(--text-secondary);line-height:1.5;margin:0 0 10px}
-.sc-upload{display:grid;gap:8px;font-size:13px}.sc-upload select,.sc-inline select,.sc-inline input{padding:5px 8px;font-size:12.5px;max-width:100%;border:1px solid var(--border,#e5e7eb);border-radius:6px}
-.sc-inline{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+.sc-explain{background:#f8fafc;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px}
+.sc-explain summary{cursor:pointer;font-weight:600}.sc-explain ul{margin:6px 0 2px;padding-left:18px;line-height:1.5}.sc-explain li{margin:3px 0}
+.sc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}.sc-grid--own{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}.sc-span2{grid-column:1/-1}
+@media (max-width:900px){.sc-grid,.sc-grid--own{grid-template-columns:1fr}}
+.sc-h3{margin:0 0 8px;font-size:14px}
+.card .card-body{padding:12px 14px}
+.sc-table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.35}.sc-table th,.sc-table td{padding:5px 8px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;vertical-align:top}.sc-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap}
+.sc-table .num{text-align:right;white-space:nowrap}.sc-table tfoot th{text-transform:none;font-size:12.5px;color:inherit;border-top:2px solid var(--border,#e5e7eb)}
+.sc-small{font-size:12px}.sc-small th,.sc-small td{padding:4px 6px}
+.sc-stays__table{min-width:960px}.sc-stays__table td{white-space:nowrap}.sc-stays__table td.sc-note{white-space:normal;min-width:200px}
+.sc-kpi input[type=number],.sc-kpi input[type=text]{padding:3px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}
+.sc-muted{font-size:11.5px;color:var(--text-secondary)}.sc-empty{color:var(--text-secondary);padding:14px!important}
+.sc-help{font-size:12px;color:var(--text-secondary);line-height:1.45;margin:0 0 8px}
+.sc-upload{display:grid;gap:6px;font-size:12.5px}.sc-upload select,.sc-inline select,.sc-inline input{padding:4px 8px;font-size:12px;max-width:100%;border:1px solid var(--border,#e5e7eb);border-radius:6px}
+.sc-inline{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px}
 .sc-warn{color:#b45309;font-weight:600}.sc-row-warn td{background:#fffbeb}.sc-row-current td{background:#f1f5f9}
-.sc-badge{display:inline-block;font-style:normal;font-size:11px;font-weight:600;color:#1d4ed8;background:#dbeafe;border-radius:999px;padding:1px 8px}
-.sc-note{font-size:12px;line-height:1.45;max-width:320px}.sc-note div{margin-bottom:2px}
-.sc-stays__head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
-.sc-foot{font-size:12px;color:var(--text-secondary);margin-top:12px}
-.sc-setup{margin-top:4px;font-size:13px}.sc-setup>summary{cursor:pointer;font-weight:600;padding:8px 0;color:var(--text-secondary)}
+.sc-badge{display:inline-block;font-style:normal;font-size:10.5px;font-weight:600;color:#1d4ed8;background:#dbeafe;border-radius:999px;padding:0 7px}
+.sc-note{font-size:11.5px;line-height:1.4}.sc-note div{margin-bottom:1px}
+.sc-stays__head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
+.sc-foot{font-size:11.5px;color:var(--text-secondary);margin-top:10px}
+.sc-setup{margin-top:2px;font-size:12.5px}.sc-setup>summary{cursor:pointer;font-weight:600;padding:6px 0;color:var(--text-secondary)}
 </style>
 @endpush
