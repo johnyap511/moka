@@ -47,7 +47,7 @@ class SalesCommissionController extends Controller
         foreach ((array) $request->file('files') as $f) {
             try {
                 $u = SalesCommission::import($f->getRealPath(), $f->getClientOriginalName(), $request->input('hotel') ?: null, Auth::id());
-                $done[] = sprintf('%s: %s → %s, %d rows stored, %d skipped (reported months), %d earlier rows replaced.',
+                $done[] = sprintf('%s: %s → %s, %d rows stored, %d already-final nights kept as paid, %d earlier rows replaced.',
                     SalesCommission::HOTELS[$u->hotel_code], $u->period_from, $u->period_to, $u->rows_stored, $u->rows_skipped_locked, $u->rows_replaced);
             } catch (\Throwable $e) {
                 $failed[] = $f->getClientOriginalName() . ': ' . $e->getMessage();

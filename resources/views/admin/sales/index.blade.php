@@ -149,7 +149,7 @@
 </div>
 
 @if($own)
-<p class="sc-foot">Reports uploaded up to: @foreach($hotels as $code => $name)@php $c = $coverage[$code] ?? null; @endphp{{ $name }} {{ $c ? $fmtY($c->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach</p>
+<p class="sc-foot">Reports uploaded up to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach</p>
 @else
 <details class="sc-setup" {{ count($data['stays']) ? '' : 'open' }}>
     <summary>Uploads, coverage and who can see what</summary>
@@ -205,7 +205,7 @@
     <div class="card" style="margin-top:12px"><div class="card-body">
         <h3 class="sc-h3">Recent uploads</h3>
         <table class="sc-table sc-small">
-            <thead><tr><th>When</th><th>Property</th><th>File</th><th>Period</th><th class="num">Rows stored</th><th class="num">Skipped (reported months)</th><th class="num">Replaced</th></tr></thead>
+            <thead><tr><th>When</th><th>Property</th><th>File</th><th>Period</th><th class="num">Rows stored</th><th class="num">Already final (kept as paid)</th><th class="num">Replaced</th></tr></thead>
             <tbody>@foreach($uploads as $u)<tr><td class="text-nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('j M H:i') }}</td><td>{{ $hotels[$u->hotel_code] ?? $u->hotel_code }}</td><td class="sc-muted">{{ $u->filename }}</td><td class="text-nowrap">{{ $fmt($u->period_from) }} → {{ $fmt($u->period_to) }}</td><td class="num">{{ $u->rows_stored }}</td><td class="num">{{ $u->rows_skipped_locked }}</td><td class="num">{{ $u->rows_replaced }}</td></tr>@endforeach</tbody>
         </table>
     </div></div>

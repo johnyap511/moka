@@ -216,15 +216,11 @@ class SalesCommission
         $to    = max($dates);
         $cut   = Lock::cutoff()->toDateString();
 
-        $keep = [];
-        $lockedSkipped = 0;
+        $keep = [];      // open months: replace what is stored for the period
+        $locked = [];    // reported months: stored once, never replaced (ground rule 27)
         $seen = [];
         foreach ($rows as $r) {
             if ($r['sales_person'] === '' || !$r['tran_date'] || $r['charge'] === '') {
-                continue;
-            }
-            if ($r['tran_date'] < $cut) {
-                $lockedSkipped++;
                 continue;
             }
             $key = md5(json_encode($r));       // an exact duplicate row is never counted twice
@@ -233,7 +229,28 @@ class SalesCommission
             }
             $seen[$key] = true;
             $r['payable'] = self::isPayable($r);
-            $keep[] = $r;
+            if ($r['tran_date'] < $cut) {
+                $locked[] = $r;
+            } else {
+                $keep[] = $r;
+            }
+        }
+        // A reported month keeps the figures it was paid on: only nights never stored
+        // before are added (a first upload of an old month), nothing is changed or removed.
+        $lockedSkipped = 0;
+        if ($locked) {
+            $have = DB::table('sales_transactions')->where('hotel_code', $hotel)->where('tran_date', '<', $cut)
+                ->whereBetween('tran_date', [$from, $cut])->selectRaw("CONCAT(folio_no, '|', tran_date) k")->pluck('k')->flip();
+            $locked = array_values(array_filter($locked, function ($r) use ($have, &$lockedSkipped) {
+                if (isset($have[$r['folio_no'] . '|' . $r['tran_date']])) {
+                    $lockedSkipped++;
+
+                    return false;
+                }
+
+                return true;
+            }));
+            $keep = array_merge($keep, $locked);
         }
 
         return DB::transaction(function () use ($hotel, $filename, $from, $to, $cut, $rows, $keep, $lockedSkipped, $userId) {
