@@ -178,3 +178,9 @@ Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
 Route::post('/sales-commission/person', 'Admin\SalesCommissionController@mapPerson')->name('admin.sales.person');
+Route::post('/sales-commission/kpi', 'Admin\SalesCommissionController@saveKpi')->name('admin.sales.kpi');
+Route::post('/sales-commission/adjustment', 'Admin\SalesCommissionController@addAdjustment')->name('admin.sales.adjustment');
+Route::post('/sales-commission/adjustment/{id}/delete', 'Admin\SalesCommissionController@deleteAdjustment')->name('admin.sales.adjustment.delete');
+Route::post('/sales-commission/payout', 'Admin\SalesCommissionController@addPayout')->name('admin.sales.payout');
+Route::get('/sales-commission/sop', 'Admin\SalesCommissionController@sop')->name('admin.sales.sop');
+Route::post('/sales-commission/sop', 'Admin\SalesCommissionController@uploadSop')->name('admin.sales.sop.upload');

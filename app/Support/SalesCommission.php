@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\OtherModel\EzeeBooking;
+use App\Support\Channel;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -254,11 +255,13 @@ class SalesCommission
         }
 
         return DB::transaction(function () use ($hotel, $filename, $from, $to, $cut, $rows, $keep, $lockedSkipped, $userId) {
+            $clawed = 0;
             $uploadId = DB::table('sales_report_uploads')->insertGetId([
                 'hotel_code' => $hotel, 'filename' => mb_substr($filename, 0, 255), 'period_from' => $from, 'period_to' => $to,
                 'rows_in_file' => count($rows), 'rows_stored' => count($keep), 'rows_skipped_locked' => $lockedSkipped,
                 'uploaded_by' => $userId, 'created_at' => now(), 'updated_at' => now(),
             ]);
+            $clawed = self::clawbacks($hotel, $rows, $cut, $userId);
             // The newest report for a property and period is the truth for that period.
             $replaced = DB::table('sales_transactions')->where('hotel_code', $hotel)
                 ->whereBetween('tran_date', [max($from, $cut), $to])->delete();
@@ -266,7 +269,7 @@ class SalesCommission
             foreach (array_chunk($keep, 500) as $chunk) {
                 DB::table('sales_transactions')->insert(array_map(fn ($r) => $r + ['upload_id' => $uploadId, 'hotel_code' => $hotel, 'created_at' => $now, 'updated_at' => $now], $chunk));
             }
-            DB::table('sales_report_uploads')->where('id', $uploadId)->update(['rows_replaced' => $replaced]);
+            DB::table('sales_report_uploads')->where('id', $uploadId)->update(['rows_replaced' => $replaced, 'clawbacks' => $clawed]);
             self::syncPersons();
 
             return DB::table('sales_report_uploads')->find($uploadId);
@@ -277,9 +280,56 @@ class SalesCommission
     public static function isPayable(array $r): bool
     {
         return $r['charge'] === 'Room Charges'
+            && self::isDirectSource($r['business_source'] ?? null)
             && in_array((string) $r['folio_status'], ['Active', 'Close'], true)
             && !in_array((string) $r['booking_status'], ['Cancel', 'Void', 'No Show'], true)
             && (float) $r['net_amount'] > 0;
+    }
+
+    /** SOP §2: OTA and agent bookings earn no commission even if a sales person is tagged. */
+    public static function isDirectSource(?string $source): bool
+    {
+        $c = Channel::canonical($source);
+
+        return !in_array($c, [Channel::BOOKING, Channel::AGODA, Channel::EXPEDIA, Channel::AIRBNB, Channel::TRIP, Channel::TRAVELOKA, Channel::TIKET], true);
+    }
+
+    /**
+     * SOP §12: a night already paid (its month is final) that the new report now shows
+     * cancelled, voided or no-show is clawed back from the next open month, once.
+     */
+    private static function clawbacks(string $hotel, array $rows, string $cut, ?int $userId): int
+    {
+        $dead = [];
+        foreach ($rows as $r) {
+            if ($r['tran_date'] < $cut && $r['charge'] === 'Room Charges' && $r['sales_person'] !== ''
+                && (in_array((string) $r['booking_status'], ['Cancel', 'Void', 'No Show'], true) || (string) $r['folio_status'] === 'Void')) {
+                $dead[$r['folio_no'] . '|' . $r['tran_date']] = $r;
+            }
+        }
+        if (!$dead) {
+            return 0;
+        }
+        $rate  = self::rate();
+        $month = max($cut, date('Y-m-01'));
+        $ym    = substr($month, 0, 7);
+        $n     = 0;
+        $paid  = DB::table('sales_transactions')->where('hotel_code', $hotel)->where('payable', 1)->whereNull('clawed_back_at')
+            ->where('tran_date', '<', $cut)->whereIn(DB::raw("CONCAT(folio_no, '|', tran_date)"), array_keys($dead))->get();
+        foreach ($paid as $t) {
+            $pid = DB::table('sales_persons')->where('name', $t->sales_person)->value('id');
+            if (!$pid) {
+                continue;
+            }
+            DB::table('sales_adjustments')->insert(['sales_person_id' => $pid, 'ym' => $ym, 'amount' => -round((float) $t->net_amount * $rate, 2), 'kind' => 'clawback',
+                'reason' => sprintf('Clawback (SOP §12): %s %s night of %s now %s in eZee; commission paid for %s recovered', $t->res_no ?: 'no RES', $t->folio_no, $t->tran_date,
+                    $dead[$t->folio_no . '|' . $t->tran_date]['booking_status'] ?: 'void', date('M Y', strtotime($t->tran_date))),
+                'created_by' => $userId, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('sales_transactions')->where('id', $t->id)->update(['clawed_back_at' => now()]);
+            $n++;
+        }
+
+        return $n;
     }
 
     /**
