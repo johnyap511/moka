@@ -251,7 +251,7 @@ class SalesCommission
             $b = $eb->book_id ? DB::table('bookings')->where('id', $eb->book_id)->first() : null;
             if ((int) $eb->status === 1 || ($b && (int) $b->status === 1)) {
                 $s->warn = 'Cancelled in Homemoka since this report. Re-upload the report to confirm before paying.';
-            } elseif ($eb->End && $eb->End <= $s->last_night) {
+            } elseif ($eb->End && $eb->End <= $s->last_night && (string) $eb->Start !== (string) $eb->End) {   // a day-use stay posts on its own date
                 $s->warn = 'eZee now ends this stay on ' . $eb->End . ', before the last night posted. Re-upload the report before paying.';
             }
         }
