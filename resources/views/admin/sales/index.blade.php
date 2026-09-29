@@ -101,7 +101,7 @@
                 <thead><tr><th>Sales person</th><th>Status</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th></tr></thead>
                 <tbody>
                 @forelse($rows as $r)
-                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted">{{ ucfirst($r->status) }}{!! !$r->confirmed_on ? '<br><span class="sc-warn">no confirmation date</span>' : '' !!}{!! !$r->kpi->entered && $r->status !== 'probation' ? '<br>KPI not entered' : '' !!}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
+                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted text-nowrap">{{ ucfirst($r->status) }}{!! !$r->confirmed_on ? ' · <span class="sc-warn">no confirmation date</span>' : '' !!}{{ !$r->kpi->entered && $r->status !== 'probation' ? ' · KPI not entered' : '' }}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
                         <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $rm($r->bonus) }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
                 @empty
                     <tr><td colspan="10" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
@@ -217,7 +217,7 @@
                 <thead><tr><th>Sales person</th><th>Status</th><th>Employed full month</th><th>Recorded absences</th><th>Absence without approval</th><th>Lateness (min)</th><th>Disciplinary</th><th>Note</th></tr></thead>
                 <tbody>
                 @foreach($rows as $r)
-                    <tr><td><b>{{ $r->name }}</b></td><td class="sc-muted">{{ ucfirst($r->status) }}</td>
+                    <tr><td><b>{{ $r->name }}</b></td><td class="sc-muted text-nowrap">{{ ucfirst($r->status) }}</td>
                         <td><input type="checkbox" name="kpi[{{ $r->id }}][employed_full_month]" value="1" @checked($r->kpi->employed_full_month)></td>
                         <td><input type="number" name="kpi[{{ $r->id }}][absences]" value="{{ $r->kpi->absences }}" min="0" max="31" style="width:64px"></td>
                         <td><input type="checkbox" name="kpi[{{ $r->id }}][unapproved_absence]" value="1" @checked($r->kpi->unapproved_absence)></td>
