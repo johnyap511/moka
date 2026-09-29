@@ -34,7 +34,12 @@ class SalesScheme
         if ($leftOn && substr($leftOn, 0, 7) < $ym) {
             return 'left';
         }
-        if (!$confirmedOn || substr($confirmedOn, 0, 7) >= $ym) {
+        // No confirmation date recorded: treated as a confirmed employee (the team on the
+        // scheme today) and flagged on the page until HR enters the date.
+        if (!$confirmedOn) {
+            return 'full';
+        }
+        if (substr($confirmedOn, 0, 7) >= $ym) {
             return 'probation';
         }
         // The transition is the three complete months after the month confirmation took effect.

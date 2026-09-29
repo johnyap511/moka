@@ -63,7 +63,7 @@
     <div class="sc-tile"><span>Deferred outstanding, {{ $deferred[0]->year }}</span><b>{{ $rm($deferred[0]->outstanding) }}</b><em>{{ $rm($deferred[0]->accrued) }} accrued so far ({{ $rm($deferred[0]->final) }} from final months), {{ $rm($deferred[0]->paid) }} paid</em></div>
     @endif
 </div>
-<p class="sc-muted" style="margin:-8px 0 14px">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : ($st->status === 'probation' ? ' · confirmation date not recorded' : '') }} · {{ $st->stays }} stay(s), {{ $st->nights }} night(s){{ $warnings ? ' · ' . $warnings . ' stay(s) on hold, ' . $rm($held) . ' not counted until the next report' : '' }}{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</p>
+<p class="sc-muted" style="margin:-8px 0 14px">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : (' · confirmation date not recorded, ask the office to set it') }} · {{ $st->stays }} stay(s), {{ $st->nights }} night(s){{ $warnings ? ' · ' . $warnings . ' stay(s) on hold, ' . $rm($held) . ' not counted until the next report' : '' }}{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</p>
 @else
 <div class="sc-tiles">
     <div class="sc-tile sc-tile--main"><span>Payable with the {{ $nextMonth }} salary, everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }} · {{ $payout }}</em></div>
@@ -101,7 +101,7 @@
                 <thead><tr><th>Sales person</th><th>Status</th><th class="num">Recognised sales</th><th>Tier</th><th>KPI result</th><th class="num">Personal 2%</th><th class="num">Team bonus</th><th class="num">Adjustments</th><th class="num">Pay now 70%</th><th class="num">Deferred 30%</th></tr></thead>
                 <tbody>
                 @forelse($rows as $r)
-                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted">{{ ucfirst($r->status) }}{{ !$r->kpi->entered && $r->status !== 'probation' ? ' · KPI not entered' : '' }}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
+                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted">{{ ucfirst($r->status) }}{{ !$r->confirmed_on ? ' · confirmation date not set' : '' }}{{ !$r->kpi->entered && $r->status !== 'probation' ? ' · KPI not entered' : '' }}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
                         <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $rm($r->bonus) }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
                 @empty
                     <tr><td colspan="10" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
