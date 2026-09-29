@@ -97,9 +97,7 @@ class SalesCommissionController extends Controller
     {
         abort_unless(admin_can('sales.manage'), 403);
         $request->validate(['ym' => 'required|regex:/^\d{4}-\d{2}$/', 'kpi' => 'required|array']);
-        if (SalesCommission::isFinal($request->input('ym'))) {
-            return back()->with('error', 'That month is final; its KPI inputs cannot change.');
-        }
+        // KPI inputs are HR facts, so a final month may still be corrected; the page says so.
         foreach ($request->input('kpi') as $pid => $k) {
             if (!DB::table('sales_persons')->where('id', (int) $pid)->exists()) {
                 continue;
@@ -148,6 +146,24 @@ class SalesCommissionController extends Controller
             'paid_on' => $request->input('paid_on'), 'note' => $request->input('note'), 'created_by' => Auth::id(), 'created_at' => now(), 'updated_at' => now()]);
 
         return back()->with('success', 'Deferred payout recorded.');
+    }
+
+    /** Undo one upload: its rows go, including rows in a final month (an explicit correction). */
+    public function deleteUpload(Request $request, $id)
+    {
+        abort_unless(admin_can('sales.manage'), 403);
+        $u = DB::table('sales_report_uploads')->find($id);
+        if (!$u) {
+            return back()->with('error', 'Upload not found.');
+        }
+        $n = DB::transaction(function () use ($u) {
+            $n = DB::table('sales_transactions')->where('upload_id', $u->id)->delete();
+            DB::table('sales_report_uploads')->where('id', $u->id)->delete();
+
+            return $n;
+        });
+
+        return back()->with('success', "Upload removed: {$n} row(s) taken out. Upload the corrected file.");
     }
 
     /** The SOP, readable by anyone who can see the page. */

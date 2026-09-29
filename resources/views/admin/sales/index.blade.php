@@ -211,11 +211,11 @@
 @if($own)
 <p class="sc-foot">Reports uploaded up to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
 @else
-<details class="sc-setup" {{ !$final && count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
+<details class="sc-setup" {{ count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
     <summary>KPI inputs for {{ $monthName }} (attendance, lateness, employment)</summary>
     <div class="card" style="margin-top:12px"><div class="card-body">
-        <p class="sc-help">From HR's records, per SOP §8: recorded absences after any approved Medical Exception (§8.3), whether any absence was without approval, accumulated lateness in minutes, and whether the person is under a disciplinary sanction affecting bonus. "Employed full month" decides who is counted in the 80% team threshold (§3.3). Confirmation dates are set under "Who can see what".{{ $final ? ' This month is final; inputs are read-only.' : '' }}</p>
-        @if(admin_can('sales.manage') && !$final)
+        <p class="sc-help">From HR's records, per SOP §8: recorded absences after any approved Medical Exception (§8.3), whether any absence was without approval, accumulated lateness in minutes, and whether the person is under a disciplinary sanction affecting bonus. "Employed full month" decides who is counted in the 80% team threshold (§3.3). Confirmation dates are set under "Who can see what".{{ $final ? ' This month is final: change these only to correct the record of what was paid.' : '' }}</p>
+        @if(admin_can('sales.manage'))
         <form method="post" action="{{ route('admin.sales.kpi') }}">
             @csrf<input type="hidden" name="ym" value="{{ $ym }}">
             <div class="table-wrap"><table class="sc-table sc-small sc-kpi">
@@ -343,8 +343,8 @@
     <div class="card" style="margin-top:12px"><div class="card-body">
         <h3 class="sc-h3">Recent uploads</h3>
         <table class="sc-table sc-small">
-            <thead><tr><th>When</th><th>Property</th><th>File</th><th>Period</th><th class="num">Rows stored</th><th class="num">Already final (kept as paid)</th><th class="num">Replaced</th><th class="num">Clawbacks</th></tr></thead>
-            <tbody>@foreach($uploads as $u)<tr><td class="text-nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('j M H:i') }}</td><td>{{ $hotels[$u->hotel_code] ?? $u->hotel_code }}</td><td class="sc-muted">{{ $u->filename }}</td><td class="text-nowrap">{{ $fmt($u->period_from) }} → {{ $fmt($u->period_to) }}</td><td class="num">{{ $u->rows_stored }}</td><td class="num">{{ $u->rows_skipped_locked }}</td><td class="num">{{ $u->rows_replaced }}</td><td class="num">{{ $u->clawbacks ?? 0 }}</td></tr>@endforeach</tbody>
+            <thead><tr><th>When</th><th>Property</th><th>File</th><th>Period</th><th class="num">Rows stored</th><th class="num">Already final (kept as paid)</th><th class="num">Replaced</th><th class="num">Clawbacks</th><th></th></tr></thead>
+            <tbody>@foreach($uploads as $u)<tr><td class="text-nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('j M H:i') }}</td><td>{{ $hotels[$u->hotel_code] ?? $u->hotel_code }}</td><td class="sc-muted">{{ $u->filename }}</td><td class="text-nowrap">{{ $fmt($u->period_from) }} → {{ $fmt($u->period_to) }}</td><td class="num">{{ $u->rows_stored }}</td><td class="num">{{ $u->rows_skipped_locked }}</td><td class="num">{{ $u->rows_replaced }}</td><td class="num">{{ $u->clawbacks ?? 0 }}</td><td>@if(admin_can('sales.manage') && DB::table('sales_transactions')->where('upload_id', $u->id)->exists())<form method="post" action="{{ route('admin.sales.upload.delete', $u->id) }}" onsubmit="return confirm('Remove this upload and its rows? Use this to replace a wrong file, then upload the corrected one.')">@csrf<button class="btn btn-secondary btn-sm">Remove</button></form>@endif</td></tr>@endforeach</tbody>
         </table>
     </div></div>
     @endif

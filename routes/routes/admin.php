@@ -184,3 +184,4 @@ Route::post('/sales-commission/adjustment/{id}/delete', 'Admin\SalesCommissionCo
 Route::post('/sales-commission/payout', 'Admin\SalesCommissionController@addPayout')->name('admin.sales.payout');
 Route::get('/sales-commission/sop', 'Admin\SalesCommissionController@sop')->name('admin.sales.sop');
 Route::post('/sales-commission/sop', 'Admin\SalesCommissionController@uploadSop')->name('admin.sales.sop.upload');
+Route::post('/sales-commission/upload/{id}/delete', 'Admin\SalesCommissionController@deleteUpload')->name('admin.sales.upload.delete');
