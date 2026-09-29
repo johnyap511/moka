@@ -398,6 +398,7 @@ class SalesCommission
                 }
             }
         }
+        $people = [];
         foreach ($stays as $s) {
             $s->other_months = $s->other_months ?? [];
             $s->cross = $s->other_months || ($s->arrival && $s->arrival < $from) || ($s->departure && $s->departure > date('Y-m-d', strtotime($to . ' +1 day')));
