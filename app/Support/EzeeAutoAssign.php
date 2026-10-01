@@ -1140,6 +1140,14 @@ class EzeeAutoAssign
         if (!$span || !$span->a || ($span->a === $start && $span->z === $end)) {
             return null;
         }
+        // A tenancy is held as one row per calendar month; when the chain is broken
+        // (pieces edited by hand) the linked month still sits inside eZee's dates.
+        // That is not a date change: only a stay that starts earlier or runs later
+        // than eZee says, or a short stay that differs at all, is raised.
+        $long = $start && $end && (strtotime($end) - strtotime($start)) > 31 * 86400;
+        if ($long && $span->a >= $start && $span->z <= $end) {
+            return null;
+        }
 
         return sprintf('Dates changed in EZEE: ours %s to %s, EZEE now %s to %s. Accept EZEE dates from the review row, or correct EZEE.',
             $span->a, $span->z, $start, $end);
