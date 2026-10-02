@@ -143,12 +143,32 @@ class Guests
             $out = '60' . $d;
         } elseif ($dial && $dial !== '60') {
             $out = str_starts_with($d, $dial) ? $d : $dial . ltrim($d, '0');
+        } elseif (self::foreignShape($d)) {
+            $out = $d;          // typed with its country code but no "+", in a shape no Malaysian number has
         } else {
             return null;
         }
         $len = strlen($out);
 
         return ($len >= 9 && $len <= 15) ? '+' . $out : null;
+    }
+
+    /**
+     * Country code + national number lengths that cannot be a Malaysian number written
+     * without its 0 or 60. Deliberately excludes +1 and +7, where 11 digits starting
+     * with 1 could equally be a Chinese mobile typed without 86.
+     */
+    private static function foreignShape(string $d): bool
+    {
+        $n = strlen($d);
+        foreach (['65' => [8, 8], '62' => [9, 11], '86' => [11, 11], '91' => [10, 10], '82' => [9, 10], '61' => [9, 9], '44' => [10, 10],
+            '66' => [9, 9], '852' => [8, 8], '63' => [10, 10], '84' => [9, 10], '886' => [9, 9], '81' => [10, 10], '971' => [9, 9], '966' => [9, 9]] as $code => [$lo, $hi]) {
+            if (str_starts_with($d, $code) && $n - strlen($code) >= $lo && $n - strlen($code) <= $hi) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** The dialling code inside a clean number, longest match first. */
