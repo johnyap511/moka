@@ -834,12 +834,23 @@ class EzeeAutoAssign
 
         $actorId = $this->actorId;
 
-        DB::transaction(function () use ($ezeeBooking, $booking, $listing, $from, $actorId) {
+        // A stay that crosses a month end is held as one row per month. All of its rows
+        // on the old unit move together; until 2 Oct 2026 only the linked row moved and
+        // the next month's row stayed behind, blocking the unit (RES4432 / RES4441, Alinea 11-08).
+        $siblings = $this->stayRows($ezeeBooking, $booking)
+            ->filter(fn ($b) => (int) $b->id !== (int) $booking->id && (int) $b->listing_id === $from && !Lock::isLocked($b->check_in));
+
+        DB::transaction(function () use ($ezeeBooking, $booking, $listing, $from, $actorId, $siblings) {
             $booking->listing_id = $listing->id;
             $booking->save();
+            foreach ($siblings as $b) {
+                $b->listing_id = $listing->id;
+                $b->save();
+            }
 
             $this->record($ezeeBooking, $listing, $from, 'move',
-                'EZEE moved this booking to room ' . $ezeeBooking->RoomName . ' (booking #' . $booking->id . ')');
+                'EZEE moved this booking to room ' . $ezeeBooking->RoomName . ' (booking #' . $booking->id
+                . ($siblings->count() ? ' and its other month segment(s) ' . $siblings->map(fn ($b) => '#' . $b->id)->implode(', ') : '') . ')');
         });
     }
 
