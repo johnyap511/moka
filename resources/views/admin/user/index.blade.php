@@ -7,53 +7,42 @@
 <div class="page-header">
     <div>
         <h1>Guests</h1>
-        <p>Manage registered guest accounts</p>
+        <p>Everyone who has stayed or registered</p>
     </div>
     <div class="flex gap-2">
-        <form action="/admin/user/export/csv" method="POST" style="display:inline">
-            @csrf
-            <button type="submit" class="btn btn-secondary">
-                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Export CSV
-            </button>
-        </form>
-        <form action="/admin/user/export/excel" method="POST" style="display:inline">
-            @csrf
-            <button type="submit" class="btn btn-primary">
-                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Export Excel
-            </button>
-        </form>
+        <a class="btn btn-secondary" href="/admin/users?type={{ $type ?? 'all' }}{{ ($q ?? '') !== '' ? '&q=' . urlencode($q) : '' }}&export=csv">Export CSV</a>
     </div>
 </div>
 
-{{-- Filter Tabs --}}
-<div class="flex gap-2 mb-4" style="border-bottom:1px solid var(--border);padding-bottom:0;margin-bottom:20px">
-    @php
-        $tabs = ['all' => 'All', 'active' => 'Active', 'inactive' => 'Inactive'];
-        $current = $type ?? 'all';
-    @endphp
+{{-- Filter tabs and search --}}
+@php
+    $tabs = ['all' => 'All guests', 'booking' => 'From bookings', 'website' => 'Website accounts'];
+    $current = $type ?? 'all';
+@endphp
+<div class="flex gap-2" style="border-bottom:1px solid var(--border);margin-bottom:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap">
+    <div class="flex gap-2">
     @foreach($tabs as $key => $label)
-        <a href="/admin/users?type={{ $key }}"
-           style="padding:10px 16px;font-size:13.5px;font-weight:500;border-bottom:2px solid {{ $current === $key ? 'var(--teal)' : 'transparent' }};color:{{ $current === $key ? 'var(--teal)' : 'var(--text-secondary)' }};transition:all .15s;margin-bottom:-1px">
-            {{ $label }}
+        <a href="/admin/users?type={{ $key }}{{ ($q ?? '') !== '' ? '&q=' . urlencode($q) : '' }}"
+           style="padding:10px 14px;font-size:13.5px;font-weight:500;border-bottom:2px solid {{ $current === $key ? 'var(--teal)' : 'transparent' }};color:{{ $current === $key ? 'var(--teal)' : 'var(--text-secondary)' }};text-decoration:none">
+            {{ $label }} <span class="badge badge-gray" style="margin-left:4px">{{ number_format($counts[$key] ?? 0) }}</span>
         </a>
     @endforeach
+    </div>
+    <form method="get" action="/admin/users" style="display:flex;gap:6px;padding-bottom:8px">
+        <input type="hidden" name="type" value="{{ $current }}">
+        <input type="search" name="q" value="{{ $q ?? '' }}" placeholder="Search name, email, phone or #ID" style="padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;min-width:260px">
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        @if(($q ?? '') !== '')<a href="/admin/users?type={{ $current }}" class="btn btn-secondary btn-sm">Clear</a>@endif
+    </form>
 </div>
+<p class="text-secondary text-sm" style="margin:0 0 12px">"From bookings" are guests the eZee sync creates with each reservation (no login). "Website accounts" registered on homemoka.com. Newest first.</p>
 
 <div class="card">
-    <div class="card-header">
-        <h2>
-            {{ $current === 'all' ? 'All Guests' : ucfirst($current) . ' Guests' }}
-            <span class="badge badge-gray" style="margin-left:8px">{{ $users->count() }}</span>
-        </h2>
-    </div>
     <div class="table-wrap">
         @if($users->isEmpty())
             <div class="empty-state">
-                <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 <p>No guests found</p>
-                <small>{{ $current !== 'all' ? 'Try changing the filter above.' : 'No guests have registered yet.' }}</small>
+                <small>{{ ($q ?? '') !== '' ? 'Nothing matches that search.' : 'Try another tab.' }}</small>
             </div>
         @else
             <table>
@@ -63,42 +52,36 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Status</th>
-                        <th>Registered</th>
+                        <th>Bookings</th>
+                        <th>Last stay</th>
+                        <th>Type</th>
+                        <th>Added</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($users as $user)
+                    @php $isWeb = $user->password !== null || $user->provider !== null; @endphp
                     <tr>
                         <td class="mono">#{{ $user->id }}</td>
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <div style="width:30px;height:30px;border-radius:50%;background:var(--teal-light);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </div>
-                                <span class="font-600">{{ $user->name }}</span>
-                            </div>
-                        </td>
-                        <td class="text-secondary">{{ $user->email }}</td>
-                        <td>{{ $user->phone ?? '—' }}</td>
-                        <td>
-                            @if($user->status == 1)
-                                <span class="badge badge-green">Active</span>
-                            @else
-                                <span class="badge badge-red">Inactive</span>
-                            @endif
-                        </td>
+                        <td><span class="font-600">{{ trim($user->name . ' ' . $user->last_name) ?: '—' }}</span>@if($user->bookings_count > 50) <span class="badge badge-orange" title="One guest record used by many bookings: the name on those bookings may not be this person">shared record</span>@endif</td>
+                        <td class="text-secondary">{{ $user->email ?: '—' }}</td>
+                        <td>{{ $user->phone ? ($user->country_code ? '+' . ltrim($user->country_code, '+') . ' ' : '') . $user->phone : '—' }}</td>
+                        <td>{{ $user->bookings_count ?: '—' }}</td>
+                        <td class="text-secondary text-sm">{{ $user->last_stay ?: '—' }}</td>
+                        <td>@if($isWeb)<span class="badge badge-teal">Website</span>@else<span class="badge badge-gray">Booking</span>@endif @if($user->status != 1)<span class="badge badge-red">Inactive</span>@endif</td>
                         <td class="text-secondary text-sm">{{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}</td>
                         <td>
                             <div class="actions">
                                 <a href="/admin/users/{{ $user->id }}" class="btn btn-secondary btn-sm">View</a>
                                 <a href="/admin/users/{{ $user->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
-                                <form action="/admin/users/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete this guest?')">
+                                @if(!$user->bookings_count)
+                                <form action="/admin/users/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete this guest? This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -107,12 +90,15 @@
             </table>
         @endif
     </div>
+    @if($users->lastPage() > 1)
+    <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <span class="text-sm text-secondary">Showing {{ number_format($users->firstItem()) }}–{{ number_format($users->lastItem()) }} of {{ number_format($users->total()) }}</span>
+        <div style="display:flex;gap:6px">
+            @if(!$users->onFirstPage())<a href="{{ $users->previousPageUrl() }}" class="btn btn-secondary btn-sm">← Prev</a>@endif
+            @if($users->hasMorePages())<a href="{{ $users->nextPageUrl() }}" class="btn btn-secondary btn-sm">Next →</a>@endif
+        </div>
+    </div>
+    @endif
 </div>
-
-@if(method_exists($users, 'links'))
-<div class="pagination" style="margin-top:20px">
-    {{ $users->appends(request()->query())->links() }}
-</div>
-@endif
 
 @endsection

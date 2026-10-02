@@ -8,6 +8,7 @@ use App\OtherModel\UserMail;
 use App\User;
 use App\VerifyAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -24,15 +25,75 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    /**
+     * Every guest: the ones the eZee sync creates from bookings (no login) and the
+     * ones who registered on the website. Until 2 Oct 2026 this page listed only the
+     * 615 website accounts, oldest first, so new booking guests never appeared.
+     */
+    public function index(Request $request)
     {
-        $users = User::join('role_user', 'users.id', '=', 'role_user.user_id')
-            ->where('role_id', 2)->where(function ($query) {
-            $query->orwhereNotNull('password')
-                ->orwhereNotNull('provider');
-        })->get();
-        $type = "user_website";
-        return view('admin.user.index', compact('users', 'type'));
+        $type = in_array($request->input('type'), ['booking', 'website'], true) ? $request->input('type') : 'all';
+        $q    = trim((string) $request->input('q'));
+
+        $base = fn () => User::join('role_user', 'users.id', '=', 'role_user.user_id')->where('role_user.role_id', 2);
+        $website = fn ($w) => $w->whereNotNull('users.password')->orWhereNotNull('users.provider');
+        if ($request->input('export') === 'csv') {
+            return $this->exportGuests($base(), $website, $type, $q);
+        }
+
+        $counts = [
+            'all'     => $base()->count(),
+            'website' => $base()->where($website)->count(),
+        ];
+        $counts['booking'] = $counts['all'] - $counts['website'];
+
+        $query = $base()->select('users.*')
+            ->selectSub(DB::table('bookings')->selectRaw('COUNT(*)')->whereColumn('bookings.user_id', 'users.id')->where('bookings.status', '!=', 1), 'bookings_count')
+            ->selectSub(DB::table('bookings')->selectRaw('MAX(check_in)')->whereColumn('bookings.user_id', 'users.id')->where('bookings.status', '!=', 1), 'last_stay');
+        if ($type === 'website') {
+            $query->where($website);
+        } elseif ($type === 'booking') {
+            $query->whereNull('users.password')->whereNull('users.provider');
+        }
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
+                $w->where('users.name', 'like', $like)->orWhere('users.last_name', 'like', $like)
+                    ->orWhere('users.email', 'like', $like)->orWhere('users.phone', 'like', $like);
+                if (ctype_digit(ltrim($q, '#'))) {
+                    $w->orWhere('users.id', (int) ltrim($q, '#'));
+                }
+            });
+        }
+        $users = $query->orderByDesc('users.id')->paginate(50)->appends($request->only('type', 'q'));
+
+        return view('admin.user.index', compact('users', 'type', 'counts', 'q'));
+    }
+
+    /** CSV of the guests in the current tab and search, streamed so 60,000 rows do not exhaust memory. */
+    private function exportGuests($query, $website, string $type, string $q)
+    {
+        $query->select('users.id', 'users.name', 'users.last_name', 'users.email', 'users.country_code', 'users.phone', 'users.created_at', 'users.password', 'users.provider');
+        if ($type === 'website') {
+            $query->where($website);
+        } elseif ($type === 'booking') {
+            $query->whereNull('users.password')->whereNull('users.provider');
+        }
+        if ($q !== '') {
+            $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
+            $query->where(fn ($w) => $w->where('users.name', 'like', $like)->orWhere('users.last_name', 'like', $like)->orWhere('users.email', 'like', $like)->orWhere('users.phone', 'like', $like));
+        }
+
+        return response()->streamDownload(function () use ($query) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Guest ID', 'First name', 'Last name', 'Email', 'Phone', 'Type', 'Added']);
+            $query->orderBy('users.id')->chunk(2000, function ($rows) use ($out) {
+                foreach ($rows as $u) {
+                    fputcsv($out, [$u->id, $u->name, $u->last_name, $u->email, trim($u->country_code . ' ' . $u->phone), ($u->password !== null || $u->provider !== null) ? 'Website' : 'Booking', $u->created_at]);
+                }
+            });
+            fclose($out);
+        }, 'Guests_' . $type . '_' . date('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**
@@ -147,10 +208,8 @@ class UserController extends Controller
             ->orderBy('users.created_at', 'desc')
             ->limit(40)->get();
         // dd($users);
-        $type = "user_admin";
-        // dd($users);
-        // return view('admin.user.index', compact('users', 'type'));
-        return view('admin.user.index', compact('users', 'type'));
+        // The Guests page now lists everyone; this old list of the latest 40 booking guests goes there.
+        return redirect('/admin/users?type=booking');
 
     }
 
