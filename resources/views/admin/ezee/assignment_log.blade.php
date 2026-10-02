@@ -171,18 +171,15 @@
                                 $B['nounit']   = '<button type="button" class="btn %s btn-sm" onclick="noUnit(this, '.$log->ezee_booking_id.')" title="Extra-guest room, needs no unit">Needs no unit</button>';
                                 if ($linkDead) { $B['restore'] = '<button type="button" class="btn %s btn-sm" onclick="restoreBooking(this, '.$log->ezee_booking_id.')" title="Bring back the cancelled booking eZee still reports">Restore</button>'; }
                                 $B['done']     = '<button type="button" class="btn %s btn-sm" onclick="setResolved(this, '.$log->id.', true)" title="Already sorted out; takes it off this list">Mark done</button>';
-                                $primary = array_values(array_filter($kPrimary, fn ($k) => isset($B[$k])));
-                                $always  = array_values(array_diff(array_filter(['open', 'done'], fn ($k) => isset($B[$k])), $primary));
-                                $rest    = array_values(array_diff(array_keys($B), $primary, $always));
+                                // One fixed row, same buttons in the same order on every item. The suggested
+                                // one is green; a button that cannot apply is greyed with the reason, not hidden.
+                                $off = fn ($label, $why) => '<button type="button" class="btn btn-secondary btn-sm rv-off" disabled title="'.e($why).'">'.$label.'</button>';
+                                if (!$ours) { $B['open'] = $off('Open booking', 'Not on the calendar yet, so there is no booking to open'); $B['dates'] = $off('Accept eZee dates', 'Not on the calendar yet; use Move to another unit to place it'); }
+                                if (!isset($B['duplicate'])) { $B['duplicate'] = $off('Mark as duplicate', 'Needs two live bookings on this item'); }
+                                $order = ['dates', 'reassign', 'history', 'duplicate', 'voided', 'nounit', 'amounts', 'restore', 'open', 'done'];
                             @endphp
                             <div class="rv-actions">
-                                @foreach($primary as $k){!! sprintf($B[$k], 'btn-primary') !!}@endforeach
-                                @foreach($always as $k){!! sprintf($B[$k], 'btn-secondary') !!}@endforeach
-                                @if($rest)
-                                <details class="rv-more"><summary class="btn btn-secondary btn-sm">Other actions</summary>
-                                    <div class="rv-more__list">@foreach($rest as $k){!! sprintf($B[$k], 'btn-secondary') !!}@endforeach</div>
-                                </details>
-                                @endif
+                                @foreach($order as $k)@if(isset($B[$k])){!! sprintf($B[$k], in_array($k, $kPrimary, true) ? 'btn-primary' : 'btn-secondary') !!}@endif @endforeach
                             </div>
                             @if($pair->count() === 2)
                             <div id="dup-{{ $log->id }}" class="review-panel" style="display:none">
@@ -300,6 +297,7 @@
 .rv-do{color:#0f172a}
 .rv-note{margin-top:6px;font-size:12px;color:var(--text-secondary)}.rv-note summary{cursor:pointer}
 .rv-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.rv-off{opacity:.45;cursor:not-allowed}
 .rv-more{position:relative}.rv-more>summary{list-style:none;cursor:pointer}.rv-more>summary::-webkit-details-marker{display:none}.rv-more>summary::after{content:" ▾"}
 .rv-more__list{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px;border:1px dashed var(--border,#e5e7eb);border-radius:8px;background:#fff}
 .rv-danger{color:#b91c1c!important;border-color:#fecaca!important}
