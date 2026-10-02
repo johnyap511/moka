@@ -59,7 +59,12 @@ class UserController extends Controller
             $query->where(function ($w) use ($q) {
                 $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
                 $w->where('users.name', 'like', $like)->orWhere('users.last_name', 'like', $like)
-                    ->orWhere('users.email', 'like', $like)->orWhere('users.phone', 'like', $like);
+                    ->orWhere('users.email', 'like', $like)->orWhere('users.phone', 'like', $like)
+                    ->orWhereRaw("CONCAT(users.name, ' ', IFNULL(users.last_name, '')) LIKE ?", [$like]);
+                $digits = preg_replace('/\D+/', '', $q);
+                if (strlen($digits) >= 6) {
+                    $w->orWhere('users.phone_e164', 'like', '%' . ltrim($digits, '0') . '%');
+                }
                 if (ctype_digit(ltrim($q, '#'))) {
                     $w->orWhere('users.id', (int) ltrim($q, '#'));
                 }
@@ -67,13 +72,19 @@ class UserController extends Controller
         }
         $users = $query->orderByDesc('users.id')->paginate(50)->appends($request->only('type', 'q'));
 
-        return view('admin.user.index', compact('users', 'type', 'counts', 'q'));
+        $reach = [
+            'phone' => $base()->whereNotNull('users.phone_e164')->count(),
+            'email' => $base()->whereNotNull('users.email')->where('users.email', '<>', '')
+                ->whereRaw("users.email NOT REGEXP '@(guest\\.booking\\.com|agoda-messaging\\.com|m\\.expediapartnercentral\\.com|guest\\.trip\\.com|guest\\.ctrip\\.com|trip\\.com|ctrip\\.com)$'")->count(),
+        ];
+
+        return view('admin.user.index', compact('users', 'type', 'counts', 'q', 'reach'));
     }
 
     /** CSV of the guests in the current tab and search, streamed so 60,000 rows do not exhaust memory. */
     private function exportGuests($query, $website, string $type, string $q)
     {
-        $query->select('users.id', 'users.name', 'users.last_name', 'users.email', 'users.country_code', 'users.phone', 'users.created_at', 'users.password', 'users.provider');
+        $query->select('users.id', 'users.name', 'users.last_name', 'users.email', 'users.country_code', 'users.phone', 'users.phone_e164', 'users.created_at', 'users.password', 'users.provider');
         if ($type === 'website') {
             $query->where($website);
         } elseif ($type === 'booking') {
@@ -86,10 +97,10 @@ class UserController extends Controller
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Guest ID', 'First name', 'Last name', 'Email', 'Phone', 'Type', 'Added']);
+            fputcsv($out, ['Guest ID', 'First name', 'Last name', 'Email', 'Phone (clean)', 'Phone as typed', 'Type', 'Added']);
             $query->orderBy('users.id')->chunk(2000, function ($rows) use ($out) {
                 foreach ($rows as $u) {
-                    fputcsv($out, [$u->id, $u->name, $u->last_name, $u->email, trim($u->country_code . ' ' . $u->phone), ($u->password !== null || $u->provider !== null) ? 'Website' : 'Booking', $u->created_at]);
+                    fputcsv($out, [$u->id, $u->name, $u->last_name, $u->email, $u->phone_e164, $u->phone, ($u->password !== null || $u->provider !== null) ? 'Website' : 'Booking', $u->created_at]);
                 }
             });
             fclose($out);

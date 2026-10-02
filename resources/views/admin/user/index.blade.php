@@ -35,7 +35,7 @@
         @if(($q ?? '') !== '')<a href="/admin/users?type={{ $current }}" class="btn btn-secondary btn-sm">Clear</a>@endif
     </form>
 </div>
-<p class="text-secondary text-sm" style="margin:0 0 12px">"From bookings" are guests the eZee sync creates with each reservation (no login). "Website accounts" registered on homemoka.com. Newest first.</p>
+<p class="text-secondary text-sm" style="margin:0 0 12px">Newest first. Phone is shown as one clean international number (click to open WhatsApp); hover for what was typed in eZee. Booking sites give a relay address instead of the guest's email, shown as "via Booking.com".@isset($reach) <b>{{ number_format($reach['phone']) }}</b> guests have a usable phone, <b>{{ number_format($reach['email']) }}</b> a direct email.@endisset</p>
 
 <div class="card">
     <div class="table-wrap">
@@ -61,12 +61,19 @@
                 </thead>
                 <tbody>
                     @foreach($users as $user)
-                    @php $isWeb = $user->password !== null || $user->provider !== null; @endphp
+                    @php
+                        $isWeb = $user->password !== null || $user->provider !== null;
+                        $full  = trim(preg_replace('/^[.\s]+/', '', trim($user->name . ' ' . $user->last_name)));
+                        // Names typed in ALL CAPS or all lower case read better in title case; the stored name is not changed.
+                        if ($full !== '' && (mb_strtoupper($full) === $full || mb_strtolower($full) === $full)) { $full = mb_convert_case(mb_strtolower($full), MB_CASE_TITLE); }
+                        $relay = \App\Support\Guests::isRelayEmail($user->email);
+                        $via   = $relay ? (str_contains($user->email, 'booking.com') ? 'Booking.com' : (str_contains($user->email, 'agoda') ? 'Agoda' : (str_contains($user->email, 'expedia') ? 'Expedia' : 'Trip.com'))) : null;
+                    @endphp
                     <tr>
                         <td class="mono">#{{ $user->id }}</td>
-                        <td><span class="font-600">{{ trim($user->name . ' ' . $user->last_name) ?: '—' }}</span>@if($user->bookings_count > 50) <span class="badge badge-orange" title="One guest record used by many bookings: the name on those bookings may not be this person">shared record</span>@endif</td>
-                        <td class="text-secondary">{{ $user->email ?: '—' }}</td>
-                        <td>{{ $user->phone ? ($user->country_code ? '+' . ltrim($user->country_code, '+') . ' ' : '') . $user->phone : '—' }}</td>
+                        <td><span class="font-600">{{ $full ?: '—' }}</span>@if($user->bookings_count > 50) <span class="badge badge-orange" title="One guest record used by many bookings: the name on those bookings may not be this person">shared record</span>@endif</td>
+                        <td class="text-secondary">@if($relay)<span title="{{ $user->email }}">via {{ $via }} <span class="text-sm">(no direct email)</span></span>@else{{ $user->email ?: '—' }}@endif</td>
+                        <td>@if($user->phone_e164)<a href="https://wa.me/{{ ltrim($user->phone_e164, '+') }}" target="_blank" rel="noopener" title="As typed in eZee: {{ $user->phone }}">{{ $user->phone_e164 }}</a>@elseif($user->phone)<span title="Could not be read as one clear number">{{ $user->phone }}</span> <span class="badge badge-gray">check</span>@else—@endif</td>
                         <td>{{ $user->bookings_count ?: '—' }}</td>
                         <td class="text-secondary text-sm">{{ $user->last_stay ?: '—' }}</td>
                         <td>@if($isWeb)<span class="badge badge-teal">Website</span>@else<span class="badge badge-gray">Booking</span>@endif @if($user->status != 1)<span class="badge badge-red">Inactive</span>@endif</td>
