@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'budget-2027-short-stay-rental-rules-malaysia',
+            'view'        => 'budget-2027-short-stay-rental-rules-malaysia',
+            'title'       => 'Budget 2027 and Short-Stay Rules: What to Watch | MOKA',
+            'heading'     => 'Budget 2027 and short-stay rules: what Malaysian owners should watch for',
+            'description' => 'Airbnb wants a national short-stay guideline, hotels want tighter rules, and Tourism Malaysia wants a bigger budget. What is realistic by 9 October.',
+            'published'   => '2026-10-05',
+            'updated'     => '2026-10-05',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/mount-kinabalu.jpg', 'Short-stay rules differ by state: Sabah, Penang and Selangor each write their own'],
+                ['new-theme23/images/projects/skyawani-5/2.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Not sure which rule applies to your unit?',
+            'cta_body'    => 'Tell us where your unit is and we will tell you what applies today and what to watch for on budget day.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-5-october-2026',
+            'view'        => 'short-stay-news-malaysia-sea-5-october-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 5 Oct 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 5 October 2026',
+            'description' => 'F1 returns to Sepang and Verstappen wins, Le Tour de Langkawi and the KL Marathon share the weekend, and Budget 2027 splits Airbnb and the hotel industry.',
+            'published'   => '2026-10-05',
+            'updated'     => '2026-10-05',
+            'image'       => 'new-theme23/images/blog/jb-city-traffic.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/singapore-supertrees.jpg', 'Formula 1 moves to Singapore for a night race next'],
+                ['new-theme23/images/blog/kk-beach-sunset.jpg', 'Malaysia is chasing a 47-million-visitor target this year'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'view'        => 'short-stay-news-malaysia-sea-16-september-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 16 Sep 2026 | MOKA',
