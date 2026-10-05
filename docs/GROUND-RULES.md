@@ -86,3 +86,14 @@ rule 17 is what the system enforces on its own, rule 27 is what people and repai
 Since 21 Sep 2026 the system enforces it too: `config/moka.php` → `reported_through` holds the last reported month
 (now 2026-08). That month and everything before it is stamped: jobs skip it and staff need a super admin password.
 Month-end step: when the next report goes out, move `reported_through` forward one month and deploy.
+
+## 28. A stay whose final room in eZee is an Extra Room is a no-show: company revenue (Sam, 5 Oct 2026)
+When the guest does not come, the front desk moves the reservation to an Extra Room in eZee. Those nights are not the
+owner's income. The daily reconcile moves a one-night or not-yet-started stay to the property's extra room by itself; a
+longer stay that has started is raised in Needs Review, because it may be a mid-stay move (nights on the unit, then the
+extra room), which eZee's Room Charges settle: guest never came → Move to another unit (the extra room); guest left early →
+Some nights elsewhere for the nights after departure. A No Show in eZee, or a departure that passed with no check-in, is
+raised for a person and cancelled with "Cancelled in eZee"; a job never cancels. Charges posted at checkout do not always
+change eZee's modified time, so departures are re-read every morning (05:40) and linked bookings repriced by rule 7–10.
+Every weekly upload of eZee's Transaction Detail Report raises a Needs Review item for any folio with posted room nights
+that Homemoka does not have (rule 26 stays and anything the sync missed).

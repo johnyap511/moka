@@ -120,7 +120,9 @@
                                 elseif (str_starts_with($note, 'Dates changed in EZEE')) { $kind = 'dates'; }
                                 elseif (str_starts_with($note, 'EZEE cancelled'))        { $kind = 'cancelled'; }
                                 elseif (str_starts_with($note, 'EZEE now charges'))      { $kind = 'amounts'; }
-                                elseif (stripos($note, 'Extra Room') !== false && stripos($note, 'split') !== false) { $kind = 'extra'; }
+                                elseif (str_starts_with($note, 'In eZee\'s Transaction Detail Report but not in Homemoka')) { $kind = 'missing'; }
+                                elseif (str_starts_with($note, 'No Show in eZee') || str_starts_with($note, 'Departure has passed')) { $kind = 'noshow'; }
+                                elseif (stripos($note, 'EZEE now has this stay on') === 0 || (stripos($note, 'Extra Room') !== false && stripos($note, 'split') !== false)) { $kind = 'extra'; }
                                 elseif (stripos($note, 'already occupies') !== false || str_starts_with($note, 'Could not')) { $kind = 'clash'; }
                                 else { $kind = 'other'; }
                                 $kinds = [
@@ -129,7 +131,9 @@
                                     'swap'      => ['Rooms were swapped in eZee (already done here)', '#047857', 'Nothing to fix. Look at both guests in eZee, and if the rooms match, mark it done.', ['done']],
                                     'cancelled' => ['Cancelled in eZee, still live here', '#b91c1c', 'Check eZee. If it really is cancelled there, cancel it here too.', ['voided']],
                                     'amounts'   => ['The amount differs from eZee', '#1d4ed8', 'Check the folio in eZee. If eZee is right, use its amounts.', ['amounts']],
-                                    'extra'     => ['Guest spent nights in an extra room', '#7c3aed', 'Read Room Charges in eZee, then put the extra-room nights on the extra room and the unit nights on the unit.', ['history']],
+                                    'extra'     => ['eZee has this stay in an extra room', '#7c3aed', 'Guest never came: Move to another unit → the extra room. Guest left early: Some nights elsewhere for the nights after departure. eZee\'s Room Charges show which.', ['reassign', 'history']],
+                                    'noshow'    => ['No-show in eZee, still live here', '#b91c1c', 'Confirm in eZee that the guest never came, then press Cancelled in eZee.', ['voided']],
+                                    'missing'   => ['In eZee\'s report, not in Homemoka', '#b45309', 'Key this stay by hand on the Bookings page with the folio number, or ask Claude. Then Mark done.', ['done']],
                                     'dup'       => ['Possible duplicate booking', '#b91c1c', 'Open both bookings. If they are the same stay keyed twice, mark the extra copy as duplicate. If they are two parts of one stay, mark it done.', ['duplicate']],
                                     'other'     => ['Needs a person to check', '#475569', 'Read the system note below and check the stay in eZee.', []],
                                 ];

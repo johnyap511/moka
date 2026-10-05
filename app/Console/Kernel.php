@@ -51,6 +51,8 @@ class Kernel extends ConsoleKernel
         // by name. Read after the hourly sync, so a cancellation lands before
         // the reconcile could act on the reservation.
         $schedule->command('ezee:notifications')->hourlyAt(10)->withoutOverlapping();
+        // Charges posted at checkout do not always change eZee's modified time: re-read yesterday's and today's departures before the 06:00 reconcile.
+        $schedule->command('ezee:refresh-departures')->dailyAt('05:40')->withoutOverlapping();
 
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying

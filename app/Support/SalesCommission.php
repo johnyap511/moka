@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\OtherModel\EzeeBooking;
 use App\Support\Channel;
+use App\Support\EzeeUnitMap;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -269,11 +270,71 @@ class SalesCommission
             foreach (array_chunk($keep, 500) as $chunk) {
                 DB::table('sales_transactions')->insert(array_map(fn ($r) => $r + ['upload_id' => $uploadId, 'hotel_code' => $hotel, 'created_at' => $now, 'updated_at' => $now], $chunk));
             }
-            DB::table('sales_report_uploads')->where('id', $uploadId)->update(['rows_replaced' => $replaced, 'clawbacks' => $clawed]);
+            DB::table('sales_report_uploads')->where('id', $uploadId)->update(['rows_replaced' => $replaced, 'clawbacks' => $clawed, 'missing' => self::flagMissing($hotel, $rows, $cut)]);
             self::syncPersons();
 
             return DB::table('sales_report_uploads')->find($uploadId);
         });
+    }
+
+    /**
+     * Rule 26: a stay keyed after night audit has a folio but no RES and never reaches
+     * the sync; a stay the sync missed for any other reason looks the same from here.
+     * Every folio in the report with posted room nights in an open month that Homemoka
+     * has no record of gets a placeholder eZee row (status 7, never auto-assigned) and a
+     * Needs Review item with the facts, so a person keys it or asks Claude to.
+     */
+    public static function flagMissing(string $hotel, array $rows, string $cut): int
+    {
+        $byFolio = [];
+        foreach ($rows as $r) {
+            if ($r['charge'] !== 'Room Charges' || $r['folio_no'] === '' || !$r['tran_date'] || $r['tran_date'] < $cut
+                || in_array((string) $r['booking_status'], ['Cancel', 'Void', 'No Show'], true) || (string) $r['folio_status'] === 'Void' || (float) $r['net_amount'] <= 0) {
+                continue;
+            }
+            $f = &$byFolio[$r['folio_no']];
+            $f = $f ?: ['res' => $r['res_no'], 'guest' => $r['guest_name'], 'room' => $r['room_no'], 'arrival' => $r['arrival'], 'departure' => $r['departure'], 'first' => $r['tran_date'], 'last' => $r['tran_date'], 'nights' => 0, 'net' => 0.0, 'source' => $r['business_source']];
+            $f['nights']++;
+            $f['net'] += (float) $r['net_amount'];
+            $f['first'] = min($f['first'], $r['tran_date']);
+            $f['last']  = max($f['last'], $r['tran_date']);
+            unset($f);
+        }
+        $n = 0;
+        foreach ($byFolio as $folio => $f) {
+            if (EzeeBooking::where('folio_no', $folio)->where('TransactionId', 'like', $hotel . '%')->exists()) {
+                continue;
+            }
+            if ($f['res'] && EzeeBooking::where('SubBookingId', $f['res'])->where('TransactionId', 'like', $hotel . '%')->exists()) {
+                continue;
+            }
+            if (DB::table('bookings')->join('listings', 'listings.id', '=', 'bookings.listing_id')->where('bookings.status', '<>', 1)
+                ->where(fn ($q) => $q->where('bookings.folio_no', $folio)->orWhere('bookings.server_folio_no', $folio))
+                ->where('listings.name', 'like', (self::HOTELS[$hotel] === 'Forum / Damai 88' ? 'Forum' : explode(' /', self::HOTELS[$hotel])[0]) . '%')->exists()) {
+                continue;
+            }
+            $sub = $f['res'] ?: 'NORES-' . $folio;
+            $tx  = $hotel . 'NORES' . preg_replace('/\D/', '', $folio);
+            $eb  = EzeeBooking::where('TransactionId', $tx)->first();
+            if (!$eb) {
+                [$first, $last] = array_pad(explode(' ', trim((string) $f['guest']), 2), 2, '');
+                $eb = EzeeBooking::create(['SubBookingId' => $sub, 'TransactionId' => $tx, 'folio_no' => $folio, 'FirstName' => $first, 'LastName' => $last, 'RoomName' => $f['room'],
+                    'Start' => $f['arrival'] ?: $f['first'], 'End' => $f['departure'] ?: date('Y-m-d', strtotime($f['last'] . ' +1 day')), 'Source' => $f['source'],
+                    'TotalAmountBeforeTax' => round($f['net'], 2), 'TotalAmountAfterTax' => round($f['net'] * 1.08, 2), 'TotalExtraCharge' => 0, 'CurrencyCode' => 'MYR', 'status' => 7, 'ezee_current_status' => 'From report', 'IsConfirmed' => 1]);
+            }
+            $listing = EzeeUnitMap::make()->resolve($eb);
+            if (!$listing || DB::table('ezee_assignment_logs')->where('ezee_booking_id', $eb->id)->where('method', 'conflict')->whereNull('resolved_at')->exists()) {
+                continue;
+            }
+            DB::table('ezee_assignment_logs')->insert(['ezee_booking_id' => $eb->id, 'listing_id' => $listing->id, 'old_listing_id' => null, 'assigned_by' => null, 'method' => 'conflict',
+                'note' => sprintf('In eZee\'s Transaction Detail Report but not in Homemoka: folio %s%s, %s, %s, %d night(s) %s to %s, RM %.2f room charges, %s. %s Key it by hand on Bookings (rule 26) or ask Claude, then Mark done.',
+                    $folio, $f['res'] ? ' / ' . $f['res'] : ' (no RES)', $f['guest'] ?: 'guest unknown', $f['room'] ?: 'room unknown', $f['nights'], $f['first'], $f['last'], $f['net'], $f['source'] ?: 'source unknown',
+                    $f['res'] ? 'The sync never received it.' : 'Keyed after night audit, so the sync cannot see it.'),
+                'created_at' => now(), 'updated_at' => now()]);
+            $n++;
+        }
+
+        return $n;
     }
 
     /** A posted room night that earns commission. */

@@ -173,28 +173,42 @@ class EzeeAutoAssign
                 continue;
             }
 
-            // An extra-guest room is not a place a real stay moves to, and one
-            // extra room is as good as another: a booking already on a real
-            // unit stays there, and one already on any extra room of the
-            // property stays where it is.
+            // eZee's final room is an extra room while our booking sits on a unit.
+            // Since 5 Oct 2026 (Sam): the front desk moves a stay to an extra room when
+            // the guest did not come, so those nights are company revenue, not the
+            // owner's. A one-night or not-yet-started stay moves there whole; a longer
+            // stay that has started may be a mid-stay move (nights on the unit, then
+            // the extra room), which only eZee's Room Charges can settle, so it is
+            // raised for a person with both actions to hand.
             if (self::isExtraRoom($listing) && (int) $booking->listing_id !== (int) $listing->id) {
-                // The front desk parks a finished or extended stay on an extra
-                // room, so EZEE's dates or amount may now cover nights the guest
-                // was charged for beyond the unit. Those nights are company
-                // revenue and belong on the extra room as a split piece, which
-                // only a person reading EZEE's Room Charges can confirm. The
-                // placement on the unit is never touched (rule 20).
-                $drift  = $this->dateDrift($ezeeBooking, $booking);
-                $amount = $this->amountDrift($ezeeBooking, $booking);
-                if ($drift || $amount) {
-                    $this->review($ezeeBooking, $listing, sprintf(
-                        'EZEE now reports this stay on %s while booking #%d sits on %s (%s to %s). %s Check Room Charges in EZEE: nights charged on the extra room are company revenue, so split the tail onto %s and keep the unit nights on the unit. Nothing was moved.',
-                        $ezeeBooking->RoomName, $booking->id, optional(Listing::withoutGlobalScope('notArchived')->find($booking->listing_id))->name ?? 'its unit',
-                        $booking->check_in, $booking->check_out,
-                        $drift ?: 'The amount differs from ours.', $listing->name));
-                    continue;
+                $unitName = optional(Listing::withoutGlobalScope('notArchived')->find($booking->listing_id))->name ?? 'its unit';
+                $chain    = $this->stayRows($ezeeBooking, $booking);
+                $started  = $chain->min('check_in') < date('Y-m-d');
+                if ($chain->sum('nights') <= 1 || !$started) {
+                    $target = $this->clash($listing->id, $ezeeBooking, $booking->id) ? $this->freeExtraRoom($listing, $ezeeBooking) : $listing;
+                    if ($target) {
+                        $this->guard(fn () => $this->move($ezeeBooking, $booking, $target), $ezeeBooking, $target);
+                        if (!$this->dryRun) {
+                            EzeeAssignmentLog::create(['ezee_booking_id' => $ezeeBooking->id, 'listing_id' => $target->id, 'old_listing_id' => $booking->listing_id, 'assigned_by' => $this->actorId, 'method' => 'move',
+                                'note' => sprintf('No-show: eZee moved %s to %s, so booking #%d left %s for %s. Company revenue, not the owner\'s (rule 25).', $ezeeBooking->SubBookingId, $ezeeBooking->RoomName, $booking->id, $unitName, $target->name)]);
+                        }
+                        continue;
+                    }
                 }
-                $this->tally['unchanged']++;
+                $this->review($ezeeBooking, $listing, sprintf(
+                    'EZEE now has this stay on %s while booking #%d sits on %s (%s to %s). If the guest never came, Move to another unit → %s. If the guest left early, use Some nights elsewhere for the nights after departure. eZee\'s Room Charges show which. Nothing was moved.',
+                    $ezeeBooking->RoomName, $booking->id, $unitName, $booking->check_in, $booking->check_out, $listing->name));
+                continue;
+            }
+
+            // A no-show in eZee, or a stay whose departure has passed without a check-in,
+            // is never cancelled here by a job (rule: cancel only per reservation with
+            // evidence); it is raised for a person with the Cancelled in eZee action.
+            $cur = (string) $ezeeBooking->ezee_current_status;
+            if ($cur === 'No Show' || ($cur === 'Confirmed Reservation' && (string) $ezeeBooking->End < date('Y-m-d', strtotime('-1 day')))) {
+                $this->review($ezeeBooking, $listing, sprintf(
+                    '%s in eZee (%s to %s) but booking #%d is still live here. Confirm in eZee, then press Cancelled in eZee so no owner is credited.',
+                    $cur === 'No Show' ? 'No Show' : 'Departure has passed and the guest was never checked in', $ezeeBooking->Start, $ezeeBooking->End, $booking->id));
                 continue;
             }
 
