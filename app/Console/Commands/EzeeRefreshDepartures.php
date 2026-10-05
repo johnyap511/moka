@@ -63,7 +63,15 @@ class EzeeRefreshDepartures extends Command
                 $changed = [];
                 foreach ($new as $k => $v) {
                     $old = $eb->$k;
-                    if (is_numeric($v) && is_numeric($old) ? abs((float) $v - (float) $old) > 0.009 : (string) $v !== (string) $old) {
+                    if ($k === 'extra_charges') {
+                        // MySQL re-spaces stored JSON, so compare the decoded lists, not the text.
+                        $same = json_decode((string) $old, true) == json_decode((string) $v, true);
+                    } elseif (is_numeric($v) && is_numeric($old)) {
+                        $same = abs((float) $v - (float) $old) <= 0.009;
+                    } else {
+                        $same = (string) $v === (string) $old;
+                    }
+                    if (!$same) {
                         $changed[$k] = [$old, $v];
                     }
                 }

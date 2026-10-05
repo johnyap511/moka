@@ -181,7 +181,12 @@ class EzeeAutoAssign
             // the extra room), which only eZee's Room Charges can settle, so it is
             // raised for a person with both actions to hand.
             if (self::isExtraRoom($listing) && (int) $booking->listing_id !== (int) $listing->id) {
-                $unitName = optional(Listing::withoutGlobalScope('notArchived')->find($booking->listing_id))->name ?? 'its unit';
+                $unit = Listing::withoutGlobalScope('notArchived')->find($booking->listing_id);
+                if ($unit && self::isExtraRoom($unit)) {
+                    $this->tally['unchanged']++;   // one extra room is as good as another
+                    continue;
+                }
+                $unitName = $unit->name ?? 'its unit';
                 $chain    = $this->stayRows($ezeeBooking, $booking);
                 $started  = $chain->min('check_in') < date('Y-m-d');
                 if ($chain->sum('nights') <= 1 || !$started) {
