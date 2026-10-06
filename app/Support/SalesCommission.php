@@ -288,7 +288,8 @@ class SalesCommission
     {
         $byFolio = [];
         foreach ($rows as $r) {
-            if ($r['charge'] !== 'Room Charges' || $r['folio_no'] === '' || !$r['tran_date'] || $r['tran_date'] < $cut
+            // Extra Room folios are cancelled or shortened trips: nothing for staff to place.
+            if ($r['charge'] !== 'Room Charges' || $r['folio_no'] === '' || !$r['tran_date'] || $r['tran_date'] < $cut || self::isExtraRoom($r['room_no'] ?? null)
                 || in_array((string) $r['booking_status'], ['Cancel', 'Void', 'No Show'], true) || (string) $r['folio_status'] === 'Void' || (float) $r['net_amount'] <= 0) {
                 continue;
             }
