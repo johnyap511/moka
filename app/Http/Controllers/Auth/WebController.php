@@ -142,8 +142,13 @@ class WebController extends Controller
         }
 
         $data = $request->only('name', 'phone', 'email', 'message');
+        // A bot's post is kept for the record, marked spam, and never emailed; the bot sees the usual thank-you.
+        $spam = \App\Support\FormGuard::reason($request, 'contact_messages', (string) $data['message'], (string) $data['name'], (string) $data['email']);
         // Saved first, then emailed to the office with reply-to set to the sender.
-        \Illuminate\Support\Facades\DB::table('contact_messages')->insert($data + ['ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now()]);
+        \Illuminate\Support\Facades\DB::table('contact_messages')->insert($data + ['ip' => $request->ip(), 'spam' => $spam !== null, 'spam_reason' => $spam, 'created_at' => now(), 'updated_at' => now()]);
+        if ($spam !== null) {
+            return back()->with("success", "Message sent. We reply within one working day.");
+        }
         try {
             \Illuminate\Support\Facades\Mail::raw(
                 "New message from the homemoka.com contact form\n\nName:    {$data['name']}\nEmail:   {$data['email']}\nPhone:   {$data['phone']}\n\nMessage:\n{$data['message']}\n\nReceived " . now()->format('d M Y H:i') . ". Reply to this email to answer them.",

@@ -46,6 +46,7 @@
                 <form method="POST" action="/contact" class="ct-form">
                     @csrf
                     <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+                    <input type="hidden" name="ft" value="{{ \App\Support\FormGuard::token() }}">
                     <label for="c-name">Name</label>
                     <input id="c-name" name="name" value="{{ old('name') }}" required>
                     @error('name')<div class="err">{{ $message }}</div>@enderror
