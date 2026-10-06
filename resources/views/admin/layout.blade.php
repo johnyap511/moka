@@ -268,24 +268,13 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     </a>
     @endif
 
-    @if(admin_can('bookings.view') || admin_can('finance.view') || admin_can('ezee.view'))
+    @if(admin_can('bookings.view') || admin_can('ezee.view'))
     <div class="sidebar-section">Operations</div>
     @endif
     @if(admin_can('bookings.view'))
     <a href="/admin/book" class="sidebar-link {{ request()->is('admin/book*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         Bookings
-    </a>
-    @endif
-    @if(admin_can('finance.view'))
-    {{-- Payments hidden on request; the route still works if visited directly. --}}
-    {{-- <a href="/admin/payment/upcoming" class="sidebar-link {{ request()->is('admin/payment*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Payments
-    </a> --}}
-    <a href="/admin/listing/chart/report" class="sidebar-link {{ request()->is('admin/listing/chart/report*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Monthly Report
     </a>
     @endif
     @if(admin_can('ezee.view'))
@@ -297,32 +286,6 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         EZEE Report
     </a>
-    <a href="/admin/ezee/revenue-export" class="sidebar-link {{ request()->is('admin/ezee/revenue-export*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        Revenue Export (EZEE)
-    </a>
-    @if(admin_can('sales.view') || admin_can('sales.own'))
-    <a href="/admin/sales-commission" class="sidebar-link {{ request()->is('admin/sales-commission*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Sales Commission
-    </a>
-    @endif
-    @if(admin_can('reports.generate'))
-    <a href="/admin/owner-reports" class="sidebar-link {{ request()->is('admin/owner-reports*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Owner reports
-    </a>
-    @endif
-    <a href="/admin/ground-rules" class="sidebar-link {{ request()->is('admin/ground-rules*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
-        Ground rules
-    </a>
-    @if(admin_is_super())
-    <a href="/admin/settings/mail" class="sidebar-link {{ request()->is('admin/settings/mail*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Mail settings
-    </a>
-    @endif
     @endif
     @if(admin_can('ezee.manage'))
     <a href="/admin/ezee/upload_bookings" class="sidebar-link {{ request()->is('admin/ezee/upload_bookings*') ? 'active' : '' }}">
@@ -348,6 +311,39 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         Historical API
     </a>
     @endif
+
+    @if(admin_can('finance.view') || admin_can('ezee.view') || admin_can('sales.view') || admin_can('sales.own') || admin_can('reports.generate'))
+    <div class="sidebar-section">Finance</div>
+    @endif
+    @if(admin_can('finance.view'))
+    {-- Payments hidden on request; the route still works if visited directly. --}
+    <a href="/admin/listing/chart/report" class="sidebar-link {{ request()->is('admin/listing/chart/report*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Monthly Report
+    </a>
+    @endif
+    @if(admin_can('finance.view') || admin_can('ezee.view'))
+    <a href="/admin/ezee/revenue-export" class="sidebar-link {{ request()->is('admin/ezee/revenue-export*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Revenue Export (EZEE)
+    </a>
+    @endif
+    @if(admin_can('sales.view') || admin_can('sales.own'))
+    <a href="/admin/sales-commission" class="sidebar-link {{ request()->is('admin/sales-commission*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Sales Commission
+    </a>
+    @endif
+    @if(admin_can('reports.generate'))
+    <a href="/admin/owner-reports" class="sidebar-link {{ request()->is('admin/owner-reports*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Owner reports
+    </a>
+    @endif
+    <a href="/admin/ground-rules" class="sidebar-link {{ request()->is('admin/ground-rules*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
+        Ground rules
+    </a>
     {{-- Listing Approval and Approvals hidden on request; the @if wrapper goes
          with them since these were its only two entries. Routes still work if
          visited directly. --}}
@@ -417,6 +413,12 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     <a href="/admin/setting/admin-roles" class="sidebar-link {{ request()->is('admin/setting/admin-roles*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
         Admin Roles
+    </a>
+    @endif
+    @if(admin_is_super())
+    <a href="/admin/settings/mail" class="sidebar-link {{ request()->is('admin/settings/mail*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Mail settings
     </a>
     @endif
 
