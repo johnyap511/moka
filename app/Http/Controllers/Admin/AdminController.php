@@ -86,7 +86,7 @@ class AdminController extends Controller
         $role = Role::find(1);
         $user->attachRole($role);
         if ($sendLink) {
-            $sent = Password::sendResetLink(['email' => $user->email]) === Password::RESET_LINK_SENT;
+            $sent = Password::sendResetLink(['email' => $user->email, 'id' => $user->id]) === Password::RESET_LINK_SENT;
             return redirect('/admin/admin')->with($sent ? 'success' : 'error', $sent
                 ? $user->name . ' created. A set-your-password link has been emailed to ' . $user->email . ' (valid 60 minutes).'
                 : $user->name . ' created, but the email could not be sent. Use "Send password link" on the edit page or check Mail settings.');
@@ -249,7 +249,7 @@ class AdminController extends Controller
             return redirect('/admin/dashboard');
         }
         $user = User::findOrFail($id);
-        $status = Password::sendResetLink(['email' => $user->email]);
+        $status = Password::sendResetLink(['email' => $user->email, 'id' => $user->id]);
 
         return back()->with($status === Password::RESET_LINK_SENT ? 'success' : 'error',
             $status === Password::RESET_LINK_SENT ? 'Password link emailed to ' . $user->email . '.' : 'Could not send: ' . __($status));

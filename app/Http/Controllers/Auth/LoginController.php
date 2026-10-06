@@ -31,9 +31,12 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        // Several records can share one email (a staff login and a guest profile): sign in the admin one.
+        $user = \App\Models\User::preferredForEmail($request->email);
+        if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-            Auth::user()->forceFill(['last_login_at' => now()])->saveQuietly();
+            $user->forceFill(['last_login_at' => now()])->saveQuietly();
             return $this->redirectAfterLogin();
         }
 

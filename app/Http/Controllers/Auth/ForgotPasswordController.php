@@ -22,7 +22,9 @@ class ForgotPasswordController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-        Password::sendResetLink($request->only('email'));
+        if ($user = \App\Models\User::preferredForEmail($request->email)) {
+            Password::sendResetLink(['email' => $user->email, 'id' => $user->id]);   // the admin record when the email is shared
+        }
 
         return back()->with('status', 'If that email is registered, a reset link has been sent. It is valid for 60 minutes.');
     }

@@ -29,7 +29,9 @@ class ResetPasswordController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ], ['password.confirmed' => 'The two passwords do not match.', 'password.min' => 'Use at least 8 characters.']);
 
-        $status = Password::reset($request->only('email', 'password', 'password_confirmation', 'token'), function ($user, $password) {
+        $preferred = \App\Models\User::preferredForEmail($request->email);
+        $credentials = $request->only('email', 'password', 'password_confirmation', 'token') + ['id' => $preferred ? $preferred->id : 0];
+        $status = Password::reset($credentials, function ($user, $password) {
             $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60)])->save();
             event(new PasswordReset($user));
         });
