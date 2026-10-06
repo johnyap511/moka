@@ -82,7 +82,8 @@
             <tbody>
                 @forelse($logs as $log)
                 @php
-                    $eb = $ezeeMap[$log->ezee_booking_id] ?? null;
+                    // A review item whose eZee record was since removed must still render (every property reads as null).
+                    $eb = $ezeeMap[$log->ezee_booking_id] ?? new class { public function __get($n) { return null; } public function __isset($n) { return false; } };
                     $methodColors = ['auto'=>'badge-blue','manual'=>'badge-teal','reassign'=>'badge-orange','cancelled'=>'badge-red'];
                 @endphp
                 <tr>
