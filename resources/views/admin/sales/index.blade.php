@@ -34,10 +34,18 @@
     $sopLink = $sop ? '<a href="' . route('admin.sales.sop') . '" target="_blank">Read the Commission SOP (v2.0)</a>' : 'SOP not uploaded yet';
 @endphp
 
+@php
+    $mine = $own ? ($data['people'][0]->name ?? $person) : $person;
+    $byPerson = $person ? null : collect($data['stays'])->groupBy('sales_person');
+    $noDates = $own ? [] : array_map(fn ($r) => $r->name, array_filter($rows, fn ($r) => !$r->confirmed_on));
+    $kpiMissingTop = $own ? 0 : count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation'));
+    $statusChip = ['probation' => ['Probation', 'sc-st--prob'], 'transition' => ['First 3 months', 'sc-st--trans'], 'full' => ['Confirmed', 'sc-st--full'], 'left' => ['Left', 'sc-st--left']];
+    $tierPct = fn ($sales) => min(100, $sales / 300);
+@endphp
 <div class="sc-head">
     <div>
         <h1>{{ $own ? 'My Commission' : 'Sales Commission' }}</h1>
-        <p class="sc-sub">2% of direct-booking room charges (incl. early check-in / late check-out) before SST · KPI gates · team bonus · 70% paid next month, 30% deferred to year end. {!! $sopLink !!}</p>
+        <p class="sc-sub">2% of direct-booking room charges (incl. early check-in / late check-out), before SST. 70% paid with next month's salary, 30% held to year end. {!! $sopLink !!}</p>
     </div>
     <div class="sc-nav">
         <a class="sc-nav__btn" href="{{ $q($prev) }}" title="{{ $mon($prev) }}">‹</a>
@@ -52,44 +60,53 @@
 
 @if($statement)
 @php $st = $statement; $nextTier = null; foreach ([1 => 15000, 2 => 20000, 3 => 30000] as $t => $min) { if ($st->sales < $min) { $nextTier = [$t, $min]; break; } } @endphp
-<div class="sc-tiles">
-    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary</span><b>{{ $rm($st->pay_now) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em><em>70% of commission + bonus{{ $st->adjustments != 0 ? ($st->adjustments > 0 ? ' + ' : ' − ') . $rm(abs($st->adjustments)) . ' adj.' : '' }}</em></div>
-    <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($st->sales) }}</b>
-        <div class="sc-bar"><i style="width:{{ min(100, $st->sales / 300) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div>
-        <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' to Tier ' . $nextTier[0] : '' }}</em></div>
-    <div class="sc-tile"><span>Commission 2%</span><b>{{ $rm($st->personal) }}</b><em>{{ $gateText($st) }}{{ $st->pct < 1 && $st->gross > 0 ? ' · before KPI ' . $rm($st->gross) : '' }}</em></div>
-    <div class="sc-tile"><span>Team bonus share</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} counted staff reached it, shared by {{ $team['eligible'] }}@else No pool: {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k (need 80%) @endif </em></div>
-    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($st->deferred) }}</b><em>paid after year-end audit</em></div>
-    @if(isset($deferred) && $deferred)
-    <div class="sc-tile"><span>Deferred balance {{ $deferred[0]->year }}</span><b>{{ $rm($deferred[0]->outstanding) }}</b><em>{{ $rm($deferred[0]->accrued) }} accrued · {{ $rm($deferred[0]->paid) }} paid</em></div>
-    @endif
+<div class="sc-hero">
+    <div class="sc-hero__main">
+        <div class="sc-hero__who">{{ $mine }} · {{ $monthName }} <span class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</span></div>
+        <div class="sc-hero__amt"><span>Paid with {{ $nextMonth }} salary</span><b>{{ $rm($st->pay_now) }}</b></div>
+        <p class="sc-hero__line">{{ $rm($st->sales) }} direct sales → 2% = {{ $rm($st->gross) }}{{ $st->pct < 1 ? ' → after KPIs ' . $rm($st->personal) : '' }}{{ $st->bonus > 0 ? ' + bonus ' . $rm($st->bonus) : '' }}{{ $st->adjustments != 0 ? ($st->adjustments > 0 ? ' + ' : ' − ') . $rm(abs($st->adjustments)) . ' adjustment' : '' }} → 70% now, {{ $rm($st->deferred) }} held to year end.</p>
+        <p class="sc-hero__meta">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : '' }} · {{ $st->stays }} stays · {{ $st->nights }} nights{{ $warnings ? ' · ' . $warnings . ' on hold (' . $rm($held) . ')' : '' }}</p>
+    </div>
+    <div class="sc-hero__side">
+        <div class="sc-kv"><span>Direct sales</span><b>{{ $rm($st->sales) }}</b>
+            <div class="sc-bar"><i style="width:{{ $tierPct($st->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div>
+            <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' to Tier ' . $nextTier[0] : '' }}</em></div>
+        <div class="sc-kv"><span>KPI</span><b class="sc-kv__sm">{{ $gateText($st) ?: '—' }}</b></div>
+        <div class="sc-kv"><span>Team bonus</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }} · {{ $team['hit'] }} of {{ $team['counted'] }} reached @else {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k, 80% needed @endif</em></div>
+        <div class="sc-kv"><span>Deferred this year</span><b>{{ isset($deferred) && $deferred ? $rm($deferred[0]->outstanding) : $rm($st->deferred) }}</b><em>{{ isset($deferred) && $deferred ? $rm($deferred[0]->accrued) . ' accrued · ' . $rm($deferred[0]->paid) . ' paid' : 'paid after the year-end audit' }}</em></div>
+    </div>
 </div>
-<p class="sc-muted" style="margin:-6px 0 12px">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : ' · confirmation date not set' }} · {{ $st->stays }} stays, {{ $st->nights }} nights{{ $warnings ? ' · ' . $warnings . ' on hold (' . $rm($held) . ')' : '' }}</p>
 @else
 <div class="sc-tiles">
-    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary, everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }} · {{ $payout }}</em></div>
-    <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'stays')) }} stays, {{ array_sum(array_column($data['people'], 'nights')) }} nights</em></div>
-    <div class="sc-tile"><span>Commission 2% after KPIs</span><b>{{ $rm($sum('personal')) }}</b><em>before KPIs {{ $rm($sum('gross')) }}</em></div>
-    <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }}, pool {{ $rm0($team['pool']) }}: {{ $team['hit'] }} of {{ $team['counted'] }} reached it, {{ $team['eligible'] }} eligible @else No pool: under 80% of {{ $team['counted'] }} counted staff reached RM15,000 @endif </em></div>
-    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($sum('deferred')) }}</b><em>paid after year-end audit</em></div>
-    <div class="sc-tile {{ $warnings ? 'sc-tile--warn' : '' }}"><span>On hold</span><b>{{ $warnings ? $rm($held) : '—' }}</b><em>{{ $warnings ? $warnings . ' stays changed in eZee since last upload' : 'no changes since last upload' }}</em></div>
+    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary · everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em></div>
+    <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'stays')) }} stays · {{ array_sum(array_column($data['people'], 'nights')) }} nights</em></div>
+    <div class="sc-tile"><span>Commission 2%</span><b>{{ $rm($sum('personal')) }}</b><em>{{ $rm($sum('gross')) }} before KPIs</em></div>
+    <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}@else {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k · 80% needed @endif</em></div>
+    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($sum('deferred')) }}</b><em>held to year end</em></div>
+    <div class="sc-tile {{ $warnings ? 'sc-tile--warn' : '' }}"><span>On hold</span><b>{{ $warnings ? $rm($held) : '—' }}</b><em>{{ $warnings ? $warnings . ' stays changed in eZee' : 'nothing changed since upload' }}</em></div>
 </div>
 @endif
 
-@if(!$own && $rows && count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')))
-<div class="sc-banner"><b>KPI inputs for {{ $monthName }} not entered yet.</b> Sales figures are automatic; attendance, lateness and employment come from HR. Until they are entered everyone is treated as having met the attendance and punctuality KPIs. <a href="#kpi">Enter them now</a></div>
+@if(!$own && ($kpiMissingTop || $noDates))
+<div class="sc-todo">
+    <b>To do before payroll:</b>
+    @if($kpiMissingTop)<a href="#kpi">KPI inputs for {{ $monthName }}</a>@endif
+    @if($kpiMissingTop && $noDates)<span>·</span>@endif
+    @if($noDates)<a href="#setup" data-open-tab="people">confirmation dates for {{ implode(', ', $noDates) }}</a>@endif
+    <span class="sc-todo__note">Until entered: attendance KPIs count as met, blank dates count as confirmed.</span>
+</div>
 @endif
+
 @if($own)
-<details class="sc-explain" {{ count($data['stays']) ? '' : 'open' }}>
-    <summary>How it is calculated · what to do if a figure looks wrong</summary>
+<details class="sc-explain">
+    <summary>How my figure is worked out</summary>
     <ul>
         <li><b>Direct sales</b> = room charges before SST, plus early check-in and late check-out fees, of bookings with your name as Sales Person in eZee. OTA and agent bookings never count; neither do cleaning fees, deposits, damage or other charges, nor stays moved to an Extra Room (cancelled or shortened trips).</li>
-        <li><b>Nights count in the month eZee posted them.</b> A stay across two months is split; look for <em class="sc-badge">cross-month</em>.</li>
+        <li><b>Each night counts in the month eZee posted it.</b> A stay across two months is split; look for <em class="sc-badge">cross-month</em>.</li>
         <li><b>2%</b> of direct sales, then the KPI gates: RM15,000 minimum (from your 4th month after confirmation), 1 recorded absence = 50%, 2+ absences, an unapproved absence or over 120 min lateness = nil.</li>
         <li><b>Team bonus</b>: if 80% of the team reach RM15k / 20k / 30k, a pool of RM500 / 1,000 / 2,000 is shared by those who reached RM15k and passed the KPIs.</li>
-        <li><b>70% paid with next month's salary, 30% deferred</b> to after the year-end audit. The deferred balance restarts each January; past years stay on record.</li>
-        <li><b>Cancelled after payment</b> = clawed back from the next payout, shown as an adjustment.</li>
-        <li><b>A stay missing?</b> Check the Sales Person field on it in eZee, then ask the office to re-upload. <b>A figure wrong?</b> Tell the Operations Manager the RES or folio within 7 days.</li>
+        <li><b>70% is paid with next month's salary, 30% held</b> until after the year-end audit. The held balance restarts each January; past years stay on record.</li>
+        <li><b>A stay missing or wrong?</b> Check the Sales Person field on it in eZee, then tell the Operations Manager the RES or folio within 7 days.</li>
     </ul>
 </details>
 @endif
@@ -100,18 +117,22 @@
         <div class="card-body">
             <h3 class="sc-h3">By sales person, {{ $monthName }}</h3>
             <div class="table-wrap">
-            <table class="sc-table">
-                <thead><tr><th>Sales person</th><th>Status</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th></tr></thead>
+            <table class="sc-table sc-people-tbl">
+                <thead><tr><th>Sales person</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th></tr></thead>
                 <tbody>
                 @forelse($rows as $r)
-                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}"><td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}">{{ $r->name }}</a></td><td class="sc-muted text-nowrap">{{ ucfirst($r->status) }}{!! !$r->confirmed_on ? ' · <span class="sc-warn">no confirmation date</span>' : '' !!}{{ !$r->kpi->entered && $r->status !== 'probation' ? ' · KPI not entered' : '' }}</td><td class="num">{{ $rm($r->sales) }}</td><td>{{ $tierLabel($r->tier_reached) }}</td><td class="sc-note">{{ $gateText($r) }}</td>
-                        <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $rm($r->bonus) }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
+                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}">
+                        <td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}"><b>{{ $r->name }}</b></a><div class="sc-st {{ $statusChip[$r->status][1] ?? '' }}">{{ $statusChip[$r->status][0] ?? ucfirst($r->status) }}</div></td>
+                        <td class="num">{{ $rm($r->sales) }}</td>
+                        <td class="sc-tier"><div class="sc-bar sc-bar--sm"><i style="width:{{ $tierPct($r->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div><span>{{ $tierLabel($r->tier_reached) }}</span></td>
+                        <td class="sc-note">{{ $gateText($r) }}</td>
+                        <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $r->bonus > 0 ? $rm($r->bonus) : '—' }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
                 @empty
-                    <tr><td colspan="10" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
+                    <tr><td colspan="9" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
                 @endforelse
                 </tbody>
                 @if(count($rows) > 1)
-                <tfoot><tr><th colspan="2">Total</th><th class="num">{{ $rm($sum('sales')) }}</th><th></th><th></th><th class="num">{{ $rm($sum('personal')) }}</th><th class="num">{{ $rm($sum('bonus')) }}</th><th class="num">{{ $rm($sum('adjustments')) }}</th><th class="num">{{ $rm($sum('pay_now')) }}</th><th class="num">{{ $rm($sum('deferred')) }}</th></tr></tfoot>
+                <tfoot><tr><th>Total</th><th class="num">{{ $rm($sum('sales')) }}</th><th></th><th></th><th class="num">{{ $rm($sum('personal')) }}</th><th class="num">{{ $rm($sum('bonus')) }}</th><th class="num">{{ $rm($sum('adjustments')) }}</th><th class="num">{{ $rm($sum('pay_now')) }}</th><th class="num">{{ $rm($sum('deferred')) }}</th></tr></tfoot>
                 @endif
             </table>
             </div>
@@ -119,17 +140,17 @@
     </div>
     @endif
 
-    <div class="card {{ $own ? '' : '' }}">
+    <div class="card {{ !isset($deferred) && !($statement && $statement->adjustment_rows->count()) ? 'sc-span2' : '' }}">
         <div class="card-body">
             <h3 class="sc-h3">Month by month{{ $person ? ', ' . $person : '' }}</h3>
             <div class="table-wrap">
             <table class="sc-table sc-small">
-                <thead><tr><th>Month</th><th class="num">Direct sales</th><th>Tier</th>@if($person)<th>KPI</th>@endif<th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th><th></th></tr></thead>
+                <thead><tr><th>Month</th><th class="num">Direct sales</th>@if($person)<th>KPI</th>@endif<th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th><th></th></tr></thead>
                 <tbody>
                 @forelse($history as $h)
-                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td><td>{{ $tierLabel($h->tier) }}</td>@if($person)<td class="sc-muted">{{ $h->pct === null ? '' : ($h->pct == 1 ? 'met' : ($h->pct == 0.5 ? '50%' : 'nil')) }}</td>@endif<td class="num">{{ $rm($h->personal) }}</td><td class="num">{{ $rm($h->bonus) }}</td><td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($h->pay_now) }}</b></td><td class="num">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span></td></tr>
+                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td>@if($person)<td class="sc-muted">{{ $h->pct === null ? '' : ($h->pct == 1 ? 'met' : ($h->pct == 0.5 ? '50%' : 'nil')) }}</td>@endif<td class="num">{{ $rm($h->personal) }}</td><td class="num">{{ $h->bonus > 0 ? $rm($h->bonus) : '—' }}</td><td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($h->pay_now) }}</b></td><td class="num">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span></td></tr>
                 @empty
-                    <tr><td colspan="10" class="sc-empty">Nothing yet.</td></tr>
+                    <tr><td colspan="9" class="sc-empty">Nothing yet.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -168,43 +189,60 @@
     @endif
 </div>
 
+@php
+$stayRow = function ($s) use ($person, $rm, $range, $fmt, $data) {
+    $o = '<tr class="' . ($s->warn ? 'sc-row-warn' : '') . '">';
+    $o .= '<td>' . e($s->guest) . '<div class="sc-muted">' . e($s->source) . '</div></td>';
+    $o .= '<td class="mono">' . e($s->res_no ?: 'no RES') . '<div class="sc-muted">' . e($s->folio_no) . '</div></td>';
+    $o .= '<td>' . e($s->room) . '<div class="sc-muted">' . e($s->property) . '</div></td>';
+    $o .= '<td class="sc-stay">' . e($range($s->arrival, $s->departure)) . ($s->cross ? '<div><em class="sc-badge">cross-month</em></div>' : '') . '</td>';
+    $o .= '<td class="num">' . $s->nights . '<div class="sc-muted">' . e($fmt($s->first_night) . ($s->nights > 1 ? ' – ' . $fmt($s->last_night) : '')) . '</div></td>';
+    $o .= '<td class="num">' . $rm($s->net) . '</td>';
+    $o .= '<td class="num">' . ($s->warn ? '<span class="sc-warn">on hold</span>' : $rm($s->commission)) . '</td>';
+    $n = '';
+    if ($s->warn) $n .= '<div class="sc-warn">' . e($s->warn) . '</div>';
+    foreach ($s->other_months as $om) $n .= '<div>' . ($om->before ? 'Also' : 'Then') . ' ' . $om->nights . ' night' . ($om->nights == 1 ? '' : 's') . ' in ' . \Carbon\Carbon::parse($om->ym . '-01')->format('M') . ': ' . $rm($om->commission) . ($om->before ? ' (paid)' : '') . '</div>';
+    if ($s->cross && !$s->other_months && $s->departure && $s->departure > $data['to']) $n .= '<div>Continues into ' . \Carbon\Carbon::parse($data['to'])->addMonth()->format('M') . '</div>';
+    if ($s->cross && !$s->other_months && $s->arrival && $s->arrival < $data['from']) $n .= '<div>Started before ' . \Carbon\Carbon::parse($data['from'])->format('M') . '</div>';
+    return $o . '<td class="sc-note">' . $n . '</td></tr>';
+};
+$stayHead = '<thead><tr><th>Guest</th><th>RES / Folio</th><th>Unit</th><th>Stay</th><th class="num">Nights</th><th class="num">Room charges</th><th class="num">2%</th><th>Note</th></tr></thead>';
+$PAGE = 25;
+@endphp
+
 <div class="card sc-stays">
     <div class="card-body">
         <div class="sc-stays__head">
             <h3 class="sc-h3">Stays, {{ $monthName }}{{ $person ? ' · ' . $person : '' }}</h3>
-            <span class="sc-muted">{{ count($data['stays']) }} stays{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</span>
+            <div class="sc-stays__tools"><input type="search" class="sc-search" placeholder="Search guest, RES, folio or unit" data-stay-search><span class="sc-muted">{{ count($data['stays']) }} stays{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</span></div>
         </div>
-        <div class="table-wrap">
-        <table class="sc-table sc-stays__table" data-enhance="search" data-search-placeholder="Search guest, RES, folio or unit">
-            <thead><tr>@if(!$person)<th>Sales person</th>@endif<th>Guest</th><th>RES / Folio</th><th>Unit</th><th>Stay</th><th class="num">Nights</th><th class="num">Room charges</th><th class="num">2%</th><th>Note</th></tr></thead>
-            <tbody>
-            @forelse($data['stays'] as $s)
-                <tr class="{{ $s->warn ? 'sc-row-warn' : '' }}">
-                    @if(!$person)<td>{{ $s->sales_person }}</td>@endif
-                    <td>{{ $s->guest }}<div class="sc-muted">{{ $s->source }}</div></td>
-                    <td class="mono">{{ $s->res_no ?: 'no RES' }}<div class="sc-muted">{{ $s->folio_no }}</div></td>
-                    <td>{{ $s->room }}<div class="sc-muted">{{ $s->property }}</div></td>
-                    <td class="sc-stay">{{ $range($s->arrival, $s->departure) }}@if($s->cross)<div><em class="sc-badge">cross-month</em></div>@endif</td>
-                    <td class="num">{{ $s->nights }}<div class="sc-muted">{{ $fmt($s->first_night) }}{{ $s->nights > 1 ? ' – ' . $fmt($s->last_night) : '' }}</div></td>
-                    <td class="num">{{ $rm($s->net) }}</td>
-                    <td class="num">@if($s->warn)<span class="sc-warn">on hold</span>@else{{ $rm($s->commission) }}@endif</td>
-                    <td class="sc-note">
-                        @if($s->warn)<div class="sc-warn">{{ $s->warn }}</div>@endif
-                        @foreach($s->other_months as $o)
-                            <div>{{ $o->before ? 'Also' : 'Then' }} {{ $o->nights }} night{{ $o->nights == 1 ? '' : 's' }} in {{ \Carbon\Carbon::parse($o->ym . '-01')->format('M') }}: {{ $rm($o->commission) }}{{ $o->before ? ' (paid)' : '' }}</div>
-                        @endforeach
-                        @if($s->cross && !$s->other_months && $s->departure && $s->departure > $data['to'])<div>Continues into {{ \Carbon\Carbon::parse($data['to'])->addMonth()->format('M') }}</div>@endif
-                        @if($s->cross && !$s->other_months && $s->arrival && $s->arrival < $data['from'])<div>Started before {{ \Carbon\Carbon::parse($data['from'])->format('M') }}</div>@endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="9" class="sc-empty">Nothing for {{ $monthName }}.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-        </div>
+        @if(!count($data['stays']))
+            <p class="sc-empty">Nothing for {{ $monthName }}.</p>
+        @elseif($byPerson)
+            @foreach($byPerson as $name => $list)
+            <details class="sc-group" {{ $loop->first ? 'open' : '' }}>
+                <summary><b>{{ $name }}</b><span>{{ $list->count() }} stays · {{ $list->sum('nights') }} nights</span><span class="num">{{ $rm($list->sum('net')) }}</span></summary>
+                <div class="table-wrap"><table class="sc-table sc-stays__table" data-stay-table>{!! $stayHead !!}<tbody>
+                @foreach($list as $i => $s){!! str_replace('<tr class="', '<tr class="' . ($loop->index >= $PAGE ? 'sc-more ' : ''), $stayRow($s)) !!}@endforeach
+                </tbody></table></div>
+                @if($list->count() > $PAGE)<button type="button" class="sc-showmore" data-show-more>Show all {{ $list->count() }}</button>@endif
+            </details>
+            @endforeach
+        @else
+            <div class="table-wrap"><table class="sc-table sc-stays__table" data-stay-table>{!! $stayHead !!}<tbody>
+            @foreach($data['stays'] as $i => $s){!! str_replace('<tr class="', '<tr class="' . ($loop->index >= $PAGE ? 'sc-more ' : ''), $stayRow($s)) !!}@endforeach
+            </tbody></table></div>
+            @if(count($data['stays']) > $PAGE)<button type="button" class="sc-showmore" data-show-more>Show all {{ count($data['stays']) }}</button>@endif
+        @endif
     </div>
 </div>
+<script>
+(function(){
+  document.querySelectorAll('[data-show-more]').forEach(function(b){b.addEventListener('click',function(){var t=b.previousElementSibling.querySelector('table');t.querySelectorAll('.sc-more').forEach(function(r){r.classList.remove('sc-more')});b.remove();});});
+  var q=document.querySelector('[data-stay-search]');if(q){q.addEventListener('input',function(){var v=q.value.trim().toLowerCase();document.querySelectorAll('[data-stay-table] tbody tr').forEach(function(r){var hit=!v||r.textContent.toLowerCase().indexOf(v)>-1;r.style.display=hit?'':'none';if(v&&hit)r.classList.remove('sc-more');});document.querySelectorAll('.sc-group').forEach(function(g){if(v)g.open=true;});});}
+  document.querySelectorAll('[data-open-tab]').forEach(function(a){a.addEventListener('click',function(){var t=document.querySelector('.sc-tab[data-tab="'+a.dataset.openTab+'"]');if(t)t.click();});});
+})();
+</script>
 
 @if($own)
 <p class="sc-foot">Reports uploaded to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
@@ -428,5 +466,18 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 .sc-sop{justify-content:space-between;border-top:1px solid var(--border,#e5e7eb);padding-top:10px}
 .sc-people select,.sc-people input[type=date]{padding:5px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;max-width:100%}.sc-people select{min-width:220px}
 @media (max-width:760px){.sc-pane__head{flex-direction:column}.sc-why>summary{text-align:left}}
+.sc-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}@media (max-width:900px){.sc-hero{grid-template-columns:1fr}}
+.sc-hero__main{background:#0f766e;color:#fff;border-radius:12px;padding:16px 18px;display:grid;gap:6px;align-content:start}
+.sc-hero__who{font-size:13px;opacity:.9;display:flex;gap:8px;align-items:center}.sc-hero__who .sc-chip--prov{background:rgba(255,255,255,.18);color:#fff}.sc-hero__who .sc-chip--final{background:rgba(255,255,255,.25);color:#fff}
+.sc-hero__amt span{display:block;font-size:12px;opacity:.85}.sc-hero__amt b{font-size:30px;line-height:1.1}
+.sc-hero__line{margin:4px 0 0;font-size:12.5px;line-height:1.5;opacity:.95}.sc-hero__meta{margin:0;font-size:11.5px;opacity:.8}
+.sc-hero__side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media (max-width:560px){.sc-hero__side{grid-template-columns:1fr}}
+.sc-kv{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;display:grid;gap:3px;align-content:start}.sc-kv span{font-size:11.5px;color:var(--text-secondary)}.sc-kv b{font-size:18px;line-height:1.15}.sc-kv b.sc-kv__sm{font-size:13px;line-height:1.35}.sc-kv em{font-style:normal;font-size:11.5px;color:var(--text-secondary);line-height:1.35}
+.sc-todo{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#78350f;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sc-todo a{font-weight:600;color:#92400e}.sc-todo__note{flex-basis:100%;font-size:11.5px;color:#92400e;opacity:.85}
+.sc-st{display:inline-block;margin-top:2px;font-size:10.5px;font-weight:600;padding:0 7px;border-radius:999px}.sc-st--full{background:#dcfce7;color:#166534}.sc-st--trans{background:#dbeafe;color:#1d4ed8}.sc-st--prob{background:#f1f5f9;color:#475569}.sc-st--left{background:#fee2e2;color:#991b1b}
+.sc-tier{min-width:120px}.sc-tier span{font-size:11.5px;color:var(--text-secondary)}.sc-bar--sm{height:5px;margin:4px 0 2px}
+.sc-stays__tools{display:flex;gap:10px;align-items:center}.sc-search{padding:5px 10px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;min-width:240px}
+.sc-group{border:1px solid var(--border,#e5e7eb);border-radius:10px;margin-bottom:8px;padding:0 10px}.sc-group>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:140px 1fr auto;gap:12px;align-items:center;padding:9px 0;font-size:13px}.sc-group>summary::-webkit-details-marker{display:none}.sc-group>summary span{color:var(--text-secondary);font-size:12px}.sc-group>summary span.num{color:inherit;font-weight:600;font-size:13px}.sc-group[open]>summary{border-bottom:1px solid var(--border,#e5e7eb)}.sc-group .table-wrap{margin:0 -10px}
+.sc-more{display:none}.sc-showmore{display:block;width:100%;margin:6px 0 8px;padding:7px;border:1px dashed #94a3b8;border-radius:8px;background:#f8fafc;font:inherit;font-size:12.5px;font-weight:600;color:#334155;cursor:pointer}.sc-showmore:hover{background:#f1f5f9}
 </style>
 @endpush
