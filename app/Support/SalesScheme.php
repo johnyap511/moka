@@ -143,9 +143,16 @@ class SalesScheme
                     $eligible[] = $name;
                 }
             }
+            // Equal shares to the cent; the last full share absorbs the rounding so the pool adds up exactly.
             $share = count($eligible) ? $pool / count($eligible) : 0;
+            $given = 0.0;
+            $full  = array_values(array_filter($eligible, fn ($n) => $rows[$n]->kpi->absences !== 1));
             foreach ($eligible as $name) {
                 $rows[$name]->bonus = round($share * ($rows[$name]->kpi->absences === 1 ? 0.5 : 1), 2);
+                $given += $rows[$name]->bonus;
+            }
+            if ($full && abs($given - $pool) > 0.001 && count($full) === count($eligible)) {
+                $rows[end($full)]->bonus = round($rows[end($full)]->bonus + ($pool - $given), 2);
             }
         }
 
