@@ -53,6 +53,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('ezee:notifications')->hourlyAt(10)->withoutOverlapping();
         // Charges posted at checkout do not always change eZee's modified time: re-read yesterday's and today's departures before the 06:00 reconcile.
         $schedule->command('ezee:refresh-departures')->dailyAt('05:40')->withoutOverlapping();
+        // Owner reports: hand a queued run to the report service (a web request cannot wait the minutes it takes).
+        $schedule->command('reports:run')->everyMinute()->withoutOverlapping(30)->runInBackground();
 
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying

@@ -42,6 +42,9 @@ return [
         'Calendar' => [
             'calendar.view' => 'View & Export Calendar',
         ],
+        'Reports' => [
+            'reports.generate' => 'Generate the monthly owner reports',
+        ],
         'Sales' => [
             'sales.view'   => 'View sales commission (all sales persons)',
             'sales.manage' => 'Upload eZee Transaction Detail Reports',
@@ -66,6 +69,7 @@ return [
                 'calendar.view',
                 'settings.view',
                 'sales.own',
+                'reports.generate',
             ],
         ],
         'finance' => [
@@ -78,6 +82,7 @@ return [
                 'bookings.view',
                 'finance.view', 'finance.manage',
                 'sales.view', 'sales.manage',
+                'reports.generate',
             ],
         ],
         'operations' => [
@@ -91,6 +96,7 @@ return [
                 'ezee.view', 'ezee.manage', 'ezee.delete', 'ezee.history',
                 'calendar.view',
                 'sales.own',
+                'reports.generate',
             ],
         ],
         'sales' => [

@@ -14,4 +14,10 @@ return [
 
     // Sales commission (Sam, 29 Sep 2026): 2% of room charges before SST, every sales person, every source.
     'sales_commission_rate' => (float) env('MOKA_SALES_COMMISSION_RATE', 0.02),
+
+    // Owner reports (6 Oct 2026): the private Cloud Run service that runs the locked
+    // report engine (repo moka-report-service). Token comes from the VM metadata server;
+    // MOKA_REPORTS_TOKEN is only for a manual test from elsewhere.
+    'reports_url'   => env('MOKA_REPORTS_URL'),
+    'reports_token' => env('MOKA_REPORTS_TOKEN'),
 ];

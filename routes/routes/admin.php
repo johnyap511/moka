@@ -174,6 +174,15 @@ Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']
     \UniSharp\LaravelFilemanager\Lfm::routes();
 });
 
+// Owner reports: monthly landlord-payout pack via the private report service (6 Oct 2026)
+Route::get('/owner-reports', 'Admin\OwnerReportController@index')->name('admin.reports.index');
+Route::post('/owner-reports', 'Admin\OwnerReportController@store')->name('admin.reports.store');
+Route::get('/owner-reports/{run}', 'Admin\OwnerReportController@show')->name('admin.reports.show');
+Route::post('/owner-reports/{run}/generate', 'Admin\OwnerReportController@generate')->name('admin.reports.generate');
+Route::get('/owner-reports/{run}/status', 'Admin\OwnerReportController@status')->name('admin.reports.status');
+Route::get('/owner-reports/{run}/download', 'Admin\OwnerReportController@download')->name('admin.reports.download');
+Route::post('/owner-reports/{run}/delete', 'Admin\OwnerReportController@destroy')->name('admin.reports.destroy');
+
 // Sales commission from eZee's Transaction Detail Report (29 Sep 2026)
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
