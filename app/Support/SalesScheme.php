@@ -86,9 +86,9 @@ class SalesScheme
                 'bonus_eligible' => false, 'bonus' => 0.0, 'adjustments' => 0.0, 'adjustment_rows' => $adj[$p->id] ?? collect(),
                 'total' => 0.0, 'pay_now' => 0.0, 'deferred' => 0.0,
             ];
-            // Left the company and nothing tagged to them this month: not on this month's page.
-            // Months before they left, and any later stay still carrying their name, stay visible.
-            if (!$s && $r->status === 'left') {
+            // Left the company before this month: off the page, out of the team count, no commission
+            // (Sam, 6 Oct 2026). Months up to and including the leaving month are unchanged.
+            if ($r->status === 'left') {
                 continue;
             }
             $r->gross = round($r->sales * $rate, 2);

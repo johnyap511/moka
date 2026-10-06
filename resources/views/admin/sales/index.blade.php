@@ -35,6 +35,8 @@
 @endphp
 
 @php
+    $leftNames = $own ? [] : $persons->filter(fn ($sp) => $sp->left_on && substr($sp->left_on, 0, 7) < $ym)->pluck('name')->all();
+    if ($leftNames) { $data['stays'] = array_values(array_filter($data['stays'], fn ($s) => !in_array($s->sales_person, $leftNames, true))); $cross = count(array_filter($data['stays'], fn ($s) => $s->cross)); }
     $mine = $own ? ($data['people'][0]->name ?? $person) : $person;
     $byPerson = $person ? null : collect($data['stays'])->groupBy('sales_person');
     $noDates = $own ? [] : array_map(fn ($r) => $r->name, array_filter($rows, fn ($r) => !$r->confirmed_on));
@@ -350,24 +352,10 @@ $PAGE = 25;
             </ul></details>
         </div>
         @php $gone = $persons->filter(fn ($sp) => $sp->left_on && $sp->left_on <= now()->toDateString()); $here = $persons->reject(fn ($sp) => $sp->left_on && $sp->left_on <= now()->toDateString()); @endphp
-        @php $personRow = function ($sp) use ($staff, $fmtY) { ob_start(); ?>
-                <tr>
-                    <td><b>{{ $sp->name }}</b><div class="sc-muted">@if(!$sp->user_id)<span class="sc-warn">no login</span>@elseif(empty($sp->admin_role))super admin, sees everyone@else{{ config('admin_permissions.roles.' . $sp->admin_role . '.label', ucfirst($sp->admin_role)) }}@endif</div></td>
-                    @if(admin_can('sales.manage'))
-                    <form method="post" action="{{ route('admin.sales.person') }}" id="sp{{ $sp->id }}">@csrf<input type="hidden" name="id" value="{{ $sp->id }}"></form>
-                    <td><select name="user_id" form="sp{{ $sp->id }}"><option value="">— not tied —</option>@foreach($staff as $u)<option value="{{ $u->id }}" @selected((int) $sp->user_id === (int) $u->id)>{{ $u->name }} · {{ $u->email }}</option>@endforeach</select></td>
-                    <td><input type="date" name="confirmed_on" form="sp{{ $sp->id }}" value="{{ $sp->confirmed_on }}" data-raw-dates></td>
-                    <td><input type="date" name="left_on" form="sp{{ $sp->id }}" value="{{ $sp->left_on }}" data-raw-dates></td>
-                    <td class="num"><button type="submit" form="sp{{ $sp->id }}" class="btn btn-secondary btn-sm">Save</button></td>
-                    @else
-                    <td>{{ $sp->email ?: '—' }}</td><td>{{ $fmtY($sp->confirmed_on) }}</td><td>{{ $fmtY($sp->left_on) }}</td><td></td>
-                    @endif
-                </tr>
-        <?php return ob_get_clean(); }; @endphp
         <table class="sc-table sc-people">
             <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
             <tbody>
-            @foreach($here as $sp){!! $personRow($sp) !!}@endforeach
+            @foreach($here as $sp)@include('admin.sales._person_row', ['sp' => $sp])@endforeach
             @if(!$here->count())<tr><td colspan="5" class="sc-empty">No current sales persons. Names appear here automatically from the first eZee report that carries them.</td></tr>@endif
             </tbody>
         </table>
@@ -375,7 +363,7 @@ $PAGE = 25;
         <details class="sc-adv" style="margin-top:10px"><summary>Left the company ({{ $gone->count() }}) — kept for past months</summary>
         <table class="sc-table sc-people sc-small" style="margin-top:6px">
             <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
-            <tbody>@foreach($gone as $sp){!! $personRow($sp) !!}@endforeach</tbody>
+            <tbody>@foreach($gone as $sp)@include('admin.sales._person_row', ['sp' => $sp])@endforeach</tbody>
         </table>
         </details>
         @endif
