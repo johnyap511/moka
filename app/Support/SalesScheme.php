@@ -24,6 +24,12 @@ class SalesScheme
     public const MIN_SALES   = 15000;
     public const TIERS       = [3 => [30000, 2000], 2 => [20000, 1000], 1 => [15000, 500]];
     public const THRESHOLD   = 0.8;
+
+    /** Staff needed for the team pool: 80% of counted staff, rounded to the nearest person (Sam, 6 Oct 2026: 3 of 4 counts). */
+    public static function needed(int $counted): int
+    {
+        return max(1, (int) round(self::THRESHOLD * $counted));
+    }
     public const PAY_NOW     = 0.7;
     public const GRACE_MIN   = 120;
     public const TRANSITION_MONTHS = 3;
@@ -120,7 +126,7 @@ class SalesScheme
         if ($counted) {
             foreach (self::TIERS as $t => [$min, $amount]) {
                 $hit = count(array_filter($counted, fn ($r) => $r->sales >= $min));
-                if ($hit / count($counted) >= self::THRESHOLD) {
+                if ($hit >= self::needed(count($counted))) {
                     $tier = $t;
                     $pool = $amount;
                     break;
@@ -151,7 +157,7 @@ class SalesScheme
             $r->total       = round($entitlement + $r->adjustments, 2);
         }
 
-        return ['rows' => $rows, 'tier' => $tier, 'pool' => $pool, 'counted' => count($counted), 'eligible' => count($eligible),
+        return ['rows' => $rows, 'tier' => $tier, 'pool' => $pool, 'counted' => count($counted), 'needed' => self::needed(count($counted)), 'eligible' => count($eligible),
             'hit' => $tier ? count(array_filter($counted, fn ($r) => $r->sales >= self::TIERS[$tier][0])) : 0, 'rate' => $rate];
     }
 

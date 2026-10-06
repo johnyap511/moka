@@ -23,12 +23,12 @@
         if (!$r->gates) return '';
         if (!$r->gates['eligible']) return $r->status === 'left' ? 'Left the company' : 'Not eligible (probation)';
         $fails = [];
-        if (!$r->gates['min_sales']) $fails[] = 'below RM15,000 minimum';
+        if (!$r->gates['min_sales']) $fails[] = 'below RM15k';
         if (!$r->gates['approved']) $fails[] = 'absence without approval';
-        if (!$r->gates['attendance']) $fails[] = $r->kpi->absences . ' recorded absences';
-        if (!$r->gates['punctual']) $fails[] = 'lateness over 120 min (' . $r->kpi->lateness_min . ')';
+        if (!$r->gates['attendance']) $fails[] = $r->kpi->absences . ' absences';
+        if (!$r->gates['punctual']) $fails[] = $r->kpi->lateness_min . ' min late';
         if ($fails) return 'Nil: ' . implode(', ', $fails);
-        return $r->kpi->absences === 1 ? '50%: one recorded absence' : 'All KPIs met';
+        return $r->kpi->absences === 1 ? '50%: one absence' : 'KPIs met';
     };
     $tierLabel = fn ($t) => $t ? 'Tier ' . $t : 'Below Tier 1';
     $sopLink = $sop ? '<a href="' . route('admin.sales.sop') . '" target="_blank">Read the Commission SOP (v2.0)</a>' : 'SOP not uploaded yet';
@@ -44,6 +44,12 @@
     $statusChip = ['probation' => ['Probation', 'sc-st--prob'], 'transition' => ['First 3 months', 'sc-st--trans'], 'full' => ['Confirmed', 'sc-st--full'], 'left' => ['Left', 'sc-st--left']];
     $tierPct = fn ($sales) => min(100, $sales / 300);
     $tierCls = fn ($t) => $t >= 3 ? 'sc-bar--t3' : ($t >= 1 ? 'sc-bar--t1' : 'sc-bar--t0');
+    $teamLine = function () use ($team, $rm0) {
+        if ($team['pool']) return 'Tier ' . $team['tier'] . ' pool ' . $rm0($team['pool']) . ' unlocked · ' . $team['hit'] . ' of ' . $team['counted'] . ' reached it';
+        $hit15 = count(array_filter($team['rows'], fn ($r) => $r->sales >= 15000));
+        $gap = max(0, ($team['needed'] ?? 0) - $hit15);
+        return $hit15 . ' of ' . $team['counted'] . ' at RM15k · ' . ($gap ? $gap . ' more unlocks the RM500 pool' : 'pool needs ' . ($team['needed'] ?? 0));
+    };
     $kpiChip = function ($txt) { if ($txt === '') return ''; $c = str_starts_with($txt, 'Nil') || str_starts_with($txt, 'Not') || str_starts_with($txt, 'Left') ? 'sc-kpi--nil' : (str_starts_with($txt, '50%') ? 'sc-kpi--half' : 'sc-kpi--ok'); return '<span class="sc-kpi ' . $c . '">' . e($txt) . '</span>'; };
     $hasBonus = $own ? false : (bool) count(array_filter($rows, fn ($r) => $r->bonus > 0));
     $hasAdj = $own ? false : (bool) count(array_filter($rows, fn ($r) => $r->adjustments != 0));
@@ -51,7 +57,7 @@
 <div class="sc-head">
     <div>
         <h1>{{ $own ? 'My Commission' : 'Sales Commission' }}</h1>
-        <p class="sc-sub">2% of direct-booking room charges (incl. early check-in / late check-out), before SST. 70% paid with next month's salary, 30% held to year end. {!! $sopLink !!}</p>
+        <p class="sc-sub">2% on direct bookings · 70% paid next month, 30% at year end · {!! $sopLink !!}</p>
     </div>
     <div class="sc-nav">
         <a class="sc-nav__btn" href="{{ $q($prev) }}" title="{{ $mon($prev) }}">‹</a>
@@ -69,50 +75,52 @@
 <div class="sc-hero">
     <div class="sc-hero__main">
         <div class="sc-hero__who">{{ $mine }} · {{ $monthName }} <span class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</span></div>
-        <div class="sc-hero__amt"><span>Paid with {{ $nextMonth }} salary</span><b>{{ $rm($st->pay_now) }}</b></div>
-        <p class="sc-hero__line">{{ $rm($st->sales) }} direct sales → 2% = {{ $rm($st->gross) }}{{ $st->pct < 1 ? ' → after KPIs ' . $rm($st->personal) : '' }}{{ $st->bonus > 0 ? ' + bonus ' . $rm($st->bonus) : '' }}{{ $st->adjustments != 0 ? ($st->adjustments > 0 ? ' + ' : ' − ') . $rm(abs($st->adjustments)) . ' adjustment' : '' }} → 70% now, {{ $rm($st->deferred) }} held to year end.</p>
-        <p class="sc-hero__meta">{{ $statusText[$st->status] ?? '' }}{{ $st->confirmed_on ? ' · confirmed ' . $fmtY($st->confirmed_on) : '' }} · {{ $st->stays }} stays · {{ $st->nights }} nights{{ $warnings ? ' · ' . $warnings . ' on hold (' . $rm($held) . ')' : '' }}</p>
+        <div class="sc-hero__amt"><span>{{ $nextMonth }} payout</span><b>{{ $rm($st->pay_now) }}</b></div>
+        <div class="sc-hero__math"><span>{{ $rm($st->sales) }} sales</span><i>→</i><span>2% {{ $rm($st->gross) }}</span>@if($st->pct < 1)<i>→</i><span>after KPIs {{ $rm($st->personal) }}</span>@endif @if($st->bonus > 0)<i>+</i><span>bonus {{ $rm($st->bonus) }}</span>@endif @if($st->adjustments != 0)<i>{{ $st->adjustments > 0 ? '+' : '−' }}</i><span>adj. {{ $rm(abs($st->adjustments)) }}</span>@endif<i>→</i><span><b>70% now</b> · {{ $rm($st->deferred) }} at year end</span></div>
+        <p class="sc-hero__meta">{{ $st->stays }} stays · {{ $st->nights }} nights{{ $warnings ? ' · ' . $warnings . ' on hold (' . $rm($held) . ')' : '' }}{{ $st->status === 'transition' ? ' · RM15k minimum waived (first 3 months)' : ($st->status === 'probation' ? ' · probation' : '') }}</p>
     </div>
     <div class="sc-hero__side">
-        <div class="sc-kv"><span>Direct sales</span><b>{{ $rm($st->sales) }}</b>
-            <div class="sc-bar"><i style="width:{{ $tierPct($st->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div>
-            <em>{{ $tierLabel($st->tier_reached) }}{{ $nextTier ? ' · ' . $rm0($nextTier[1] - $st->sales) . ' to Tier ' . $nextTier[0] : '' }}</em></div>
-        <div class="sc-kv"><span>KPI</span><b class="sc-kv__sm">{{ $gateText($st) ?: '—' }}</b></div>
-        <div class="sc-kv"><span>Team bonus</span><b>{{ $rm($st->bonus) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }} · {{ $team['hit'] }} of {{ $team['counted'] }} reached @else {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k, 80% needed @endif</em></div>
-        <div class="sc-kv"><span>Deferred this year</span><b>{{ isset($deferred) && $deferred ? $rm($deferred[0]->outstanding) : $rm($st->deferred) }}</b><em>{{ isset($deferred) && $deferred ? $rm($deferred[0]->accrued) . ' accrued · ' . $rm($deferred[0]->paid) . ' paid' : 'paid after the year-end audit' }}</em></div>
+        <div class="sc-kv sc-kv--wide">
+            <div class="sc-kv__row"><span>Direct sales</span><b>{{ $rm($st->sales) }}</b></div>
+            <div class="sc-track"><i style="width:{{ $tierPct($st->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u><u style="left:100%"></u></div>
+            <div class="sc-track__labels"><span style="left:50%">RM15k</span><span style="left:66.7%">20k</span><span style="left:100%">30k</span></div>
+            <em>{{ $st->tier_reached >= 3 ? 'Tier 3 reached' : ($nextTier ? $rm0($nextTier[1] - $st->sales) . ' more to Tier ' . $nextTier[0] : '') }}</em>
+        </div>
+        <div class="sc-kv"><span>KPI</span>{!! $kpiChip($gateText($st) ?: 'KPIs met') !!}</div>
+        <div class="sc-kv"><span>Team bonus</span><b>{{ $rm($st->bonus) }}</b><em>{{ $teamLine() }}</em></div>
+        <div class="sc-kv sc-kv--wide"><div class="sc-kv__row"><span>Held to year end {{ isset($deferred) && $deferred ? $deferred[0]->year : '' }}</span><b>{{ isset($deferred) && $deferred ? $rm($deferred[0]->outstanding) : $rm($st->deferred) }}</b></div><em>{{ isset($deferred) && $deferred ? $rm($deferred[0]->paid) . ' paid out so far' : 'paid after the year-end audit' }}</em></div>
     </div>
 </div>
 @else
-<div class="sc-tiles">
-    <div class="sc-tile sc-tile--main"><span>Paid with {{ $nextMonth }} salary · everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em></div>
+<div class="sc-tiles {{ $warnings ? '' : 'sc-tiles--5' }}">
+    <div class="sc-tile sc-tile--main"><span>{{ $nextMonth }} payout · everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em></div>
     <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'stays')) }} stays · {{ array_sum(array_column($data['people'], 'nights')) }} nights</em></div>
-    <div class="sc-tile"><span>Commission 2%</span><b>{{ $rm($sum('personal')) }}</b><em>{{ $rm($sum('gross')) }} before KPIs</em></div>
-    <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>@if($team['pool'])Tier {{ $team['tier'] }} pool {{ $rm0($team['pool']) }}@else {{ count(array_filter($rows, fn ($r) => $r->sales >= 15000)) }} of {{ $team['counted'] }} reached RM15k · 80% needed @endif</em></div>
-    <div class="sc-tile"><span>Deferred 30%</span><b>{{ $rm($sum('deferred')) }}</b><em>held to year end</em></div>
-    <div class="sc-tile {{ $warnings ? 'sc-tile--warn' : '' }}"><span>On hold</span><b>{{ $warnings ? $rm($held) : '—' }}</b><em>{{ $warnings ? $warnings . ' stays changed in eZee' : 'nothing changed since upload' }}</em></div>
+    <div class="sc-tile"><span>Commission</span><b>{{ $rm($sum('personal')) }}</b><em>{{ $sum('gross') != $sum('personal') ? $rm($sum('gross')) . ' before KPIs' : '2%, all KPIs met' }}</em></div>
+    <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>{{ $teamLine() }}</em></div>
+    <div class="sc-tile"><span>Held to year end</span><b>{{ $rm($sum('deferred')) }}</b><em>30%, after audit</em></div>
+    @if($warnings)<div class="sc-tile sc-tile--warn"><span>On hold</span><b>{{ $rm($held) }}</b><em>{{ $warnings }} stays changed in eZee</em></div>@endif
 </div>
 @endif
 
 @if(!$own && ($kpiMissingTop || $noDates))
 <div class="sc-todo">
-    <b>To do before payroll:</b>
-    @if($kpiMissingTop)<a href="#kpi">KPI inputs for {{ $monthName }}</a>@endif
+    <b>Before payroll:</b>
+    @if($kpiMissingTop)<a href="#kpi" title="Until entered, attendance and punctuality count as met">KPI inputs</a>@endif
     @if($kpiMissingTop && $noDates)<span>·</span>@endif
-    @if($noDates)<a href="#setup" data-open-tab="people">confirmation dates for {{ implode(', ', $noDates) }}</a>@endif
-    <span class="sc-todo__note">Until entered: attendance KPIs count as met, blank dates count as confirmed.</span>
+    @if($noDates)<a href="#setup" data-open-tab="people" title="Blank dates count as confirmed">confirmation dates ({{ implode(', ', $noDates) }})</a>@endif
 </div>
 @endif
 
 @if($own)
 <details class="sc-explain">
-    <summary>How my figure is worked out</summary>
+    <summary>How it works</summary>
     <ul>
-        <li><b>Direct sales</b> = room charges before SST, plus early check-in and late check-out fees, of bookings with your name as Sales Person in eZee. OTA and agent bookings never count; neither do cleaning fees, deposits, damage or other charges, nor stays moved to an Extra Room (cancelled or shortened trips).</li>
-        <li><b>Each night counts in the month eZee posted it.</b> A stay across two months is split; look for <em class="sc-badge">cross-month</em>.</li>
-        <li><b>2%</b> of direct sales, then the KPI gates: RM15,000 minimum (from your 4th month after confirmation), 1 recorded absence = 50%, 2+ absences, an unapproved absence or over 120 min lateness = nil.</li>
-        <li><b>Team bonus</b>: if 80% of the team reach RM15k / 20k / 30k, a pool of RM500 / 1,000 / 2,000 is shared by those who reached RM15k and passed the KPIs.</li>
-        <li><b>70% is paid with next month's salary, 30% held</b> until after the year-end audit. The held balance restarts each January; past years stay on record.</li>
-        <li><b>A stay missing or wrong?</b> Check the Sales Person field on it in eZee, then tell the Operations Manager the RES or folio within 7 days.</li>
+        <li><b>Direct sales</b>: room charges + early check-in / late check-out, before SST, on bookings tagged to you in eZee. Not OTA, not cleaning fees or deposits, not Extra Room stays.</li>
+        <li><b>Nights count in the month eZee posts them</b> — a stay over month-end is split (<em class="sc-badge">cross-month</em>).</li>
+        <li><b>2%</b>, then KPIs: RM15k minimum · 1 absence = 50% · 2+ absences, unapproved absence or 120+ min late = nil.</li>
+        <li><b>Team bonus</b>: enough of the team at RM15k / 20k / 30k unlocks RM500 / 1,000 / 2,000, shared by those at RM15k with KPIs met.</li>
+        <li><b>70% next month, 30% after the year-end audit.</b></li>
+        <li><b>Something missing?</b> Check the Sales Person tag in eZee, then tell the Operations Manager the RES or folio within 7 days.</li>
     </ul>
 </details>
 @endif
@@ -490,5 +498,11 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 .sc-bar--t3 i{background:#0f766e}.sc-bar--t1 i{background:#f59e0b}.sc-bar--t0 i{background:#94a3b8}
 .sc-stays__table td.sc-note{color:var(--text-secondary);font-size:11px}
 .sc-group>summary span.num{color:#065f46}
+.sc-tiles--5{grid-template-columns:repeat(5,minmax(0,1fr))}@media (max-width:1100px){.sc-tiles--5{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:640px){.sc-tiles--5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sc-hero__amt b{font-size:34px}.sc-hero__math{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:12.5px;margin-top:6px}.sc-hero__math span{background:rgba(255,255,255,.14);border-radius:999px;padding:3px 10px;white-space:nowrap}.sc-hero__math i{font-style:normal;opacity:.7}
+.sc-kv--wide{grid-column:1/-1}.sc-kv__row{display:flex;justify-content:space-between;align-items:baseline}.sc-kv__row b{font-size:18px}
+.sc-track{position:relative;height:8px;background:#e2e8f0;border-radius:999px;margin:8px 0 2px}.sc-track i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#14b8a6,#0f766e);border-radius:999px}.sc-track u{position:absolute;top:-3px;width:2px;height:14px;background:#94a3b8}
+.sc-track__labels{position:relative;height:14px;font-size:10.5px;color:var(--text-secondary)}.sc-track__labels span{position:absolute;transform:translateX(-100%);padding-right:4px}
+.sc-kv .sc-kpi{width:max-content;margin-top:2px}
 </style>
 @endpush
