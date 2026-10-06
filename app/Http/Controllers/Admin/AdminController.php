@@ -28,12 +28,12 @@ class AdminController extends Controller
             ->select('users.*')
             ->orderBy('users.name')
             ->get();
-        $archived = request()->boolean('archived');
-        $users = $all->filter(fn ($u) => (bool) $u->archived_at === $archived)->values();
+        $archived = request()->boolean('archived');   // the Inactive tab
+        $users = $all->filter(fn ($u) => ((int) $u->status !== 1) === $archived)->values();
 
         return view('admin.user.adminList', [
             'users' => $users, 'archived' => $archived,
-            'counts' => ['active' => $all->whereNull('archived_at')->count(), 'archived' => $all->whereNotNull('archived_at')->count()],
+            'counts' => ['active' => $all->where('status', 1)->count(), 'archived' => $all->where('status', '<>', 1)->count()],
         ]);
     }
 
@@ -198,38 +198,42 @@ class AdminController extends Controller
         }
 
         $user = User::findOrFail($id);
-        if (! $user->archived_at) {
-            return redirect('/admin/admin')->with('error', 'Archive the login first; delete is only for archived logins.');
+        if ((int) $user->status === 1) {
+            return redirect('/admin/admin')->with('error', 'Set the login to Inactive first; delete is only for inactive logins.');
         }
         $user->delete();
 
         return redirect('/admin/admin?archived=1')->with('success', 'Admin deleted.');
     }
 
-    /** Archive: access stops today, the record and its history stay. A tied sales person gets today as leaving date. */
-    public function archive($id)
+    /** Click on the status badge: Active ⇄ Inactive. Inactive = no admin access; record and history stay. */
+    public function toggle($id)
     {
         if (! admin_can('roles.manage')) {
             return redirect('/admin/dashboard');
         }
         if ((int) $id === Auth::id()) {
-            return redirect('/admin/admin')->with('error', 'You cannot archive your own account.');
+            return redirect('/admin/admin')->with('error', 'You cannot deactivate your own account.');
         }
         $user = User::findOrFail($id);
-        $user->update(['status' => 0, 'archived_at' => now()]);
-        $left = DB::table('sales_persons')->where('user_id', $user->id)->whereNull('left_on')->update(['left_on' => now()->toDateString()]);
+        if ((int) $user->status === 1) {
+            $user->update(['status' => 0, 'archived_at' => now()]);
+            $left = DB::table('sales_persons')->where('user_id', $user->id)->whereNull('left_on')->update(['left_on' => now()->toDateString()]);
 
-        return redirect('/admin/admin')->with('success', $user->name . ' archived. The login no longer works.' . ($left ? ' Sales person marked as left today.' : ''));
+            return redirect('/admin/admin')->with('success', $user->name . ' is now inactive and cannot sign in.' . ($left ? ' Sales person marked as left today.' : ''));
+        }
+        $user->update(['status' => 1, 'archived_at' => null]);
+
+        return redirect('/admin/admin?archived=1')->with('success', $user->name . ' is active again. Check the sales person leaving date if one was set.');
+    }
+
+    public function archive($id)
+    {
+        return $this->toggle($id);
     }
 
     public function restore($id)
     {
-        if (! admin_can('roles.manage')) {
-            return redirect('/admin/dashboard');
-        }
-        $user = User::findOrFail($id);
-        $user->update(['status' => 1, 'archived_at' => null]);
-
-        return redirect('/admin/admin')->with('success', $user->name . ' restored. Check the sales person leaving date if it was set.');
+        return $this->toggle($id);
     }
 }

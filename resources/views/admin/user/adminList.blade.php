@@ -35,7 +35,7 @@
     <div class="card-header">
         <div style="display:flex;gap:6px;align-items:center">
             <a href="/admin/admin" class="btn btn-sm {{ $archived ? 'btn-secondary' : 'btn-primary' }}">Active <span class="badge {{ $archived ? 'badge-gray' : '' }}" style="margin-left:6px;{{ $archived ? '' : 'background:rgba(255,255,255,.25);color:#fff' }}">{{ $counts['active'] }}</span></a>
-            <a href="/admin/admin?archived=1" class="btn btn-sm {{ $archived ? 'btn-primary' : 'btn-secondary' }}">Archived <span class="badge {{ $archived ? '' : 'badge-gray' }}" style="margin-left:6px;{{ $archived ? 'background:rgba(255,255,255,.25);color:#fff' : '' }}">{{ $counts['archived'] }}</span></a>
+            <a href="/admin/admin?archived=1" class="btn btn-sm {{ $archived ? 'btn-primary' : 'btn-secondary' }}">Inactive <span class="badge {{ $archived ? '' : 'badge-gray' }}" style="margin-left:6px;{{ $archived ? 'background:rgba(255,255,255,.25);color:#fff' : '' }}">{{ $counts['archived'] }}</span></a>
         </div>
     </div>
     <div class="table-wrap">
@@ -44,7 +44,7 @@
                 <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                <p>{{ $archived ? 'No archived logins.' : 'No admin users found' }}</p>
+                <p>{{ $archived ? 'No inactive logins.' : 'No admin users found' }}</p>
             </div>
         @else
             <table>
@@ -79,8 +79,12 @@
                             <span class="badge {{ $roleInfo['class'] }}">{{ $roleInfo['label'] }}</span>
                         </td>
                         <td>
-                            @if($user->archived_at)
-                                <span class="badge badge-gray">Archived {{ \Carbon\Carbon::parse($user->archived_at)->format('j M Y') }}</span>
+                            @if(admin_can('roles.manage') && $user->id !== Auth::id())
+                                <form action="/admin/admin/{{ $user->id }}/toggle" method="POST" style="display:inline" onsubmit="return confirm('{{ $user->status == 1 ? 'Set ' . $user->name . ' to Inactive? The login stops working; record and commission history stay. A tied sales person gets today as leaving date.' : 'Set ' . $user->name . ' to Active again?' }}')">
+                                    @csrf
+                                    <button type="submit" class="badge {{ $user->status == 1 ? 'badge-green' : 'badge-red' }} badge-toggle" title="Click to switch">{{ $user->status == 1 ? 'Active' : 'Inactive' }}</button>
+                                </form>
+                                @if($user->status != 1 && $user->archived_at)<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">since {{ \Carbon\Carbon::parse($user->archived_at)->format('j M Y') }}</div>@endif
                             @elseif($user->status == 1)
                                 <span class="badge badge-green">Active</span>
                             @else
@@ -90,21 +94,13 @@
                         <td>
                             <div class="actions">
                                 @if(admin_can('roles.manage'))
-                                    @if($user->archived_at)
-                                        <form action="/admin/admin/{{ $user->id }}/restore" method="POST">@csrf<button type="submit" class="btn btn-secondary btn-sm">Restore</button></form>
-                                        <form action="/admin/admin/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete {{ $user->name }} permanently? Archived logins keep their history; deleting removes the record.')">
+                                    <a href="/admin/admin/{{ $user->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+                                    @if($user->status != 1 && $user->id !== Auth::id())
+                                        <form action="/admin/admin/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete {{ $user->name }} permanently? Inactive logins keep their history; deleting removes the record.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                         </form>
-                                    @else
-                                        <a href="/admin/admin/{{ $user->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
-                                        @if($user->id !== Auth::id())
-                                            <form action="/admin/admin/{{ $user->id }}/archive" method="POST" onsubmit="return confirm('Archive {{ $user->name }}? The login stops working today; the record and commission history stay. If tied to a sales person, today becomes the leaving date.')">
-                                                @csrf
-                                                <button type="submit" class="btn btn-secondary btn-sm">Archive</button>
-                                            </form>
-                                        @endif
                                     @endif
                                 @endif
                             </div>
@@ -118,3 +114,7 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>.badge-toggle{border:0;cursor:pointer;font:inherit;font-size:inherit}.badge-toggle:hover{filter:brightness(.92)}</style>
+@endpush
