@@ -37,8 +37,8 @@
         <div class="lbl">Active</div>
     </div>
     <div class="stat-card">
-        <div class="val" style="color:var(--text-secondary)">{{ $listings->where('status', 0)->count() }}</div>
-        <div class="lbl">Inactive</div>
+        <div class="val" style="color:var(--text-secondary)">{{ $showArchived ? $listings->count() : $archivedCount }}</div>
+        <div class="lbl">Archived (inactive)</div>
     </div>
     <div class="stat-card">
         <div class="val" style="color:var(--blue)">{{ $listings->where('type', 'group')->count() }}</div>
@@ -226,6 +226,7 @@ async function toggleStatus(btn, id) {
     try {
         const data = await postJson('/admin/listing/' + id + '/status', {});
         btn.textContent = data.label;
+        if (data.archived !== undefined) { window.location.reload(); return; }   // moved between Active and Archived
         btn.classList.toggle('badge-green', data.status === 1);
         btn.classList.toggle('badge-red', data.status !== 1);
         btn.title = 'Click to ' + (data.status === 1 ? 'deactivate' : 'activate');

@@ -77,7 +77,7 @@ class ListingController extends Controller
         // withArchived: restoring has to reach rows the global scope hides.
         $count = Listing::withArchived()
             ->whereIn('id', $request->input('ids'))
-            ->update(['archived_at' => $archived ? now() : null]);
+            ->update(['archived_at' => $archived ? now() : null, 'status' => $archived ? 0 : 1]);
 
         $noun = $count === 1 ? 'property' : 'properties';
 
@@ -100,13 +100,17 @@ class ListingController extends Controller
     {
         $listing = Listing::findOrFail($id);
 
+        // Inactive means archived (Sam, 6 Oct 2026): one state, two words. Deactivating moves the
+        // property to the Archived tab; activating brings it back.
         $listing->status = (int) $listing->status === 1 ? 0 : 1;
+        $listing->archived_at = (int) $listing->status === 1 ? null : now();
         $listing->save();
 
         return response()->json([
-            'ok'     => true,
-            'status' => (int) $listing->status,
-            'label'  => (int) $listing->status === 1 ? 'Active' : 'Inactive',
+            'ok'       => true,
+            'status'   => (int) $listing->status,
+            'archived' => (int) $listing->status !== 1,
+            'label'    => (int) $listing->status === 1 ? 'Active' : 'Inactive',
         ]);
     }
 
