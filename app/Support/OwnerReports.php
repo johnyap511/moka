@@ -85,10 +85,14 @@ class OwnerReports
         if (count($sheets) === 1) {
             return $sheets[0];
         }
-        $name = strtolower(Carbon::parse($month . '-01')->format('F'));
+        $m = Carbon::parse($month . '-01');
+        $names = [strtolower($m->format('F')), strtolower($m->format('M'))]; // "august", "aug"
         foreach ($sheets as $s) {
-            if (str_contains(strtolower($s), $name)) {
-                return $s;
+            $l = strtolower($s);
+            foreach ($names as $n) {
+                if (preg_match('/\\b' . $n . '\\b/', $l) && str_contains($l, $m->format('Y'))) {
+                    return $s;
+                }
             }
         }
         return null;
