@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  * exported per property). The Sales Person column exists only in that report;
  * eZee's APIs never send it (checked against every documented endpoint, 29 Sep 2026).
  *
- * Basis: every posted "Room Charges" row that carries a Sales Person, net of SST,
+ * Basis: every posted room charge (plus early check-in / late check-out) row that carries a Sales Person, net of SST,
  * on a folio that is Active or Closed and a booking that is not cancelled, void or
  * no-show. Commission = rate x net amount, counted in the month the night was posted.
  *
@@ -338,9 +338,19 @@ class SalesCommission
     }
 
     /** A posted room night that earns commission. */
+    /** Charges that earn commission (Sam, 6 Oct 2026): room charges plus early check-in and late check-out. Cleaning fees, deposits, damage, OTA channel fee and other charges do not. */
+    public const COMMISSIONABLE = ['Room Charges', 'Early Check In', 'Late Check Out'];
+
+    /** Stays parked on an "Extra Room" are cancelled or shortened trips (Sam, 6 Oct 2026): no commission. */
+    public static function isExtraRoom(?string $room): bool
+    {
+        return (bool) preg_match('/extra\s*room/i', (string) $room);
+    }
+
     public static function isPayable(array $r): bool
     {
-        return $r['charge'] === 'Room Charges'
+        return in_array($r['charge'], self::COMMISSIONABLE, true)
+            && !self::isExtraRoom($r['room_no'] ?? null)
             && self::isDirectSource($r['business_source'] ?? null)
             && in_array((string) $r['folio_status'], ['Active', 'Close'], true)
             && !in_array((string) $r['booking_status'], ['Cancel', 'Void', 'No Show'], true)

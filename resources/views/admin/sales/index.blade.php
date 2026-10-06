@@ -37,7 +37,7 @@
 <div class="sc-head">
     <div>
         <h1>{{ $own ? 'My Commission' : 'Sales Commission' }}</h1>
-        <p class="sc-sub">2% of direct-booking room charges before SST · KPI gates · team bonus · 70% paid next month, 30% deferred to year end. {!! $sopLink !!}</p>
+        <p class="sc-sub">2% of direct-booking room charges (incl. early check-in / late check-out) before SST · KPI gates · team bonus · 70% paid next month, 30% deferred to year end. {!! $sopLink !!}</p>
     </div>
     <div class="sc-nav">
         <a class="sc-nav__btn" href="{{ $q($prev) }}" title="{{ $mon($prev) }}">‹</a>
@@ -83,7 +83,7 @@
 <details class="sc-explain" {{ count($data['stays']) ? '' : 'open' }}>
     <summary>How it is calculated · what to do if a figure looks wrong</summary>
     <ul>
-        <li><b>Direct sales</b> = room charges before SST of bookings with your name as Sales Person in eZee. OTA and agent bookings never count. Deposits, cleaning, early/late check-in, other charges are not room charges.</li>
+        <li><b>Direct sales</b> = room charges before SST, plus early check-in and late check-out fees, of bookings with your name as Sales Person in eZee. OTA and agent bookings never count; neither do cleaning fees, deposits, damage or other charges, nor stays moved to an Extra Room (cancelled or shortened trips).</li>
         <li><b>Nights count in the month eZee posted them.</b> A stay across two months is split; look for <em class="sc-badge">cross-month</em>.</li>
         <li><b>2%</b> of direct sales, then the KPI gates: RM15,000 minimum (from your 4th month after confirmation), 1 recorded absence = 50%, 2+ absences, an unapproved absence or over 120 min lateness = nil.</li>
         <li><b>Team bonus</b>: if 80% of the team reach RM15k / 20k / 30k, a pool of RM500 / 1,000 / 2,000 is shared by those who reached RM15k and passed the KPIs.</li>
