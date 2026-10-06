@@ -142,7 +142,14 @@ class OwnerReports
             $c['prev_sheet'] = $run->prev_sheet;
         }
         if ($run->overrides) {
-            $c['overrides'] = $run->overrides;
+            // Empty maps must reach the engine as {} not []: PHP arrays lose the distinction.
+            $ov = $run->overrides;
+            foreach (['mg_units', 'office_rent', 'alinea_rent_ovr', 'lt_override'] as $k) {
+                if (array_key_exists($k, $ov) && is_array($ov[$k]) && !$ov[$k]) {
+                    $ov[$k] = new \stdClass();
+                }
+            }
+            $c['overrides'] = $ov;
         }
         return $c;
     }
