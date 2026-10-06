@@ -149,7 +149,8 @@ class OwnerController extends Controller
     {
         $listings = Listing::where('user_id', $id)->get();
         $user = User::find($id);
-        return view('admin.listing.index', compact('listings', 'user'));
+        // The listing index also powers the per-owner list; it has no archive tab here.
+        return view('admin.listing.index', compact('listings', 'user') + ['showArchived' => false, 'archivedCount' => 0]);
     }
 
     /**
