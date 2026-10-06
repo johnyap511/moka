@@ -209,144 +209,169 @@
 @if($own)
 <p class="sc-foot">Reports uploaded to: @foreach($hotels as $code => $name){{ $name }} {{ isset($coverage[$code]) ? $fmtY($coverage[$code]->last_day) : 'never' }}{{ $loop->last ? '' : ' · ' }}@endforeach · {!! $sopLink !!}</p>
 @else
-<details class="sc-setup" id="kpi" {{ count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation')) ? 'open' : '' }}>
-    <summary>Enter KPI inputs for {{ $monthName }}: attendance, lateness, employment</summary>
-    <div class="card" style="margin-top:12px"><div class="card-body">
-        <p class="sc-help">The RM15,000 sales KPI is checked automatically from eZee. These come from HR's clock-in and leave records (SOP §8): <b>Recorded absences</b> = MC, unpaid leave and unnotified no-shows, minus any approved Medical Exception (§8.3); <b>Absence without approval</b> = one instance means nil for the month; <b>Lateness</b> = minutes over the month against the shift start (over 120 = nil); <b>Disciplinary</b> = a live sanction affecting bonus (§9.4); <b>Employed full month</b> decides who is counted in the 80% team threshold (§3.3). Confirmation dates are set under "Who can see what". Save once per month, before the payroll run.{{ $final ? ' This month is final: change these only to correct the record of what was paid.' : '' }}</p>
+@php
+    $kpiMissing = count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation'));
+    $untied = count(array_filter($persons->all(), fn ($sp) => !$sp->user_id));
+    $staleHotels = count(array_filter(array_keys($hotels), fn ($code) => !isset($coverage[$code]) || \Carbon\Carbon::parse($coverage[$code]->last_day)->lt(now()->subDays(8))));
+    $tab = $kpiMissing ? 'kpi' : (count($data['stays']) ? 'uploads' : 'uploads');
+@endphp
+<div class="sc-setup" id="setup" data-tab="{{ $tab }}">
+    <div class="sc-tabs" role="tablist">
+        <button type="button" class="sc-tab" data-tab="kpi" id="kpi">KPI inputs @if($kpiMissing)<i class="sc-dot"></i>@endif</button>
+        <button type="button" class="sc-tab" data-tab="uploads">Uploads @if($staleHotels)<i class="sc-dot"></i>@endif</button>
+        <button type="button" class="sc-tab" data-tab="people">Sales persons @if($untied)<i class="sc-dot"></i>@endif</button>
+        <button type="button" class="sc-tab" data-tab="adjust">Adjustments</button>
+        <button type="button" class="sc-tab" data-tab="deferred">Deferred payouts</button>
+    </div>
+
+    {{-- KPI inputs --}}
+    <section class="sc-pane card" data-pane="kpi"><div class="card-body">
+        <div class="sc-pane__head">
+            <div><h3 class="sc-h3">KPI inputs, {{ $monthName }}</h3><p class="sc-help">From HR's clock-in and leave records. Sales is checked automatically.{{ $final ? ' Month is final: edit only to correct the record.' : '' }}</p></div>
+            <details class="sc-why"><summary>Rules</summary><ul>
+                <li><b>Full month</b>: employed the whole month, counted in the 80% team threshold (§3.3).</li>
+                <li><b>Absences</b>: MC, unpaid leave, no-shows, minus approved Medical Exceptions (§8.3). 1 = 50%, 2+ = nil.</li>
+                <li><b>Unapproved</b>: one absence without approval = nil.</li>
+                <li><b>Late (min)</b>: minutes over the month against shift start; over 120 = nil.</li>
+                <li><b>Disciplinary</b>: live sanction affecting bonus (§9.4).</li>
+            </ul></details>
+        </div>
         @if(admin_can('sales.manage'))
         <form method="post" action="{{ route('admin.sales.kpi') }}">
             @csrf<input type="hidden" name="ym" value="{{ $ym }}">
-            <div class="table-wrap"><table class="sc-table sc-small sc-kpi">
-                <thead><tr><th>Sales person</th><th>Status</th><th>Employed full month</th><th>Recorded absences</th><th>Absence without approval</th><th>Lateness (min)</th><th>Disciplinary</th><th>Note</th></tr></thead>
+            <div class="table-wrap"><table class="sc-table sc-kpi">
+                <thead><tr><th>Sales person</th><th class="ctr">Full month</th><th class="ctr">Absences</th><th class="ctr">Unapproved</th><th class="ctr">Late (min)</th><th class="ctr">Disciplinary</th><th>Note</th></tr></thead>
                 <tbody>
                 @foreach($rows as $r)
-                    <tr><td><b>{{ $r->name }}</b></td><td class="sc-muted text-nowrap">{{ ucfirst($r->status) }}</td>
-                        <td><input type="checkbox" name="kpi[{{ $r->id }}][employed_full_month]" value="1" @checked($r->kpi->employed_full_month)></td>
-                        <td><input type="number" name="kpi[{{ $r->id }}][absences]" value="{{ $r->kpi->absences }}" min="0" max="31" style="width:64px"></td>
-                        <td><input type="checkbox" name="kpi[{{ $r->id }}][unapproved_absence]" value="1" @checked($r->kpi->unapproved_absence)></td>
-                        <td><input type="number" name="kpi[{{ $r->id }}][lateness_min]" value="{{ $r->kpi->lateness_min }}" min="0" style="width:72px"></td>
-                        <td><input type="checkbox" name="kpi[{{ $r->id }}][disciplinary]" value="1" @checked($r->kpi->disciplinary)></td>
-                        <td><input type="text" name="kpi[{{ $r->id }}][note]" value="{{ $r->kpi->note }}" maxlength="255" placeholder="e.g. 1 MC exempted (§8.3)" style="width:100%"></td></tr>
+                    <tr><td><b>{{ $r->name }}</b><div class="sc-muted">{{ ucfirst($r->status) }}</div></td>
+                        <td class="ctr"><input type="checkbox" name="kpi[{{ $r->id }}][employed_full_month]" value="1" @checked($r->kpi->employed_full_month)></td>
+                        <td class="ctr"><input type="number" name="kpi[{{ $r->id }}][absences]" value="{{ $r->kpi->absences }}" min="0" max="31"></td>
+                        <td class="ctr"><input type="checkbox" name="kpi[{{ $r->id }}][unapproved_absence]" value="1" @checked($r->kpi->unapproved_absence)></td>
+                        <td class="ctr"><input type="number" name="kpi[{{ $r->id }}][lateness_min]" value="{{ $r->kpi->lateness_min }}" min="0"></td>
+                        <td class="ctr"><input type="checkbox" name="kpi[{{ $r->id }}][disciplinary]" value="1" @checked($r->kpi->disciplinary)></td>
+                        <td><input type="text" name="kpi[{{ $r->id }}][note]" value="{{ $r->kpi->note }}" maxlength="255" placeholder="Optional" class="sc-wide"></td></tr>
                 @endforeach
                 </tbody>
             </table></div>
-            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px">Save KPI inputs for {{ $monthName }}</button>
+            <div class="sc-pane__foot"><button type="submit" class="btn btn-primary btn-sm">Save {{ $monthName }}</button><span class="sc-muted">Once a month, before payroll.</span></div>
         </form>
         @endif
-    </div></div>
-</details>
+    </div></section>
 
-<details class="sc-setup">
-    <summary>Adjustments and deferred payouts</summary>
-    <div class="sc-grid" style="margin-top:12px">
-        <div class="card"><div class="card-body">
-            <h3 class="sc-h3">Adjustments in {{ $monthName }}</h3>
-            <p class="sc-help">Clawbacks (SOP §12) are raised automatically when an upload shows a paid night cancelled or voided. Add manual ones here for refunds, management-approved bookings, or corrections; they change the 70% payout of the month.</p>
-            <table class="sc-table sc-small"><tbody>
-            @forelse($adjustments as $a)
-                <tr><td>{{ $a->name }}</td><td class="num">{{ $rm($a->amount) }}</td><td class="sc-note">{{ $a->reason }}</td><td>@if(admin_can('sales.manage') && !$final)<form method="post" action="{{ route('admin.sales.adjustment.delete', $a->id) }}" onsubmit="return confirm('Remove this adjustment?')">@csrf<button class="btn btn-secondary btn-sm">Remove</button></form>@endif</td></tr>
-            @empty
-                <tr><td colspan="4" class="sc-empty">None this month.</td></tr>
-            @endforelse
-            </tbody></table>
-            @if(admin_can('sales.manage') && !$final)
-            <form method="post" action="{{ route('admin.sales.adjustment') }}" class="sc-inline" style="margin-top:10px">
-                @csrf<input type="hidden" name="ym" value="{{ $ym }}">
-                <select name="sales_person_id" required>@foreach($persons as $sp)<option value="{{ $sp->id }}">{{ $sp->name }}</option>@endforeach</select>
-                <input type="number" name="amount" step="0.01" placeholder="Amount (negative = deduct)" required style="width:190px">
-                <input type="text" name="reason" placeholder="Reason" maxlength="255" required style="flex:1;min-width:200px">
-                <button type="submit" class="btn btn-primary btn-sm">Add</button>
-            </form>
-            @endif
-        </div></div>
-        <div class="card"><div class="card-body">
-            <h3 class="sc-h3">Deferred payouts (30%)</h3>
-            <p class="sc-help">Record each payout of the deferred 30% after the audited accounts (SOP §11.2). Pick a person on the page to see their year-by-year balance.</p>
-            @if(admin_can('sales.manage'))
-            <form method="post" action="{{ route('admin.sales.payout') }}" class="sc-inline">
-                @csrf
-                <select name="sales_person_id" required>@foreach($persons as $sp)<option value="{{ $sp->id }}" @selected($person === $sp->name)>{{ $sp->name }}</option>@endforeach</select>
-                <input type="number" name="year" value="{{ (int) substr($ym, 0, 4) }}" min="2020" max="2100" required style="width:84px">
-                <input type="number" name="amount" step="0.01" min="0.01" placeholder="Amount" required style="width:120px">
-                <input type="date" name="paid_on" value="{{ date('Y-m-d') }}" required data-raw-dates>
-                <input type="text" name="note" placeholder="Note" maxlength="255" style="flex:1;min-width:140px">
-                <button type="submit" class="btn btn-primary btn-sm">Record</button>
-            </form>
-            @endif
-        </div></div>
-    </div>
-</details>
-
-<details class="sc-setup" {{ count($data['stays']) ? '' : 'open' }}>
-    <summary>Uploads, coverage, who can see what, and the SOP</summary>
-    <div class="sc-grid" style="margin-top:12px">
-        <div class="card">
-            <div class="card-body">
-                <h3 class="sc-h3">Upload eZee reports</h3>
-                <p class="sc-help">In eZee: Reports → Back Office → <b>Transaction Detail Report</b>, one file per property, exported as Excel. Upload weekly. Overlapping dates are fine: the newest file replaces what it covers, so nothing is counted twice and cancelled or shortened stays correct themselves. Months already reported to owners are kept as paid; a paid night that later shows cancelled raises a clawback instead.</p>
-                @if(admin_can('sales.manage'))
-                <form method="post" action="{{ route('admin.sales.upload') }}" enctype="multipart/form-data" class="sc-upload">
-                    @csrf
-                    <input type="hidden" name="month" value="{{ $ym }}">
-                    <input type="file" name="files[]" accept=".xlsx,.xls" multiple required>
-                    <select name="hotel"><option value="">Property: detect from the file</option>@foreach($hotels as $code => $name)<option value="{{ $code }}">{{ $name }}</option>@endforeach</select>
-                    <button type="submit" class="btn btn-primary btn-sm">Upload</button>
-                </form>
-                @endif
-                <table class="sc-table sc-small" style="margin-top:12px">
-                    <thead><tr><th>Property</th><th>Covered to</th><th>Last upload</th></tr></thead>
-                    <tbody>@foreach($hotels as $code => $name)@php $c = $coverage[$code] ?? null; $stale = $c && \Carbon\Carbon::parse($c->last_day)->lt(now()->subDays(8)); @endphp
-                        <tr><td>{{ $name }}</td><td class="{{ !$c || $stale ? 'sc-warn' : '' }}">{{ $c ? $fmtY($c->last_day) : 'never' }}</td><td class="sc-muted">{{ $c ? \Carbon\Carbon::parse($c->last_upload)->format('j M H:i') : '—' }}</td></tr>
-                    @endforeach</tbody>
-                </table>
-                @if(admin_can('sales.manage'))
-                <form method="post" action="{{ route('admin.sales.sop.upload') }}" enctype="multipart/form-data" class="sc-inline" style="margin-top:14px">
-                    @csrf<span class="sc-muted">SOP shown to staff: {!! $sopLink !!}.</span><input type="file" name="sop" accept="application/pdf" required><button type="submit" class="btn btn-secondary btn-sm">Replace SOP</button>
-                </form>
-                @endif
-            </div>
+    {{-- Uploads --}}
+    <section class="sc-pane card" data-pane="uploads"><div class="card-body">
+        <div class="sc-pane__head">
+            <div><h3 class="sc-h3">eZee Transaction Detail Reports</h3><p class="sc-help">Reports → Back Office → Transaction Detail Report, one Excel per property, weekly.</p></div>
+            <details class="sc-why"><summary>How uploads work</summary><ul>
+                <li>Overlapping dates are fine: the newest file replaces what it covers, so nothing counts twice and cancelled or shortened stays correct themselves.</li>
+                <li>Months already reported to owners stay as paid; a paid night that later shows cancelled raises a clawback.</li>
+                <li>Property is read from the file; pick it only if detection fails.</li>
+            </ul></details>
         </div>
-        <div class="card">
-            <div class="card-body">
-                <h3 class="sc-h3">Who can see what</h3>
-                <p class="sc-help">Each Sales Person name from eZee is tied to one staff login, who then sees only their own commission. The confirmation date drives eligibility (SOP §3): blank = probation, first three complete months after it = minimum waived.</p>
-                <table class="sc-table sc-small">
-                    <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach($persons as $sp)
-                        <tr>
-                            <td><b>{{ $sp->name }}</b></td>
-                            @if(admin_can('sales.manage'))
-                            <td colspan="3">
-                                <form method="post" action="{{ route('admin.sales.person') }}" class="sc-inline">
-                                    @csrf<input type="hidden" name="id" value="{{ $sp->id }}">
-                                    <select name="user_id"><option value="">— not tied —</option>@foreach($staff as $u)<option value="{{ $u->id }}" @selected((int) $sp->user_id === (int) $u->id)>{{ $u->email }} ({{ $u->name }})</option>@endforeach</select>
-                                    <input type="date" name="confirmed_on" value="{{ $sp->confirmed_on }}" data-raw-dates title="Confirmed on">
-                                    <input type="date" name="left_on" value="{{ $sp->left_on }}" data-raw-dates title="Left on">
-                                    <button type="submit" class="btn btn-secondary btn-sm">Save</button>
-                                </form>
-                            </td>
-                            @else
-                            <td>{{ $sp->email ?: '—' }}</td><td>{{ $fmtY($sp->confirmed_on) }}</td><td>{{ $fmtY($sp->left_on) }}</td>
-                            @endif
-                            <td class="sc-note">@if(!$sp->user_id)<span class="sc-warn">no login yet</span>@elseif(empty($sp->admin_role))sees everyone (super admin)@else{{ ucfirst($sp->admin_role) }} role @endif</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
+        @if(admin_can('sales.manage'))
+        <form method="post" action="{{ route('admin.sales.upload') }}" enctype="multipart/form-data" class="sc-uploadrow">
+            @csrf<input type="hidden" name="month" value="{{ $ym }}">
+            <label class="sc-file"><input type="file" name="files[]" accept=".xlsx,.xls" multiple required><span>Choose Excel files</span></label>
+            <select name="hotel"><option value="">Detect property</option>@foreach($hotels as $code => $name)<option value="{{ $code }}">{{ $name }}</option>@endforeach</select>
+            <button type="submit" class="btn btn-primary btn-sm" onclick="this.disabled=true;this.textContent='Uploading…';this.form.submit()">Upload</button>
+        </form>
+        @endif
+        <div class="sc-cover">
+            @foreach($hotels as $code => $name)@php $c = $coverage[$code] ?? null; $stale = !$c || \Carbon\Carbon::parse($c->last_day)->lt(now()->subDays(8)); @endphp
+            <div class="sc-cover__item {{ $stale ? 'is-stale' : '' }}"><span>{{ $name }}</span><b>{{ $c ? 'to ' . $fmtY($c->last_day) : 'never uploaded' }}</b></div>
+            @endforeach
         </div>
-    </div>
-    @if(count($uploads))
-    <div class="card" style="margin-top:12px"><div class="card-body">
-        <h3 class="sc-h3">Recent uploads</h3>
-        <table class="sc-table sc-small">
-            <thead><tr><th>When</th><th>Property</th><th>File</th><th>Period</th><th class="num">Rows stored</th><th class="num">Already final (kept as paid)</th><th class="num">Replaced</th><th class="num">Clawbacks</th><th></th></tr></thead>
-            <tbody>@foreach($uploads as $u)<tr><td class="text-nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('j M H:i') }}</td><td>{{ $hotels[$u->hotel_code] ?? $u->hotel_code }}</td><td class="sc-muted">{{ $u->filename }}</td><td class="text-nowrap">{{ $fmt($u->period_from) }} → {{ $fmt($u->period_to) }}</td><td class="num">{{ $u->rows_stored }}</td><td class="num">{{ $u->rows_skipped_locked }}</td><td class="num">{{ $u->rows_replaced }}</td><td class="num">{{ $u->clawbacks ?? 0 }}</td><td>@if(admin_can('sales.manage') && DB::table('sales_transactions')->where('upload_id', $u->id)->exists())<form method="post" action="{{ route('admin.sales.upload.delete', $u->id) }}" onsubmit="return confirm('Remove this upload and its rows? Use this to replace a wrong file, then upload the corrected one.')">@csrf<button class="btn btn-secondary btn-sm">Remove</button></form>@endif</td></tr>@endforeach</tbody>
+        @if(count($uploads))
+        <table class="sc-table sc-small sc-uploads">
+            <thead><tr><th>When</th><th>Property</th><th>Period</th><th class="num">Rows</th><th class="num">Kept paid</th><th class="num">Replaced</th><th class="num">Clawbacks</th><th></th></tr></thead>
+            <tbody>@foreach($uploads as $u)<tr><td class="text-nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('j M H:i') }}</td><td>{{ $hotels[$u->hotel_code] ?? $u->hotel_code }}<div class="sc-muted sc-file-name">{{ $u->filename }}</div></td><td class="text-nowrap">{{ $fmt($u->period_from) }} → {{ $fmt($u->period_to) }}</td><td class="num">{{ $u->rows_stored }}</td><td class="num">{{ $u->rows_skipped_locked ?: '—' }}</td><td class="num">{{ $u->rows_replaced ?: '—' }}</td><td class="num">{{ $u->clawbacks ?: '—' }}</td><td class="num">@if(admin_can('sales.manage') && DB::table('sales_transactions')->where('upload_id', $u->id)->exists())<form method="post" action="{{ route('admin.sales.upload.delete', $u->id) }}" onsubmit="return confirm('This deletes the {{ number_format($u->rows_stored) }} stored rows from this file ({{ $hotels[$u->hotel_code] ?? $u->hotel_code }}, {{ $fmt($u->period_from) }} to {{ $fmt($u->period_to) }}). The month will show nothing until the file is uploaded again. Continue?')">@csrf<button class="sc-link">Remove</button></form>@endif</td></tr>@endforeach</tbody>
         </table>
-    </div></div>
-    @endif
-</details>
+        @endif
+        <div class="sc-pane__foot sc-sop">
+            <span>{!! $sopLink !!}</span>
+            @if(admin_can('sales.manage'))
+            <form method="post" action="{{ route('admin.sales.sop.upload') }}" enctype="multipart/form-data" class="sc-inline">
+                @csrf<label class="sc-file sc-file--sm"><input type="file" name="sop" accept="application/pdf" required onchange="this.form.submit()"><span>Replace PDF</span></label>
+            </form>
+            @endif
+        </div>
+    </div></section>
+
+    {{-- Sales persons --}}
+    <section class="sc-pane card" data-pane="people"><div class="card-body">
+        <div class="sc-pane__head">
+            <div><h3 class="sc-h3">Sales persons</h3><p class="sc-help">Tie each eZee name to a login; that person then sees only their own commission.</p></div>
+            <details class="sc-why"><summary>Dates</summary><ul>
+                <li><b>Confirmed on</b> drives eligibility (§3): blank = probation, nothing paid; first three complete months after it = RM15,000 minimum waived.</li>
+                <li><b>Left on</b> stops the scheme from that date.</li>
+            </ul></details>
+        </div>
+        <table class="sc-table sc-people">
+            <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
+            <tbody>
+            @foreach($persons as $sp)
+                <tr>
+                    <td><b>{{ $sp->name }}</b><div class="sc-muted">@if(!$sp->user_id)<span class="sc-warn">no login</span>@elseif(empty($sp->admin_role))super admin, sees everyone@else{{ ucfirst($sp->admin_role) }}@endif</div></td>
+                    @if(admin_can('sales.manage'))
+                    <form method="post" action="{{ route('admin.sales.person') }}" id="sp{{ $sp->id }}">@csrf<input type="hidden" name="id" value="{{ $sp->id }}"></form>
+                    <td><select name="user_id" form="sp{{ $sp->id }}"><option value="">— not tied —</option>@foreach($staff as $u)<option value="{{ $u->id }}" @selected((int) $sp->user_id === (int) $u->id)>{{ $u->name }} · {{ $u->email }}</option>@endforeach</select></td>
+                    <td><input type="date" name="confirmed_on" form="sp{{ $sp->id }}" value="{{ $sp->confirmed_on }}" data-raw-dates></td>
+                    <td><input type="date" name="left_on" form="sp{{ $sp->id }}" value="{{ $sp->left_on }}" data-raw-dates></td>
+                    <td class="num"><button type="submit" form="sp{{ $sp->id }}" class="btn btn-secondary btn-sm">Save</button></td>
+                    @else
+                    <td>{{ $sp->email ?: '—' }}</td><td>{{ $fmtY($sp->confirmed_on) }}</td><td>{{ $fmtY($sp->left_on) }}</td><td></td>
+                    @endif
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div></section>
+
+    {{-- Adjustments --}}
+    <section class="sc-pane card" data-pane="adjust"><div class="card-body">
+        <div class="sc-pane__head">
+            <div><h3 class="sc-h3">Adjustments, {{ $monthName }}</h3><p class="sc-help">Change this month's 70% payout. Clawbacks (§12) appear here automatically.</p></div>
+        </div>
+        <table class="sc-table sc-small"><tbody>
+        @forelse($adjustments as $a)
+            <tr><td>{{ $a->name }}</td><td class="num">{{ $rm($a->amount) }}</td><td class="sc-note">{{ $a->reason }}</td><td class="num">@if(admin_can('sales.manage') && !$final)<form method="post" action="{{ route('admin.sales.adjustment.delete', $a->id) }}" onsubmit="return confirm('Remove this adjustment?')">@csrf<button class="sc-link">Remove</button></form>@endif</td></tr>
+        @empty
+            <tr><td colspan="4" class="sc-empty">None this month.</td></tr>
+        @endforelse
+        </tbody></table>
+        @if(admin_can('sales.manage') && !$final)
+        <form method="post" action="{{ route('admin.sales.adjustment') }}" class="sc-inline sc-pane__foot">
+            @csrf<input type="hidden" name="ym" value="{{ $ym }}">
+            <select name="sales_person_id" required>@foreach($persons as $sp)<option value="{{ $sp->id }}">{{ $sp->name }}</option>@endforeach</select>
+            <input type="number" name="amount" step="0.01" placeholder="Amount, − to deduct" required style="width:170px">
+            <input type="text" name="reason" placeholder="Reason" maxlength="255" required style="flex:1;min-width:200px">
+            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+        </form>
+        @endif
+    </div></section>
+
+    {{-- Deferred payouts --}}
+    <section class="sc-pane card" data-pane="deferred"><div class="card-body">
+        <div class="sc-pane__head">
+            <div><h3 class="sc-h3">Deferred 30% payouts</h3><p class="sc-help">Record each payout made after the year-end audit (§11.2). Pick a person above to see their balance by year.</p></div>
+        </div>
+        @if(admin_can('sales.manage'))
+        <form method="post" action="{{ route('admin.sales.payout') }}" class="sc-inline">
+            @csrf
+            <select name="sales_person_id" required>@foreach($persons as $sp)<option value="{{ $sp->id }}" @selected($person === $sp->name)>{{ $sp->name }}</option>@endforeach</select>
+            <input type="number" name="year" value="{{ (int) substr($ym, 0, 4) }}" min="2020" max="2100" required style="width:84px">
+            <input type="number" name="amount" step="0.01" min="0.01" placeholder="Amount" required style="width:120px">
+            <input type="date" name="paid_on" value="{{ date('Y-m-d') }}" required data-raw-dates>
+            <input type="text" name="note" placeholder="Note" maxlength="255" style="flex:1;min-width:140px">
+            <button type="submit" class="btn btn-primary btn-sm">Record</button>
+        </form>
+        @endif
+    </div></section>
+</div>
+<script>
+(function(){var w=document.getElementById('setup');if(!w)return;var tabs=w.querySelectorAll('.sc-tab'),panes=w.querySelectorAll('.sc-pane');function show(n){tabs.forEach(function(t){t.classList.toggle('is-on',t.dataset.tab===n)});panes.forEach(function(p){p.hidden=p.dataset.pane!==n});try{localStorage.setItem('sc-tab',n)}catch(e){}}
+tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab)})});var h=location.hash.replace('#','');var saved=null;try{saved=localStorage.getItem('sc-tab')}catch(e){}show(h==='kpi'?'kpi':(w.dataset.tab==='kpi'?'kpi':(saved||w.dataset.tab)));document.querySelectorAll('a[href="#kpi"]').forEach(function(a){a.addEventListener('click',function(){show('kpi')})});})();
+</script>
 @endif
 @endsection
 
@@ -386,6 +411,22 @@
 .sc-note{font-size:11.5px;line-height:1.4}.sc-note div{margin-bottom:1px}
 .sc-stays__head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
 .sc-foot{font-size:11.5px;color:var(--text-secondary);margin-top:10px}
-.sc-setup{margin-top:2px;font-size:12.5px}.sc-setup>summary{cursor:pointer;font-weight:600;padding:6px 0;color:var(--text-secondary)}
+.sc-setup{margin-top:14px;font-size:12.5px}
+.sc-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;border-bottom:1px solid var(--border,#e5e7eb)}
+.sc-tab{position:relative;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:8px 12px;font:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer}.sc-tab:hover{color:inherit}.sc-tab.is-on{color:#0f766e;border-bottom-color:#0f766e;font-weight:600}
+.sc-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-left:5px;vertical-align:middle}
+.sc-pane[hidden]{display:none}
+.sc-pane__head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:10px}.sc-pane__head .sc-h3{margin-bottom:2px}.sc-pane__head .sc-help{margin:0}
+.sc-why{flex:none;font-size:12px;max-width:360px}.sc-why>summary{cursor:pointer;color:#0f766e;font-weight:600;list-style:none;text-align:right}.sc-why>summary::-webkit-details-marker{display:none}.sc-why>summary::before{content:'? ';font-weight:700}.sc-why[open]>summary{margin-bottom:4px}.sc-why ul{margin:0;padding-left:16px;line-height:1.45;color:var(--text-secondary)}.sc-why li{margin:2px 0}
+.sc-pane__foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.sc-kpi .ctr{text-align:center}.sc-kpi input[type=number]{width:64px;text-align:center}.sc-kpi .sc-wide{width:100%;min-width:160px}.sc-kpi input[type=checkbox]{width:15px;height:15px}
+.sc-uploadrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sc-uploadrow select{padding:6px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff}
+.sc-file{position:relative;display:inline-flex;align-items:center;padding:6px 12px;border:1px dashed #94a3b8;border-radius:8px;font-size:12.5px;font-weight:600;color:#334155;background:#f8fafc;cursor:pointer}.sc-file:hover{background:#f1f5f9}.sc-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}.sc-file--sm{padding:3px 10px;font-weight:500;border-style:solid}
+.sc-cover{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}.sc-cover__item{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:6px 10px;display:grid;gap:1px}.sc-cover__item span{font-size:11.5px;color:var(--text-secondary)}.sc-cover__item b{font-size:12.5px;font-weight:600}.sc-cover__item.is-stale{border-color:#fcd34d;background:#fffbeb}.sc-cover__item.is-stale b{color:#b45309}
+.sc-uploads .sc-file-name{font-size:11px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-link{background:none;border:0;padding:0;font:inherit;font-size:12px;color:#0f766e;cursor:pointer;text-decoration:underline}
+.sc-sop{justify-content:space-between;border-top:1px solid var(--border,#e5e7eb);padding-top:10px}
+.sc-people select,.sc-people input[type=date]{padding:5px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;max-width:100%}.sc-people select{min-width:220px}
+@media (max-width:760px){.sc-pane__head{flex-direction:column}.sc-why>summary{text-align:left}}
 </style>
 @endpush
