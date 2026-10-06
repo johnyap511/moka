@@ -51,8 +51,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-input" required minlength="6">
+                <label class="form-label">Password <span style="font-weight:400;color:var(--text-secondary)">(optional)</span></label>
+                <input type="password" name="password" class="form-input" minlength="6" autocomplete="new-password">
+                <div class="form-help">Leave blank and the person gets an email to set their own password. Nobody else ever knows it.</div>
                 @error('password')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 

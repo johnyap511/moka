@@ -33,6 +33,7 @@ class LoginController extends Controller
 
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            Auth::user()->forceFill(['last_login_at' => now()])->saveQuietly();
             return $this->redirectAfterLogin();
         }
 

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -64,7 +66,7 @@ class AdminController extends Controller
             'email'        => 'required|string|email|max:200|unique:users,email',
             'phone'        => 'required|numeric',
             'country_code' => 'required|numeric',
-            'password'     => 'required|string|min:6|max:100',
+            'password'     => 'nullable|string|min:6|max:100',
             'status'       => 'required|integer',
             'admin_role'   => 'nullable|string|in:' . implode(',', array_keys(config('admin_permissions.roles'))),
         ]);
@@ -74,13 +76,21 @@ class AdminController extends Controller
         }
 
         $data = $request->only('name', 'last_name', 'email', 'phone', 'country_code', 'status');
-        $data['password']   = Hash::make($request->password);
+        // No password given: the new person sets their own from an emailed link (6 Oct 2026).
+        $sendLink = $request->password === null || $request->password === '';
+        $data['password']   = Hash::make($sendLink ? Str::random(32) : $request->password);
         $data['admin_role'] = $request->admin_role ?: null;
 
         $user = User::create($data);
 
         $role = Role::find(1);
         $user->attachRole($role);
+        if ($sendLink) {
+            $sent = Password::sendResetLink(['email' => $user->email]) === Password::RESET_LINK_SENT;
+            return redirect('/admin/admin')->with($sent ? 'success' : 'error', $sent
+                ? $user->name . ' created. A set-your-password link has been emailed to ' . $user->email . ' (valid 60 minutes).'
+                : $user->name . ' created, but the email could not be sent. Use "Send password link" on the edit page or check Mail settings.');
+        }
 
         return redirect('/admin/admin')->with('success', 'Admin created successfully!');
     }
@@ -230,6 +240,19 @@ class AdminController extends Controller
     public function archive($id)
     {
         return $this->toggle($id);
+    }
+
+    /** Email a set/reset-password link to an admin login (valid 60 minutes). */
+    public function sendReset($id)
+    {
+        if (! admin_can('roles.manage')) {
+            return redirect('/admin/dashboard');
+        }
+        $user = User::findOrFail($id);
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        return back()->with($status === Password::RESET_LINK_SENT ? 'success' : 'error',
+            $status === Password::RESET_LINK_SENT ? 'Password link emailed to ' . $user->email . '.' : 'Could not send: ' . __($status));
     }
 
     public function restore($id)

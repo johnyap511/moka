@@ -54,6 +54,7 @@
                         <th>Email</th>
                         <th>Admin Role</th>
                         <th>Status</th>
+                        <th>Last login</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -89,6 +90,13 @@
                                 <span class="badge badge-green">Active</span>
                             @else
                                 <span class="badge badge-red">Inactive</span>
+                            @endif
+                        </td>
+                        <td class="text-secondary" style="white-space:nowrap">
+                            @if($user->last_login_at)
+                                {{ \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() }}<div style="font-size:11px">{{ \Carbon\Carbon::parse($user->last_login_at)->format('j M Y H:i') }}</div>
+                            @else
+                                <span style="color:var(--text-secondary)">never</span>
                             @endif
                         </td>
                         <td>

@@ -56,7 +56,7 @@
             <div class="form-group">
                 <label class="form-label">New Password</label>
                 <input type="password" name="password" class="form-input" placeholder="Leave blank to keep current">
-                <div class="form-help">Leave blank to keep the current password.</div>
+                <div class="form-help">Leave blank to keep the current password. Or <button type="submit" form="sendReset" class="sc-linkbtn" style="background:none;border:0;padding:0;color:var(--teal);cursor:pointer;font:inherit;text-decoration:underline">email {{ $user->name }} a link to set a new one</button>.</div>
                 @error('password')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
@@ -173,4 +173,5 @@ function applyRoleDefaults() {
 </script>
 @endpush
 
+<form id="sendReset" method="POST" action="/admin/admin/{{ $user->id }}/send-reset">@csrf</form>
 @endsection

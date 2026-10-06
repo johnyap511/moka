@@ -17,6 +17,7 @@ Route::get('/owners/{id}/listing', 'Admin\OwnerController@ownerListing');
 Route::get('/owners/{id}/listing/create', 'Admin\OwnerController@ownerAddListing');
 Route::get('/owners/{id}/listing/{listingId}/edit', 'Admin\OwnerController@ownerListingEdit');
 Route::resource('/admin', 'Admin\AdminController');
+Route::post('/admin/{id}/send-reset', 'Admin\AdminController@sendReset')->name('admin.users.sendreset');
 Route::post('/admin/{id}/toggle', 'Admin\AdminController@toggle')->name('admin.users.toggle');
 Route::post('/admin/{id}/archive', 'Admin\AdminController@archive')->name('admin.users.archive');
 Route::post('/admin/{id}/restore', 'Admin\AdminController@restore')->name('admin.users.restore');
