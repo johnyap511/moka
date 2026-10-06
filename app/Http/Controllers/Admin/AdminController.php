@@ -8,6 +8,7 @@ use App\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,12 +23,18 @@ class AdminController extends Controller
             return redirect('/admin/dashboard');
         }
 
-        $users = User::join('role_user', 'users.id', '=', 'role_user.user_id')
+        $all = User::join('role_user', 'users.id', '=', 'role_user.user_id')
             ->where('role_id', 1)
             ->select('users.*')
+            ->orderBy('users.name')
             ->get();
+        $archived = request()->boolean('archived');
+        $users = $all->filter(fn ($u) => (bool) $u->archived_at === $archived)->values();
 
-        return view('admin.user.adminList', compact('users'));
+        return view('admin.user.adminList', [
+            'users' => $users, 'archived' => $archived,
+            'counts' => ['active' => $all->whereNull('archived_at')->count(), 'archived' => $all->whereNotNull('archived_at')->count()],
+        ]);
     }
 
     /**
@@ -59,7 +66,7 @@ class AdminController extends Controller
             'country_code' => 'required|numeric',
             'password'     => 'required|string|min:6|max:100',
             'status'       => 'required|integer',
-            'admin_role'   => 'nullable|string|in:super_admin,manager,finance,operations',
+            'admin_role'   => 'nullable|string|in:' . implode(',', array_keys(config('admin_permissions.roles'))),
         ]);
 
         if ($validator->fails()) {
@@ -125,7 +132,7 @@ class AdminController extends Controller
             'country_code' => 'required|numeric',
             'password'     => 'nullable|string|min:6|max:100',
             'status'       => 'required|integer',
-            'admin_role'   => 'nullable|string|in:super_admin,manager,finance,operations',
+            'admin_role'   => 'nullable|string|in:' . implode(',', array_keys(config('admin_permissions.roles'))),
         ]);
 
         if ($validator->fails()) {
@@ -191,8 +198,38 @@ class AdminController extends Controller
         }
 
         $user = User::findOrFail($id);
+        if (! $user->archived_at) {
+            return redirect('/admin/admin')->with('error', 'Archive the login first; delete is only for archived logins.');
+        }
         $user->delete();
 
-        return redirect('/admin/admin')->with('success', 'Admin deleted successfully.');
+        return redirect('/admin/admin?archived=1')->with('success', 'Admin deleted.');
+    }
+
+    /** Archive: access stops today, the record and its history stay. A tied sales person gets today as leaving date. */
+    public function archive($id)
+    {
+        if (! admin_can('roles.manage')) {
+            return redirect('/admin/dashboard');
+        }
+        if ((int) $id === Auth::id()) {
+            return redirect('/admin/admin')->with('error', 'You cannot archive your own account.');
+        }
+        $user = User::findOrFail($id);
+        $user->update(['status' => 0, 'archived_at' => now()]);
+        $left = DB::table('sales_persons')->where('user_id', $user->id)->whereNull('left_on')->update(['left_on' => now()->toDateString()]);
+
+        return redirect('/admin/admin')->with('success', $user->name . ' archived. The login no longer works.' . ($left ? ' Sales person marked as left today.' : ''));
+    }
+
+    public function restore($id)
+    {
+        if (! admin_can('roles.manage')) {
+            return redirect('/admin/dashboard');
+        }
+        $user = User::findOrFail($id);
+        $user->update(['status' => 1, 'archived_at' => null]);
+
+        return redirect('/admin/admin')->with('success', $user->name . ' restored. Check the sales person leaving date if it was set.');
     }
 }

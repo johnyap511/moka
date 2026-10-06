@@ -95,7 +95,7 @@ Route::middleware('lang')->group(function () {
     Route::get('/logout',  'Auth\WebController@logout');
 
     /* ── Admin Panel ─────────────────────────────────────────────────── */
-    Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::prefix('admin')->middleware(['auth', 'role:admin', 'admin.active'])->group(function () {
         require base_path('routes/routes/admin.php');
     });
 

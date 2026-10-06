@@ -46,6 +46,7 @@ class Kernel extends HttpKernel
         'lang'             => \App\Http\Middleware\Localization::class,
         'role'             => \Laratrust\Middleware\LaratrustRole::class,
         'permission'       => \Laratrust\Middleware\LaratrustPermission::class,
+        'admin.active'     => \App\Http\Middleware\EnsureAdminActive::class,
         'ability'          => \Laratrust\Middleware\LaratrustAbility::class,
         'adminperm'        => \App\Http\Middleware\CheckAdminPermission::class,
     ];

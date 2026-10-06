@@ -33,10 +33,10 @@
 
 <div class="card">
     <div class="card-header">
-        <h2>
-            All Admins
-            <span class="badge badge-gray" style="margin-left:8px">{{ $users->count() }}</span>
-        </h2>
+        <div style="display:flex;gap:6px;align-items:center">
+            <a href="/admin/admin" class="btn btn-sm {{ $archived ? 'btn-secondary' : 'btn-primary' }}">Active <span class="badge {{ $archived ? 'badge-gray' : '' }}" style="margin-left:6px;{{ $archived ? '' : 'background:rgba(255,255,255,.25);color:#fff' }}">{{ $counts['active'] }}</span></a>
+            <a href="/admin/admin?archived=1" class="btn btn-sm {{ $archived ? 'btn-primary' : 'btn-secondary' }}">Archived <span class="badge {{ $archived ? '' : 'badge-gray' }}" style="margin-left:6px;{{ $archived ? 'background:rgba(255,255,255,.25);color:#fff' : '' }}">{{ $counts['archived'] }}</span></a>
+        </div>
     </div>
     <div class="table-wrap">
         @if($users->isEmpty())
@@ -44,7 +44,7 @@
                 <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                <p>No admin users found</p>
+                <p>{{ $archived ? 'No archived logins.' : 'No admin users found' }}</p>
             </div>
         @else
             <table>
@@ -79,7 +79,9 @@
                             <span class="badge {{ $roleInfo['class'] }}">{{ $roleInfo['label'] }}</span>
                         </td>
                         <td>
-                            @if($user->status == 1)
+                            @if($user->archived_at)
+                                <span class="badge badge-gray">Archived {{ \Carbon\Carbon::parse($user->archived_at)->format('j M Y') }}</span>
+                            @elseif($user->status == 1)
                                 <span class="badge badge-green">Active</span>
                             @else
                                 <span class="badge badge-red">Inactive</span>
@@ -88,13 +90,21 @@
                         <td>
                             <div class="actions">
                                 @if(admin_can('roles.manage'))
-                                    <a href="/admin/admin/{{ $user->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
-                                    @if($user->id !== Auth::id())
-                                        <form action="/admin/admin/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete this admin user?')">
+                                    @if($user->archived_at)
+                                        <form action="/admin/admin/{{ $user->id }}/restore" method="POST">@csrf<button type="submit" class="btn btn-secondary btn-sm">Restore</button></form>
+                                        <form action="/admin/admin/{{ $user->id }}" method="POST" onsubmit="return confirm('Delete {{ $user->name }} permanently? Archived logins keep their history; deleting removes the record.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                         </form>
+                                    @else
+                                        <a href="/admin/admin/{{ $user->id }}/edit" class="btn btn-secondary btn-sm">Edit</a>
+                                        @if($user->id !== Auth::id())
+                                            <form action="/admin/admin/{{ $user->id }}/archive" method="POST" onsubmit="return confirm('Archive {{ $user->name }}? The login stops working today; the record and commission history stay. If tied to a sales person, today becomes the leaving date.')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-secondary btn-sm">Archive</button>
+                                            </form>
+                                        @endif
                                     @endif
                                 @endif
                             </div>
