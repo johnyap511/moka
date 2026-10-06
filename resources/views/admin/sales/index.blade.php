@@ -102,6 +102,17 @@
 </div>
 @endif
 
+@if(!$own)
+    @if($approval)
+    <div class="sc-approved"><span class="sc-chip sc-chip--final">Approved</span> {{ $monthName }} was approved by {{ $approver ?: 'the office' }} on {{ \Carbon\Carbon::parse($approval->approved_at)->format('j M Y') }} — figures are final.
+        @if(admin_is_super())<form method="post" action="{{ route('admin.sales.unapprove') }}" class="sc-inline" onsubmit="return confirm('Remove the approval for {{ $monthName }}? Figures go back to provisional and will recompute.')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="sc-link">Undo</button></form>@endif
+    </div>
+    @elseif($ym < date('Y-m') && admin_can('sales.manage') && count($rows))
+    <div class="sc-approve"><div><b>{{ $monthName }} is provisional.</b> <span class="sc-muted">Approve once KPI inputs and uploads are complete: figures freeze, uploads can no longer change this month, and the 30% is booked as owed.</span></div>
+        <form method="post" action="{{ route('admin.sales.approve') }}" onsubmit="return confirm('Approve {{ $monthName }}? Payouts: {{ $rm($sum('pay_now')) }} now, {{ $rm($sum('deferred')) }} deferred. This locks the month.')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="btn btn-primary btn-sm">Approve {{ $monthName }}</button></form>
+    </div>
+    @endif
+@endif
 @if(!$own && ($kpiMissingTop || $noDates))
 <div class="sc-todo">
     <b>Before payroll:</b>
@@ -403,20 +414,39 @@ $PAGE = 25;
 
     {{-- Deferred payouts --}}
     <section class="sc-pane card" data-pane="deferred"><div class="card-body">
+        @php $yr = (int) substr($ym, 0, 4); @endphp
         <div class="sc-pane__head">
-            <div><h3 class="sc-h3">Deferred 30% payouts</h3><p class="sc-help">Record each payout made after the year-end audit (§11.2). Pick a person above to see their balance by year.</p></div>
+            <div><h3 class="sc-h3">Deferred 30%, {{ $yr }}</h3><p class="sc-help">Accrues automatically from each approved month. After the year-end audit, pay the balance and record it here — the amount is filled in for you.</p></div>
         </div>
-        @if(admin_can('sales.manage'))
-        <form method="post" action="{{ route('admin.sales.payout') }}" class="sc-inline">
-            @csrf
-            <select name="sales_person_id" required>@foreach($persons as $sp)<option value="{{ $sp->id }}" @selected($person === $sp->name)>{{ $sp->name }}</option>@endforeach</select>
-            <input type="number" name="year" value="{{ (int) substr($ym, 0, 4) }}" min="2020" max="2100" required style="width:84px">
-            <input type="number" name="amount" step="0.01" min="0.01" placeholder="Amount" required style="width:120px">
-            <input type="date" name="paid_on" value="{{ date('Y-m-d') }}" required data-raw-dates>
-            <input type="text" name="note" placeholder="Note" maxlength="255" style="flex:1;min-width:140px">
-            <button type="submit" class="btn btn-primary btn-sm">Record</button>
-        </form>
-        @endif
+        <table class="sc-table sc-small">
+            <thead><tr><th>Sales person</th><th class="num">Accrued</th><th class="num">Approved months</th><th class="num">Paid</th><th class="num sc-focus">Owed</th><th>Record payout</th></tr></thead>
+            <tbody>
+            @forelse($deferredYear as $d)
+                <tr>
+                    <td><b>{{ $d->name }}</b></td>
+                    <td class="num">{{ $rm($d->accrued) }}</td>
+                    <td class="num">{{ $rm($d->final) }}<div class="sc-muted">{{ $d->months }} month{{ $d->months == 1 ? '' : 's' }}</div></td>
+                    <td class="num">{{ $d->paid > 0 ? $rm($d->paid) : '—' }}</td>
+                    <td class="num sc-focus"><b>{{ $rm($d->outstanding) }}</b></td>
+                    <td>
+                        @if(admin_can('sales.manage') && $d->outstanding > 0)
+                        <form method="post" action="{{ route('admin.sales.payout') }}" class="sc-inline" onsubmit="return confirm('Record a deferred payout of RM ' + this.amount.value + ' to {{ $d->name }} for {{ $yr }}?')">
+                            @csrf<input type="hidden" name="sales_person_id" value="{{ $d->id }}"><input type="hidden" name="year" value="{{ $yr }}">
+                            <input type="number" name="amount" step="0.01" min="0.01" max="{{ $d->outstanding }}" value="{{ $d->outstanding }}" required style="width:110px">
+                            <input type="date" name="paid_on" value="{{ date('Y-m-d') }}" required data-raw-dates>
+                            <input type="hidden" name="note" value="Year-end payout {{ $yr }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Record</button>
+                        </form>
+                        @elseif($d->outstanding <= 0 && $d->paid > 0)<span class="sc-chip sc-chip--final">Settled</span>
+                        @else<span class="sc-muted">nothing owed yet</span>@endif
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6" class="sc-empty">No commission in {{ $yr }} yet.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+        <p class="sc-help" style="margin-top:8px">Owed = deferred 30% of approved months minus payouts recorded. Provisional months are shown in Accrued only. Pick a person above to see their year-by-year history.</p>
     </div></section>
 </div>
 <script>
@@ -504,5 +534,7 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 .sc-track{position:relative;height:8px;background:#e2e8f0;border-radius:999px;margin:8px 0 2px}.sc-track i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#14b8a6,#0f766e);border-radius:999px}.sc-track u{position:absolute;top:-3px;width:2px;height:14px;background:#94a3b8}
 .sc-track__labels{position:relative;height:14px;font-size:10.5px;color:var(--text-secondary)}.sc-track__labels span{position:absolute;transform:translateX(-100%);padding-right:4px}
 .sc-kv .sc-kpi{width:max-content;margin-top:2px}
+.sc-approved{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#065f46;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sc-approved form{margin-left:auto}
+.sc-approve{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 </style>
 @endpush

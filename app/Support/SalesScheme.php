@@ -61,8 +61,84 @@ class SalesScheme
      * Everyone's statement for a month: recognised sales, gates, personal commission,
      * team bonus, adjustments, the 70/30 split. Keyed by sales person name.
      */
-    public static function month(string $ym): array
+    /** The approval row for a month, or null. */
+    public static function approval(string $ym): ?object
     {
+        static $cache = [];
+        if (!array_key_exists($ym, $cache)) {
+            $cache[$ym] = DB::table('sales_month_approvals')->where('ym', $ym)->first();
+        }
+        return $cache[$ym];
+    }
+
+    /** First day of the month after the latest approved month, or null when nothing is approved. */
+    public static function approvedThrough(): ?string
+    {
+        $last = DB::table('sales_month_approvals')->max('ym');
+        return $last ? date('Y-m-01', strtotime($last . '-01 +1 month')) : null;
+    }
+
+    /** Freeze a month: compute it now and keep the figures; later rule or KPI changes do not alter it. */
+    public static function approve(string $ym, ?int $userId): void
+    {
+        $m = self::month($ym, true);
+        DB::table('sales_month_approvals')->updateOrInsert(['ym' => $ym], [
+            'approved_by' => $userId, 'approved_at' => now(), 'snapshot' => json_encode($m), 'updated_at' => now(), 'created_at' => now(),
+        ]);
+    }
+
+    public static function unapprove(string $ym): void
+    {
+        DB::table('sales_month_approvals')->where('ym', $ym)->delete();
+    }
+
+    private static function thaw(array $m): array
+    {
+        $rows = [];
+        foreach ((array) $m['rows'] as $name => $r) {
+            $r = json_decode(json_encode($r));   // stdClass all the way down
+            $r->gates = (array) $r->gates;
+            $r->adjustment_rows = collect($r->adjustment_rows ?? []);
+            $rows[$name] = $r;
+        }
+        $m['rows'] = $rows;
+        return $m;
+    }
+
+    /** Deferred 30% for one calendar year, every person: accrued, final (approved months), paid, outstanding. */
+    public static function deferredYear(int $year): array
+    {
+        $out = [];
+        for ($mo = 1; $mo <= 12; $mo++) {
+            $ym = sprintf('%d-%02d', $year, $mo);
+            if ($ym > date('Y-m')) {
+                break;
+            }
+            $m = self::month($ym);
+            $final = SalesCommission::isFinal($ym);
+            foreach ($m['rows'] as $name => $r) {
+                $o = $out[$name] ??= (object) ['id' => $r->id, 'name' => $name, 'accrued' => 0.0, 'final' => 0.0, 'paid' => 0.0, 'outstanding' => 0.0, 'months' => 0];
+                $o->accrued += $r->deferred;
+                if ($final) {
+                    $o->final += $r->deferred;
+                    $o->months++;
+                }
+            }
+        }
+        foreach ($out as $o) {
+            $o->paid = (float) DB::table('sales_deferred_payouts')->where('sales_person_id', $o->id)->where('year', $year)->sum('amount');
+            $o->accrued = round($o->accrued, 2); $o->final = round($o->final, 2); $o->paid = round($o->paid, 2);
+            $o->outstanding = round($o->final - $o->paid, 2);
+        }
+        uasort($out, fn ($a, $b) => $b->outstanding <=> $a->outstanding);
+        return array_values($out);
+    }
+
+    public static function month(string $ym, bool $fresh = false): array
+    {
+        if (!$fresh && ($a = self::approval($ym)) && $a->snapshot) {
+            return self::thaw(json_decode($a->snapshot, true));
+        }
         $rate    = SalesCommission::rate();
         $persons = DB::table('sales_persons')->orderBy('name')->get()->keyBy('name');
         $sales   = DB::table('sales_transactions')->selectRaw('sales_person, SUM(net_amount) net, COUNT(*) nights, COUNT(DISTINCT CONCAT(hotel_code, "|", folio_no)) stays')

@@ -192,6 +192,8 @@ Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
 Route::post('/sales-commission/person', 'Admin\SalesCommissionController@mapPerson')->name('admin.sales.person');
 Route::post('/sales-commission/kpi', 'Admin\SalesCommissionController@saveKpi')->name('admin.sales.kpi');
+Route::post('/sales-commission/approve', 'Admin\SalesCommissionController@approve')->name('admin.sales.approve');
+Route::post('/sales-commission/unapprove', 'Admin\SalesCommissionController@unapprove')->name('admin.sales.unapprove');
 Route::post('/sales-commission/adjustment', 'Admin\SalesCommissionController@addAdjustment')->name('admin.sales.adjustment');
 Route::post('/sales-commission/adjustment/{id}/delete', 'Admin\SalesCommissionController@deleteAdjustment')->name('admin.sales.adjustment.delete');
 Route::post('/sales-commission/payout', 'Admin\SalesCommissionController@addPayout')->name('admin.sales.payout');

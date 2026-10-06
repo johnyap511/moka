@@ -25,7 +25,7 @@ class SalesCommissionController extends Controller
             'statement' => $person ? ($team['rows'][$person] ?? null) : null,
             'history' => SalesScheme::history($person),
             'prev' => date('Y-m', strtotime($ym . '-01 -1 month')), 'next' => date('Y-m', strtotime($ym . '-01 +1 month')),
-            'final' => SalesCommission::isFinal($ym), 'payout' => SalesCommission::payoutLabel($ym), 'sop' => is_file(SalesScheme::sopPath()),
+            'final' => SalesCommission::isFinal($ym), 'approval' => SalesScheme::approval($ym), 'payout' => SalesCommission::payoutLabel($ym), 'sop' => is_file(SalesScheme::sopPath()),
             'coverage' => DB::table('sales_report_uploads')->select('hotel_code', DB::raw('MAX(period_to) last_day'), DB::raw('MAX(created_at) last_upload'))->groupBy('hotel_code')->get()->keyBy('hotel_code')];
         if ($person && isset($team['rows'][$person])) {
             $view['deferred'] = SalesScheme::deferred($person, $team['rows'][$person]->id);
@@ -35,6 +35,8 @@ class SalesCommissionController extends Controller
             SalesCommission::syncPersons();
             $view['uploads']  = DB::table('sales_report_uploads')->orderByDesc('id')->limit(15)->get();
             $view['people']   = DB::table('sales_persons')->orderBy('name')->pluck('name');
+            $view['deferredYear'] = SalesScheme::deferredYear((int) substr($ym, 0, 4));
+            $view['approver'] = $view['approval'] && $view['approval']->approved_by ? DB::table('users')->where('id', $view['approval']->approved_by)->value('name') : null;
             $view['persons']  = DB::table('sales_persons')->leftJoin('users', 'users.id', '=', 'sales_persons.user_id')
                 ->select('sales_persons.id', 'sales_persons.name', 'sales_persons.user_id', 'sales_persons.confirmed_on', 'sales_persons.left_on', 'users.email', 'users.admin_role')->orderBy('sales_persons.name')->get();
             $view['staff']    = DB::table('users')->join('role_user', 'role_user.user_id', '=', 'users.id')->where('role_user.role_id', 1)
@@ -164,6 +166,29 @@ class SalesCommissionController extends Controller
         });
 
         return back()->with('success', "Upload removed: {$n} row(s) taken out. Upload the corrected file.");
+    }
+
+    /** Approve a month: figures frozen, uploads no longer replace its rows, adjustments move on. */
+    public function approve(Request $request)
+    {
+        abort_unless(admin_can('sales.manage'), 403);
+        $request->validate(['ym' => 'required|date_format:Y-m']);
+        $ym = $request->input('ym');
+        if ($ym >= date('Y-m')) {
+            return back()->with('error', 'A month can be approved once it has ended.');
+        }
+        SalesScheme::approve($ym, Auth::id());
+
+        return redirect()->route('admin.sales.index', ['month' => $ym])->with('success', \Carbon\Carbon::parse($ym . '-01')->format('F Y') . ' approved. Its figures are now final.');
+    }
+
+    public function unapprove(Request $request)
+    {
+        abort_unless(admin_is_super(), 403);
+        $request->validate(['ym' => 'required|date_format:Y-m']);
+        SalesScheme::unapprove($request->input('ym'));
+
+        return redirect()->route('admin.sales.index', ['month' => $request->input('ym')])->with('success', 'Approval removed; the month is provisional again.');
     }
 
     /** The SOP, readable by anyone who can see the page. */

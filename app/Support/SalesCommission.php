@@ -41,7 +41,7 @@ class SalesCommission
     /** A month whose report has gone to owners is final (ground rule 27); later months are provisional. */
     public static function isFinal(string $ym): bool
     {
-        return Lock::isLocked($ym . '-01');
+        return Lock::isLocked($ym . '-01') || SalesScheme::approval($ym) !== null;
     }
 
     /**
@@ -217,6 +217,9 @@ class SalesCommission
         $from  = min($dates);
         $to    = max($dates);
         $cut   = Lock::cutoff()->toDateString();
+        if ($through = SalesScheme::approvedThrough()) {   // approved months are final too
+            $cut = max($cut, $through);
+        }
 
         $keep = [];      // open months: replace what is stored for the period
         $locked = [];    // reported months: stored once, never replaced (ground rule 27)
