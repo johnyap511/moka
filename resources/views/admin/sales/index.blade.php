@@ -41,6 +41,10 @@
     $kpiMissingTop = $own ? 0 : count(array_filter($rows, fn ($r) => !$r->kpi->entered && $r->status !== 'probation'));
     $statusChip = ['probation' => ['Probation', 'sc-st--prob'], 'transition' => ['First 3 months', 'sc-st--trans'], 'full' => ['Confirmed', 'sc-st--full'], 'left' => ['Left', 'sc-st--left']];
     $tierPct = fn ($sales) => min(100, $sales / 300);
+    $tierCls = fn ($t) => $t >= 3 ? 'sc-bar--t3' : ($t >= 1 ? 'sc-bar--t1' : 'sc-bar--t0');
+    $kpiChip = function ($txt) { if ($txt === '') return ''; $c = str_starts_with($txt, 'Nil') || str_starts_with($txt, 'Not') || str_starts_with($txt, 'Left') ? 'sc-kpi--nil' : (str_starts_with($txt, '50%') ? 'sc-kpi--half' : 'sc-kpi--ok'); return '<span class="sc-kpi ' . $c . '">' . e($txt) . '</span>'; };
+    $hasBonus = $own ? false : (bool) count(array_filter($rows, fn ($r) => $r->bonus > 0));
+    $hasAdj = $own ? false : (bool) count(array_filter($rows, fn ($r) => $r->adjustments != 0));
 @endphp
 <div class="sc-head">
     <div>
@@ -112,27 +116,27 @@
 @endif
 
 <div class="sc-grid {{ $own ? 'sc-grid--own' : '' }}">
-    @if(!$own)
+    @if(!$own && !$person)
     <div class="card sc-span2">
         <div class="card-body">
             <h3 class="sc-h3">By sales person, {{ $monthName }}</h3>
             <div class="table-wrap">
             <table class="sc-table sc-people-tbl">
-                <thead><tr><th>Sales person</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th></tr></thead>
+                <thead><tr><th>Sales person</th><th class="num">Direct sales</th><th>Tier</th><th>KPI</th><th class="num">2%</th>@if($hasBonus)<th class="num">Bonus</th>@endif @if($hasAdj)<th class="num">Adj.</th>@endif<th class="num sc-focus">Paid 70%</th><th class="num">Deferred</th></tr></thead>
                 <tbody>
                 @forelse($rows as $r)
-                    <tr class="{{ $person === $r->name ? 'sc-row-current' : '' }}">
+                    <tr>
                         <td><a href="?month={{ $ym }}&person={{ urlencode($r->name) }}"><b>{{ $r->name }}</b></a><div class="sc-st {{ $statusChip[$r->status][1] ?? '' }}">{{ $statusChip[$r->status][0] ?? ucfirst($r->status) }}</div></td>
                         <td class="num">{{ $rm($r->sales) }}</td>
-                        <td class="sc-tier"><div class="sc-bar sc-bar--sm"><i style="width:{{ $tierPct($r->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div><span>{{ $tierLabel($r->tier_reached) }}</span></td>
-                        <td class="sc-note">{{ $gateText($r) }}</td>
-                        <td class="num">{{ $rm($r->personal) }}</td><td class="num">{{ $r->bonus > 0 ? $rm($r->bonus) : '—' }}</td><td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($r->pay_now) }}</b></td><td class="num">{{ $rm($r->deferred) }}</td></tr>
+                        <td class="sc-tier"><div class="sc-bar sc-bar--sm {{ $tierCls($r->tier_reached) }}"><i style="width:{{ $tierPct($r->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div><span>{{ $tierLabel($r->tier_reached) }}</span></td>
+                        <td>{!! $kpiChip($gateText($r)) !!}</td>
+                        <td class="num">{{ $rm($r->personal) }}</td>@if($hasBonus)<td class="num">{{ $r->bonus > 0 ? $rm($r->bonus) : '—' }}</td>@endif @if($hasAdj)<td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td>@endif<td class="num sc-focus"><b>{{ $rm($r->pay_now) }}</b></td><td class="num sc-dim">{{ $rm($r->deferred) }}</td></tr>
                 @empty
                     <tr><td colspan="9" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
                 @endforelse
                 </tbody>
                 @if(count($rows) > 1)
-                <tfoot><tr><th>Total</th><th class="num">{{ $rm($sum('sales')) }}</th><th></th><th></th><th class="num">{{ $rm($sum('personal')) }}</th><th class="num">{{ $rm($sum('bonus')) }}</th><th class="num">{{ $rm($sum('adjustments')) }}</th><th class="num">{{ $rm($sum('pay_now')) }}</th><th class="num">{{ $rm($sum('deferred')) }}</th></tr></tfoot>
+                <tfoot><tr><th>Total</th><th class="num">{{ $rm($sum('sales')) }}</th><th></th><th></th><th class="num">{{ $rm($sum('personal')) }}</th>@if($hasBonus)<th class="num">{{ $rm($sum('bonus')) }}</th>@endif @if($hasAdj)<th class="num">{{ $rm($sum('adjustments')) }}</th>@endif<th class="num sc-focus">{{ $rm($sum('pay_now')) }}</th><th class="num sc-dim">{{ $rm($sum('deferred')) }}</th></tr></tfoot>
                 @endif
             </table>
             </div>
@@ -140,15 +144,16 @@
     </div>
     @endif
 
-    <div class="card {{ !isset($deferred) && !($statement && $statement->adjustment_rows->count()) ? 'sc-span2' : '' }}">
+    <div class="card {{ !(isset($deferred) && (count($deferred) > 1 || array_sum(array_column($deferred, 'paid')) > 0)) && !($statement && $statement->adjustment_rows->count()) ? 'sc-span2' : '' }}">
         <div class="card-body">
             <h3 class="sc-h3">Month by month{{ $person ? ', ' . $person : '' }}</h3>
             <div class="table-wrap">
+            @php $hBonus = count(array_filter($history, fn ($h) => $h->bonus > 0)); $hAdj = count(array_filter($history, fn ($h) => $h->adjustments != 0)); @endphp
             <table class="sc-table sc-small">
-                <thead><tr><th>Month</th><th class="num">Direct sales</th>@if($person)<th>KPI</th>@endif<th class="num">2%</th><th class="num">Bonus</th><th class="num">Adj.</th><th class="num">Paid 70%</th><th class="num">Deferred</th><th></th></tr></thead>
+                <thead><tr><th>Month</th><th class="num">Direct sales</th>@if($person)<th>KPI</th>@endif<th class="num">2%</th>@if($hBonus)<th class="num">Bonus</th>@endif @if($hAdj)<th class="num">Adj.</th>@endif<th class="num sc-focus">Paid 70%</th><th class="num">Deferred</th><th></th></tr></thead>
                 <tbody>
                 @forelse($history as $h)
-                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td>@if($person)<td class="sc-muted">{{ $h->pct === null ? '' : ($h->pct == 1 ? 'met' : ($h->pct == 0.5 ? '50%' : 'nil')) }}</td>@endif<td class="num">{{ $rm($h->personal) }}</td><td class="num">{{ $h->bonus > 0 ? $rm($h->bonus) : '—' }}</td><td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td><td class="num"><b>{{ $rm($h->pay_now) }}</b></td><td class="num">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span></td></tr>
+                    <tr class="{{ $h->ym === $ym ? 'sc-row-current' : '' }}"><td><a href="{{ $q($h->ym) }}">{{ $mon($h->ym) }}</a></td><td class="num">{{ $rm($h->sales) }}</td>@if($person)<td>{!! $h->pct === null ? '' : $kpiChip($h->pct == 1 ? 'Met' : ($h->pct == 0.5 ? '50%' : 'Nil')) !!}</td>@endif<td class="num">{{ $rm($h->personal) }}</td>@if($hBonus)<td class="num">{{ $h->bonus > 0 ? $rm($h->bonus) : '—' }}</td>@endif @if($hAdj)<td class="num">{{ $h->adjustments != 0 ? $rm($h->adjustments) : '—' }}</td>@endif<td class="num sc-focus"><b>{{ $rm($h->pay_now) }}</b></td><td class="num sc-dim">{{ $rm($h->deferred) }}</td><td><span class="sc-chip {{ $h->final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $h->final ? 'Final' : 'Provisional' }}</span></td></tr>
                 @empty
                     <tr><td colspan="9" class="sc-empty">Nothing yet.</td></tr>
                 @endforelse
@@ -158,7 +163,7 @@
         </div>
     </div>
 
-    @if(isset($deferred))
+    @if(isset($deferred) && (count($deferred) > 1 || array_sum(array_column($deferred, 'paid')) > 0))
     <div class="card">
         <div class="card-body">
             <h3 class="sc-h3">Deferred 30% by year</h3>
@@ -198,7 +203,7 @@ $stayRow = function ($s) use ($person, $rm, $range, $fmt, $data) {
     $o .= '<td class="sc-stay">' . e($range($s->arrival, $s->departure)) . ($s->cross ? '<div><em class="sc-badge">cross-month</em></div>' : '') . '</td>';
     $o .= '<td class="num">' . $s->nights . '<div class="sc-muted">' . e($fmt($s->first_night) . ($s->nights > 1 ? ' – ' . $fmt($s->last_night) : '')) . '</div></td>';
     $o .= '<td class="num">' . $rm($s->net) . '</td>';
-    $o .= '<td class="num">' . ($s->warn ? '<span class="sc-warn">on hold</span>' : $rm($s->commission)) . '</td>';
+    $o .= '<td class="num sc-focus">' . ($s->warn ? '<span class="sc-warn">on hold</span>' : '<b>' . $rm($s->commission) . '</b>') . '</td>';
     $n = '';
     if ($s->warn) $n .= '<div class="sc-warn">' . e($s->warn) . '</div>';
     foreach ($s->other_months as $om) $n .= '<div>' . ($om->before ? 'Also' : 'Then') . ' ' . $om->nights . ' night' . ($om->nights == 1 ? '' : 's') . ' in ' . \Carbon\Carbon::parse($om->ym . '-01')->format('M') . ': ' . $rm($om->commission) . ($om->before ? ' (paid)' : '') . '</div>';
@@ -206,7 +211,7 @@ $stayRow = function ($s) use ($person, $rm, $range, $fmt, $data) {
     if ($s->cross && !$s->other_months && $s->arrival && $s->arrival < $data['from']) $n .= '<div>Started before ' . \Carbon\Carbon::parse($data['from'])->format('M') . '</div>';
     return $o . '<td class="sc-note">' . $n . '</td></tr>';
 };
-$stayHead = '<thead><tr><th>Guest</th><th>RES / Folio</th><th>Unit</th><th>Stay</th><th class="num">Nights</th><th class="num">Room charges</th><th class="num">2%</th><th>Note</th></tr></thead>';
+$stayHead = '<thead><tr><th>Guest</th><th>RES / Folio</th><th>Unit</th><th>Stay</th><th class="num">Nights</th><th class="num">Room charges</th><th class="num sc-focus">2%</th><th>Note</th></tr></thead>';
 $PAGE = 25;
 @endphp
 
@@ -479,5 +484,11 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 .sc-stays__tools{display:flex;gap:10px;align-items:center}.sc-search{padding:5px 10px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;min-width:240px}
 .sc-group{border:1px solid var(--border,#e5e7eb);border-radius:10px;margin-bottom:8px;padding:0 10px}.sc-group>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:140px 1fr auto;gap:12px;align-items:center;padding:9px 0;font-size:13px}.sc-group>summary::-webkit-details-marker{display:none}.sc-group>summary span{color:var(--text-secondary);font-size:12px}.sc-group>summary span.num{color:inherit;font-weight:600;font-size:13px}.sc-group[open]>summary{border-bottom:1px solid var(--border,#e5e7eb)}.sc-group .table-wrap{margin:0 -10px}
 .sc-more{display:none}.sc-showmore{display:block;width:100%;margin:6px 0 8px;padding:7px;border:1px dashed #94a3b8;border-radius:8px;background:#f8fafc;font:inherit;font-size:12.5px;font-weight:600;color:#334155;cursor:pointer}.sc-showmore:hover{background:#f1f5f9}
+.sc-table thead th{background:#f1f5f9;border-bottom:2px solid #cbd5e1}.sc-table th.sc-focus,.sc-table td.sc-focus{background:#ecfdf5}.sc-table th.sc-focus{color:#065f46}.sc-table td.sc-focus b{color:#065f46}.sc-table tfoot th.sc-focus{background:#d1fae5}
+.sc-table td.sc-dim{color:var(--text-secondary)}.sc-table tbody tr:nth-child(even) td{background:#fafafa}.sc-table tbody tr:nth-child(even) td.sc-focus{background:#e6faf1}
+.sc-kpi{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:normal;max-width:220px;line-height:1.35}.sc-kpi--ok{background:#dcfce7;color:#166534}.sc-kpi--half{background:#fef3c7;color:#92400e}.sc-kpi--nil{background:#fee2e2;color:#991b1b}
+.sc-bar--t3 i{background:#0f766e}.sc-bar--t1 i{background:#f59e0b}.sc-bar--t0 i{background:#94a3b8}
+.sc-stays__table td.sc-note{color:var(--text-secondary);font-size:11px}
+.sc-group>summary span.num{color:#065f46}
 </style>
 @endpush
