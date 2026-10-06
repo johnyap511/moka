@@ -86,8 +86,10 @@ class SalesScheme
                 'bonus_eligible' => false, 'bonus' => 0.0, 'adjustments' => 0.0, 'adjustment_rows' => $adj[$p->id] ?? collect(),
                 'total' => 0.0, 'pay_now' => 0.0, 'deferred' => 0.0,
             ];
-            if (!$s && $r->status !== 'full' && $r->status !== 'transition') {
-                // No sales and not in the scheme: nothing to show for this month.
+            // Left the company and nothing tagged to them this month: not on this month's page.
+            // Months before they left, and any later stay still carrying their name, stay visible.
+            if (!$s && $r->status === 'left') {
+                continue;
             }
             $r->gross = round($r->sales * $rate, 2);
             foreach (self::TIERS as $tier => [$min]) {

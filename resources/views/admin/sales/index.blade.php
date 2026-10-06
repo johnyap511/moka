@@ -346,15 +346,13 @@ $PAGE = 25;
             <div><h3 class="sc-h3">Sales persons</h3><p class="sc-help">Tie each eZee name to a login; that person then sees only their own commission.</p></div>
             <details class="sc-why"><summary>Dates</summary><ul>
                 <li><b>Confirmed on</b> drives eligibility (§3): blank = probation, nothing paid; first three complete months after it = RM15,000 minimum waived.</li>
-                <li><b>Left on</b> stops the scheme from that date.</li>
+                <li><b>Left on</b>: from the following month the person is off the page and out of the team count; stays still tagged to them in eZee after that date show as nil.</li>
             </ul></details>
         </div>
-        <table class="sc-table sc-people">
-            <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
-            <tbody>
-            @foreach($persons as $sp)
+        @php $gone = $persons->filter(fn ($sp) => $sp->left_on && $sp->left_on <= now()->toDateString()); $here = $persons->reject(fn ($sp) => $sp->left_on && $sp->left_on <= now()->toDateString()); @endphp
+        @php $personRow = function ($sp) use ($staff, $fmtY) { ob_start(); ?>
                 <tr>
-                    <td><b>{{ $sp->name }}</b><div class="sc-muted">@if(!$sp->user_id)<span class="sc-warn">no login</span>@elseif(empty($sp->admin_role))super admin, sees everyone@else{{ ucfirst($sp->admin_role) }}@endif</div></td>
+                    <td><b>{{ $sp->name }}</b><div class="sc-muted">@if(!$sp->user_id)<span class="sc-warn">no login</span>@elseif(empty($sp->admin_role))super admin, sees everyone@else{{ config('admin_permissions.roles.' . $sp->admin_role . '.label', ucfirst($sp->admin_role)) }}@endif</div></td>
                     @if(admin_can('sales.manage'))
                     <form method="post" action="{{ route('admin.sales.person') }}" id="sp{{ $sp->id }}">@csrf<input type="hidden" name="id" value="{{ $sp->id }}"></form>
                     <td><select name="user_id" form="sp{{ $sp->id }}"><option value="">— not tied —</option>@foreach($staff as $u)<option value="{{ $u->id }}" @selected((int) $sp->user_id === (int) $u->id)>{{ $u->name }} · {{ $u->email }}</option>@endforeach</select></td>
@@ -365,9 +363,23 @@ $PAGE = 25;
                     <td>{{ $sp->email ?: '—' }}</td><td>{{ $fmtY($sp->confirmed_on) }}</td><td>{{ $fmtY($sp->left_on) }}</td><td></td>
                     @endif
                 </tr>
-            @endforeach
+        <?php return ob_get_clean(); }; @endphp
+        <table class="sc-table sc-people">
+            <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
+            <tbody>
+            @foreach($here as $sp){!! $personRow($sp) !!}@endforeach
+            @if(!$here->count())<tr><td colspan="5" class="sc-empty">No current sales persons. Names appear here automatically from the first eZee report that carries them.</td></tr>@endif
             </tbody>
         </table>
+        @if($gone->count())
+        <details class="sc-adv" style="margin-top:10px"><summary>Left the company ({{ $gone->count() }}) — kept for past months</summary>
+        <table class="sc-table sc-people sc-small" style="margin-top:6px">
+            <thead><tr><th>Name in eZee</th><th>Login</th><th>Confirmed on</th><th>Left on</th><th></th></tr></thead>
+            <tbody>@foreach($gone as $sp){!! $personRow($sp) !!}@endforeach</tbody>
+        </table>
+        </details>
+        @endif
+        <p class="sc-help" style="margin-top:10px">New sales persons are added automatically from the first uploaded eZee report that carries their name, and tied to a login with the same name@homemoka.com. To remove someone, set their <b>Left on</b> date: from the next month they disappear from the page and the team count; their past months stay. Deactivating a login on Users → Admin sets this date for you.</p>
     </div></section>
 
     {{-- Adjustments --}}
