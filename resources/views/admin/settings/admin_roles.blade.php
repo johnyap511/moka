@@ -34,7 +34,7 @@
     <div class="card" style="margin:0">
         <div class="card-body" style="padding:18px 20px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                <span class="badge {{ $slug === 'super_admin' ? 'badge-teal' : ($slug === 'manager' ? 'badge-blue' : ($slug === 'finance' ? 'badge-green' : 'badge-gray')) }}"
+                <span class="badge {{ ['super_admin' => 'badge-teal', 'admin' => 'badge-blue', 'operations_manager' => 'badge-blue', 'finance_manager' => 'badge-green', 'finance' => 'badge-green'][$slug] ?? 'badge-gray' }}"
                     style="font-size:12px;padding:3px 10px">
                     {{ $role['label'] }}
                 </span>

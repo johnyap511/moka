@@ -71,12 +71,8 @@
                         <td class="text-secondary">{{ $user->email }}</td>
                         <td>
                             @php
-                                $roleLabels = [
-                                    'super_admin' => ['label' => 'Super Admin', 'class' => 'badge-teal'],
-                                    'manager'     => ['label' => 'Manager',     'class' => 'badge-blue'],
-                                    'finance'     => ['label' => 'Finance',     'class' => 'badge-green'],
-                                    'operations'  => ['label' => 'Operations',  'class' => 'badge-gray'],
-                                ];
+                                $roleClasses = ['super_admin' => 'badge-teal', 'admin' => 'badge-blue', 'operations_manager' => 'badge-blue', 'operations' => 'badge-gray', 'finance_manager' => 'badge-green', 'finance' => 'badge-green', 'sales' => 'badge-gray'];
+                                $roleLabels = collect(config('admin_permissions.roles'))->map(fn ($r, $k) => ['label' => $r['label'], 'class' => $roleClasses[$k] ?? 'badge-gray'])->all();
                                 $roleKey = $user->admin_role ?: 'super_admin';
                                 $roleInfo = $roleLabels[$roleKey] ?? ['label' => ucfirst($roleKey), 'class' => 'badge-gray'];
                             @endphp
