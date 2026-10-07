@@ -989,6 +989,22 @@ class EzeeAutoAssign
             return;
         }
 
+        // A sub-line of the same reservation (RES1234-1) that eZee lists in the same room on the
+        // same dates as the stay already in the unit is that stay, not a second guest: group and
+        // agent bookings carry the company on the master line and the guest on the room line
+        // (Sam, 7 Oct 2026, RES31670). Tie it to the booking and raise nothing.
+        if ($this->sameStayAsClash($ezeeBooking, $clash)) {
+            EzeeBooking::where('id', $ezeeBooking->id)->update(['book_id' => $clash->id, 'status' => 8]);
+            EzeeAssignmentLog::where('ezee_booking_id', $ezeeBooking->id)->where('method', 'conflict')->whereNull('resolved_at')
+                ->update(['resolved_at' => now(), 'resolved_by' => $this->actorId, 'resolution_note' => 'Same stay as booking #' . $clash->id . ' (sub-line of the same reservation); tied automatically.']);
+            $this->record($ezeeBooking, $listing, $fromListingId, 'assign', sprintf(
+                'Sub-line %s is the same stay as booking #%d (same folio, %s, %s → %s): tied to it, nothing to review.',
+                $ezeeBooking->SubBookingId, $clash->id, $ezeeBooking->RoomName, $ezeeBooking->Start, $ezeeBooking->End));
+            $this->tally['same_stay'] = ($this->tally['same_stay'] ?? 0) + 1;
+            unset($this->conflictedNow[$ezeeBooking->id]);
+            return;
+        }
+
         // A room swap eZee itself confirms (ground rules 17 and 20, 7 Sep 2026):
         // the blocker's final room in eZee is elsewhere, so it moved out and this
         // reservation took the unit. Applied automatically for unlocked months,
@@ -1021,6 +1037,23 @@ class EzeeAutoAssign
                 $ezeeBooking->End,
             $clash->id
         ));
+    }
+
+    /** Same reservation, same folio, same room and dates as the booking in the way: one stay, two eZee lines. */
+    private function sameStayAsClash(EzeeBooking $ezeeBooking, Booking $clash): bool
+    {
+        if (!preg_match('/-\d+$/', (string) $ezeeBooking->SubBookingId)) {
+            return false;
+        }
+        if (substr((string) $ezeeBooking->Start, 0, 10) !== substr((string) $clash->check_in, 0, 10)
+            || substr((string) $ezeeBooking->End, 0, 10) !== substr((string) $clash->check_out, 0, 10)) {
+            return false;
+        }
+        $sameFolio = $ezeeBooking->folio_no && $clash->folio_no && $ezeeBooking->folio_no === $clash->folio_no;
+        $masterLinked = EzeeBooking::where('book_id', $clash->id)->where('TransactionId', $ezeeBooking->TransactionId)
+            ->where('id', '<>', $ezeeBooking->id)->exists();
+
+        return $sameFolio || $masterLinked;
     }
 
     /**
