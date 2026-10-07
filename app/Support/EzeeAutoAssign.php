@@ -188,6 +188,17 @@ class EzeeAutoAssign
                 }
                 $unitName = $unit->name ?? 'its unit';
                 $chain    = $this->stayRows($ezeeBooking, $booking);
+                // The stay was already split: slept nights on the unit, the leftover nights on an
+                // extra room. That is exactly what eZee shows, so nothing to raise (7 Oct 2026 —
+                // this came back every morning after staff had closed it).
+                $tail = $chain->sortBy('check_out')->last();
+                if ($tail && (int) $tail->id !== (int) $booking->id) {
+                    $tailUnit = Listing::withoutGlobalScope('notArchived')->find($tail->listing_id);
+                    if ($tailUnit && self::isExtraRoom($tailUnit)) {
+                        $this->tally['unchanged']++;
+                        continue;
+                    }
+                }
                 $started  = $chain->min('check_in') < date('Y-m-d');
                 if ($chain->sum('nights') <= 1 || !$started) {
                     $target = $this->clash($listing->id, $ezeeBooking, $booking->id) ? $this->freeExtraRoom($listing, $ezeeBooking) : $listing;
