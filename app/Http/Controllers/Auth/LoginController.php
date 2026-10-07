@@ -32,7 +32,9 @@ class LoginController extends Controller
         ]);
 
         // Several records can share one email (a staff login and a guest profile): sign in the admin one.
-        $user = \App\Models\User::preferredForEmail($request->email);
+        // Resolve on the auth model (App\User carries the role methods), not App\Models\User.
+        $found = \App\Models\User::preferredForEmail($request->email);
+        $user  = $found ? \App\User::find($found->id) : null;
         if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
