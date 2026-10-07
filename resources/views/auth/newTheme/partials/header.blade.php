@@ -5,9 +5,9 @@
                     <div class="d-flex align-items-center">
                         <a href="/" class=" border-lg-none"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="logo" class="logo-main"></a>
                         <button class="navbar-toggler border-start border-white ps-3 ms-3 ps-sm-4 ms-sm-4 py-2" style="border-radius:0 !important;" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" onclick="menuExpand(this)">
-                                <span class="font-white font-semi-bold fs_18 me-3">Menu</span>
-                                <i class="fa-solid fa-chevron-up"></i>
+                            aria-controls="navbarNav" aria-expanded="false" aria-label="Open menu" onclick="menuExpand(this)">
+                                <span class="font-white font-semi-bold fs_18 me-3" aria-hidden="true">Menu</span>
+                                <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
                         </button>
                     </div>
                     <a href="/get/estimate" target="_blank" class="d-inline d-lg-none">
