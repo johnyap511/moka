@@ -88,7 +88,8 @@
                 '@id'        => url('/') . '/#website',
                 'url'        => url('/'),
                 'name'       => 'MOKA',
-                'alternateName' => ['homemoka', 'Home MOKA', 'MOKA Malaysia'],
+                // 'homemoka' removed (8 Oct 2026): Google was showing the lower-case domain as the site name in results.
+                'alternateName' => ['Home MOKA', 'MOKA Malaysia'],
                 'publisher'  => ['@id' => url('/') . '/#organization'],
                 'inLanguage' => 'en-MY',
             ],
