@@ -27,10 +27,11 @@ class BlogController extends Controller
         return view('blog.posts.' . $post['view'], compact('post', 'related'));
     }
 
-    /** Newest first. */
+    /** Newest first. A post dated in the future stays hidden until its day (one post a day, Sam, 8 Oct 2026). */
     private function posts(): Collection
     {
         return collect(config('blog.posts', []))
+            ->filter(fn ($p) => $p['published'] <= now()->toDateString())
             ->sortByDesc('published')
             ->values();
     }
