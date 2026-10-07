@@ -23,6 +23,31 @@ return [
     'pages' => [
 
         [
+            'slug'        => 'maxim-risen-property-management',
+            'label'       => 'Maxim Risen owners',
+            'title'       => 'Maxim Risen Property Management, Cheras | MOKA',
+            'description' => 'Collecting your Maxim Risen keys? MOKA runs around 100 units at EkoCheras next door, since 2019: renovation, furnishing, Airbnb and monthly rental management, with a show unit to view.',
+            'eyebrow'     => 'Maxim Risen, Cheras',
+            'h1'          => 'Maxim Risen property management, <em>from key collection to first guest</em>',
+            'sub'         => 'The management team for your Maxim Risen unit is already next door. MOKA has operated at EkoCheras since 2019 and runs around 100 units there today, with housekeeping, maintenance, repeat guests and a furnished show unit ten minutes from your tower.',
+            'updated'     => '2026-10-08',
+            'sections'    => [
+                ['h2' => 'Already operating next door', 'p' => 'Rental management needs people on the ground: a locked-out guest at midnight, an air-conditioner fault, a cleaner between two same-day bookings. MOKA\'s management office is at EkoCheras, opposite the residential towers and a ten-minute walk from Maxim Risen, with a team on site every day.', 'bullets' => ['Around 100 units managed at EkoCheras', 'Management, operations, housekeeping and maintenance teams based at EkoCheras', 'Operating in the area since 2019', 'A furnished show unit at EkoCheras you can view before you decide']],
+                ['h2' => 'From key collection to operation', 'p' => 'One team takes the unit the whole way, so you are not coordinating a contractor, a furniture supplier, a photographer and an operator separately.', 'bullets' => ['Unit inspection after vacant possession and defects reported', 'Rental strategy: short stay, weekly, monthly, corporate or a mix, within the building\'s rules', 'Rental-oriented renovation and furnishing by Innspace, a SkyWorld Solution+ panel renovator', 'Photography, listing on Airbnb, Booking.com, Agoda and direct channels, pricing and launch', 'Guest handling, housekeeping, maintenance, reviews and a line-by-line monthly owner statement']],
+                ['h2' => 'Guests who already stay in Cheras', 'p' => 'Years of operating around EkoCheras come with a guest base: people visiting for work, hospital stays, family events, exhibitions and longer assignments, many of whom return and book direct. When Maxim Risen joins our Cheras inventory, those guests are offered your unit too, so it does not start from zero on a single platform.'],
+                ['h2' => 'Property management, not only Airbnb', 'p' => 'Airbnb is one channel. Depending on the building rules and the month, your unit may be on Airbnb, Booking.com and Agoda, let to a returning guest directly, or placed with a monthly or corporate tenant. The aim is the best sustainable income after fees, cleaning, utilities, vacancy and wear, not the highest nightly rate on a good weekend.'],
+            ],
+            'faqs' => [
+                ['q' => 'I have just collected my Maxim Risen keys. What should I do first?', 'a' => 'Do the defect inspection, then decide the rental strategy before any renovation starts. The strategy decides the furnishing, bed count, storage and appliances. Send us your unit type and floor plan and we will advise on the next step and arrange a show unit viewing.'],
+                ['q' => 'Can I see your work before appointing you?', 'a' => 'Yes. There is a furnished MOKA show unit at EkoCheras, ten minutes from Maxim Risen, open for viewing by appointment, and you can meet the team that would run your unit.'],
+                ['q' => 'Do you only do Airbnb?', 'a' => 'No. Airbnb, Booking.com, Agoda, direct bookings from returning guests, weekly and monthly stays and corporate accommodation are all used depending on the building rules and the month.'],
+                ['q' => 'Who does the renovation and furniture?', 'a' => 'Innspace, MOKA\'s renovation business, which works as a SkyWorld Solution+ panel renovator and on projects involving SkyWorld, Sunsuria and Eng Han. It is a rental-oriented fit-out, not furniture placed in an empty unit.'],
+                ['q' => 'How do I know what my unit earned?', 'a' => 'A monthly owner statement lists every booking, charge and deduction, and you can check it against the platform payouts. Ask any operator for a sample statement before signing.'],
+                ['q' => 'What does MOKA charge?', 'a' => 'A percentage of rental revenue, nothing upfront. The rate depends on the unit and plan and is agreed in writing first.'],
+            ],
+        ],
+
+        [
             'slug'        => 'airbnb-management-malaysia',
             'label'       => 'Airbnb management',
             'title'       => 'Airbnb Management Company in Malaysia | MOKA',

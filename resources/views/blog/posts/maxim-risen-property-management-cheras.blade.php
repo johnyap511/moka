@@ -116,6 +116,8 @@
         type, your floor plan and your current renovation status, and we will discuss the next step with you.
     </p>
 
+    <p>Everything MOKA does for Maxim Risen owners, from key collection to the first guest, is on one page: <a href="/solutions/maxim-risen-property-management">Maxim Risen property management in Cheras</a>.</p>
+
     <h2>Sources</h2>
     <ul>
         <li><a href="https://www.propertyguru.com.my/condo/maxim-risen-21496" rel="noopener" target="_blank">PropertyGuru Malaysia: Maxim Risen project page (developer, towers, unit count, built-up, distances)</a></li>

@@ -76,4 +76,5 @@
         <li>Bring your floor plan. A furnishing plan for a 523 to 819 sq ft layout can be sketched on the spot.</li>
         <li>Ask for a projection based on the operator's own nearby units, and keep it to check against later.</li>
     </ol>
+    <p>Everything MOKA does for Maxim Risen owners, from key collection to the first guest, is on one page: <a href="/solutions/maxim-risen-property-management">Maxim Risen property management in Cheras</a>.</p>
 @endsection

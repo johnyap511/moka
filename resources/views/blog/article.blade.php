@@ -15,6 +15,11 @@
 @endpush
 
 @push('schema')
+    @if(!empty($post['faq']))
+    <script type="application/ld+json">
+    {!! json_encode(['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn ($f) => ['@type' => 'Question', 'name' => $f[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]]], $post['faq'])], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    </script>
+    @endif
     <script type="application/ld+json">
     {!! json_encode([
         '@context'         => 'https://schema.org',
@@ -75,14 +80,24 @@
         <div class="blog-cover">
             <picture>
                 <source srcset="{{ $webp($post['image']) }}" type="image/webp">
-                <img src="{{ asset($post['image']) }}" alt="" width="1600" height="1000" loading="eager">
+                <img src="{{ asset($post['image']) }}" alt="{{ $post['heading'] }}" width="1600" height="1000" loading="eager" fetchpriority="high">
             </picture>
         </div>
 
         <div class="blog-body blog-body--article">
             <div class="blog-layout">
                 <div class="blog-body__inner blog-body__inner--article" id="blogArticle">
-                    @yield('article')
+                    @php
+                        // Figures are placed before the 2nd and 4th h2 in the HTML itself (not by script), so
+                        // search engines see the images and their alt text without rendering JavaScript.
+                        $body = $__env->yieldContent('article'); $n = 0;
+                        $body = preg_replace_callback('/<h2(?![^>]*class="blog-cta)/', function ($m) use (&$n, $figures, $webp) {
+                            $n++; $f = $n === 2 ? ($figures[0] ?? null) : ($n === 4 ? ($figures[1] ?? null) : null);
+                            if (!$f) return $m[0];
+                            return '<figure class="blog-figure"><picture><source srcset="' . $webp($f[0]) . '" type="image/webp"><img src="' . asset($f[0]) . '" alt="' . e($f[1]) . '" loading="lazy" width="1600" height="1000"></picture><figcaption>' . e($f[1]) . '</figcaption></figure>' . $m[0];
+                        }, $body);
+                    @endphp
+                    {!! $body !!}
 
                     <div class="blog-share">
                         <span>Share this article</span>
@@ -131,7 +146,7 @@
                                 <div class="blog-card__media">
                                     <picture>
                                         <source srcset="{{ asset(preg_replace('/\.jpg$/', '-thumb.webp', $item['image'])) }}" type="image/webp">
-                                        <img src="{{ asset(preg_replace('/\.jpg$/', '-thumb.jpg', $item['image'])) }}" alt="" loading="lazy" width="720" height="540">
+                                        <img src="{{ asset(preg_replace('/\.jpg$/', '-thumb.jpg', $item['image'])) }}" alt="{{ $item['heading'] }}" loading="lazy" width="720" height="540">
                                     </picture>
                                 </div>
                                 <div class="blog-card__body">
@@ -158,13 +173,6 @@
         h2s.forEach(function (h, i) { if (!h.id) h.id = 'section-' + (i + 1); var li = document.createElement('li'); var a = document.createElement('a'); a.href = '#' + h.id; a.textContent = h.textContent; li.appendChild(a); ol.appendChild(li); });
         toc.hidden = false;
     }
-    var figs = {!! json_encode(array_map(fn ($f) => ['src' => asset($f[0]), 'webp' => $webp($f[0]), 'cap' => $f[1]], $figures)) !!};
-    [1, 3].forEach(function (pos, i) {
-        var h = h2s[pos], f = figs[i]; if (!h || !f) return;
-        var fig = document.createElement('figure'); fig.className = 'blog-figure';
-        fig.innerHTML = '<picture><source srcset="' + f.webp + '" type="image/webp"><img src="' + f.src + '" alt="' + f.cap + '" loading="lazy" width="1600" height="1000"></picture><figcaption>' + f.cap + '</figcaption>';
-        h.parentNode.insertBefore(fig, h);
-    });
     var bar = document.getElementById('blogProgress');
     function prog() { var r = art.getBoundingClientRect(), total = r.height - innerHeight, done = Math.min(Math.max(-r.top, 0), Math.max(total, 1)); bar.style.width = (total > 0 ? done / total * 100 : 100) + '%'; }
     addEventListener('scroll', prog, { passive: true }); prog();
