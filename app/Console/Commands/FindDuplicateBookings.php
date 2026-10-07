@@ -22,7 +22,8 @@ class FindDuplicateBookings extends Command
     {
         $from = Lock::cutoff()->toDateString();
         $pairs = DB::select("select a.id a_id, b.id b_id, a.folio_no, la.name a_unit, lb.name b_unit, a.check_in, a.check_out, b.check_in b_in, b.check_out b_out,
-                TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,''))) guest
+                TRIM(CONCAT(IFNULL(ua.name,''),' ',IFNULL(ua.last_name,''))) guest,
+                TRIM(CONCAT(IFNULL(ub.name,''),' ',IFNULL(ub.last_name,''))) guest_b, a.user_id a_user, b.user_id b_user
             from bookings a join bookings b on b.id > a.id and b.status = 5 and b.check_in < a.check_out and b.check_out > a.check_in
             join listings la on la.id = a.listing_id join listings lb on lb.id = b.listing_id
             left join users ua on ua.id = a.user_id left join users ub on ub.id = b.user_id
@@ -30,6 +31,22 @@ class FindDuplicateBookings extends Command
               and a.folio_no like 'FN%' and a.folio_no = b.folio_no", [$from]);
         $raised = 0;
         foreach ($pairs as $p) {
+            // Same folio is not enough (Sam, 7 Oct 2026): at Alinea the folio is derived from the
+            // transaction id and repeats across unrelated stays. A pair is a duplicate only when it
+            // is the same guest, or both rows hang off the same eZee reservation; two rows tied to
+            // different reservations are two stays.
+            $resA = EzeeBooking::where('book_id', $p->a_id)->where('status', '<>', 1)->value('SubBookingId');
+            $resB = EzeeBooking::where('book_id', $p->b_id)->where('status', '<>', 1)->value('SubBookingId');
+            $base = fn ($r) => $r ? preg_replace('/-\d+$/', '', $r) : null;
+            if ($resA && $resB && $base($resA) !== $base($resB)) {
+                continue;
+            }
+            $norm = fn ($n) => preg_replace('/[^a-z]/', '', strtolower((string) $n));
+            $sameGuest = ($p->a_user && (int) $p->a_user === (int) $p->b_user) || ($norm($p->guest) !== '' && $norm($p->guest) === $norm($p->guest_b));
+            $sameRes = $resA && $resB && $base($resA) === $base($resB);
+            if (!$sameGuest && !$sameRes) {
+                continue;
+            }
             $this->line(sprintf('#%d %s %s..%s  <->  #%d %s %s..%s  folio %s  %s', $p->a_id, $p->a_unit, $p->check_in, $p->check_out, $p->b_id, $p->b_unit, $p->b_in, $p->b_out, $p->folio_no, $p->guest));
             if ($this->option('dry-run')) continue;
             $eb = EzeeBooking::whereIn('book_id', [$p->a_id, $p->b_id])->where('status', '<>', 1)->first();
