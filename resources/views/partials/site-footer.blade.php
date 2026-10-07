@@ -76,6 +76,7 @@
                     <li><a href="/solutions/for-property-developers">For developers</a></li>
                     <li><a href="/solutions/for-property-agents">For agents &amp; agencies</a></li>
                     <li><a href="/solutions/renovation">Renovation for owners</a></li>
+                    <li><a href="/solutions/maxim-risen-property-management">Maxim Risen owners, Cheras</a></li>
                     <li><a href="/solutions">All solutions &amp; locations</a></li>
                 </ul>
             </div>
