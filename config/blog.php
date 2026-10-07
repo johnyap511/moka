@@ -54,8 +54,8 @@ return [
             'title'       => 'Property Management in Cheras: Why Next Door Matters | MOKA',
             'heading'     => 'Property management in Cheras: why the operator across the road fills your unit faster',
             'description' => 'Choosing an Airbnb or rental operator in Cheras? MOKA has run units at EkoCheras since 2019, with an on-site team, repeat guests and a show unit you can view.',
-            'published'   => '2026-10-08',
-            'updated'     => '2026-10-08',
+            'published'   => '2026-10-09',
+            'updated'     => '2026-10-09',
             'image'       => 'new-theme23/images/projects/curvo/2.jpg',
             'figures'     => [
                 ['new-theme23/images/projects/curvo/3.jpg', 'A MOKA-managed unit at Curvo'],
@@ -75,8 +75,8 @@ return [
             'title'       => 'Renovating a Maxim Risen Unit for Rental | MOKA',
             'heading'     => 'Renovating and furnishing a Maxim Risen unit for rental: plan it before the first quote',
             'description' => 'A rental fit-out for a 523 to 819 sq ft Maxim Risen unit: what to build in, where to spend, the timeline from keys to first guest, and the show unit to see first.',
-            'published'   => '2026-10-08',
-            'updated'     => '2026-10-08',
+            'published'   => '2026-10-10',
+            'updated'     => '2026-10-10',
             'image'       => 'new-theme23/images/projects/skyvogue/6.jpg',
             'figures'     => [
                 ['new-theme23/images/projects/curvo/4.jpg', 'Built-in joinery in an Innspace fit-out at Curvo'],
@@ -96,8 +96,8 @@ return [
             'title'       => 'Maxim Risen Owners: 10 Questions Before You Appoint | MOKA',
             'heading'     => 'Maxim Risen owners: ten questions to ask before appointing a property operator',
             'description' => 'Straight answers for Maxim Risen owners collecting keys: short stay or monthly, renovate first or appoint first, who fixes problems, and what you should see before signing.',
-            'published'   => '2026-10-08',
-            'updated'     => '2026-10-08',
+            'published'   => '2026-10-11',
+            'updated'     => '2026-10-11',
             'image'       => 'new-theme23/images/projects/the-valley/6.jpg',
             'figures'     => [
                 ['new-theme23/images/projects/skyawani-5/4.jpg', 'A MOKA-managed unit at Sky Awani 5'],

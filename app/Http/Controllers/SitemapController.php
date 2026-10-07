@@ -49,7 +49,7 @@ class SitemapController extends Controller
         // Blade skips any line containing a literal `<?`, treating it as a raw
         // PHP tag, so the declaration would pass through uncompiled.
         $solutions = collect(config('solutions.pages', []))->map(fn ($p) => ['path' => '/solutions/' . $p['slug'], 'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => \Carbon\Carbon::parse($p['updated'])->toAtomString()]);
-        $posts = collect(config('blog.posts', []))->map(function ($post) {
+        $posts = collect(config('blog.posts', []))->filter(fn ($p) => $p['published'] <= now()->toDateString())->map(function ($post) {
             return [
                 'slug'    => $post['slug'],
                 'lastmod' => $post['updated'],
