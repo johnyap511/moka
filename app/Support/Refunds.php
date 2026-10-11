@@ -50,9 +50,24 @@ class Refunds
         }
         return RefundLink::create([
             'token'      => Str::lower(Str::random(28)),
-            'expires_at' => now()->addHours(self::LINK_HOURS),
+            'expires_at' => self::expiryFor(now()),
             'created_by' => $userId,
         ]);
+    }
+
+    /**
+     * Links expire at 09:00, when the front desk starts sending the day's
+     * check-out messages (Sam, 12 Oct 2026): the second 09:00 after issue. The
+     * 09:00 job therefore issues links valid exactly 48 hours; one issued by
+     * hand in the afternoon still lasts until the morning after next.
+     */
+    public static function expiryFor(Carbon $issued): Carbon
+    {
+        $nine = $issued->copy()->setTime(9, 0, 0);
+        if ($nine->lte($issued)) {
+            $nine->addDay();
+        }
+        return $nine->addDay();
     }
 
     /** Active Operation Team members a guest can name. */

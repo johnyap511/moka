@@ -46,9 +46,9 @@
     @if($link)
         <code id="rf-url">{{ $link->url() }}</code>
         <button type="button" class="btn btn-secondary rf-sm" onclick="navigator.clipboard.writeText(document.getElementById('rf-url').textContent).then(()=>{this.textContent='Copied';setTimeout(()=>this.textContent='Copy link',1500)})">Copy link</button>
-        <span class="rf-muted">valid until {{ $link->expires_at->format('D d M, H:i') }} · renews itself on the dashboard</span>
+        <span class="rf-muted">valid until {{ $link->expires_at->format('D d M, g:ia') }} · a new one is issued every day at 9am</span>
     @else
-        <span class="rf-muted">none valid right now; the dashboard issues one when opened</span>
+        <span class="rf-muted">none valid right now; the dashboard issues one when opened, and the 9am job every morning</span>
     @endif
     <form method="post" action="{{ route('admin.refunds.link') }}" style="margin-left:auto">@csrf<button class="btn btn-secondary rf-sm" type="submit">New link (48 h)</button></form>
 </div>

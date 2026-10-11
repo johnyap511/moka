@@ -57,6 +57,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('reports:run')->everyMinute()->withoutOverlapping(30)->runInBackground();
         // Tell Bing (and the answer engines on its index) about pages published or updated today.
         $schedule->command('seo:indexnow')->dailyAt('00:15');
+        // Deposit refund portal: the day's guest link, issued when the front desk starts sending check-out messages.
+        $schedule->command('refunds:issue-link')->dailyAt('09:00');
 
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying
