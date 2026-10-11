@@ -5,23 +5,11 @@
 @php $e = fn ($f) => $errors->has($f) ? 'is-err' : ''; @endphp
 <div class="card">
     <h1>Deposit refund request</h1>
-    <p>Thank you for staying with MOKA. Fill in the details below and we will return your security deposit to your bank account.</p>
-    <div class="notice"><b>Good to know</b>
-        <ul>
-            <li>Submit before <b>3pm on your check-out day</b> for the fastest refund.</li>
-            <li>Refunds are made within <b>3 working days</b> of your submission.</li>
-            <li>Deposits not claimed within one year of check-out are forfeited.</li>
-        </ul>
-    </div>
-</div>
-
-<div class="card safe">
-    <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3.5 8.5-7 11-3.5-2.5-7-6-7-11V5l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Stay safe from scams</b>
-    <ul>
-        <li>Deposit refunds are <b>free</b>. MOKA never asks you to pay anything, buy credit or "unlock" a refund.</li>
-        <li>We will <b>never</b> ask for your online banking password, OTP or TAC code, card number or CVV.</li>
-        <li>This form only works on <b>homemoka.com</b>. Our only phone number is <b>+603 6789 2288</b>.</li>
-        <li>Unsure? Call or WhatsApp us using the contact details at the bottom of this page before you continue.</li>
+    <p class="muted" style="margin:0 0 4px">Thank you for staying with MOKA. Tell us where to send your deposit.</p>
+    <ul class="tips">
+        <li>Submit before <b>3pm</b> on check-out day</li>
+        <li>Refund within <b>3 working days</b></li>
+        <li>Unclaimed after 1 year is forfeited</li>
     </ul>
 </div>
 
@@ -38,17 +26,17 @@
     <div class="card">
         <h2><span class="n">1</span>Your stay</h2>
         <div class="field">
-            <label for="name"><span class="req">Name as per reservation</span> <small>The name the booking was made under</small></label>
+            <label for="name"><span class="req">Name as per reservation</span></label>
             <input type="text" id="name" name="name" value="{{ old('name') }}" class="{{ $e('name') }}" required autocomplete="name" maxlength="120">
             @error('name')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="phone"><span class="req">Contact number</span> <small>The number used for your booking, e.g. 012-345 6789</small></label>
+            <label for="phone"><span class="req">Contact number</span> <small>Used for your booking, e.g. 012-345 6789</small></label>
             <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" class="{{ $e('phone') }}" required autocomplete="tel" inputmode="tel" maxlength="40">
             @error('phone')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="email"><span class="req">Email</span> <small>We send the refund confirmation here</small></label>
+            <label for="email"><span class="req">Email</span></label>
             <input type="email" id="email" name="email" value="{{ old('email') }}" class="{{ $e('email') }}" required autocomplete="email" inputmode="email" maxlength="150">
             @error('email')<div class="err">{{ $message }}</div>@enderror
         </div>
@@ -63,7 +51,7 @@
             @error('property')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="unit_no"><span class="req">Unit number</span> <small>As on your door or check-in message, e.g. E-23A-01</small></label>
+            <label for="unit_no"><span class="req">Unit number</span> <small>e.g. E-23A-01</small></label>
             <input type="text" id="unit_no" name="unit_no" value="{{ old('unit_no') }}" class="{{ $e('unit_no') }}" required autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase">
             @error('unit_no')<div class="err">{{ $message }}</div>@enderror
         </div>
@@ -75,20 +63,20 @@
     </div>
 
     <div class="card">
-        <h2><span class="n">2</span>Bank details for the refund</h2>
+        <h2><span class="n">2</span>Refund to</h2>
         <div class="field">
-            <label for="bank_name"><span class="req">Bank name</span> <small>e.g. Maybank, CIMB, Public Bank</small></label>
+            <label for="bank_name"><span class="req">Bank name</span></label>
             <input type="text" id="bank_name" name="bank_name" value="{{ old('bank_name') }}" class="{{ $e('bank_name') }}" required maxlength="80" list="banks">
             <datalist id="banks"><option>Maybank</option><option>CIMB Bank</option><option>Public Bank</option><option>RHB Bank</option><option>Hong Leong Bank</option><option>AmBank</option><option>Bank Islam</option><option>Bank Rakyat</option><option>OCBC Bank</option><option>UOB</option><option>HSBC</option><option>Standard Chartered</option><option>Affin Bank</option><option>Alliance Bank</option><option>Touch 'n Go eWallet</option></datalist>
             @error('bank_name')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="bank_holder"><span class="req">Account holder name</span> <small>Must match the person who paid the deposit</small></label>
+            <label for="bank_holder"><span class="req">Account holder name</span> <small>Must match who paid the deposit</small></label>
             <input type="text" id="bank_holder" name="bank_holder" value="{{ old('bank_holder') }}" class="{{ $e('bank_holder') }}" required maxlength="120">
             @error('bank_holder')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="bank_account"><span class="req">Account number</span> <small>Digits only, e.g. 24637958947</small></label>
+            <label for="bank_account"><span class="req">Account number</span> <small>Digits only</small></label>
             <input type="text" id="bank_account" name="bank_account" value="{{ old('bank_account') }}" class="{{ $e('bank_account') }}" inputmode="numeric" autocomplete="off" required maxlength="40">
             @error('bank_account')<div class="err">{{ $message }}</div>@enderror
         </div>
@@ -109,7 +97,7 @@
         </div>
         @endforeach
         <div class="field">
-            <label for="comments">Anything we should know? <small>Optional. Your comments help us improve.</small></label>
+            <label for="comments">Comments <small>Optional</small></label>
             <textarea id="comments" name="comments" maxlength="2000">{{ old('comments') }}</textarea>
         </div>
     </div>
@@ -117,7 +105,7 @@
     @if($staff->isNotEmpty())
     <div class="card">
         <h2><span class="n">4</span>Who served you?</h2>
-        <p class="muted">Optional. Compliments go straight to the team member who looked after you.</p>
+        <p class="muted">Optional. Compliments reach them directly.</p>
         <div class="field">
             <label for="staff_user_id">Team member</label>
             <select id="staff_user_id" name="staff_user_id">
@@ -138,7 +126,7 @@
                 <div class="scale-l"><span>Very poor</span><span>Excellent</span></div>
             </div>
             <div class="field">
-                <label for="staff_comment">A few words for them <small>Optional</small></label>
+                <label for="staff_comment">A few words for them</label>
                 <textarea id="staff_comment" name="staff_comment" maxlength="1000">{{ old('staff_comment') }}</textarea>
             </div>
         </div>
@@ -153,7 +141,7 @@
     @endif
 
     <button class="btn" type="submit" id="rf-submit">Submit refund request</button>
-    <div class="lock"><span>🔒</span><span>Your bank details are encrypted and seen only by our Finance team. Nothing is shared with third parties.</span></div>
+    <div class="lock"><span>🔒</span><span>Encrypted. Seen only by MOKA Finance. We never ask for OTP, passwords or payment.</span></div>
 </form>
 
 <script>
