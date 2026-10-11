@@ -50,6 +50,12 @@ return [
             'sales.manage' => 'Upload eZee Transaction Detail Reports',
             'sales.own'    => 'See own sales commission only',
         ],
+        'Refunds' => [
+            'refunds.link'     => 'See and copy the guest refund link',
+            'refunds.view'     => 'View deposit refund requests (bank account masked)',
+            'refunds.manage'   => 'See bank details, mark refunds paid',
+            'refunds.feedback' => 'View guest feedback and team KPI',
+        ],
     ],
     'roles' => [
         'super_admin' => [
@@ -72,6 +78,7 @@ return [
                 'calendar.view',
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
             ],
         ],
         'operations_manager' => [
@@ -89,6 +96,7 @@ return [
                 'settings.view',
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate',
+                'refunds.link', 'refunds.view', 'refunds.feedback',
             ],
         ],
         'operations' => [
@@ -103,6 +111,7 @@ return [
                 'calendar.view',
                 'sales.own',
                 'reports.generate',
+                'refunds.link',
             ],
         ],
         'finance_manager' => [
@@ -120,6 +129,7 @@ return [
                 'settings.view',
                 'sales.view', 'sales.manage',
                 'reports.generate',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
             ],
         ],
         'finance' => [
@@ -135,6 +145,7 @@ return [
                 'calendar.view',
                 'sales.view', 'sales.manage',
                 'reports.generate',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
             ],
         ],
         'sales' => [

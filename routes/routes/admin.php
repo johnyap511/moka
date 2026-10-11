@@ -187,6 +187,14 @@ Route::get('/owner-reports/{run}/status', 'Admin\OwnerReportController@status')-
 Route::get('/owner-reports/{run}/download', 'Admin\OwnerReportController@download')->name('admin.reports.download');
 Route::post('/owner-reports/{run}/delete', 'Admin\OwnerReportController@destroy')->name('admin.reports.destroy');
 
+// Deposit refunds: guest requests, Finance marks paid, guest feedback KPI (11 Oct 2026)
+Route::get('/refunds', 'Admin\RefundController@index')->name('admin.refunds.index');
+Route::post('/refunds/link', 'Admin\RefundController@newLink')->name('admin.refunds.link');
+Route::post('/refunds/{refund}/paid', 'Admin\RefundController@paid')->name('admin.refunds.paid');
+Route::post('/refunds/{refund}/reject', 'Admin\RefundController@reject')->name('admin.refunds.reject');
+Route::post('/refunds/{refund}/reopen', 'Admin\RefundController@reopen')->name('admin.refunds.reopen');
+Route::post('/refunds/{refund}/attach', 'Admin\RefundController@attach')->name('admin.refunds.attach');
+
 // Sales commission from eZee's Transaction Detail Report (29 Sep 2026)
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
