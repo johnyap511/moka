@@ -73,10 +73,14 @@ class Refunds
     /** Active Operation Team members a guest can name. */
     public static function staff()
     {
+        // Shared or placeholder accounts (the "Intern" login) are not people a guest can name (Sam, 12 Oct 2026).
+        $exclude = array_map('strtolower', config('moka.refund_staff_exclude', ['intern']));
         return User::whereIn('admin_role', ['operations', 'operations_manager'])
             ->where('status', 1)
             ->orderBy('name')
-            ->get(['id', 'name', 'last_name']);
+            ->get(['id', 'name', 'last_name'])
+            ->reject(fn ($u) => in_array(strtolower(trim($u->name)), $exclude, true) || in_array(strtolower(trim($u->name . ' ' . $u->last_name)), $exclude, true))
+            ->values();
     }
 
     public static function digits(?string $phone): string

@@ -23,6 +23,12 @@ return [
 
     // Deposit refund portal (12 Oct 2026). Optional Cloudflare Turnstile on the guest
     // form: set both keys to turn the bot check on; leave empty and the form works without it.
+    // Admin accounts never offered in the guest form's "who served you" list (shared logins).
+    'refund_staff_exclude' => ['Intern', 'Intern Moka'],
+
+    // Company registration number shown on the guest refund page (SSM), once Sam supplies it.
+    'company_reg'      => env('MOKA_COMPANY_REG'),
+
     'turnstile_site'   => env('MOKA_TURNSTILE_SITE'),
     'turnstile_secret' => env('MOKA_TURNSTILE_SECRET'),
 ];

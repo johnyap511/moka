@@ -15,6 +15,16 @@
     </div>
 </div>
 
+<div class="card safe">
+    <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3.5 8.5-7 11-3.5-2.5-7-6-7-11V5l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Stay safe from scams</b>
+    <ul>
+        <li>Deposit refunds are <b>free</b>. MOKA never asks you to pay anything, buy credit or "unlock" a refund.</li>
+        <li>We will <b>never</b> ask for your online banking password, OTP or TAC code, card number or CVV.</li>
+        <li>This form only works on <b>homemoka.com</b>. Our only phone number is <b>+603 6789 2288</b>.</li>
+        <li>Unsure? Call or WhatsApp us using the contact details at the bottom of this page before you continue.</li>
+    </ul>
+</div>
+
 <div class="steps"><span>1 · Your stay</span><span>2 · Bank details</span><span>3 · Your feedback</span><span>4 · Who served you</span></div>
 
 @if($errors->any())
