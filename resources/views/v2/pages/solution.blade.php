@@ -66,6 +66,13 @@
                     </div>
                 @endforeach
 
+                <div class="sol-block sol-block--list sol-glance">
+                    <div class="sol-block__text">
+                        <h2>MOKA at a glance</h2>
+                        <ul class="sol-check">@foreach(config('seo.facts', []) as $fact)<li>{{ $fact }}</li>@endforeach</ul>
+                    </div>
+                </div>
+
                 @if(!empty($page['faqs']))
                 <div class="sol-faq">
                     <h2>Questions owners ask</h2>

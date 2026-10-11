@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 // staging copy of the site is not indexed alongside it.
 Route::get('/sitemap.xml', 'SitemapController@index')->name('sitemap');
 Route::get('/robots.txt',  'RobotsController')->name('robots');
+Route::get('/llms.txt',    'LlmsController')->name('llms');
+Route::get('/llms-full.txt', 'LlmsController')->name('llms.full');
+Route::get('/' . config('seo.indexnow_key', 'no-indexnow-key') . '.txt', fn () => response(config('seo.indexnow_key'))->header('Content-Type', 'text/plain'));
 
 /* ── Blog ────────────────────────────────────────────────────────── */
 Route::get('/blog',         'BlogController@index')->name('blog.index');

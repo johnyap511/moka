@@ -55,6 +55,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('ezee:refresh-departures')->dailyAt('05:40')->withoutOverlapping();
         // Owner reports: hand a queued run to the report service (a web request cannot wait the minutes it takes).
         $schedule->command('reports:run')->everyMinute()->withoutOverlapping(30)->runInBackground();
+        // Tell Bing (and the answer engines on its index) about pages published or updated today.
+        $schedule->command('seo:indexnow')->dailyAt('00:15');
 
         // EZEE never reports a cancellation; a cancelled reservation just stops
         // appearing. Without this sweep they accumulate silently, occupying

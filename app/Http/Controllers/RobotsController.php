@@ -54,6 +54,12 @@ class RobotsController extends Controller
     private function production(): string
     {
         $sitemap = url('/sitemap.xml');
+        $llms    = url('/llms.txt');
+        $private = "Allow: /\n        Disallow: /admin\n        Disallow: /owner\n        Disallow: /user\n        Disallow: /login\n        Disallow: /register\n        Disallow: /password\n        Disallow: /payment\n        Disallow: /logout";
+        $answerBots = implode("\n", array_map(fn ($ua) => "User-agent: {$ua}\n        {$private}", [
+            'OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
+            'Bingbot', 'Google-Extended', 'Applebot', 'DuckAssistBot', 'Meta-ExternalFetcher', 'YouBot',
+        ]));
 
         return <<<TXT
         # https://homemoka.com/robots.txt
@@ -79,33 +85,31 @@ class RobotsController extends Controller
         Disallow: /*?*modal=
 
         # ---------------------------------------------------------------------
-        # AI crawlers: same stance as staymoka.com — content may be used to
-        # answer questions with attribution, but not to train models.
+        # AI answer engines (ChatGPT search, Claude, Perplexity, Copilot, Gemini,
+        # Siri/Spotlight, DuckDuckGo, Meta AI, You.com): welcome. They read pages to
+        # answer questions with attribution, which is how owners find us now.
+        # Each gets the same private-area exclusions as everyone else.
         # ---------------------------------------------------------------------
-        User-agent: Amazonbot
-        Disallow: /
-
-        User-agent: Applebot-Extended
-        Disallow: /
-
-        User-agent: Bytespider
-        Disallow: /
-
-        User-agent: CCBot
-        Disallow: /
-
-        User-agent: ClaudeBot
-        Disallow: /
-
-        User-agent: Google-Extended
-        Disallow: /
-
+        {$answerBots}
+        # ---------------------------------------------------------------------
+        # Training-only crawlers: no. Content may be cited, not used to train
+        # models (Content-Signal above says the same).
+        # ---------------------------------------------------------------------
         User-agent: GPTBot
         Disallow: /
-
+        User-agent: ClaudeBot
+        Disallow: /
+        User-agent: CCBot
+        Disallow: /
+        User-agent: Bytespider
+        Disallow: /
+        User-agent: Amazonbot
+        Disallow: /
+        User-agent: Applebot-Extended
+        Disallow: /
         User-agent: meta-externalagent
         Disallow: /
-
+        # AI pages for assistants: {$llms}
         Sitemap: {$sitemap}
         TXT;
     }
