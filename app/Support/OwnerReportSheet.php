@@ -25,8 +25,10 @@ class OwnerReportSheet
         $from = $ym . '-01';
         $to   = date('Y-m-t', strtotime($from));
         $out  = [];
+        // lazyById pages by id; an extra orderBy() here made the pages overlap and skip (150 duplicates,
+        // 81 missing on the first September run). Sort afterwards instead.
         $bookings = Booking::where('status', '>=', 3)->whereBetween('check_in', [$from, $to])
-            ->with(['user', 'listing', 'ezeeBooking'])->orderBy('check_in')->orderBy('id')->lazyById(500);
+            ->with(['user', 'listing', 'ezeeBooking'])->lazyById(500);
         foreach ($bookings as $b) {
             $ezee = $b->ezeeBooking ?: self::siblingEzee($b);
             $otaText = Channel::canonical($ezee->Source ?? $b->source);
@@ -44,6 +46,8 @@ class OwnerReportSheet
                 $ezeeFolio, round((float) $b->price, 2), self::remarksFor($b),
             ];
         }
+
+        usort($out, fn ($a, $b) => [$a[6], $a[0]] <=> [$b[6], $b[0]]);
 
         return $out;
     }
