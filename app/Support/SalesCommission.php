@@ -432,9 +432,14 @@ class SalesCommission
                     'guest' => $r->guest_name, 'source' => $r->business_source, 'room' => $r->room_no, 'arrival' => $r->arrival, 'departure' => $r->departure,
                     'sales_person' => $r->sales_person, 'nights' => 0, 'first_night' => $r->tran_date, 'last_night' => $r->tran_date, 'net' => 0.0, 'status' => $r->booking_status, 'warn' => null];
             }
-            $s->nights++;
+            // Nights come from Room Charges only; early check-in / late check-out fees add money, not nights
+            // (they post on the arrival or departure day and used to make a stay look one night longer).
+            if ($r->charge === 'Room Charges') {
+                $s->nights++;
+                $s->first_night = min($s->first_night, $r->tran_date);
+                $s->last_night = max($s->last_night, $r->tran_date);
+            }
             $s->net += (float) $r->net_amount;
-            $s->last_night = max($s->last_night, $r->tran_date);
             $s->status = $r->booking_status;
             unset($s);
         }
@@ -459,7 +464,7 @@ class SalesCommission
         $rate = self::rate();
         $keys = array_keys($stays);
         if ($keys) {
-            $other = DB::table('sales_transactions')->selectRaw("hotel_code, folio_no, DATE_FORMAT(tran_date, '%Y-%m') ym, COUNT(*) nights, SUM(net_amount) net")
+            $other = DB::table('sales_transactions')->selectRaw("hotel_code, folio_no, DATE_FORMAT(tran_date, '%Y-%m') ym, SUM(charge = 'Room Charges') nights, SUM(net_amount) net")
                 ->where('payable', 1)->where(fn ($w) => $w->where('tran_date', '<', $from)->orWhere('tran_date', '>', $to))
                 ->where(function ($w) use ($stays) {
                     foreach ($stays as $s) {
