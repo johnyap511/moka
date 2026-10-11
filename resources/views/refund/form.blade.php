@@ -2,43 +2,50 @@
 @section('title', 'Deposit Refund Form')
 
 @section('body')
+@php $e = fn ($f) => $errors->has($f) ? 'is-err' : ''; @endphp
 <div class="card">
-    <h1>MOKA Deposit Refund Form</h1>
-    <p>Dear Guest, it is our pleasure to host you at our home. We will always provide the best in order for you to feel as comfortable as your home away from home. We hope that you are satisfied with our services, and choose MOKA as your preferred accommodation provider for your next trip. Hope to see you again soon!</p>
-    <div class="notice"><b>Kind reminder</b>
-        <ol>
-            <li>Please submit this form before <b>3pm on the day of check-out</b> to speed up your refund.</li>
-            <li>Your security deposit will be refunded within <b>3 working days</b> from the day you submit this form.</li>
-            <li>Unclaimed security deposits are forfeited if not claimed within one year of your check-out date.</li>
-        </ol>
+    <h1>Deposit refund request</h1>
+    <p>Thank you for staying with MOKA. Fill in the details below and we will return your security deposit to your bank account.</p>
+    <div class="notice"><b>Good to know</b>
+        <ul>
+            <li>Submit before <b>3pm on your check-out day</b> for the fastest refund.</li>
+            <li>Refunds are made within <b>3 working days</b> of your submission.</li>
+            <li>Deposits not claimed within one year of check-out are forfeited.</li>
+        </ul>
     </div>
 </div>
 
-<form method="post" action="{{ route('refund.store', $link->token) }}" novalidate>
+<div class="steps"><span>1 · Your stay</span><span>2 · Bank details</span><span>3 · Your feedback</span><span>4 · Who served you</span></div>
+
+@if($errors->any())
+<div class="alert">Some details need a second look. Please check the fields marked in red.</div>
+@endif
+
+<form method="post" action="{{ route('refund.store', $link->token) }}" novalidate id="rf">
     @csrf
     <div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
     <div class="card">
-        <h2>Your stay</h2>
+        <h2><span class="n">1</span>Your stay</h2>
         <div class="field">
-            <label for="name">Name as per reservation <small>Example: Wong Xin Rou</small></label>
-            <input type="text" id="name" name="name" value="{{ old('name') }}" required autocomplete="name">
+            <label for="name"><span class="req">Name as per reservation</span> <small>The name the booking was made under</small></label>
+            <input type="text" id="name" name="name" value="{{ old('name') }}" class="{{ $e('name') }}" required autocomplete="name" maxlength="120">
             @error('name')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="email">Email <small>Example: xinrou@gmail.com</small></label>
-            <input type="email" id="email" name="email" value="{{ old('email') }}" required autocomplete="email">
-            @error('email')<div class="err">{{ $message }}</div>@enderror
-        </div>
-        <div class="field">
-            <label for="phone">Contact number <small>The number used for your booking. Example: 019-6668126</small></label>
-            <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" required autocomplete="tel">
+            <label for="phone"><span class="req">Contact number</span> <small>The number used for your booking, e.g. 012-345 6789</small></label>
+            <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" class="{{ $e('phone') }}" required autocomplete="tel" inputmode="tel" maxlength="40">
             @error('phone')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="property">Property</label>
-            <select id="property" name="property" required>
-                <option value="" disabled {{ old('property') ? '' : 'selected' }}>Choose the property</option>
+            <label for="email"><span class="req">Email</span> <small>We send the refund confirmation here</small></label>
+            <input type="email" id="email" name="email" value="{{ old('email') }}" class="{{ $e('email') }}" required autocomplete="email" inputmode="email" maxlength="150">
+            @error('email')<div class="err">{{ $message }}</div>@enderror
+        </div>
+        <div class="field">
+            <label for="property"><span class="req">Property</span></label>
+            <select id="property" name="property" class="{{ $e('property') }}" required>
+                <option value="" disabled {{ old('property') ? '' : 'selected' }}>Choose where you stayed</option>
                 @foreach($properties as $p)
                 <option value="{{ $p }}" {{ old('property') === $p ? 'selected' : '' }}>{{ $p }}</option>
                 @endforeach
@@ -46,94 +53,107 @@
             @error('property')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="unit_no">Unit number <small>Example: E-23A-01</small></label>
-            <input type="text" id="unit_no" name="unit_no" value="{{ old('unit_no') }}" required autocapitalize="characters">
+            <label for="unit_no"><span class="req">Unit number</span> <small>As on your door or check-in message, e.g. E-23A-01</small></label>
+            <input type="text" id="unit_no" name="unit_no" value="{{ old('unit_no') }}" class="{{ $e('unit_no') }}" required autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase">
             @error('unit_no')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="check_out">Date of check-out</label>
-            <input type="date" id="check_out" name="check_out" value="{{ old('check_out', date('Y-m-d')) }}" max="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
+            <label for="check_out"><span class="req">Check-out date</span></label>
+            <input type="date" id="check_out" name="check_out" value="{{ old('check_out', date('Y-m-d')) }}" class="{{ $e('check_out') }}" max="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
             @error('check_out')<div class="err">{{ $message }}</div>@enderror
         </div>
     </div>
 
     <div class="card">
-        <h2>Refund to</h2>
+        <h2><span class="n">2</span>Bank details for the refund</h2>
         <div class="field">
-            <label for="bank_name">Bank name <small>Example: Public Bank</small></label>
-            <input type="text" id="bank_name" name="bank_name" value="{{ old('bank_name') }}" required>
+            <label for="bank_name"><span class="req">Bank name</span> <small>e.g. Maybank, CIMB, Public Bank</small></label>
+            <input type="text" id="bank_name" name="bank_name" value="{{ old('bank_name') }}" class="{{ $e('bank_name') }}" required maxlength="80" list="banks">
+            <datalist id="banks"><option>Maybank</option><option>CIMB Bank</option><option>Public Bank</option><option>RHB Bank</option><option>Hong Leong Bank</option><option>AmBank</option><option>Bank Islam</option><option>Bank Rakyat</option><option>OCBC Bank</option><option>UOB</option><option>HSBC</option><option>Standard Chartered</option><option>Affin Bank</option><option>Alliance Bank</option><option>Touch 'n Go eWallet</option></datalist>
             @error('bank_name')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="bank_holder">Bank account holder name <small>Please make sure the account name matches the person who paid the deposit.</small></label>
-            <input type="text" id="bank_holder" name="bank_holder" value="{{ old('bank_holder') }}" required>
+            <label for="bank_holder"><span class="req">Account holder name</span> <small>Must match the person who paid the deposit</small></label>
+            <input type="text" id="bank_holder" name="bank_holder" value="{{ old('bank_holder') }}" class="{{ $e('bank_holder') }}" required maxlength="120">
             @error('bank_holder')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="bank_account">Bank account number <small>Example: 24637958947</small></label>
-            <input type="text" id="bank_account" name="bank_account" value="{{ old('bank_account') }}" inputmode="numeric" required>
+            <label for="bank_account"><span class="req">Account number</span> <small>Digits only, e.g. 24637958947</small></label>
+            <input type="text" id="bank_account" name="bank_account" value="{{ old('bank_account') }}" class="{{ $e('bank_account') }}" inputmode="numeric" autocomplete="off" required maxlength="40">
             @error('bank_account')<div class="err">{{ $message }}</div>@enderror
         </div>
     </div>
 
     <div class="card">
-        <h2>How did we do?</h2>
-        @foreach([['rating_clean', 'How would you rate our room cleanliness?'], ['rating_service', 'How would you rate our customer service?']] as [$f, $q])
+        <h2><span class="n">3</span>Your feedback</h2>
+        @foreach([['rating_clean', 'How clean was the unit?'], ['rating_service', 'How was our customer service?']] as [$f, $q])
         <div class="field">
-            <label>{{ $q }}</label>
-            <div class="scale"><span>Very poor</span>
-                <div class="opts">
-                    @for($i = 1; $i <= 5; $i++)
-                    <label style="margin:0;flex:1"><input type="radio" name="{{ $f }}" value="{{ $i }}" {{ (int) old($f) === $i ? 'checked' : '' }} required><span class="opt">{{ $i }}</span></label>
-                    @endfor
-                </div>
-                <span>Excellent</span>
+            <label><span class="req">{{ $q }}</span></label>
+            <div class="scale">
+                @for($i = 1; $i <= 5; $i++)
+                <label><input type="radio" name="{{ $f }}" value="{{ $i }}" {{ (int) old($f) === $i ? 'checked' : '' }} required><span class="opt">{{ $i }}</span></label>
+                @endfor
             </div>
+            <div class="scale-l"><span>Very poor</span><span>Excellent</span></div>
             @error($f)<div class="err">{{ $message }}</div>@enderror
         </div>
         @endforeach
         <div class="field">
-            <label for="comments">Comments <small>We appreciate your time, so we can keep improving. Thank you!</small></label>
-            <textarea id="comments" name="comments">{{ old('comments') }}</textarea>
+            <label for="comments">Anything we should know? <small>Optional. Your comments help us improve.</small></label>
+            <textarea id="comments" name="comments" maxlength="2000">{{ old('comments') }}</textarea>
         </div>
     </div>
 
     @if($staff->isNotEmpty())
     <div class="card">
-        <h2>Who served you?</h2>
-        <p class="muted">Optional. Pick the team member who looked after you and tell us how they did. Compliments reach them directly.</p>
+        <h2><span class="n">4</span>Who served you?</h2>
+        <p class="muted">Optional. Compliments go straight to the team member who looked after you.</p>
         <div class="field">
             <label for="staff_user_id">Team member</label>
             <select id="staff_user_id" name="staff_user_id">
-                <option value="">— Not sure / skip —</option>
+                <option value="">Not sure / skip</option>
                 @foreach($staff as $s)
                 <option value="{{ $s->id }}" {{ (int) old('staff_user_id') === (int) $s->id ? 'selected' : '' }}>{{ trim($s->name . ' ' . $s->last_name) }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="field">
-            <label>Their service</label>
-            <div class="scale"><span>Very poor</span>
-                <div class="opts">
+        <div id="staff-more" style="{{ old('staff_user_id') ? '' : 'display:none' }}">
+            <div class="field">
+                <label>How did they do?</label>
+                <div class="scale">
                     @for($i = 1; $i <= 5; $i++)
-                    <label style="margin:0;flex:1"><input type="radio" name="staff_rating" value="{{ $i }}" {{ (int) old('staff_rating') === $i ? 'checked' : '' }}><span class="opt">{{ $i }}</span></label>
+                    <label><input type="radio" name="staff_rating" value="{{ $i }}" {{ (int) old('staff_rating') === $i ? 'checked' : '' }}><span class="opt">{{ $i }}</span></label>
                     @endfor
                 </div>
-                <span>Excellent</span>
+                <div class="scale-l"><span>Very poor</span><span>Excellent</span></div>
             </div>
-        </div>
-        <div class="field">
-            <label for="staff_comment">Compliment or feedback for them</label>
-            <textarea id="staff_comment" name="staff_comment">{{ old('staff_comment') }}</textarea>
+            <div class="field">
+                <label for="staff_comment">A few words for them <small>Optional</small></label>
+                <textarea id="staff_comment" name="staff_comment" maxlength="1000">{{ old('staff_comment') }}</textarea>
+            </div>
         </div>
     </div>
     @endif
 
-    @if($errors->any())
-    <div class="card" style="border:1px solid #fecaca;background:#fef2f2"><b>Please check the highlighted fields above.</b></div>
+    @if(config('moka.turnstile_site'))
+    <div class="card" style="padding:14px 18px"><div class="cf-turnstile" data-sitekey="{{ config('moka.turnstile_site') }}" data-theme="light"></div>
+        @error('cf-turnstile-response')<div class="err">{{ $message }}</div>@enderror
+    </div>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     @endif
 
-    <button class="btn" type="submit">Submit refund request</button>
-    <p class="muted center" style="margin-top:10px">Your bank details are encrypted and seen only by our Finance team.</p>
+    <button class="btn" type="submit" id="rf-submit">Submit refund request</button>
+    <div class="lock"><span>🔒</span><span>Your bank details are encrypted and seen only by our Finance team. Nothing is shared with third parties.</span></div>
 </form>
+
+<script>
+(function(){
+    var f=document.getElementById('rf'),b=document.getElementById('rf-submit');
+    f.addEventListener('submit',function(){b.disabled=true;b.textContent='Sending…';});
+    var u=document.getElementById('unit_no');u&&u.addEventListener('input',function(){this.value=this.value.toUpperCase();});
+    var s=document.getElementById('staff_user_id'),m=document.getElementById('staff-more');
+    s&&s.addEventListener('change',function(){m.style.display=this.value?'':'none';});
+    var first=document.querySelector('.is-err');first&&first.scrollIntoView({block:'center'});
+})();
+</script>
 @endsection

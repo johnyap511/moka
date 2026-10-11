@@ -1,11 +1,16 @@
 @extends('refund._shell')
-@section('title', 'Thank you')
+@section('title', 'Request received')
 
 @section('body')
 <div class="card center">
     <div class="ok">✓</div>
-    <h1>Thank you, we have received your request.</h1>
-    <p>Your security deposit will be refunded within <b>3 working days</b>. If anything needs checking, our team will contact you on the number you gave.</p>
-    <p class="muted">We hope to host you again soon.</p>
+    <h1>Thank you, your request is in.</h1>
+    <p class="muted">We will return your security deposit within 3 working days.</p>
+    <div class="next">
+        <div><span class="n">1</span><span>Our Finance team checks your stay and the deposit paid.</span></div>
+        <div><span class="n">2</span><span>The refund is transferred to the bank account you gave us.</span></div>
+        <div><span class="n">3</span><span>If anything needs confirming, we will WhatsApp or call the number you entered.</span></div>
+    </div>
 </div>
+<div class="card center"><p class="muted" style="margin:0">Loved your stay? Follow us for offers on your next trip.</p></div>
 @endsection

@@ -34,5 +34,14 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Deposit refund form (public, behind a 48-hour link). Two caps per IP: a
+        // burst cap against scripted floods and a daily cap wide enough for a whole
+        // building on one shared WiFi address; the per-phone cap is in App\Support\Refunds.
+        RateLimiter::for('refund-form', fn (Request $request) => Limit::perMinute(30)->by('rf-form|' . $request->ip()));
+        RateLimiter::for('refund-submit', fn (Request $request) => [
+            Limit::perMinute(6)->by('rf-burst|' . $request->ip()),
+            Limit::perDay(150)->by('rf-day|' . $request->ip()),
+        ]);
     }
 }

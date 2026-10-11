@@ -60,8 +60,8 @@ Route::middleware('lang')->group(function () {
 
     /* ── Deposit refund portal: guest form behind a 48-hour link (11 Oct 2026) ── */
     Route::get('/refund/thank-you', 'RefundController@thanks')->name('refund.thanks');
-    Route::get('/refund/{token}',   'RefundController@show')->name('refund.show')->middleware('throttle:120,60');
-    Route::post('/refund/{token}',  'RefundController@store')->name('refund.store')->middleware('throttle:60,1440');
+    Route::get('/refund/{token}',   'RefundController@show')->name('refund.show')->where('token', '[a-z0-9]{10,40}')->middleware('throttle:refund-form');
+    Route::post('/refund/{token}',  'RefundController@store')->name('refund.store')->where('token', '[a-z0-9]{10,40}')->middleware('throttle:refund-submit');
 
     /* ── Property Search & Detail ───────────────────────────────────── */
     // Booking engine retired (8 Sep 2026): bookings are taken on staymoka.com. The code stays; the routes send visitors there.

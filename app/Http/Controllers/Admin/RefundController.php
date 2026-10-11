@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Booking;
+use App\DataLog;
 use App\Http\Controllers\Controller;
 use App\Models\RefundRequest;
-use App\DataLog;
 use App\Support\Refunds;
-use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Finance side of the deposit refund portal: requests beside their booking,
- * bank details for refunds.manage only, mark paid, and the guest feedback tab.
+ * bank details for refunds.manage only, mark paid, CSV for the payment run,
+ * and the guest feedback tab (team KPI counts verified stays only).
  */
 class RefundController extends Controller
 {
@@ -27,52 +28,62 @@ class RefundController extends Controller
     public function index(Request $request)
     {
         $tab = $request->input('tab', admin_can('refunds.view') ? 'pending' : 'feedback');
-        $q   = trim((string) $request->input('q', ''));
-        $ym  = $request->input('month', now()->format('Y-m'));
+        if (!admin_can('refunds.view')) {
+            $tab = 'feedback';
+        }
+        $q    = trim((string) $request->input('q', ''));
+        $prop = (string) $request->input('property', '');
+        $ym   = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : now()->format('Y-m');
 
-        $base = RefundRequest::query();
         $counts = [
-            'pending' => (clone $base)->where('status', 'pending')->count(),
-            'verify'  => (clone $base)->where('status', 'pending')->where('match', '!=', 'matched')->count(),
-            'overdue' => (clone $base)->where('status', 'pending')->where('due_on', '<', today())->count(),
-            'paid'    => (clone $base)->where('status', 'paid')->count(),
+            'pending'  => RefundRequest::where('status', 'pending')->count(),
+            'verify'   => RefundRequest::where('status', 'pending')->where('match', '!=', 'matched')->count(),
+            'overdue'  => RefundRequest::where('status', 'pending')->where('due_on', '<', today())->count(),
+            'paid'     => RefundRequest::where('status', 'paid')->count(),
+            'rejected' => RefundRequest::where('status', 'rejected')->count(),
+            'today'    => RefundRequest::where('created_at', '>=', today())->count(),
         ];
 
         $rows = collect();
-        if ($tab !== 'feedback' && admin_can('refunds.view')) {
-            $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer'])->orderByDesc('id');
-            if ($tab === 'pending') {
-                $query->where('status', 'pending');
-            } elseif ($tab === 'paid') {
-                $query->where('status', 'paid');
-            } elseif ($tab === 'rejected') {
-                $query->where('status', 'rejected');
-            }
-            if ($q !== '') {
-                $d = Refunds::digits($q);
-                $query->where(function ($w) use ($q, $d) {
-                    $w->where('name', 'like', "%$q%")->orWhere('email', 'like', "%$q%")->orWhere('unit_no', 'like', "%$q%")->orWhere('reference', 'like', "%$q%");
-                    if ($d !== '') {
-                        $w->orWhere('phone_digits', 'like', "%$d%");
-                    }
-                    if (ctype_digit($q)) {
-                        $w->orWhere('id', (int) $q)->orWhere('booking_id', (int) $q);
-                    }
-                });
-            }
-            $rows = $query->paginate(40)->withQueryString();
-        }
-
-        $feedback = null;
-        if ($tab === 'feedback') {
-            $feedback = $this->feedback($ym);
+        if ($tab !== 'feedback') {
+            $rows = $this->filtered($tab, $q, $prop)->paginate(40)->withQueryString();
         }
 
         return view('admin.refunds.index', [
-            'tab' => $tab, 'q' => $q, 'ym' => $ym, 'rows' => $rows, 'counts' => $counts, 'feedback' => $feedback,
-            'link' => Refunds::currentLink(),
-            'canManage' => admin_can('refunds.manage'),
+            'tab' => $tab, 'q' => $q, 'prop' => $prop, 'ym' => $ym, 'rows' => $rows, 'counts' => $counts,
+            'feedback'   => $tab === 'feedback' ? $this->feedback($ym) : null,
+            'link'       => Refunds::currentLink(),
+            'properties' => array_keys(Refunds::PROPERTIES),
+            'canManage'  => admin_can('refunds.manage'),
         ]);
+    }
+
+    private function filtered(string $tab, string $q, string $prop)
+    {
+        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer'])->orderByDesc('id');
+        if (in_array($tab, ['pending', 'paid', 'rejected'], true)) {
+            $query->where('status', $tab);
+        }
+        if ($tab === 'verify') {
+            $query->where('status', 'pending')->where('match', '!=', 'matched');
+        }
+        if ($prop !== '' && isset(Refunds::PROPERTIES[$prop])) {
+            $query->where('property', $prop);
+        }
+        if ($q !== '') {
+            $like = '%' . addcslashes($q, '%_\\') . '%';
+            $d = Refunds::digits($q);
+            $query->where(function ($w) use ($q, $like, $d) {
+                $w->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('unit_no', 'like', $like)->orWhere('reference', 'like', $like);
+                if ($d !== '') {
+                    $w->orWhere('phone_digits', 'like', '%' . $d . '%');
+                }
+                if (ctype_digit($q)) {
+                    $w->orWhere('id', (int) $q)->orWhere('booking_id', (int) $q);
+                }
+            });
+        }
+        return $query;
     }
 
     private function feedback(string $ym): array
@@ -81,7 +92,12 @@ class RefundController extends Controller
         $to   = $from->copy()->addMonth();
         $all  = RefundRequest::with('staff')->where('created_at', '>=', $from)->where('created_at', '<', $to)->orderByDesc('id')->get();
 
-        $staff = $all->whereNotNull('staff_user_id')->groupBy('staff_user_id')->map(function ($g) {
+        // KPI counts only requests tied to a real stay, so nobody can pad a
+        // colleague's score (or sink it) with made-up submissions.
+        $verified   = $all->filter(fn ($r) => $r->booking_id && $r->match !== 'duplicate');
+        $unverified = $all->count() - $verified->count();
+
+        $staff = $verified->whereNotNull('staff_user_id')->groupBy('staff_user_id')->map(function ($g) {
             $rated = $g->whereNotNull('staff_rating');
             return [
                 'user'     => $g->first()->staff,
@@ -93,21 +109,52 @@ class RefundController extends Controller
             ];
         })->sortByDesc('count')->values();
 
-        $properties = $all->groupBy('property')->map(fn ($g) => [
+        $properties = $verified->groupBy('property')->map(fn ($g) => [
             'count'   => $g->count(),
             'clean'   => $g->whereNotNull('rating_clean')->count() ? round($g->avg('rating_clean'), 2) : null,
             'service' => $g->whereNotNull('rating_service')->count() ? round($g->avg('rating_service'), 2) : null,
         ])->sortByDesc('count');
 
         return [
+            'ym'         => $ym,
             'month'      => $from->format('F Y'),
+            'prev'       => $from->copy()->subMonth()->format('Y-m'),
+            'next'       => $from->copy()->addMonth()->format('Y-m'),
             'total'      => $all->count(),
-            'clean'      => $all->whereNotNull('rating_clean')->count() ? round($all->avg('rating_clean'), 2) : null,
-            'service'    => $all->whereNotNull('rating_service')->count() ? round($all->avg('rating_service'), 2) : null,
+            'verified'   => $verified->count(),
+            'unverified' => $unverified,
+            'clean'      => $verified->whereNotNull('rating_clean')->count() ? round($verified->avg('rating_clean'), 2) : null,
+            'service'    => $verified->whereNotNull('rating_service')->count() ? round($verified->avg('rating_service'), 2) : null,
             'staff'      => $staff,
             'properties' => $properties,
             'comments'   => $all->filter(fn ($r) => filled($r->comments))->values(),
         ];
+    }
+
+    /** CSV of the current list, for the bank payment run. Finance only: it carries account numbers. */
+    public function export(Request $request): StreamedResponse
+    {
+        $this->manage();
+        $tab  = (string) $request->input('tab', 'pending');
+        $rows = $this->filtered($tab === 'feedback' ? 'all' : $tab, trim((string) $request->input('q', '')), (string) $request->input('property', ''))->get();
+        $this->log(null, 'Refund CSV exported', ['tab' => $tab, 'rows' => $rows->count()]);
+
+        $name = 'deposit-refunds-' . $tab . '-' . now()->format('Ymd-Hi') . '.csv';
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Request', 'Submitted', 'Status', 'Due', 'Guest', 'Phone', 'Email', 'Property', 'Unit', 'Check-out', 'Booking', 'Match', 'Note', 'Bank', 'Account holder', 'Account number', 'Paid on', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r->id, $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
+                    $r->name, $r->phone, $r->email, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
+                    $r->booking_id, $r->match, $r->match_note,
+                    $r->bank_name, $r->bank_holder, "\t" . $r->bank_account,   // tab keeps Excel from mangling long numbers
+                    $r->paid_at?->format('Y-m-d'), $r->reference,
+                    $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
+                ]);
+            }
+            fclose($out);
+        }, $name, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /** A fresh 48-hour link, on request. */

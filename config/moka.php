@@ -20,4 +20,9 @@ return [
     // MOKA_REPORTS_TOKEN is only for a manual test from elsewhere.
     'reports_url'   => env('MOKA_REPORTS_URL'),
     'reports_token' => env('MOKA_REPORTS_TOKEN'),
+
+    // Deposit refund portal (12 Oct 2026). Optional Cloudflare Turnstile on the guest
+    // form: set both keys to turn the bot check on; leave empty and the form works without it.
+    'turnstile_site'   => env('MOKA_TURNSTILE_SITE'),
+    'turnstile_secret' => env('MOKA_TURNSTILE_SECRET'),
 ];
