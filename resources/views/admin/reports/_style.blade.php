@@ -22,4 +22,5 @@
 .or-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .or-files{font-size:12.5px;line-height:1.6;color:var(--text-secondary)}.or-files b{color:inherit}
 .or-err{background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#991b1b;margin-bottom:12px}
+.or-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media (max-width:700px){.or-settings{grid-template-columns:1fr}}.or-settings label{display:grid;gap:3px;font-weight:600;font-size:12.5px}.or-settings label small{font-weight:400;color:var(--text-secondary)}.or-settings textarea{min-height:70px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
 </style>

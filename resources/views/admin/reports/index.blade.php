@@ -11,7 +11,7 @@
 <div class="or-head">
     <div>
         <h1>Owner reports</h1>
-        <p class="or-sub">Monthly landlord-payout pack (Excel + PDF per unit, groups, compilation). Upload the two month-end files, confirm the data tab, generate, download the zip.</p>
+        <p class="or-sub">Monthly landlord-payout pack (Excel + PDF per unit, groups, compilation). Upload the Master file, confirm the data tab and the month's settings, generate, download the zip. The bookings sheet is built from Homemoka.</p>
     </div>
 </div>
 
@@ -31,8 +31,8 @@
                 <label>Master file <small>Master_Utilities.xlsx</small>
                     <input type="file" name="master" accept=".xlsx" required>
                 </label>
-                <label>Reconciled bookings <small>Reconciled_FINAL.xlsx, sheet “Moka”</small>
-                    <input type="file" name="recon" accept=".xlsx" required>
+                <label>Bookings sheet <small>optional: leave empty and Homemoka builds it from the month's bookings (the “Moka” sheet); or upload a Reconciled_FINAL.xlsx</small>
+                    <input type="file" name="recon" accept=".xlsx">
                 </label>
                 <details class="or-adv">
                     <summary>Previous month's master (optional)</summary>

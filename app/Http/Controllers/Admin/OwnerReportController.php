@@ -38,19 +38,25 @@ class OwnerReportController extends Controller
         $request->validate([
             'month'  => 'required|date_format:Y-m',
             'master' => 'required|file|mimes:xlsx|max:30720',
-            'recon'  => 'required|file|mimes:xlsx|max:30720',
+            'recon'  => 'nullable|file|mimes:xlsx|max:30720',
             'prev'   => 'nullable|file|mimes:xlsx|max:30720',
         ], [], ['master' => 'Master file', 'recon' => 'Reconciled file', 'prev' => 'previous month master']);
 
         $run = ReportRun::create([
             'month' => $request->input('month'), 'status' => 'draft', 'user_id' => Auth::id(),
             'master_name' => $request->file('master')->getClientOriginalName(),
-            'recon_name' => $request->file('recon')->getClientOriginalName(),
+            'recon_name' => $request->file('recon') ? $request->file('recon')->getClientOriginalName() : 'Built by Homemoka',
             'prev_name' => $request->file('prev') ? $request->file('prev')->getClientOriginalName() : null,
         ]);
         File::ensureDirectoryExists($run->dir(), 0755);
         $request->file('master')->move($run->dir(), 'master.xlsx');
-        $request->file('recon')->move($run->dir(), 'recon.xlsx');
+        if ($request->file('recon')) {
+            $request->file('recon')->move($run->dir(), 'recon.xlsx');
+        } else {
+            // Phase 2: the bookings sheet comes from Homemoka itself (the reconciled data lives here now).
+            $n = \App\Support\OwnerReportSheet::write($run->month, $run->file('recon.xlsx'));
+            $run->update(['recon_name' => 'Built by Homemoka: ' . $n . ' bookings checking in ' . $run->monthLabel()]);
+        }
         if ($request->file('prev')) {
             $request->file('prev')->move($run->dir(), 'prev.xlsx');
         }
@@ -90,12 +96,20 @@ class OwnerReportController extends Controller
 
     public function show(ReportRun $run)
     {
-        $defaults = $run->status === 'draft' ? OwnerReports::defaults() : [];
+        $prefill = $run->overrides;
+        $source = $run->overrides ? 'this run' : null;
+        if (!$prefill && in_array($run->status, ['draft', 'error'])) {
+            $last = ReportRun::where('status', 'done')->where('id', '<>', $run->id)->whereNotNull('overrides')->orderByDesc('month')->orderByDesc('id')->first();
+            if ($last) {
+                $prefill = $last->overrides; $source = 'the ' . $last->monthLabel() . ' run';
+            } else {
+                $prefill = OwnerReports::defaults(); $source = $prefill ? 'the engine defaults' : null;
+            }
+        }
         return view('admin.reports.show', [
             'run' => $run,
-            'overridesJson' => $run->overrides ? json_encode($run->overrides, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-                : ($defaults ? json_encode($defaults, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : ''),
-            'defaultsKnown' => (bool) $defaults,
+            'form' => OwnerReports::formFromOverrides($prefill ?: []),
+            'formSource' => $source,
         ]);
     }
 
@@ -111,7 +125,9 @@ class OwnerReportController extends Controller
             return back()->with('error', 'Pick the data tab from the list.');
         }
         try {
-            $overrides = OwnerReports::parseOverrides($request->input('overrides'));
+            $overrides = $request->filled('overrides')
+                ? OwnerReports::parseOverrides($request->input('overrides'))
+                : OwnerReports::overridesFromForm($request->only(OwnerReports::TABLES));
         } catch (\InvalidArgumentException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }

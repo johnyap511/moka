@@ -81,10 +81,21 @@
         </label>
         @endif
 
-        <details class="or-adv" {{ $errors->any() || session('error') ? 'open' : '' }}>
-            <summary>Advanced: monthly judgment settings</summary>
-            <p class="or-help">Minimum-guarantee units, owner stays, office rents, Alinea fixed rents, bookings to re-tag as short-term, units forced to long-term. {{ $defaultsKnown ? 'Pre-filled with the current standard settings; most months leave as is.' : 'Leave empty to use the standard settings.' }}</p>
-            <textarea name="overrides" spellcheck="false" placeholder='{"mg_units": {"EkoCheras J-22-06": 2000}, "owner_stay": [], "office_rent": {}, "alinea_rent_ovr": {}, "str_retag": [], "lt_override": {}}'>{{ old('overrides', $overridesJson) }}</textarea>
+        <details class="or-adv" {{ $errors->any() || session('error') || $run->status === 'error' ? 'open' : '' }}>
+            <summary>This month's settings @if($formSource)<span class="or-muted">(pre-filled from {{ $formSource }}; check them)</span>@endif</summary>
+            <p class="or-help">One unit per line. Amounts in RM. Leave a box empty when it does not apply this month.</p>
+            <div class="or-settings">
+                @foreach(\App\Support\OwnerReports::MAPS as $k)
+                <label>{{ \App\Support\OwnerReports::label($k) }} <small>{{ ['mg_units' => 'landlord guaranteed at least this; shortfall borne by MOKA', 'office_rent' => 'fixed rent paid; Moka NP not tracked', 'alinea_rent_ovr' => 'Alinea members paid a fixed rent instead of the group share', 'lt_override' => 'treat as long term at this monthly rent'][$k] }}</small>
+                    <textarea name="{{ $k }}" rows="3" spellcheck="false" placeholder="EkoCheras J-22-06: 2000">{{ old($k, $form[$k]) }}</textarea>
+                </label>
+                @endforeach
+                @foreach(\App\Support\OwnerReports::LISTS as $k)
+                <label>{{ \App\Support\OwnerReports::label($k) }} <small>{{ ['owner_stay' => 'owner stayed: all charges zeroed', 'str_retag' => 'bookings tagged Long Term Rental that are really short stay'][$k] }}</small>
+                    <textarea name="{{ $k }}" rows="3" spellcheck="false" placeholder="EkoCheras H-30-16">{{ old($k, $form[$k]) }}</textarea>
+                </label>
+                @endforeach
+            </div>
         </details>
 
         <div class="or-actions" style="margin-top:0">

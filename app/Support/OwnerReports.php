@@ -126,6 +126,49 @@ class OwnerReports
         return $d;
     }
 
+    public const MAPS  = ['mg_units', 'office_rent', 'alinea_rent_ovr', 'lt_override'];
+    public const LISTS = ['owner_stay', 'str_retag'];
+
+    /** Form fields → override tables. Maps are "Unit name: amount" per line; lists are one unit per line. */
+    public static function overridesFromForm(array $in): ?array
+    {
+        $out = [];
+        foreach (self::MAPS as $k) {
+            $map = [];
+            foreach (preg_split('/\r?\n/', (string) ($in[$k] ?? '')) as $line) {
+                $line = trim($line);
+                if ($line === '') continue;
+                if (!preg_match('/^(.+?)\s*[:=]\s*([\d,]+(?:\.\d+)?)\s*$/', $line, $m)) {
+                    throw new \InvalidArgumentException("Can't read \"$line\" under " . self::label($k) . ': write one unit per line as "Unit name: amount".');
+                }
+                $map[trim($m[1])] = (float) str_replace(',', '', $m[2]);
+            }
+            $out[$k] = $map;
+        }
+        foreach (self::LISTS as $k) {
+            $out[$k] = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string) ($in[$k] ?? ''))), fn ($v) => $v !== ''));
+        }
+        return $out;
+    }
+
+    /** Override tables → form field text. */
+    public static function formFromOverrides(array $ov): array
+    {
+        $f = [];
+        foreach (self::MAPS as $k) {
+            $f[$k] = implode("\n", array_map(fn ($u, $a) => $u . ': ' . rtrim(rtrim(number_format((float) $a, 2, '.', ''), '0'), '.'), array_keys((array) ($ov[$k] ?? [])), array_values((array) ($ov[$k] ?? []))));
+        }
+        foreach (self::LISTS as $k) {
+            $f[$k] = implode("\n", (array) ($ov[$k] ?? []));
+        }
+        return $f;
+    }
+
+    public static function label(string $k): string
+    {
+        return ['mg_units' => 'Minimum guarantee', 'owner_stay' => 'Owner stayed', 'office_rent' => 'Office rent', 'alinea_rent_ovr' => 'Alinea fixed rent', 'str_retag' => 'Treat as short stay', 'lt_override' => 'Force long term'][$k] ?? $k;
+    }
+
     public static function config(ReportRun $run): array
     {
         $m = Carbon::parse($run->month . '-01');
