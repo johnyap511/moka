@@ -22,6 +22,7 @@
 .ur-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .ur-sharebar{display:inline-block;width:90px;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}.ur-sharebar i{display:block;height:100%}
 .ur-wrap{overflow:auto}
+.ur-cmp{display:grid;gap:2px}.ur-cmp-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border,#e5e7eb)}.ur-cmp-row:last-child{border-bottom:0}.ur-cmp-l{font-size:13px}.ur-cmp-l small{display:block;font-size:11.5px;color:var(--text-secondary)}.ur-cmp-v{white-space:nowrap;font-size:13.5px;display:flex;align-items:center;gap:6px}
 </style>
 
 <div class="ur-h"><h2>Analysis · {{ $x['month'] }}</h2><span>Admin and managers only · {{ $x['units'] > 1 ? $x['units'] . ' pooled units' : $listing->name }}</span></div>
@@ -52,15 +53,12 @@
         <div class="ur-note">RevPAR = room revenue ÷ every night available, sold or not. It is what the unit earns per night in money, so a high ADR with low occupancy and a low ADR with high occupancy can be compared.</div>
     </div>
     <div class="ur-card">
-        <h3>Same month last year <small>{{ $x['lastYear'] }}</small></h3>
-        <table class="ur-table">
-            <thead><tr><th></th><th class="num">{{ $x['lastYear'] }}</th><th class="num">{{ $selDate->format('M Y') }}</th><th class="num">Change</th></tr></thead>
-            <tbody>
+        <h3>Same month last year <small>vs {{ $x['lastYear'] }}</small></h3>
+        <div class="ur-cmp">
             @foreach($x['compare'] as $c)
-            <tr><td>{{ $c['label'] }}</td><td class="num">{{ $fmt($c['then'], $c['kind']) }}</td><td class="num"><b>{{ $fmt($c['now'], $c['kind']) }}</b></td><td class="num">{!! $chg($c) !!}</td></tr>
+            <div class="ur-cmp-row"><div class="ur-cmp-l">{{ $c['label'] }}<small>{{ $x['lastYear'] }}: {{ $fmt($c['then'], $c['kind']) }}</small></div><div class="ur-cmp-v"><b>{{ $fmt($c['now'], $c['kind']) }}</b>{!! $chg($c) !!}</div></div>
             @endforeach
-            </tbody>
-        </table>
+        </div>
         <div class="ur-note">Same unit, same calendar month, measured the same way as the tiles above.</div>
     </div>
 </div>

@@ -21,6 +21,7 @@
 .pf-stack{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:10px 0 6px;background:#f1f5f9}.pf-stack i{display:block;height:100%}
 .pf-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--text-secondary)}
 .pf-note{font-size:11.5px;color:var(--text-secondary);margin-top:8px;line-height:1.4}
+.pf-cmp{display:grid;gap:4px}.pf-cmp-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border,#e5e7eb)}.pf-cmp-row:last-child{border-bottom:0}.pf-cmp-l{font-size:13px}.pf-cmp-l small{display:block;font-size:11.5px;color:var(--text-secondary)}.pf-cmp-v{white-space:nowrap;font-size:13.5px;display:flex;align-items:center;gap:6px}.pf-cmp-v .pf-chg{margin:0}
 .pf-wrap{overflow:auto}
 tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-shadow:inset 3px 0 #dc2626}
 </style>
@@ -30,7 +31,7 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
 @php
     $rm = fn ($v) => 'RM ' . number_format((float) $v, 2);
     $n = $d['now']; $cmp = collect($d['compare'])->keyBy('label');
-    $chip = function ($c) { if (!$c || $c['pct'] === null) return ''; $cls = $c['pct'] > 0 ? 'pf-chg--up' : ($c['pct'] < 0 ? 'pf-chg--down' : ''); return '<span class="pf-chg ' . $cls . '" title="vs ' . $d['lastYear'] . '">' . ($c['pct'] > 0 ? '+' : '') . number_format($c['pct'], 1) . '%</span>'; };
+    $chip = function ($c) use ($d) { if (!$c || $c['pct'] === null) return ''; $cls = $c['pct'] > 0 ? 'pf-chg--up' : ($c['pct'] < 0 ? 'pf-chg--down' : ''); return '<span class="pf-chg ' . $cls . '" title="vs ' . $d['lastYear'] . '">' . ($c['pct'] > 0 ? '+' : '') . number_format($c['pct'], 1) . '%</span>'; };
     $sp = $n['split']; $splitTotal = max(0.01, $sp['room'] + $sp['cleaning'] + $sp['sst']);
     $byUnit = $d['byUnit']; $top = array_slice(array_column($byUnit, 'id'), 0, 3); $low = array_slice(array_column(array_reverse(array_filter($byUnit, fn ($u) => true)), 'id'), 0, 3);
 @endphp
@@ -92,15 +93,13 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
         </div>
     </div>
     <div class="pf-card">
-        <h3>Same month last year <small>{{ $d['lastYear'] }}</small></h3>
-        <table class="pf-table">
-            <thead><tr><th></th><th class="num">{{ $d['lastYear'] }}</th><th class="num">{{ $sel->format('M Y') }}</th></tr></thead>
-            <tbody>
+        <h3>Same month last year <small>vs {{ $d['lastYear'] }}</small></h3>
+        <div class="pf-cmp">
             @foreach($d['compare'] as $c)
-            <tr><td>{{ $c['label'] }}</td><td class="num">{{ $c['kind'] === 'rm' ? $rm($c['then']) : ($c['kind'] === 'pct' ? number_format($c['then'], 1) . '%' : number_format($c['then'])) }}</td><td class="num"><b>{{ $c['kind'] === 'rm' ? $rm($c['now']) : ($c['kind'] === 'pct' ? number_format($c['now'], 1) . '%' : number_format($c['now'])) }}</b>{!! $chip($c) !!}</td></tr>
+            @php $f = fn ($v) => $c['kind'] === 'rm' ? $rm($v) : ($c['kind'] === 'pct' ? number_format($v, 1) . '%' : number_format($v)); @endphp
+            <div class="pf-cmp-row"><div class="pf-cmp-l">{{ $c['label'] }}<small>{{ $d['lastYear'] }}: {{ $f($c['then']) }}</small></div><div class="pf-cmp-v"><b>{{ $f($c['now']) }}</b>{!! $chip($c) !!}</div></div>
             @endforeach
-            </tbody>
-        </table>
+        </div>
     </div>
 </div>
 
