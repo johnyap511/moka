@@ -209,6 +209,9 @@ canvas{display:block}
         <div class="chart-box"><canvas id="occChart"></canvas></div>
     </div>
 </div>
+@if(!empty($extras))
+    @include('admin.unit_report_extras')
+@endif
 @endsection
 
 @push('scripts')

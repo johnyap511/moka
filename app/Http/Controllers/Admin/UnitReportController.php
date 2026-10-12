@@ -17,7 +17,7 @@ class UnitReportController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(fn ($request, $next) => admin_can('listings.view') ? $next($request) : abort(403));
+        $this->middleware(fn ($request, $next) => admin_can('reports.units') ? $next($request) : abort(403));
     }
 
     public function index(Request $request)
@@ -32,7 +32,10 @@ class UnitReportController extends Controller
 
         $grouped = $allListings->groupBy(fn ($l) => preg_replace('/(\s+(Extra\s+Room|\S*\d\S*))+$/u', '', $l->name) ?: $l->name)->sortKeys();
 
-        return view('owner.home.index', OwnerDashboard::metrics($listing, $id, $request->input('date')) + [
+        $metrics = OwnerDashboard::metrics($listing, $id, $request->input('date'));
+
+        return view('owner.home.index', $metrics + [
+            'extras'          => \App\Support\UnitAnalytics::build($listing, $metrics),
             'allListings'     => $allListings,
             'groupedListings' => $grouped,
             'layout'          => 'admin.layout',
