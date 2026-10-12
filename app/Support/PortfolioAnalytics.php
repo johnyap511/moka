@@ -19,7 +19,13 @@ class PortfolioAnalytics
     /** Property name a unit belongs to, from its name ("Ekocheras H-10-02" → "Ekocheras"). */
     public static function propertyOf(string $name): string
     {
-        return preg_replace('/(\s+(Extra\s+Room|\S*\d\S*))+$/u', '', $name) ?: $name;
+        $base = preg_replace('/(\s+(Extra\s+Room|\S*\d\S*))+$/u', '', $name) ?: $name;
+        $key  = preg_replace('/[^a-z]/', '', strtolower($base));
+        // Unit names are typed by hand ("EkoCheras" and "Ekocheras", "Bell Suite" and "Bell Suites"): one property each.
+        return [
+            'ekocheras' => 'EkoCheras', 'bellsuite' => 'Bell Suites', 'bellsuites' => 'Bell Suites', 'damai' => 'Damai 88',
+            'artecheras' => 'Arte Cheras', 'forum' => 'Forum', 'alinea' => 'Alinea', 'queensville' => 'Queensville', 'klgateway' => 'KL Gateway',
+        ][$key] ?? $base;
     }
 
     /** @return array<string, \Illuminate\Support\Collection<int, Listing>> property => units */

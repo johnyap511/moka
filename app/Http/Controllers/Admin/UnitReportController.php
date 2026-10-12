@@ -30,7 +30,7 @@ class UnitReportController extends Controller
         $id = (int) $request->input('listing_id') ?: ($allListings->first()->id ?? null);
         $listing = $id ? Listing::withArchived()->find($id) : null;
 
-        $grouped = $allListings->groupBy(fn ($l) => preg_replace('/(\s+(Extra\s+Room|\S*\d\S*))+$/u', '', $l->name) ?: $l->name)->sortKeys();
+        $grouped = $allListings->groupBy(fn ($l) => \App\Support\PortfolioAnalytics::propertyOf($l->name))->sortKeys();
 
         $metrics = OwnerDashboard::metrics($listing, $id, $request->input('date'));
 
