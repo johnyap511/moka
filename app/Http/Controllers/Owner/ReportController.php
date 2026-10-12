@@ -18,10 +18,14 @@ class ReportController extends Controller
         $authId = Auth::user()->id;
         $listingId = $request->listing_id;
         $year = $request->year;
-        if(empty($listingId)){
-            $listingIds = Listing::withArchived()->where('user_id', $authId)->pluck('id')->toArray();
-        }else{
-            $listingIds[] = $listingId;
+        // Only the owner's own units, whatever listing_id the request carries (12 Oct 2026).
+        $own = Listing::withArchived()->where('user_id', $authId)->pluck('id')->map(fn ($v) => (int) $v)->all();
+        if (empty($listingId)) {
+            $listingIds = $own;
+        } elseif (in_array((int) $listingId, $own, true)) {
+            $listingIds = [(int) $listingId];
+        } else {
+            abort(403, 'You do not have access to this listing.');
         }
 
         if(empty($year)){
@@ -42,10 +46,14 @@ class ReportController extends Controller
         $authId = Auth::user()->id;
         $listingId = $request->listing_id;
         $year = $request->year;
-        if(empty($listingId)){
-            $listingIds = Listing::withArchived()->where('user_id', $authId)->pluck('id')->toArray();
-        }else{
-            $listingIds[] = $listingId;
+        // Only the owner's own units, whatever listing_id the request carries (12 Oct 2026).
+        $own = Listing::withArchived()->where('user_id', $authId)->pluck('id')->map(fn ($v) => (int) $v)->all();
+        if (empty($listingId)) {
+            $listingIds = $own;
+        } elseif (in_array((int) $listingId, $own, true)) {
+            $listingIds = [(int) $listingId];
+        } else {
+            abort(403, 'You do not have access to this listing.');
         }
 
         if(empty($year)){

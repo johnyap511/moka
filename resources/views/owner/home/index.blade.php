@@ -17,11 +17,12 @@
 .db-head p{color:var(--text-secondary);margin-top:4px;font-size:14px}
 .db-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 190px auto;gap:10px;align-items:center;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:18px}
 .db-toolbar .btn{padding:10px 22px;font-size:13.5px;font-weight:600;justify-content:center}
+.db-toolbar--search{grid-template-columns:minmax(200px,1fr) minmax(220px,1.2fr) 170px auto}@media (max-width:900px){.db-toolbar,.db-toolbar--search{grid-template-columns:1fr 1fr}}
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
 .kpi .ic svg{width:18px;height:18px}
-.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:clamp(16px,1.45vw,22px);font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .l{font-size:12.5px;color:var(--text-secondary);font-weight:500}
 .kpi .s{font-size:11.5px;color:var(--text-secondary)}
 .kpi.hero{background:linear-gradient(135deg,#F36523,#ff8a4c);color:#fff}
@@ -80,8 +81,11 @@ canvas{display:block}
     </div>
 </div>
 
-<form method="GET" action="{{ $formAction ?? '/owner/dashboard' }}" class="db-toolbar">
-    <select name="listing_id" class="form-select" aria-label="Unit">
+<form method="GET" action="{{ $formAction ?? '/owner/dashboard' }}" class="db-toolbar{{ !empty($groupedListings) ? ' db-toolbar--search' : '' }}">
+    @if(!empty($groupedListings))
+    <input type="search" id="db-unit-search" class="form-input" placeholder="Type to find a unit or owner…" autocomplete="off" aria-label="Find a unit">
+    @endif
+    <select name="listing_id" class="form-select" aria-label="Unit" id="db-unit-select">
         @if(!empty($groupedListings))
             @foreach($groupedListings as $property => $units)
             <optgroup label="{{ $property }}">
@@ -203,6 +207,20 @@ canvas{display:block}
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+    var q = document.getElementById('db-unit-search'), sel = document.getElementById('db-unit-select');
+    if (!q || !sel) return;
+    var opts = Array.prototype.slice.call(sel.querySelectorAll('option'));
+    q.addEventListener('input', function(){
+        var t = q.value.trim().toLowerCase(), first = null;
+        opts.forEach(function(o){ var hit = !t || o.textContent.toLowerCase().indexOf(t) !== -1; o.hidden = !hit; if (hit && !first) first = o; });
+        sel.querySelectorAll('optgroup').forEach(function(g){ g.hidden = !g.querySelector('option:not([hidden])'); });
+        if (t && first) sel.value = first.value;
+    });
+    q.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); sel.form.submit(); } });
+})();
+</script>
 <script>
 (function () {
     var labels  = {!! json_encode(array_column($graphArray, 0)) !!};
