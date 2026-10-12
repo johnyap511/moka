@@ -26,9 +26,22 @@ class HomeController extends Controller
             return back()->with('error', 'Access denied.');
         }
 
+        return view('owner.home.index', self::metrics($listing, $id, $request->date) + [
+            'allListings' => $allListings, 'layout' => 'owner.layout', 'formAction' => '/owner/dashboard',
+        ]);
+    }
+
+    /**
+     * Everything the dashboard shows for one unit and month. Shared with the
+     * admin Unit report (12 Oct 2026), which runs it for any unit.
+     *
+     * @return array<string,mixed>
+     */
+    public static function metrics(?Listing $listing, $id, ?string $date): array
+    {
         // Selected month (default = now)
-        $selDate = $request->date
-            ? Carbon::parse($request->date . '-01')
+        $selDate = $date
+            ? Carbon::parse($date . '-01')
             : Carbon::now()->startOfMonth();
 
         $monthStart  = $selDate->copy()->startOfMonth()->toDateString();
@@ -173,13 +186,13 @@ class HomeController extends Controller
             }
         }
 
-        return view('owner.home.index', compact(
-            'allListings', 'listing', 'id', 'selDate',
+        return compact(
+            'listing', 'id', 'selDate',
             'bookingCount', 'monthRevenue', 'occupancy',
             'accumulatedSales', 'avgDailyRate', 'avgLengthOfStay',
             'sourceBreakdown', 'categoryBreakdown',
             'graphArray', 'graphavg', 'pool', 'poolMonth'
-        ));
+        );
     }
 
     public function change_password()

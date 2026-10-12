@@ -257,6 +257,13 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     @endif
 
     @if(admin_can('listings.view'))
+    <a href="/admin/unit-report" class="sidebar-link {{ request()->is('admin/unit-report*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+        Unit report
+    </a>
+    @endif
+
+    @if(admin_can('listings.view'))
     <div class="sidebar-section">Properties</div>
     <a href="/admin/listing" class="sidebar-link {{ request()->is('admin/listing*') && !request()->is('admin/listing/*/book*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>

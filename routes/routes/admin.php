@@ -34,6 +34,8 @@ Route::post('/listing/generate/ezee', 'Admin\ListingController@generateEzeeToken
 
 // Report
 Route::get('/listing/chart/report', 'Admin\ListingController@report');
+// Unit report: the owner dashboard (revenue, occupancy, sources) for any unit, picked from a dropdown (back on the menu 12 Oct 2026).
+Route::get('/unit-report', 'Admin\UnitReportController@index')->name('admin.unit-report');
 //Details
 Route::get('/listing/{listingId}/details', 'Admin\ListingController@listingDetails');
 Route::post('/listing/{listingId}/details', 'Admin\ListingController@listingDetailsStore');

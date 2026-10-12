@@ -1,6 +1,6 @@
-@extends('owner.layout')
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@extends($layout ?? 'owner.layout')
+@section('title', $pageTitle ?? 'Dashboard')
+@section('page-title', $pageTitle ?? 'Dashboard')
 
 @php
     // One palette for channels and categories, shared with the calendar.
@@ -75,16 +75,26 @@ canvas{display:block}
 
 <div class="db-head">
     <div>
-        <h1>Hello {{ Auth::user()->name }}</h1>
+        <h1>{{ $heading ?? 'Hello ' . Auth::user()->name }}</h1>
         <p>{{ $listing->name ?? 'Your portfolio' }}{!! $isPool ? ' · <b>' . e($pool['group']->name ?? 'Pool') . '</b>, ' . $pool['units'] . ' units, pool figures' : '' !!} · {{ $selDate->format('F Y') }}</p>
     </div>
 </div>
 
-<form method="GET" action="/owner/dashboard" class="db-toolbar">
+<form method="GET" action="{{ $formAction ?? '/owner/dashboard' }}" class="db-toolbar">
     <select name="listing_id" class="form-select" aria-label="Unit">
+        @if(!empty($groupedListings))
+            @foreach($groupedListings as $property => $units)
+            <optgroup label="{{ $property }}">
+                @foreach($units as $l)
+                <option value="{{ $l->id }}" {{ ($id == $l->id) ? 'selected' : '' }}>{{ $l->name }}{{ $l->owner_name ? ' · ' . $l->owner_name : '' }}</option>
+                @endforeach
+            </optgroup>
+            @endforeach
+        @else
         @foreach($allListings as $l)
             <option value="{{ $l->id }}" {{ ($id == $l->id) ? 'selected' : '' }}>{{ $l->name }}</option>
         @endforeach
+        @endif
     </select>
     <input type="month" name="date" class="form-input" value="{{ $selDate->format('Y-m') }}" aria-label="Month">
     <button type="submit" class="btn btn-primary">Update</button>
