@@ -77,6 +77,9 @@ canvas{display:block}
 
 @section('content')
 
+@if(!empty($extras))
+<div class="pf-tabs" style="display:flex;gap:4px;margin-bottom:12px"><a href="/admin/portfolio" style="padding:7px 14px;border-radius:999px;font-size:13px;text-decoration:none;color:var(--text-secondary);border:1px solid var(--border,#e5e7eb);background:#fff">Portfolio</a><a href="/admin/unit-report" style="padding:7px 14px;border-radius:999px;font-size:13px;text-decoration:none;color:#fff;background:#0f766e;border:1px solid #0f766e;font-weight:600">Unit report</a></div>
+@endif
 <div class="db-head">
     <div>
         <h1>{{ $heading ?? 'Hello ' . Auth::user()->name }}</h1>

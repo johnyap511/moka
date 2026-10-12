@@ -85,29 +85,21 @@
     </table>
 </div>
 
-<div class="ur-h"><h2>Bookings · {{ $x['month'] }}</h2><span>{{ $x['rows']->count() }} rows · {{ $ng['rows'] }} nights · click a number to open the booking</span></div>
-<div class="ur-card ur-wrap">
-    <table class="ur-table">
-        <thead><tr><th>#</th>@if($x['units'] > 1)<th>Unit</th>@endif<th>Guest</th><th>Check-in</th><th>Check-out</th><th class="num">Nights</th><th>Channel</th><th class="num">Rate</th><th class="num">Room</th><th class="num">Cleaning</th><th class="num">Total</th><th>Folio</th></tr></thead>
-        <tbody>
-        @forelse($x['rows'] as $b)
-        @php $ch = \App\Support\Channel::canonical($b->source); @endphp
-        <tr>
-            <td><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">{{ $b->id }}</a></td>
-            @if($x['units'] > 1)<td>{{ $b->listing->name ?? '' }}</td>@endif
-            <td>{{ trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')) ?: '—' }}</td>
-            <td>{{ \Carbon\Carbon::parse($b->check_in)->format('D d M') }}</td><td>{{ \Carbon\Carbon::parse($b->check_out)->format('D d M') }}</td>
-            <td class="num">{{ $b->nights }}</td>
-            <td><span class="ur-dot" style="background:{{ $x['colours'][$ch] ?? '#94a3b8' }}"></span>{{ $ch ?: '—' }}</td>
-            <td class="num">{{ number_format($b->price_night, 2) }}</td>
-            <td class="num">{{ number_format($b->nights * $b->price_night, 2) }}</td>
-            <td class="num">{{ $b->cleaning_fee > 0 ? number_format($b->cleaning_fee, 2) : '—' }}</td>
-            <td class="num"><b>{{ number_format($b->price, 2) }}</b></td>
-            <td style="color:var(--text-secondary)">{{ $b->folio_no }}</td>
-        </tr>
-        @empty
-        <tr><td colspan="12" style="text-align:center;color:var(--text-secondary);padding:18px">No bookings checking in this month.</td></tr>
-        @endforelse
-        </tbody>
-    </table>
+<div class="ur-grid" style="grid-template-columns:1.4fr 1fr">
+    <div class="ur-card"><h3>Room revenue, last 6 months <small>rows checking in each month</small></h3><div style="position:relative;height:220px"><canvas id="ur-rev"></canvas></div></div>
+    <div class="ur-card"><h3>Channel share of revenue <small>{{ $x['month'] }}</small></h3><div style="position:relative;height:220px"><canvas id="ur-ch"></canvas></div></div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    if (typeof Chart === 'undefined') return;
+    var money = function(v){ return 'RM ' + Number(v).toLocaleString('en-MY', {maximumFractionDigits: 0}); };
+    var t = @json($x['trend']);
+    new Chart(document.getElementById('ur-rev'), { type: 'bar', data: { labels: t.map(function(r){ return r.label; }), datasets: [
+        { label: 'Room', data: t.map(function(r){ return r.room; }), backgroundColor: '#0f766e', borderRadius: 6, maxBarThickness: 42 },
+        { label: 'Cleaning', data: t.map(function(r){ return r.cleaning; }), backgroundColor: '#f59e0b', borderRadius: 6, maxBarThickness: 42 } ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: function(c){ return c.dataset.label + ': ' + money(c.raw); } } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, ticks: { callback: money }, grid: { color: '#f1f5f9' } } } } });
+    var ch = @json($x['byChannel']), colours = @json($x['colours']);
+    new Chart(document.getElementById('ur-ch'), { type: 'doughnut', data: { labels: ch.map(function(c){ return c.channel || 'Unknown'; }), datasets: [{ data: ch.length ? ch.map(function(c){ return c.room; }) : [1], backgroundColor: ch.length ? ch.map(function(c){ return colours[c.channel] || '#94a3b8'; }) : ['#eceef1'], borderWidth: 2, borderColor: '#fff' }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: function(c){ return c.label + ': ' + money(c.raw); } } } } } });
+});
+</script>

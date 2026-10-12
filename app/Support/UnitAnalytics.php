@@ -78,7 +78,20 @@ class UnitAnalytics
             return ['channel' => $src, 'bookings' => $g->count(), 'nights' => (int) $g->sum('nights'), 'room' => round($r, 2), 'fee' => round((float) $g->sum('ota_fee'), 2), 'share' => $room > 0 ? round($r / $room * 100, 1) : 0, 'adr' => $g->sum('nights') > 0 ? round($r / $g->sum('nights'), 2) : 0];
         })->sortByDesc('room')->values();
 
+        // Six-month room revenue, rows checking in each month (same basis as the split above).
+        $trendStart = $start->copy()->subMonths(5);
+        $monthly = Booking::whereIn('listing_id', $scopeIds)->where('status', '>=', 5)
+            ->where('check_in', '>=', $trendStart->toDateString())->where('check_in', '<', $endEx->toDateString())
+            ->get(['check_in', 'nights', 'price_night', 'cleaning_fee'])
+            ->groupBy(fn ($b) => substr($b->check_in, 0, 7));
+        $trend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = $start->copy()->subMonths($i); $g = $monthly->get($m->format('Y-m'), collect());
+            $trend[] = ['label' => $m->format("M'y"), 'room' => round($g->sum(fn ($b) => (float) $b->nights * (float) $b->price_night), 2), 'cleaning' => round((float) $g->sum('cleaning_fee'), 2)];
+        }
+
         return [
+            'trend'     => $trend,
             'month'     => $selDate->format('F Y'),
             'lastYear'  => $selDate->copy()->subYear()->format('M Y'),
             'units'     => $units,
