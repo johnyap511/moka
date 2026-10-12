@@ -11,11 +11,11 @@
 .pf-kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;display:grid;gap:3px;min-width:0}.pf-kpi .l{font-size:11.5px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.03em}.pf-kpi .v{font-size:clamp(16px,1.5vw,22px);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pf-kpi .s{font-size:11.5px;color:var(--text-secondary)}
 .pf-kpi.hero{background:linear-gradient(135deg,#F36523,#ff8a4c);color:#fff}.pf-kpi.hero .l,.pf-kpi.hero .s{color:rgba(255,255,255,.85)}.pf-kpi.teal{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff}.pf-kpi.teal .l,.pf-kpi.teal .s{color:rgba(255,255,255,.85)}
 .pf-chg{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.06);margin-left:4px}.pf-chg--up{background:#dcfce7;color:#166534}.pf-chg--down{background:#fee2e2;color:#991b1b}.hero .pf-chg,.teal .pf-chg{background:rgba(255,255,255,.22);color:#fff}
-.pf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}@media (max-width:900px){.pf-grid{grid-template-columns:1fr}}.pf-grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;margin-bottom:14px}@media (max-width:1000px){.pf-grid3{grid-template-columns:1fr}}
+.pf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}@media (max-width:900px){.pf-grid{grid-template-columns:1fr}}.pf-grid--prop{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.pf-grid3{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:14px}@media (max-width:1100px){.pf-grid3{grid-template-columns:1fr}}
 .pf-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;min-width:0}.pf-card h3{font-size:13.5px;margin:0 0 10px;display:flex;justify-content:space-between;gap:8px}.pf-card h3 small{font-weight:400;color:var(--text-secondary)}
 .pf-chart{position:relative;height:220px}.pf-chart--sm{height:200px}
-.pf-table{width:100%;border-collapse:collapse;font-size:12.5px}.pf-table th,.pf-table td{padding:7px 8px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;white-space:nowrap}.pf-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);cursor:pointer;user-select:none}.pf-table th.sorted{color:#0f766e}.pf-table .num{text-align:right}.pf-table tbody tr:hover{background:#fafcfb}.pf-table a{color:inherit;text-decoration:none;font-weight:600}.pf-table a:hover{color:#0f766e}
-.pf-mini{display:inline-block;width:70px;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}.pf-mini i{display:block;height:100%;background:#0f766e}
+.pf-table{width:100%;border-collapse:collapse;font-size:12.5px}.pf-table th,.pf-table td{padding:6px 7px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;white-space:nowrap}.pf-table td.wrap{white-space:normal}.pf-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);cursor:pointer;user-select:none}.pf-table th.sorted{color:#0f766e}.pf-table .num{text-align:right}.pf-table tbody tr:hover{background:#fafcfb}.pf-table a{color:inherit;text-decoration:none;font-weight:600}.pf-table a:hover{color:#0f766e}
+.pf-mini{display:inline-block;width:48px;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}.pf-mini i{display:block;height:100%;background:#0f766e}
 .pf-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .pf-rows{display:grid;gap:6px;font-size:13px}.pf-rows div{display:flex;justify-content:space-between;gap:10px}.pf-rows .k{color:var(--text-secondary)}.pf-rows .tot{border-top:1px solid var(--border,#e5e7eb);padding-top:6px;font-weight:700}
 .pf-stack{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:10px 0 6px;background:#f1f5f9}.pf-stack i{display:block;height:100%}
@@ -68,14 +68,18 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
 <div class="pf-grid3">
     <div class="pf-card">
         <h3>Revenue by channel <small>{{ $d['month'] }}</small></h3>
-        <div style="display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center">
-            <div class="pf-chart pf-chart--sm" style="height:150px"><canvas id="pf-ch"></canvas></div>
+        @php $chTop = $n['channels']->take(7); $chRest = $n['channels']->slice(7); @endphp
+        <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:14px;align-items:center">
+            <div class="pf-chart pf-chart--sm" style="height:140px"><canvas id="pf-ch"></canvas></div>
             <table class="pf-table" style="font-size:12px">
-                <thead><tr><th>Channel</th><th class="num">Revenue</th><th class="num">Share</th><th class="num">ADR</th></tr></thead>
+                <thead><tr><th>Channel</th><th class="num">Revenue</th><th class="num">Share</th></tr></thead>
                 <tbody>
-                @foreach($n['channels'] as $c)
-                <tr><td><span class="pf-dot" style="background:{{ $d['colours'][$c['channel']] ?? '#94a3b8' }}"></span>{{ $c['channel'] }}</td><td class="num">{{ $rm($c['revenue']) }}</td><td class="num"><b>{{ number_format($c['share'], 1) }}%</b></td><td class="num">{{ number_format($c['adr'], 0) }}</td></tr>
+                @foreach($chTop as $c)
+                <tr><td><span class="pf-dot" style="background:{{ $d['colours'][$c['channel']] ?? '#94a3b8' }}"></span>{{ $c['channel'] }}</td><td class="num">{{ $rm($c['revenue']) }}</td><td class="num"><b>{{ number_format($c['share'], 1) }}%</b></td></tr>
                 @endforeach
+                @if($chRest->count())
+                <tr><td><span class="pf-dot" style="background:#cbd5e1"></span>{{ $chRest->count() }} other channels</td><td class="num">{{ $rm($chRest->sum('revenue')) }}</td><td class="num"><b>{{ number_format($chRest->sum('share'), 1) }}%</b></td></tr>
+                @endif
                 </tbody>
             </table>
         </div>
@@ -104,11 +108,11 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
 </div>
 
 @if($property === '' && $d['byProperty']->count() > 1)
-<div class="pf-grid" style="grid-template-columns:1.1fr 1fr">
+<div class="pf-grid pf-grid--prop">
     <div class="pf-card pf-wrap">
         <h3>By property <small>{{ $d['month'] }}</small></h3>
         <table class="pf-table">
-            <thead><tr><th>Property</th><th class="num">Units</th><th class="num">Occupancy</th><th class="num">Revenue</th><th class="num">ADR</th><th class="num">RevPAR</th></tr></thead>
+            <thead><tr><th>Property</th><th class="num">Units</th><th class="num">Occ.</th><th class="num">Revenue</th><th class="num">ADR</th><th class="num">RevPAR</th></tr></thead>
             <tbody>
             @foreach($d['byProperty'] as $p)
             <tr><td><a href="/admin/portfolio?property={{ urlencode($p['property']) }}&date={{ $sel->format('Y-m') }}">{{ $p['property'] }}</a></td><td class="num">{{ $p['units'] }}</td><td class="num">{{ number_format($p['occupancy'], 1) }}%<span class="pf-mini"><i style="width:{{ min(100, $p['occupancy']) }}%"></i></span></td><td class="num"><b>{{ $rm($p['revenue']) }}</b></td><td class="num">{{ number_format($p['adr'], 0) }}</td><td class="num">{{ number_format($p['revpar'], 0) }}</td></tr>
@@ -121,14 +125,14 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
 @endif
 
 <div class="pf-card pf-wrap">
-    <h3>By unit <small>{{ count($byUnit) }} units · click a heading to sort · green = top 3 revenue, red = bottom 3</small></h3>
+    <h3>By unit <small>{{ count($byUnit) }} units · sorted by revenue, click a heading to re-sort · green top 3, red bottom 3</small></h3>
     <table class="pf-table" id="pf-units">
-        <thead><tr><th data-k="name">Unit</th><th data-k="owner">Owner</th><th class="num" data-k="nights">Nights</th><th class="num sorted" data-k="occupancy">Occupancy</th><th class="num" data-k="revenue">Revenue</th><th class="num" data-k="adr">ADR</th><th class="num" data-k="revpar">RevPAR</th><th class="num" data-k="bookings">Bookings</th></tr></thead>
+        <thead><tr><th data-k="name">Unit</th><th data-k="owner">Owner</th><th class="num" data-k="nights">Nights</th><th class="num" data-k="occupancy">Occ.</th><th class="num sorted" data-k="revenue">Revenue ↓</th><th class="num" data-k="adr">ADR</th><th class="num" data-k="revpar">RevPAR</th><th class="num" data-k="bookings">Bkgs</th></tr></thead>
         <tbody>
         @foreach($byUnit as $u)
         <tr class="{{ in_array($u['id'], $top) ? 'top' : (in_array($u['id'], $low) && count($byUnit) > 6 ? 'low' : '') }}" data-name="{{ $u['name'] }}" data-owner="{{ $u['owner'] }}" data-nights="{{ $u['nights'] }}" data-occupancy="{{ $u['occupancy'] }}" data-revenue="{{ $u['revenue'] }}" data-adr="{{ $u['adr'] }}" data-revpar="{{ $u['revpar'] }}" data-bookings="{{ $u['bookings'] }}">
             <td><a href="/admin/unit-report?listing_id={{ $u['id'] }}&date={{ $sel->format('Y-m') }}">{{ $u['name'] }}</a></td>
-            <td style="color:var(--text-secondary)">{{ $u['owner'] }}</td>
+            <td class="wrap" style="color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $u['owner'] }}</td>
             <td class="num">{{ $u['nights'] }}</td>
             <td class="num">{{ number_format($u['occupancy'], 1) }}%<span class="pf-mini"><i style="width:{{ min(100, $u['occupancy']) }}%"></i></span></td>
             <td class="num"><b>{{ $rm($u['revenue']) }}</b></td>

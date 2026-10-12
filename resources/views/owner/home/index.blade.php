@@ -43,12 +43,12 @@
 .panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;min-width:0}
 .panel h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .panel h3 small{font-weight:500;color:var(--text-secondary);font-size:12px}
-.donut{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center}
-.donut .chart-box{position:relative;height:150px;width:150px}
-.legend{display:flex;flex-direction:column;gap:7px;font-size:12.5px;min-width:0}
+.donut{display:grid;grid-template-columns:130px minmax(0,1fr);gap:14px;align-items:center}
+.donut .chart-box{position:relative;height:130px;width:130px}
+.legend{display:flex;flex-direction:column;gap:6px;font-size:12px;min-width:0}
 .legend .row{display:flex;align-items:center;gap:8px}
 .legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.legend .name{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend .name{flex:1;color:var(--text);white-space:normal;line-height:1.2}
 .legend .pct{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .legend .cnt{color:var(--text-secondary);font-variant-numeric:tabular-nums;min-width:22px;text-align:right}
 .legend .empty{color:var(--text-secondary);font-size:12.5px}

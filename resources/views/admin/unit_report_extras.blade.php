@@ -83,7 +83,7 @@
     </table>
 </div>
 
-<div class="ur-grid" style="grid-template-columns:1.4fr 1fr">
+<div class="ur-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
     <div class="ur-card"><h3>Room revenue, last 6 months <small>rows checking in each month</small></h3><div style="position:relative;height:220px"><canvas id="ur-rev"></canvas></div></div>
     <div class="ur-card"><h3>Channel share of revenue <small>{{ $x['month'] }}</small></h3><div style="position:relative;height:220px"><canvas id="ur-ch"></canvas></div></div>
 </div>
