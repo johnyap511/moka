@@ -17,7 +17,10 @@
 .db-head p{color:var(--text-secondary);margin-top:4px;font-size:14px}
 .db-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 190px auto;gap:10px;align-items:center;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:18px}
 .db-toolbar .btn{padding:10px 22px;font-size:13.5px;font-weight:600;justify-content:center}
-.db-toolbar--search{grid-template-columns:minmax(200px,1fr) minmax(220px,1.2fr) 170px auto}@media (max-width:900px){.db-toolbar,.db-toolbar--search{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.db-toolbar{grid-template-columns:1fr 1fr}.db-toolbar .db-combo{grid-column:1/-1}}
+.db-combo{position:relative;min-width:0}.db-combo input[type=text]{width:100%;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.db-combo-list{position:absolute;z-index:40;top:calc(100% + 4px);left:0;right:0;max-height:340px;overflow:auto;background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;box-shadow:0 10px 30px -10px rgba(0,0,0,.25);padding:4px}
+.db-combo-group{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);padding:8px 10px 3px}.db-combo-opt{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13.5px}.db-combo-opt span{color:var(--text-secondary)}.db-combo-opt:hover,.db-combo-opt.is-act{background:#f0fdfa;color:#0f766e}.db-combo-opt.is-sel{font-weight:600}.db-combo-empty{padding:12px 10px;color:var(--text-secondary);font-size:13px}
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
@@ -81,25 +84,28 @@ canvas{display:block}
     </div>
 </div>
 
-<form method="GET" action="{{ $formAction ?? '/owner/dashboard' }}" class="db-toolbar{{ !empty($groupedListings) ? ' db-toolbar--search' : '' }}">
+<form method="GET" action="{{ $formAction ?? '/owner/dashboard' }}" class="db-toolbar">
     @if(!empty($groupedListings))
-    <input type="search" id="db-unit-search" class="form-input" placeholder="Type to find a unit or owner…" autocomplete="off" aria-label="Find a unit">
-    @endif
-    <select name="listing_id" class="form-select" aria-label="Unit" id="db-unit-select">
-        @if(!empty($groupedListings))
+    {{-- One box that is both the dropdown and the search: type to narrow, pick to open. --}}
+    <div class="db-combo">
+        <input type="text" id="db-combo-input" class="form-select" value="{{ $listing ? $listing->name . ($listing->owner_name ?? null ? ' · ' . $listing->owner_name : '') : '' }}" placeholder="Choose a unit…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="db-combo-list" aria-label="Unit">
+        <input type="hidden" name="listing_id" id="db-combo-id" value="{{ $id }}">
+        <div class="db-combo-list" id="db-combo-list" role="listbox" hidden>
             @foreach($groupedListings as $property => $units)
-            <optgroup label="{{ $property }}">
-                @foreach($units as $l)
-                <option value="{{ $l->id }}" {{ ($id == $l->id) ? 'selected' : '' }}>{{ $l->name }}{{ $l->owner_name ? ' · ' . $l->owner_name : '' }}</option>
-                @endforeach
-            </optgroup>
+            <div class="db-combo-group">{{ $property }}</div>
+            @foreach($units as $l)
+            <div class="db-combo-opt{{ $id == $l->id ? ' is-sel' : '' }}" role="option" data-id="{{ $l->id }}" data-text="{{ strtolower($l->name . ' ' . ($l->owner_name ?? '')) }}">{{ $l->name }}@if($l->owner_name)<span> · {{ $l->owner_name }}</span>@endif</div>
             @endforeach
-        @else
+            @endforeach
+        </div>
+    </div>
+    @else
+    <select name="listing_id" class="form-select" aria-label="Unit" id="db-unit-select">
         @foreach($allListings as $l)
             <option value="{{ $l->id }}" {{ ($id == $l->id) ? 'selected' : '' }}>{{ $l->name }}</option>
         @endforeach
-        @endif
     </select>
+    @endif
     <input type="month" name="date" class="form-input" value="{{ $selDate->format('Y-m') }}" aria-label="Month">
     <button type="submit" class="btn btn-primary">Update</button>
 </form>
@@ -209,16 +215,30 @@ canvas{display:block}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function(){
-    var q = document.getElementById('db-unit-search'), sel = document.getElementById('db-unit-select');
-    if (!q || !sel) return;
-    var opts = Array.prototype.slice.call(sel.querySelectorAll('option'));
-    q.addEventListener('input', function(){
-        var t = q.value.trim().toLowerCase(), first = null;
-        opts.forEach(function(o){ var hit = !t || o.textContent.toLowerCase().indexOf(t) !== -1; o.hidden = !hit; if (hit && !first) first = o; });
-        sel.querySelectorAll('optgroup').forEach(function(g){ g.hidden = !g.querySelector('option:not([hidden])'); });
-        if (t && first) sel.value = first.value;
+    var inp = document.getElementById('db-combo-input'), hid = document.getElementById('db-combo-id'), list = document.getElementById('db-combo-list');
+    if (!inp || !list) return;
+    var opts = Array.prototype.slice.call(list.querySelectorAll('.db-combo-opt')), groups = Array.prototype.slice.call(list.querySelectorAll('.db-combo-group'));
+    var startValue = inp.value, act = -1, empty = document.createElement('div'); empty.className = 'db-combo-empty'; empty.textContent = 'No unit matches'; empty.hidden = true; list.appendChild(empty);
+    function open(){ list.hidden = false; inp.setAttribute('aria-expanded', 'true'); var sel = list.querySelector('.is-sel'); if (sel) sel.scrollIntoView({block: 'center'}); }
+    function close(){ list.hidden = true; inp.setAttribute('aria-expanded', 'false'); act = -1; opts.forEach(function(o){ o.classList.remove('is-act'); }); }
+    function visible(){ return opts.filter(function(o){ return !o.hidden; }); }
+    function filter(){
+        var t = inp.value.trim().toLowerCase(), n = 0;
+        opts.forEach(function(o){ var hit = !t || o.dataset.text.indexOf(t) !== -1; o.hidden = !hit; if (hit) n++; });
+        groups.forEach(function(g){ var e = g.nextElementSibling, any = false; while (e && e.classList.contains('db-combo-opt')) { if (!e.hidden) any = true; e = e.nextElementSibling; } g.hidden = !any; });
+        empty.hidden = n > 0; act = -1; open();
+    }
+    function choose(o){ hid.value = o.dataset.id; inp.value = o.textContent; close(); inp.form.submit(); }
+    inp.addEventListener('focus', function(){ inp.select(); filter(); });
+    inp.addEventListener('input', filter);
+    inp.addEventListener('keydown', function(e){
+        var v = visible();
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (list.hidden) open(); act = e.key === 'ArrowDown' ? Math.min(act + 1, v.length - 1) : Math.max(act - 1, 0); opts.forEach(function(o){ o.classList.remove('is-act'); }); if (v[act]) { v[act].classList.add('is-act'); v[act].scrollIntoView({block: 'nearest'}); } }
+        else if (e.key === 'Enter') { e.preventDefault(); var pick = v[act] || v[0]; if (pick) choose(pick); }
+        else if (e.key === 'Escape') { inp.value = startValue; close(); }
     });
-    q.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); sel.form.submit(); } });
+    list.addEventListener('mousedown', function(e){ var o = e.target.closest('.db-combo-opt'); if (o) { e.preventDefault(); choose(o); } });
+    document.addEventListener('click', function(e){ if (!e.target.closest('.db-combo')) { if (!list.hidden) inp.value = startValue; close(); } });
 })();
 </script>
 <script>

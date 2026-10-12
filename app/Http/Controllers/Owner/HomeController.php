@@ -128,15 +128,17 @@ class HomeController extends Controller
             }
             $accumulatedSales = round($accumulatedSales, 2);
 
-            // Source breakdown (month). Matched case-insensitively: sources
-            // arrive from EZEE with inconsistent capitalisation, and an exact
-            // comparison drops those bookings out of their real channel.
-            $total    = max($bookingCount, 1);
-            $knownSrc = ['Airbnb', 'Website', 'Booking', 'Expedia', 'Agoda', 'Traveloka'];
-            foreach ($knownSrc as $src) {
-                $cnt = $monthBooks->filter(
-                    fn ($b) => strcasecmp(trim((string) ($b->source ?? '')), $src) === 0
-                )->count();
+            // Source breakdown (month), by canonical channel (App\Support\Channel):
+            // "Booking.com" and "booking", "Walk In" and "Website", "CTrip" and
+            // "Trip.com" are the same channel. Until 12 Oct 2026 this matched six
+            // fixed spellings only, so most of a month's bookings fell out of the
+            // chart and the shares did not add up to 100%.
+            $total  = max($bookingCount, 1);
+            $groups = $monthBooks->groupBy(fn ($b) => \App\Support\Channel::canonical($b->source))->map->count()->sortDesc();
+            if ($groups->isEmpty()) {
+                $groups = collect(['Airbnb' => 0, 'Website' => 0, 'Booking.com' => 0, 'Expedia' => 0, 'Agoda' => 0, 'Traveloka' => 0]);
+            }
+            foreach ($groups as $src => $cnt) {
                 $sourceBreakdown[$src] = ['count' => $cnt, 'pct' => round($cnt / $total * 100, 2)];
             }
 
