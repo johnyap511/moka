@@ -87,9 +87,9 @@ class PortfolioAnalytics
         })->sortByDesc('revenue')->values();
 
         $cmp = [];
-        foreach (['revenue' => ['Revenue', 'rm'], 'occupancy' => ['Occupancy', 'pct'], 'adr' => ['ADR', 'rm'], 'revpar' => ['RevPAR', 'rm'], 'bookings' => ['Bookings', 'n'], 'nights' => ['Nights sold', 'n']] as $k => [$label, $kind]) {
+        foreach (['revenue' => ['Revenue', 'rm'], 'occupancy' => ['Occupancy', 'pct'], 'adr' => ['ADR', 'rm'], 'revpar' => ['RevPAR', 'rm'], 'bookings' => ['Bookings', 'n'], 'nights' => ['Nights sold', 'n']] as $k => [$cLabel, $kind]) {
             $a = (float) $now[$k]; $b = (float) $ly[$k];
-            $cmp[] = ['label' => $label, 'now' => $a, 'then' => $b, 'pct' => $b > 0 ? round(($a - $b) / $b * 100, 1) : null, 'kind' => $kind];
+            $cmp[] = ['label' => $cLabel, 'now' => $a, 'then' => $b, 'pct' => $b > 0 ? round(($a - $b) / $b * 100, 1) : null, 'kind' => $kind];
         }
 
         return [
