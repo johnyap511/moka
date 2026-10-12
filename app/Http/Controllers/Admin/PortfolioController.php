@@ -12,7 +12,8 @@ class PortfolioController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(fn ($request, $next) => admin_can('reports.units') ? $next($request) : abort(403));
+        // Super admin only for now (Sam, 12 Oct 2026); widen to reports.units when he says so.
+        $this->middleware(fn ($request, $next) => admin_is_super() ? $next($request) : abort(403));
     }
 
     public function index(Request $request)

@@ -25,7 +25,7 @@
 .kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
 .kpi .ic svg{width:18px;height:18px}
-.kpi .v{font-size:clamp(16px,1.45vw,22px);font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:clamp(14px,1.3vw,22px);font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .l{font-size:12.5px;color:var(--text-secondary);font-weight:500}
 .kpi .s{font-size:11.5px;color:var(--text-secondary)}
 .kpi.hero{background:linear-gradient(135deg,#F36523,#ff8a4c);color:#fff}
@@ -39,18 +39,18 @@
 .kpi.dark .ic{background:rgba(255,255,255,.15);color:#fff}
 .kpi.plain .ic{background:#fff7ed;color:#F36523}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr);gap:14px;margin-bottom:14px}
 .panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;min-width:0}
 .panel h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .panel h3 small{font-weight:500;color:var(--text-secondary);font-size:12px}
-.donut{display:grid;grid-template-columns:130px minmax(0,1fr);gap:14px;align-items:center}
-.donut .chart-box{position:relative;height:130px;width:130px}
-.legend{display:flex;flex-direction:column;gap:6px;font-size:12px;min-width:0}
-.legend .row{display:flex;align-items:center;gap:8px}
+.donut{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:center}
+.donut .chart-box{position:relative;height:118px;width:118px}
+.legend{display:flex;flex-direction:column;gap:5px;font-size:11.5px;min-width:0}
+.legend .row{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;align-items:center;gap:6px;min-width:0}
 .legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.legend .name{flex:1;color:var(--text);white-space:normal;line-height:1.2}
+.legend .name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .legend .pct{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
-.legend .cnt{color:var(--text-secondary);font-variant-numeric:tabular-nums;min-width:22px;text-align:right}
+.legend .cnt{color:var(--text-secondary);font-variant-numeric:tabular-nums;min-width:18px;text-align:right}
 .legend .empty{color:var(--text-secondary);font-size:12.5px}
 .bars{display:grid;grid-template-columns:1fr 1fr;gap:6px 26px}
 .bar{display:grid;grid-template-columns:82px 1fr 40px;align-items:center;gap:8px;font-size:12px;padding:3px 0}
@@ -77,7 +77,7 @@ canvas{display:block}
 
 @section('content')
 
-@if(!empty($extras))
+@if(!empty($extras) && admin_is_super())
 <div class="pf-tabs" style="display:flex;gap:4px;margin-bottom:12px"><a href="/admin/portfolio" style="padding:7px 14px;border-radius:999px;font-size:13px;text-decoration:none;color:var(--text-secondary);border:1px solid var(--border,#e5e7eb);background:#fff">Portfolio</a><a href="/admin/unit-report" style="padding:7px 14px;border-radius:999px;font-size:13px;text-decoration:none;color:#fff;background:#0f766e;border:1px solid #0f766e;font-weight:600">Unit report</a></div>
 @endif
 <div class="db-head">
@@ -162,7 +162,7 @@ canvas{display:block}
                 @foreach($sourceBreakdown as $src => $d)
                     @if($d['count'] > 0)
                         @php $any = true; @endphp
-                        <div class="row"><span class="dot" style="background:{{ $channelColour[$src] ?? '#64748b' }}"></span><span class="name">{{ $src }}</span><span class="cnt">{{ $d['count'] }}</span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
+                        <div class="row"><span class="dot" style="background:{{ $channelColour[$src] ?? '#64748b' }}"></span><span class="name" title="{{ $src }}">{{ $src }}</span><span class="cnt">{{ $d['count'] }}</span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
                     @endif
                 @endforeach
                 @unless($any)<div class="empty">No bookings this month</div>@endunless
@@ -178,7 +178,7 @@ canvas{display:block}
                 @foreach($categoryBreakdown as $cat => $d)
                     @if($d['count'] > 0)
                         @php $any = true; @endphp
-                        <div class="row"><span class="dot" style="background:{{ $catColours[$cat] ?? '#64748b' }}"></span><span class="name">{{ $cat }}</span><span class="cnt">{{ $d['count'] }}</span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
+                        <div class="row"><span class="dot" style="background:{{ $catColours[$cat] ?? '#64748b' }}"></span><span class="name" title="{{ $cat }}">{{ $cat }}</span><span class="cnt">{{ $d['count'] }}</span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
                     @endif
                 @endforeach
                 @unless($any)<div class="empty">No bookings this month</div>@endunless
@@ -190,12 +190,12 @@ canvas{display:block}
         <div class="bars">
             <div>
                 @foreach($sourceBreakdown as $src => $d)
-                    <div class="bar"><span class="name">{{ $src }}</span><span class="track"><span class="fill" style="width:{{ min(100, $d['pct']) }}%;background:{{ $channelColour[$src] ?? '#64748b' }}"></span></span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
+                    <div class="bar"><span class="name" title="{{ $src }}">{{ $src }}</span><span class="track"><span class="fill" style="width:{{ min(100, $d['pct']) }}%;background:{{ $channelColour[$src] ?? '#64748b' }}"></span></span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
                 @endforeach
             </div>
             <div>
                 @foreach($categoryBreakdown as $cat => $d)
-                    <div class="bar"><span class="name">{{ $cat }}</span><span class="track"><span class="fill" style="width:{{ min(100, $d['pct']) }}%;background:{{ $catColours[$cat] ?? '#64748b' }}"></span></span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
+                    <div class="bar"><span class="name" title="{{ $cat }}">{{ $cat }}</span><span class="track"><span class="fill" style="width:{{ min(100, $d['pct']) }}%;background:{{ $catColours[$cat] ?? '#64748b' }}"></span></span><span class="pct">{{ number_format($d['pct'], 0) }}%</span></div>
                 @endforeach
             </div>
         </div>
