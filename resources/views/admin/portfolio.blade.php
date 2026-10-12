@@ -11,11 +11,11 @@
 .pf-kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;display:grid;gap:3px;min-width:0}.pf-kpi .l{font-size:11.5px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.03em}.pf-kpi .v{font-size:clamp(16px,1.5vw,22px);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pf-kpi .s{font-size:11.5px;color:var(--text-secondary)}
 .pf-kpi.hero{background:linear-gradient(135deg,#F36523,#ff8a4c);color:#fff}.pf-kpi.hero .l,.pf-kpi.hero .s{color:rgba(255,255,255,.85)}.pf-kpi.teal{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff}.pf-kpi.teal .l,.pf-kpi.teal .s{color:rgba(255,255,255,.85)}
 .pf-chg{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.06);margin-left:4px}.pf-chg--up{background:#dcfce7;color:#166534}.pf-chg--down{background:#fee2e2;color:#991b1b}.hero .pf-chg,.teal .pf-chg{background:rgba(255,255,255,.22);color:#fff}
-.pf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}@media (max-width:900px){.pf-grid{grid-template-columns:1fr}}.pf-grid--prop{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.pf-grid3{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:14px}@media (max-width:1100px){.pf-grid3{grid-template-columns:1fr}}
+.pf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}@media (max-width:900px){.pf-grid{grid-template-columns:1fr}}.pf-grid--prop{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}.pf-grid3{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:14px}@media (max-width:1100px){.pf-grid3{grid-template-columns:1fr}}
 .pf-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;min-width:0}.pf-card h3{font-size:13.5px;margin:0 0 10px;display:flex;justify-content:space-between;gap:8px}.pf-card h3 small{font-weight:400;color:var(--text-secondary)}
 .pf-chart{position:relative;height:220px}.pf-chart--sm{height:200px}
 .pf-table{width:100%;border-collapse:collapse;font-size:12.5px}.pf-table th,.pf-table td{padding:6px 7px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;white-space:nowrap}.pf-table td.wrap{white-space:normal}.pf-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);cursor:pointer;user-select:none}.pf-table th.sorted{color:#0f766e}.pf-table .num{text-align:right}.pf-table tbody tr:hover{background:#fafcfb}.pf-table a{color:inherit;text-decoration:none;font-weight:600}.pf-table a:hover{color:#0f766e}
-.pf-mini{display:inline-block;width:48px;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}.pf-mini i{display:block;height:100%;background:#0f766e}
+.pf-mini{display:inline-block;width:40px;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}.pf-mini i{display:block;height:100%;background:#0f766e}
 .pf-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .pf-rows{display:grid;gap:6px;font-size:13px}.pf-rows div{display:flex;justify-content:space-between;gap:10px}.pf-rows .k{color:var(--text-secondary)}.pf-rows .tot{border-top:1px solid var(--border,#e5e7eb);padding-top:6px;font-weight:700}
 .pf-stack{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:10px 0 6px;background:#f1f5f9}.pf-stack i{display:block;height:100%}
@@ -69,8 +69,8 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
     <div class="pf-card">
         <h3>Revenue by channel <small>{{ $d['month'] }}</small></h3>
         @php $chTop = $n['channels']->take(7); $chRest = $n['channels']->slice(7); @endphp
-        <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:14px;align-items:center">
-            <div class="pf-chart pf-chart--sm" style="height:140px"><canvas id="pf-ch"></canvas></div>
+        <div style="display:grid;grid-template-columns:124px minmax(0,1fr);gap:12px;align-items:center">
+            <div class="pf-chart pf-chart--sm" style="height:124px"><canvas id="pf-ch"></canvas></div>
             <table class="pf-table" style="font-size:12px">
                 <thead><tr><th>Channel</th><th class="num">Revenue</th><th class="num">Share</th></tr></thead>
                 <tbody>
