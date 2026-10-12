@@ -322,6 +322,11 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     <div class="sidebar-section">Finance</div>
     @endif
     @if(admin_can('finance.view'))
+    {{-- Payments: owner report records by unit and month, receipts and status (back on the menu 12 Oct 2026, Sam). --}}
+    <a href="/admin/payment/upcoming" class="sidebar-link {{ request()->is('admin/payment*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h2m4 0h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+        Payments
+    </a>
     <a href="/admin/listing/chart/report" class="sidebar-link {{ request()->is('admin/listing/chart/report*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Monthly Report

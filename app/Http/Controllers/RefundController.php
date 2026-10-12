@@ -70,6 +70,7 @@ class RefundController extends Controller
             'staff_user_id'  => ['nullable', 'integer', 'in:' . (Refunds::staff()->pluck('id')->implode(',') ?: '0')],
             'staff_rating'   => ['nullable', 'integer', 'between:1,5'],
             'staff_comment'  => ['nullable', 'string', 'max:1000'],
+            'marketing_opt_in' => ['nullable', 'in:1'],
         ], [
             // Plain wording whatever the site locale; the public form must never show "validation.required".
             'required'           => 'Please fill in this field.',

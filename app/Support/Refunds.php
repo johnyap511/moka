@@ -202,6 +202,26 @@ class Refunds
 
         $now = now();
 
+        // The guest profile on the matched booking gets the contact details it was
+        // missing (eZee rarely carries a direct email). Existing values are never
+        // overwritten; the request row keeps what the guest typed either way.
+        if ($booking && in_array($match, ['matched', 'duplicate'], true) && $booking->user) {
+            $fill = [];
+            if (blank($booking->user->email) && !empty($in['email'])) {
+                $fill['email'] = $in['email'];
+            }
+            if (blank($booking->user->phone) && $phoneDigits !== '') {
+                $fill['phone'] = $phoneDigits;
+            }
+            if ($fill) {
+                try {
+                    User::where('id', $booking->user->id)->update($fill);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+
         return RefundRequest::create([
             'refund_link_id' => $link?->id,
             'booking_id'     => $booking?->id,
@@ -221,6 +241,7 @@ class Refunds
             'rating_clean'   => $in['rating_clean'] ?? null,
             'rating_service' => $in['rating_service'] ?? null,
             'comments'       => $in['comments'] ?? null,
+            'marketing_opt_in' => !empty($in['marketing_opt_in']),
             'staff_user_id'  => $in['staff_user_id'] ?? null,
             'staff_rating'   => !empty($in['staff_user_id']) ? ($in['staff_rating'] ?? null) : null,
             'staff_comment'  => !empty($in['staff_user_id']) ? ($in['staff_comment'] ?? null) : null,

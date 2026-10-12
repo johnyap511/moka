@@ -80,6 +80,7 @@
         <input type="search" name="q" value="{{ $q }}" placeholder="Name, phone, unit, booking #" style="width:200px">
         <button class="btn btn-secondary rf-sm" type="submit">Search</button>
         @if($canManage)<a class="btn btn-secondary rf-sm" href="{{ route('admin.refunds.export') }}{{ $qs([]) }}" title="CSV of this list with bank details, for the payment run">Export CSV</a>@endif
+        <a class="btn btn-secondary rf-sm" href="{{ route('admin.refunds.contacts') }}" title="Guests who ticked the offers box: name, email, phone. No bank details.">Contacts CSV</a>
     </form>
     @else
     <form method="get" class="rf-filter"><input type="hidden" name="tab" value="feedback"><input type="month" name="month" value="{{ $ym }}"><button class="btn btn-secondary rf-sm" type="submit">Show</button></form>

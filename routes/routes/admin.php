@@ -191,6 +191,7 @@ Route::post('/owner-reports/{run}/delete', 'Admin\OwnerReportController@destroy'
 Route::get('/refunds', 'Admin\RefundController@index')->name('admin.refunds.index');
 Route::post('/refunds/link', 'Admin\RefundController@newLink')->name('admin.refunds.link');
 Route::get('/refunds/export', 'Admin\RefundController@export')->name('admin.refunds.export');
+Route::get('/refunds/contacts', 'Admin\RefundController@contacts')->name('admin.refunds.contacts');
 Route::post('/refunds/{refund}/paid', 'Admin\RefundController@paid')->name('admin.refunds.paid');
 Route::post('/refunds/{refund}/reject', 'Admin\RefundController@reject')->name('admin.refunds.reject');
 Route::post('/refunds/{refund}/reopen', 'Admin\RefundController@reopen')->name('admin.refunds.reopen');
