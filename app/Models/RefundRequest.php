@@ -21,6 +21,7 @@ class RefundRequest extends Model
         'check_out'    => 'date',
         'due_on'       => 'date',
         'paid_at'      => 'datetime',
+        'deduction_at' => 'datetime',
     ];
 
     public function booking()
