@@ -11,18 +11,19 @@
 .rf-link{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px}.rf-link code{background:#fff;border:1px solid #99f6e4;border-radius:6px;padding:3px 8px;font-size:12px;word-break:break-all}
 .rf-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border,#e5e7eb);margin-bottom:10px;flex-wrap:wrap;align-items:center}.rf-tabs a{padding:8px 12px;font-size:13px;color:var(--text-secondary);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}.rf-tabs a.on{color:#0f766e;border-color:#0f766e;font-weight:600}.rf-tabs a i{font-style:normal;background:#f1f5f9;border-radius:999px;padding:0 6px;font-size:11px;margin-left:4px}.rf-tabs a.on i{background:#ccfbf1;color:#0f766e}
 .rf-filter{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}.rf-filter input,.rf-filter select{padding:5px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;font-family:inherit}
-.rf-table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.35}.rf-table th,.rf-table td{padding:9px 8px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;vertical-align:top}.rf-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap}.rf-table tbody tr:hover{background:#fafcfb}
+.rf-table{width:100%;border-collapse:collapse;font-size:12px;line-height:1.35}.rf-table th,.rf-table td{padding:8px 6px;border-bottom:1px solid var(--border,#e5e7eb);text-align:left;vertical-align:top}.rf-table th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap}.rf-table tbody tr:hover{background:#fafcfb}
 .rf-table tr.overdue td:first-child{box-shadow:inset 3px 0 #dc2626}.rf-table tr.verify td:first-child{box-shadow:inset 3px 0 #f59e0b}.rf-table tr.dup td:first-child{box-shadow:inset 3px 0 #ef4444}
 .rf-muted{font-size:11.5px;color:var(--text-secondary)}.rf-bank{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;display:flex;gap:6px;align-items:center}.rf-bank button{border:1px solid var(--border,#e5e7eb);background:#fff;border-radius:6px;font-size:10.5px;padding:1px 6px;cursor:pointer;color:var(--text-secondary)}
 .rf-chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;font-weight:600;white-space:nowrap}.rf-chip--ok{background:#dcfce7;color:#166534}.rf-chip--warn{background:#fef3c7;color:#92400e}.rf-chip--dup{background:#fee2e2;color:#991b1b}.rf-chip--paid{background:#dbeafe;color:#1d4ed8}.rf-chip--rej{background:#f1f5f9;color:#475569}
 .rf-stars{color:#f59e0b;letter-spacing:1px;white-space:nowrap}.rf-note{font-size:11.5px;color:#92400e;margin-top:3px;line-height:1.35}.rf-due-bad{color:#b91c1c;font-weight:600}.rf-due-soon{color:#b45309;font-weight:600}
-.rf-act{display:grid;gap:5px;min-width:215px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 10px;font-size:12px;white-space:nowrap}
+.rf-act{display:grid;gap:5px;width:190px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;width:100px;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 9px;font-size:12px;white-space:nowrap}.rf-more{background:none;border:0;color:#0f766e;font-size:11.5px;font-weight:600;cursor:pointer;text-align:left;padding:0}.rf-more-box{display:grid;gap:5px}.rf-more-box[hidden]{display:none}
+.rf-table td.rf-wrap{white-space:normal;max-width:220px}.rf-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
 .rf-grp{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:#0f766e;background:#ccfbf1;border-radius:999px;padding:0 6px;white-space:nowrap}
 .rf-tick{width:28px;text-align:center}.rf-tick input{width:16px;height:16px;cursor:pointer;accent-color:#0f766e}
 .rf-bulk[hidden]{display:none}.rf-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#0f766e;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px;position:sticky;top:8px;z-index:5}.rf-bulk input{padding:5px 8px;font-size:12.5px;border:1px solid rgba(255,255,255,.4);border-radius:8px;min-width:200px}.rf-bulk .rf-muted{color:rgba(255,255,255,.8)}
 .rf-table tr.rf-gone{opacity:.35;transition:opacity .4s}.rf-flash{position:fixed;right:16px;bottom:16px;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:50}
-.rf-sugg{border:1px dashed #99f6e4;border-radius:8px;padding:6px 8px;background:#f0fdfa;display:grid;gap:4px;max-width:420px}.rf-sugg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700}.rf-sugg-row{display:flex;gap:6px;align-items:center;justify-content:space-between}.rf-sugg-t{font-size:12px;line-height:1.3;white-space:normal;min-width:0}.rf-sugg-t .rf-muted{white-space:normal}
+.rf-sugg{border:1px dashed #99f6e4;border-radius:8px;padding:6px 8px;background:#f0fdfa;display:grid;gap:4px}.rf-sugg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700}.rf-sugg-row{display:flex;gap:6px;align-items:center;justify-content:space-between}.rf-sugg-t{font-size:12px;line-height:1.3;white-space:normal;min-width:0}.rf-sugg-t .rf-muted{white-space:normal}
 .rf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media (max-width:900px){.rf-grid{grid-template-columns:1fr}}
 .rf-h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}.rf-quote{border-left:3px solid #99f6e4;padding:4px 10px;margin:6px 0;font-size:12.5px;line-height:1.4}.rf-quote small{display:block;color:var(--text-secondary)}.rf-quote.unv{border-color:#fde68a}
 .rf-sm{padding:4px 10px;font-size:12px}
@@ -159,7 +160,7 @@
     <table class="rf-table">
         <thead><tr>
             @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<th class="rf-tick"><input type="checkbox" id="rf-all" title="Select all pending on this page" aria-label="Select all"></th>@endif
-            <th>#</th><th>Submitted</th><th>Guest</th><th>Stay</th><th>Booking</th>
+            <th>#</th><th>Guest</th><th>Stay &amp; booking</th>
             <th>{{ $canManage ? 'Refund to' : 'Bank' }}</th><th>Ratings</th><th>Due</th>
             @if($canManage)<th>Action</th>@endif
         </tr></thead>
@@ -174,30 +175,29 @@
             <tr class="{{ $rowClass }}" data-id="{{ $r->id }}">
                 @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<td class="rf-tick">@if($r->status === 'pending')<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
                 <td>{{ $r->id }}@if($r->group_key)<div class="rf-grp" title="One guest, several units: paid together, one deposit each">{{ $r->group_index }} of {{ $r->group_size }}</div>@endif</td>
-                <td>{{ $r->created_at->format('d M') }}<div class="rf-muted">{{ $r->created_at->format('H:i') }}</div></td>
-                <td><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }}</div><div class="rf-muted">{{ $r->email }}</div></td>
-                <td>{{ \Illuminate\Support\Str::before($r->property, ' by') }}<div><b>{{ $r->unit_no }}</b></div><div class="rf-muted">out {{ $r->check_out->format('d M Y') }}</div></td>
-                <td>
+                <td class="rf-wrap"><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }}</div><div class="rf-muted rf-ell" title="{{ $r->email }}">{{ $r->email }}</div><div class="rf-muted">{{ $r->created_at->format('d M, H:i') }}</div></td>
+                <td class="rf-wrap">
+                    <div>{{ \Illuminate\Support\Str::before($r->property, ' by') }} <b>{{ $r->unit_no }}</b> <span class="rf-muted">· out {{ $r->check_out->format('d M') }}</span></div>
                     @if($r->status === 'paid')<span class="rf-chip rf-chip--paid">Paid {{ $r->paid_at?->format('d M') }}</span> <div class="rf-muted">{{ $r->payer->name ?? '' }}{{ $r->reference ? ' · ' . $r->reference : '' }}</div>
                     @elseif($r->status === 'rejected')<span class="rf-chip rf-chip--rej">Rejected</span><div class="rf-note">{{ $r->note }}</div>
                     @else<span class="rf-chip {{ $mClass }}">{{ $mLabel }}</span>@endif
                     @if($b)
-                        <div><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">#{{ $b->id }}</a> {{ $b->listing->name ?? '' }}<div class="rf-muted">{{ $b->user->name ?? '' }} {{ $b->user->last_name ?? '' }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }}</div></div>
+                        <div class="rf-muted"><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">#{{ $b->id }}</a> {{ $b->listing->name ?? '' }} · {{ \Illuminate\Support\Str::limit(trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')), 24) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }}</div>
                     @endif
                     @if($r->match_note && $r->status !== 'rejected')<div class="rf-note">{{ $r->match_note }}</div>@endif
                 </td>
-                <td>{{ $r->bank_name }}
+                <td class="rf-wrap">
                     @if($canManage)
                         <div class="rf-bank"><span>{{ $r->bank_account }}</span><button type="button" data-copy="{{ $r->bank_account }}" onclick="navigator.clipboard.writeText(this.dataset.copy).then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='copy',1200)})">copy</button></div>
-                        <div class="rf-muted">{{ $r->bank_holder }}</div>
-                    @else<div class="rf-bank">{{ $r->maskedAccount() }}</div>@endif
+                        <div class="rf-muted">{{ $r->bank_holder }}</div><div class="rf-muted">{{ $r->bank_name }}</div>
+                    @else<div class="rf-bank">{{ $r->maskedAccount() }}</div><div class="rf-muted">{{ $r->bank_name }}</div>@endif
                 </td>
-                <td><span class="rf-stars" title="Cleanliness">{{ $stars($r->rating_clean) }}</span><div class="rf-stars" title="Service">{{ $stars($r->rating_service) }}</div>
-                    @if($r->staff)<div class="rf-muted">{{ $r->staff->name }}: {{ $stars($r->staff_rating) }}</div>@endif
-                    @if($r->comments)<div class="rf-muted" title="{{ $r->comments }}">“{{ \Illuminate\Support\Str::limit($r->comments, 60) }}”</div>@endif
+                <td><div class="rf-stars" title="Cleanliness {{ $r->rating_clean }}/5, service {{ $r->rating_service }}/5">★{{ $r->rating_clean ?? '–' }} <span class="rf-muted">clean</span><br>★{{ $r->rating_service ?? '–' }} <span class="rf-muted">service</span></div>
+                    @if($r->staff)<div class="rf-muted" title="{{ $r->staff->name }}">{{ \Illuminate\Support\Str::limit($r->staff->name, 10) }} ★{{ $r->staff_rating ?? '–' }}</div>@endif
+                    @if($r->comments)<div class="rf-muted rf-ell" title="{{ $r->comments }}">“{{ \Illuminate\Support\Str::limit($r->comments, 30) }}”</div>@endif
                 </td>
                 <td>@if($r->status === 'pending' && $r->due_on)
-                        {{ $r->due_on->format('D d M') }}
+                        {{ $r->due_on->format('d M') }}
                         @if($daysLeft < 0)<div class="rf-due-bad">{{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} overdue</div>
                         @elseif($daysLeft === 0)<div class="rf-due-soon">due today</div>
                         @else<div class="rf-muted">{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }} left</div>@endif
@@ -205,8 +205,10 @@
                 @if($canManage)
                 <td class="rf-act">
                     @if($r->status === 'pending')
-                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form">@csrf<input name="reference" placeholder="Bank ref (optional)" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
-                        <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN folio or RES" value="{{ $r->booking_id }}" title="Booking number, eZee folio (FN4525) or reservation (RES4465)"><button class="btn btn-secondary" type="submit">Link</button></form>
+                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form">@csrf<input name="reference" placeholder="Bank ref" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
+                        <button type="button" class="rf-more" onclick="var d=this.nextElementSibling;d.hidden=!d.hidden;this.textContent=d.hidden?'More ▾':'Less ▴'">More ▾</button>
+                        <div class="rf-more-box" {{ $r->match !== 'matched' ? '' : 'hidden' }}>
+                        <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN or RES" value="{{ $r->booking_id }}" title="Booking number, eZee folio (FN4525) or reservation (RES4465)"><button class="btn btn-secondary" type="submit">Link</button></form>
                         @if(!empty($r->suggestions))
                         <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
                             @foreach($r->suggestions as $s)
@@ -219,7 +221,8 @@
                         </div>
                         @endif
                         <form method="post" action="{{ route('admin.refunds.reject', $r) }}" onsubmit="return confirm('Reject request #{{ $r->id }}? The record is kept.')">@csrf<input name="note" placeholder="Reason" required maxlength="255"><button class="btn btn-secondary" type="submit">Reject</button></form>
-                        <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request for it with the same bank details">@csrf<input name="unit_no" placeholder="Other unit, e.g. 01-30" maxlength="40" required><button class="btn btn-secondary" type="submit">Split</button></form>
+                        <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request for it with the same bank details">@csrf<input name="unit_no" placeholder="Other unit" maxlength="40" required><button class="btn btn-secondary" type="submit">Split</button></form>
+                        </div>
                     @else
                         <form method="post" action="{{ route('admin.refunds.reopen', $r) }}">@csrf<button class="btn btn-secondary" type="submit">Reopen</button></form>
                     @endif
@@ -227,7 +230,7 @@
                 @endif
             </tr>
         @empty
-            <tr><td colspan="{{ $canManage ? 10 : 8 }}" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
+            <tr><td colspan="{{ $canManage ? 9 : 7 }}" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
         @endforelse
         </tbody>
     </table>
