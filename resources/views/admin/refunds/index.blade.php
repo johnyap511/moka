@@ -18,6 +18,7 @@
 .rf-stars{color:#f59e0b;letter-spacing:1px;white-space:nowrap}.rf-note{font-size:11.5px;color:#92400e;margin-top:3px;line-height:1.35}.rf-due-bad{color:#b91c1c;font-weight:600}.rf-due-soon{color:#b45309;font-weight:600}
 .rf-act{display:grid;gap:5px;min-width:215px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 10px;font-size:12px;white-space:nowrap}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
+.rf-sugg{border:1px dashed #99f6e4;border-radius:8px;padding:6px 8px;background:#f0fdfa;display:grid;gap:4px;max-width:420px}.rf-sugg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700}.rf-sugg-row{display:flex;gap:6px;align-items:center;justify-content:space-between}.rf-sugg-t{font-size:12px;line-height:1.3;white-space:normal;min-width:0}.rf-sugg-t .rf-muted{white-space:normal}
 .rf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media (max-width:900px){.rf-grid{grid-template-columns:1fr}}
 .rf-h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}.rf-quote{border-left:3px solid #99f6e4;padding:4px 10px;margin:6px 0;font-size:12.5px;line-height:1.4}.rf-quote small{display:block;color:var(--text-secondary)}.rf-quote.unv{border-color:#fde68a}
 .rf-sm{padding:4px 10px;font-size:12px}
@@ -190,7 +191,18 @@
                 <td class="rf-act">
                     @if($r->status === 'pending')
                         <form method="post" action="{{ route('admin.refunds.paid', $r) }}">@csrf<input name="reference" placeholder="Bank ref (optional)" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
-                        <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #" value="{{ $r->booking_id }}" inputmode="numeric"><button class="btn btn-secondary" type="submit">Link</button></form>
+                        <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN folio or RES" value="{{ $r->booking_id }}" title="Booking number, eZee folio (FN4525) or reservation (RES4465)"><button class="btn btn-secondary" type="submit">Link</button></form>
+                        @if(!empty($r->suggestions))
+                        <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
+                            @foreach($r->suggestions as $s)
+                            @php $sb = $s['booking']; @endphp
+                            <form method="post" action="{{ route('admin.refunds.attach', $r) }}" class="rf-sugg-row">@csrf<input type="hidden" name="booking_id" value="{{ $sb->id }}">
+                                <div class="rf-sugg-t"><b>{{ $sb->listing->name ?? '' }}</b> · {{ trim(($sb->user->name ?? '') . ' ' . ($sb->user->last_name ?? '')) ?: '—' }}<div class="rf-muted">{{ \Carbon\Carbon::parse($sb->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($sb->check_out)->format('d M') }} · {{ $sb->source }} · {{ $sb->folio_no }} · {{ $s['why'] }}</div></div>
+                                <button class="btn btn-secondary" type="submit">Pick</button>
+                            </form>
+                            @endforeach
+                        </div>
+                        @endif
                         <form method="post" action="{{ route('admin.refunds.reject', $r) }}" onsubmit="return confirm('Reject request #{{ $r->id }}? The record is kept.')">@csrf<input name="note" placeholder="Reason" required maxlength="255"><button class="btn btn-secondary" type="submit">Reject</button></form>
                     @else
                         <form method="post" action="{{ route('admin.refunds.reopen', $r) }}">@csrf<button class="btn btn-secondary" type="submit">Reopen</button></form>

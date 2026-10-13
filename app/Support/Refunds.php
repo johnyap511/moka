@@ -102,6 +102,122 @@ class Refunds
      * Find the booking the request is for: property + unit number + check-out
      * date. Returns [booking|null, match, note].
      */
+    /** Listings of a property whose name or eZee room code ends with the typed unit. */
+    public static function unitsFor(string $prefix, string $unit): \Illuminate\Support\Collection
+    {
+        $unitKey = self::compact($unit);
+        if ($unitKey === '') {
+            return collect();
+        }
+        $inProperty = Listing::withoutGlobalScope('notArchived')->where('name', 'like', $prefix . '%')->get(['id', 'name']);
+        $listings = $inProperty->filter(fn ($l) => str_ends_with(self::compact($l->name), $unitKey));
+        if ($listings->isEmpty()) {
+            $mapped = \Illuminate\Support\Facades\DB::table('ezee_room_mappings')
+                ->whereNull('archived_at')->whereNotNull('listing_id')
+                ->get(['room_name', 'listing_id'])
+                ->filter(fn ($m) => self::compact($m->room_name) === $unitKey || str_ends_with(self::compact($m->room_name), $unitKey))
+                ->pluck('listing_id')->unique();
+            $listings = $inProperty->whereIn('id', $mapped->all());
+        }
+        return $listings->values();
+    }
+
+    /**
+     * Likely bookings for a request Finance has to verify, each with the reason
+     * it is offered: same unit within 3 days, a similar guest name at that
+     * property within a week, or the same phone number within two weeks.
+     *
+     * @return array<int, array{booking: Booking, why: string}>
+     */
+    public static function suggestions(\App\Models\RefundRequest $r, int $limit = 5): array
+    {
+        $prefix = self::PROPERTIES[$r->property] ?? null;
+        $day    = Carbon::parse($r->check_out);
+        $out    = [];
+        $add = function ($bookings, string $why) use (&$out, $limit) {
+            foreach ($bookings as $b) {
+                if (count($out) >= $limit) {
+                    return;
+                }
+                if (!isset($out[$b->id])) {
+                    $out[$b->id] = ['booking' => $b, 'why' => $why];
+                }
+            }
+        };
+        $live = fn () => Booking::where('status', '>=', 5)->with(['user:id,name,last_name,phone', 'listing:id,name']);
+        $propertyIds = $prefix ? Listing::withoutGlobalScope('notArchived')->where('name', 'like', $prefix . '%')->pluck('id') : collect();
+
+        if ($prefix) {
+            $units = self::unitsFor($prefix, $r->unit_no)->pluck('id');
+            if ($units->isNotEmpty()) {
+                $add($live()->whereIn('listing_id', $units)
+                    ->whereBetween('check_out', [$day->copy()->subDays(3)->toDateString(), $day->copy()->addDays(3)->toDateString()])
+                    ->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get(), 'same unit, check-out within 3 days');
+            }
+        }
+
+        $words = array_values(array_filter(preg_split('/[^a-z]+/', strtolower($r->name)), fn ($w) => strlen($w) >= 3 && !in_array($w, ['bin', 'binti', 'the', 'mr', 'mrs', 'ms'], true)));
+        if ($words && $propertyIds->isNotEmpty()) {
+            $q = $live()->whereIn('listing_id', $propertyIds)
+                ->whereBetween('check_out', [$day->copy()->subDays(7)->toDateString(), $day->copy()->addDays(7)->toDateString()])
+                ->whereHas('user', function ($u) use ($words) {
+                    $u->where(function ($w) use ($words) {
+                        foreach ($words as $word) {
+                            $w->orWhere('name', 'like', '%' . $word . '%')->orWhere('last_name', 'like', '%' . $word . '%');
+                        }
+                    });
+                })->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get();
+            $add($q, 'similar guest name at ' . $prefix . ', check-out within 7 days');
+        }
+
+        if ($r->phone_digits) {
+            $tail = substr($r->phone_digits, -8);
+            $users = User::where('phone', 'like', '%' . $tail . '%')->orWhere('phone_e164', 'like', '%' . $tail . '%')->pluck('id');
+            if ($users->isNotEmpty()) {
+                $add($live()->whereIn('user_id', $users)
+                    ->whereBetween('check_out', [$day->copy()->subDays(14)->toDateString(), $day->copy()->addDays(14)->toDateString()])
+                    ->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get(), 'same phone number, check-out within 14 days');
+            }
+        }
+
+        return array_values($out);
+    }
+
+    /**
+     * Resolve what Finance typed in the Link box: a booking number, an eZee
+     * folio ("FN4525", repeats across hotels so the request's property and
+     * date decide) or a reservation ("RES4465", "RES31670-1").
+     */
+    public static function resolveReference(string $ref, ?\App\Models\RefundRequest $r = null): ?Booking
+    {
+        $ref = strtoupper(trim($ref));
+        if ($ref === '') {
+            return null;
+        }
+        if (ctype_digit($ref)) {
+            return Booking::find((int) $ref);
+        }
+        $candidates = collect();
+        if (preg_match('/^FN\s*(\d+)$/', $ref, $m)) {
+            $fn = 'FN' . $m[1];
+            $candidates = Booking::where('status', '>=', 3)->where(fn ($q) => $q->where('folio_no', $fn)->orWhere('server_folio_no', $fn))->with('listing:id,name')->get();
+        } elseif (preg_match('/^RES\s*([\d-]+)$/', $ref, $m)) {
+            $ids = \App\OtherModel\EzeeBooking::where('SubBookingId', 'RES' . $m[1])->whereNotNull('book_id')->pluck('book_id');
+            $candidates = Booking::whereIn('id', $ids)->with('listing:id,name')->get();
+        }
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+        if ($r && ($prefix = self::PROPERTIES[$r->property] ?? null)) {
+            $same = $candidates->filter(fn ($b) => str_starts_with($b->listing->name ?? '', $prefix));
+            if ($same->isNotEmpty()) {
+                $candidates = $same;
+            }
+        }
+        $day = $r ? Carbon::parse($r->check_out) : now();
+        return $candidates->sortBy(fn ($b) => abs(Carbon::parse($b->check_out)->diffInDays($day, false)))->first();
+    }
+
     public static function match(string $property, string $unit, string $checkOut, string $name): array
     {
         $prefix = self::PROPERTIES[$property] ?? null;
@@ -116,25 +232,17 @@ class Refunds
 
         $inProperty = Listing::withoutGlobalScope('notArchived')->where('name', 'like', $prefix . '%')->get(['id', 'name']);
 
-        // 1. Homemoka unit names: "Alinea 11-08" ends with the typed "11-08".
-        $listings = $inProperty->filter(fn ($l) => str_ends_with(self::compact($l->name), $unitKey));
+        // Homemoka unit names ("Alinea 11-08" ends with "11-08") or eZee room codes
+        // guests see in their messages ("AL-11-08"; Najihah, 12 Oct 2026).
+        $listings = self::unitsFor($prefix, $unit);
 
-        // 2. eZee room codes, which is what guests see in their messages: "AL-11-08",
-        //    "BS 03-06", "C2-07-10" (Najihah, 12 Oct 2026: two Alinea guests typed the code).
         if ($listings->isEmpty()) {
-            $mapped = \Illuminate\Support\Facades\DB::table('ezee_room_mappings')
-                ->whereNull('archived_at')->whereNotNull('listing_id')
-                ->get(['room_name', 'listing_id'])
-                ->filter(fn ($m) => self::compact($m->room_name) === $unitKey || str_ends_with(self::compact($m->room_name), $unitKey))
-                ->pluck('listing_id')->unique();
-            $listings = $inProperty->whereIn('id', $mapped->all());
-            if ($listings->isEmpty() && $mapped->isNotEmpty()) {
-                $elsewhere = Listing::withoutGlobalScope('notArchived')->whereIn('id', $mapped->all())->value('name');
-                return [null, 'verify', 'Unit "' . $unit . '" is ' . $elsewhere . ', not at ' . $prefix];
+            $elsewhere = \Illuminate\Support\Facades\DB::table('ezee_room_mappings')->join('listings', 'listings.id', '=', 'ezee_room_mappings.listing_id')
+                ->whereNull('ezee_room_mappings.archived_at')->get(['room_name', 'listings.name'])
+                ->first(fn ($m) => self::compact($m->room_name) === $unitKey || str_ends_with(self::compact($m->room_name), $unitKey));
+            if ($elsewhere) {
+                return [null, 'verify', 'Unit "' . $unit . '" is ' . $elsewhere->name . ', not at ' . $prefix];
             }
-        }
-
-        if ($listings->isEmpty()) {
             return [null, 'verify', 'No unit "' . $unit . '" at ' . $prefix];
         }
 

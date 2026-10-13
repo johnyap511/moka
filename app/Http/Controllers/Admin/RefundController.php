@@ -48,6 +48,11 @@ class RefundController extends Controller
         $rows = collect();
         if ($tab !== 'feedback') {
             $rows = $this->filtered($tab, $q, $prop, $from, $to)->paginate(40)->withQueryString();
+            if (admin_can('refunds.manage')) {
+                foreach ($rows as $r) {
+                    $r->suggestions = ($r->status === 'pending' && $r->match !== 'matched') ? Refunds::suggestions($r) : [];
+                }
+            }
         }
 
         return view('admin.refunds.index', [
@@ -242,13 +247,14 @@ class RefundController extends Controller
     public function attach(Request $request, RefundRequest $refund)
     {
         $this->manage();
-        $request->validate(['booking_id' => 'nullable|integer']);
-        $id = $request->input('booking_id');
-        if ($id) {
-            $booking = Booking::with('listing')->find($id);
+        $request->validate(['booking_id' => 'nullable|string|max:40']);
+        $id = trim((string) $request->input('booking_id'));
+        if ($id !== '') {
+            $booking = Refunds::resolveReference($id, $refund);
             if (!$booking) {
-                return back()->with('error', 'Booking #' . $id . ' not found.');
+                return back()->with('error', '"' . $id . '" did not resolve to a booking. Use the booking number, the eZee folio (FN4525) or the reservation (RES4465).');
             }
+            $booking->load('listing');
             $dup = RefundRequest::where('booking_id', $booking->id)->where('id', '!=', $refund->id)->orderBy('id')->first();
             $refund->update([
                 'booking_id'   => $booking->id,
