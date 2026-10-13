@@ -13,6 +13,10 @@ Live since 12 Oct 2026. Replaces the Google Form.
 
 Fills in: name as per reservation, contact number, email, property, unit, check-out date, bank name, account holder, account number, two ratings, optional comments, and optionally the team member who served them with a rating. The guest sees only "Thank you, your request is in". They never see booking details.
 
+## One guest, several units
+
+The guest taps "+ Add another unit" on the form (up to three). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.
+
 ## Finance (Operations → Deposit refunds)
 
 - **Pending** — everything not yet paid. Rows marked **Matched** were tied to a booking automatically (property + unit + check-out date). Open the booking link, check the deposit in eZee, pay, then click **Paid** (bank reference optional).
