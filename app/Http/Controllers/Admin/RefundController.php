@@ -229,6 +229,44 @@ class RefundController extends Controller
         return back()->with('success', 'Request #' . $refund->id . ' marked paid.');
     }
 
+    /**
+     * One bulk endpoint for the tick column (Sam, 13 Oct 2026): action = paid (Finance,
+     * confirmed-received rows only), received (Finance), nodeduct (Operations or Finance:
+     * records "checked, nothing to deduct" so Finance can pay the full deposit).
+     */
+    public function bulk(Request $request)
+    {
+        $request->validate(['action' => 'required|in:paid,received,nodeduct', 'ids' => 'required|array|min:1|max:200', 'ids.*' => 'integer', 'reference' => 'nullable|string|max:120']);
+        $action = $request->input('action');
+        if ($action === 'paid') {
+            return $this->bulkPaid($request);
+        }
+        if ($action === 'received') {
+            $this->manage();
+        } else {
+            $this->manageOrDeduct();
+        }
+        $rows = RefundRequest::whereIn('id', $request->input('ids'))->where('status', 'pending')->get();
+        $done = []; $skipped = 0;
+        foreach ($rows as $r) {
+            if ($action === 'received') {
+                if ($r->received_at) { $skipped++; continue; }
+                $r->update(['received_at' => now(), 'received_by' => Auth::id()]);
+            } else {
+                if ($r->deduction_at || ($r->opsCutoffPassed() && !admin_can('refunds.manage'))) { $skipped++; continue; }
+                $r->update(['deduction_amount' => 0, 'deduction_reason' => null, 'deduction_by' => Auth::id(), 'deduction_at' => now()]);
+            }
+            $done[] = $r->id;
+        }
+        $this->log(null, $action === 'received' ? 'Refund deposits confirmed received in bulk' : 'Refunds checked, no deduction, in bulk', ['ids' => $done]);
+        $what = $action === 'received' ? 'confirmed received' : 'checked, no deduction';
+        $msg = count($done) . ' request' . (count($done) === 1 ? '' : 's') . ' ' . $what . ($skipped ? '; ' . $skipped . ' skipped (already done, not pending, or past the cut-off)' : '') . '.';
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'action' => $action, 'ids' => $done, 'message' => $msg, 'counts' => $this->counts(), 'by' => Auth::user()->name, 'at' => now()->format('d M H:i')]);
+        }
+        return back()->with('success', $msg);
+    }
+
     /** Tick several pending requests and mark them paid in one go (Sam, 13 Oct 2026). */
     public function bulkPaid(Request $request)
     {

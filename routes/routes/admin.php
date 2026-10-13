@@ -197,6 +197,7 @@ Route::get('/refunds/export', 'Admin\RefundController@export')->name('admin.refu
 Route::get('/refunds/contacts', 'Admin\RefundController@contacts')->name('admin.refunds.contacts');
 Route::post('/refunds/{refund}/paid', 'Admin\RefundController@paid')->name('admin.refunds.paid');
 Route::post('/refunds/bulk-paid', 'Admin\RefundController@bulkPaid')->name('admin.refunds.bulk-paid');
+Route::post('/refunds/bulk', 'Admin\RefundController@bulk')->name('admin.refunds.bulk');
 Route::post('/refunds/{refund}/reject', 'Admin\RefundController@reject')->name('admin.refunds.reject');
 Route::post('/refunds/{refund}/reopen', 'Admin\RefundController@reopen')->name('admin.refunds.reopen');
 Route::post('/refunds/{refund}/attach', 'Admin\RefundController@attach')->name('admin.refunds.attach');

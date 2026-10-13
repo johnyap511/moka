@@ -19,6 +19,11 @@
 .rf-act{display:grid;gap:5px;width:190px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;width:100px;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 9px;font-size:12px;white-space:nowrap}.rf-more{background:none;border:0;color:#0f766e;font-size:11.5px;font-weight:600;cursor:pointer;text-align:left;padding:0}.rf-more-box{display:grid;gap:5px}.rf-more-box[hidden]{display:none}
 .rf-table td.rf-wrap{white-space:normal;max-width:220px}.rf-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
+.rf-list{table-layout:fixed;min-width:0!important;width:100%}.rf-list th,.rf-list td{padding:8px 7px;vertical-align:middle;overflow:hidden}.rf-list td.rf-wrap,.rf-list td.num{white-space:normal}.rf-list .rf-steps{white-space:normal}.rf-detail td{overflow:visible}.rf-list .rf-tick{padding-left:10px}.rf-list tr.rf-row{cursor:pointer}.rf-list tr.rf-row:hover{background:#f8fafc}.rf-list tr.rf-row.open{background:#f0fdfa}.rf-open{border:1px solid var(--border,#e5e7eb);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer;color:#0f766e;font-size:13px}
+.rf-steps{white-space:nowrap}.rf-step{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 6px;border-radius:999px;background:#f1f5f9;color:#94a3b8;margin-right:2px}.rf-step.on{background:#dcfce7;color:#166534}.rf-step.off{background:#fee2e2;color:#991b1b;text-decoration:line-through}
+.rf-detail td{background:#fafcfb;padding:12px 14px 14px;border-bottom:2px solid #ccfbf1}.rf-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}@media (max-width:1000px){.rf-panel{grid-template-columns:1fr}}.rf-pane{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.45;min-width:0}.rf-pane h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary)}
+.rf-forms{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.rf-forms input{flex:1;min-width:120px;padding:5px 7px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-forms form{display:flex;gap:4px;flex:1;min-width:200px}
+.rf-bulk-pay{display:inline-flex;gap:4px;align-items:center}.rf-bulk-pay input{min-width:150px}
 .rf-dep{min-width:130px;white-space:normal}.rf-cut{font-size:11.5px;color:#b45309}.rf-recv{margin-top:4px;font-size:11.5px}.rf-deduct{color:#b91c1c;font-weight:600}.rf-deduct .rf-note{font-weight:400}.rf-due{font-weight:700;color:#0f766e;margin-top:2px}
 .rf-ded{margin-top:4px;font-size:11.5px}.rf-ded summary{cursor:pointer;color:#0f766e;font-weight:600}.rf-ded-form{display:grid;gap:4px;margin-top:4px}.rf-ded-form input{padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px;width:130px}.rf-ded-form .btn{padding:4px 9px;font-size:12px;width:max-content}
 .rf-grp{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:#0f766e;background:#ccfbf1;border-radius:999px;padding:0 6px;white-space:nowrap}
@@ -149,138 +154,131 @@
         </div></div>
     </div>
 @else
-@if($canManage && $tab !== 'paid' && $tab !== 'rejected')
-<form method="post" action="{{ route('admin.refunds.bulk-paid') }}" id="rf-bulk" class="rf-bulk" hidden>@csrf
+@php $listTab = $tab !== 'paid' && $tab !== 'rejected'; @endphp
+@if(($canManage || $canDeduct) && $listTab)
+<form method="post" action="{{ route('admin.refunds.bulk') }}" id="rf-bulk" class="rf-bulk" hidden>@csrf
+    <input type="hidden" name="action" id="rf-bulk-action" value="">
     <b><span id="rf-bulk-n">0</span> selected</b>
-    <input name="reference" placeholder="Bank ref for all (optional)" maxlength="120">
-    <button class="btn btn-primary rf-sm" type="submit">Mark selected as paid</button>
+    @if($canDeduct || $canManage)<button class="btn btn-secondary rf-sm" type="button" data-action="nodeduct" title="Operations: checked, nothing to deduct, full deposit to refund">✓ No deduction</button>@endif
+    @if($canManage)
+    <button class="btn btn-secondary rf-sm" type="button" data-action="received" title="Finance: deposit seen on the bank statement / SQL accounting">✓ Deposit received</button>
+    <span class="rf-bulk-pay"><input name="reference" placeholder="Bank ref (optional)" maxlength="120"><button class="btn btn-primary rf-sm" type="button" data-action="paid" title="Pays confirmed-received rows only">Mark paid</button></span>
+    @endif
     <button class="btn btn-secondary rf-sm" type="button" id="rf-bulk-clear">Clear</button>
-    <span class="rf-muted">Tick the boxes on the left. Only pending requests can be ticked.</span>
 </form>
 @endif
-@if($tab === 'paid' && $rows instanceof \Illuminate\Contracts\Pagination\Paginator)
-<div class="rf-link" style="background:#eff6ff;border-color:#bfdbfe"><b>Paid total</b> <span>RM {{ number_format($paidTotal ?? 0, 2) }}</span><span class="rf-muted">· {{ $rows->total() }} request{{ $rows->total() === 1 ? '' : 's' }}{{ $from || $to ? ' · paid ' . ($from ?: '…') . ' to ' . ($to ?: '…') : '' }} · requests paid before 13 Oct 2026 may have no amount recorded</span></div>
-@endif
-<div class="card"><div class="card-body" style="overflow:auto">
-    <table class="rf-table">
+<div class="card"><div class="card-body" style="padding:0">
+    <table class="rf-table rf-list">
+        <colgroup>@if(($canManage || $canDeduct) && $listTab)<col style="width:34px">@endif<col style="width:54px"><col style="width:21%"><col style="width:20%"><col style="width:15%"><col style="width:92px"><col style="width:148px"><col style="width:66px"><col style="width:40px"></colgroup>
         <thead><tr>
-            @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<th class="rf-tick"><input type="checkbox" id="rf-all" title="Select all pending on this page" aria-label="Select all"></th>@endif
-            <th>#</th><th>Guest</th><th>Stay &amp; booking</th><th>Deposit</th>
-            <th>{{ $canManage ? 'Refund to' : 'Bank' }}</th><th>Ratings</th><th>Due</th>
-            @if($canManage || $canDeduct)<th>Action</th>@endif
+            @if(($canManage || $canDeduct) && $listTab)<th class="rf-tick"><input type="checkbox" id="rf-all" aria-label="Select all"></th>@endif
+            <th>#</th><th>Guest</th><th>Stay</th><th>Booking</th><th class="num">Refund</th><th>Progress</th><th>Due</th><th></th>
         </tr></thead>
         <tbody>
         @forelse($rows as $r)
             @php
                 [$mLabel, $mClass] = $matchChip[$r->match] ?? [$r->match, 'rf-chip--warn'];
-                $b = $r->booking;
+                $b = $r->booking; $due = $r->refundDue();
                 $rowClass = $r->isOverdue() ? 'overdue' : ($r->status === 'pending' ? ($r->match === 'duplicate' ? 'dup' : ($r->match !== 'matched' ? 'verify' : '')) : '');
                 $daysLeft = $r->due_on ? today()->diffInDays($r->due_on, false) : null;
+                $opsDone = (bool) $r->deduction_at; $opsOpen = !$r->opsCutoffPassed();
+                $pending = $r->status === 'pending';
             @endphp
-            <tr class="{{ $rowClass }}" data-id="{{ $r->id }}">
-                @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<td class="rf-tick">@if($r->status === 'pending')<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
-                <td>{{ $r->id }}@if($r->group_key)<div class="rf-grp" title="One guest, several units: paid together, one deposit each">{{ $r->group_index }} of {{ $r->group_size }}</div>@endif</td>
-                <td class="rf-wrap"><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }}</div><div class="rf-muted rf-ell" title="{{ $r->email }}">{{ $r->email }}</div><div class="rf-muted">{{ $r->created_at->format('d M, H:i') }}</div></td>
-                <td class="rf-wrap">
-                    <div>{{ \Illuminate\Support\Str::before($r->property, ' by') }} <b>{{ $r->unit_no }}</b> <span class="rf-muted">· out {{ $r->check_out->format('d M') }}</span></div>
-                    @if($r->status === 'paid')<span class="rf-chip rf-chip--paid">Paid {{ $r->paid_at?->format('d M') }}</span> <div class="rf-muted">{{ $r->payer->name ?? '' }}{{ $r->reference ? ' · ' . $r->reference : '' }}</div>
-                    @elseif($r->status === 'rejected')<span class="rf-chip rf-chip--rej">Rejected</span><div class="rf-note">{{ $r->note }}</div>
+            <tr class="rf-row {{ $rowClass }}" data-id="{{ $r->id }}">
+                @if(($canManage || $canDeduct) && $listTab)<td class="rf-tick">@if($pending)<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
+                <td><b>{{ $r->id }}</b>@if($r->group_key)<div class="rf-grp" title="One guest, several units">{{ $r->group_index }}/{{ $r->group_size }}</div>@endif</td>
+                <td class="rf-wrap"><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }} · {{ $r->created_at->format('d M H:i') }}</div></td>
+                <td class="rf-wrap">{{ \Illuminate\Support\Str::before($r->property, ' by') }} <b>{{ $r->unit_no }}</b><div class="rf-muted">out {{ $r->check_out->format('d M') }}</div></td>
+                <td>
+                    @if($r->status === 'rejected')<span class="rf-chip rf-chip--rej">Rejected</span>
                     @else<span class="rf-chip {{ $mClass }}">{{ $mLabel }}</span>@endif
-                    @if($b)
-                        <div class="rf-muted"><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">#{{ $b->id }}</a> {{ $b->listing->name ?? '' }} · {{ \Illuminate\Support\Str::limit(trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')), 24) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }}</div>
-                    @endif
-                    @if($r->match_note && $r->status !== 'rejected')<div class="rf-note">{{ $r->match_note }}</div>@endif
+                    @if($b)<div class="rf-muted"><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">#{{ $b->id }}</a> {{ \Illuminate\Support\Str::limit(trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')), 18) }}</div>@endif
                 </td>
-                <td class="rf-dep">
-                    @php $due = $r->refundDue(); @endphp
-                    @if($r->status === 'paid')
-                        <div><b>RM {{ number_format($r->amount_paid ?? 0, 2) }}</b> <span class="rf-muted">paid</span></div>
+                <td class="num">
+                    @if($r->status === 'paid')<b>RM {{ number_format($r->amount_paid ?? 0, 2) }}</b><div class="rf-muted">paid</div>
+                    @elseif($due !== null)<b>RM {{ number_format($due, 2) }}</b>@if($r->deduction_amount > 0)<div class="rf-deduct">− {{ number_format($r->deduction_amount, 2) }}</div>@endif
+                    @else —@endif
+                </td>
+                <td class="rf-steps">
+                    @if($r->status === 'rejected')<span class="rf-muted">{{ $r->note }}</span>
+                    @else
+                    <span class="rf-step {{ $opsDone ? 'on' : ($opsOpen ? '' : 'off') }}" title="{{ $opsDone ? 'Operations checked ' . $r->deduction_at->format('d M H:i') : ($opsOpen ? 'Operations can record a deduction until ' . $r->ops_cutoff_at?->format('D d M, g:ia') : 'Cut-off passed, nothing recorded: full deposit') }}">Ops</span>
+                    <span class="rf-step {{ $r->received_at ? 'on' : '' }}" title="{{ $r->received_at ? 'Deposit receipt confirmed by ' . ($r->receiver->name ?? '') . ' ' . $r->received_at->format('d M') : 'Deposit receipt not yet confirmed by Finance' }}">Rcvd</span>
+                    <span class="rf-step {{ $r->status === 'paid' ? 'on' : '' }}" title="{{ $r->status === 'paid' ? 'Paid ' . $r->paid_at?->format('d M') . ' by ' . ($r->payer->name ?? '') : 'Not paid yet' }}">Paid</span>
                     @endif
-                    @if($r->deposit_amount !== null)<div class="rf-muted">Deposit RM {{ number_format($r->deposit_amount, 2) }}</div>@else<div class="rf-muted">Deposit not set</div>@endif
-                    @if($r->deduction_amount > 0)<div class="rf-deduct">− RM {{ number_format($r->deduction_amount, 2) }}<div class="rf-note">{{ $r->deduction_reason }}</div><div class="rf-muted">{{ $r->deductor->name ?? '' }}{{ $r->deduction_at ? ', ' . $r->deduction_at->format('d M') : '' }}</div></div>@endif
-                    @if($r->status !== 'paid' && $due !== null)<div class="rf-due">Refund RM {{ number_format($due, 2) }}</div>@endif
-                    @if($r->status === 'pending' && $r->ops_cutoff_at)
-                        @if($r->opsCutoffPassed())<div class="rf-muted">Ops cut-off passed{{ $r->deduction_at ? '' : ' · no deduction' }}</div>
-                        @else<div class="rf-cut">Ops cut-off {{ $r->ops_cutoff_at->format('D d M, g:ia') }}</div>@endif
-                    @endif
-                    @if($r->status === 'pending')
-                        <div class="rf-recv" data-id="{{ $r->id }}">
-                        @if($r->received_at)<span class="rf-chip rf-chip--ok">Received ✓</span> <span class="rf-muted">{{ $r->receiver->name ?? '' }}, {{ $r->received_at->format('d M') }}</span>
-                        @else<span class="rf-chip rf-chip--warn">Receipt unconfirmed</span>@endif
-                        @if($canManage)<form method="post" action="{{ route('admin.refunds.received', $r) }}" class="rf-recv-form" style="display:inline">@csrf<button type="submit" class="rf-more" title="Finance: tick after checking the bank statement / SQL accounting">{{ $r->received_at ? 'undo' : 'Confirm received' }}</button></form>@endif
-                        </div>
-                    @endif
-                    @if($canDeduct && $r->status === 'pending' && !$r->opsCutoffPassed())
-                    <details class="rf-ded"><summary>{{ $r->deduction_amount > 0 || $r->deposit_amount !== null ? 'Edit' : 'Deposit / deduct' }}</summary>
+                </td>
+                <td>@if($pending && $r->due_on){{ $r->due_on->format('d M') }}@if($daysLeft < 0)<div class="rf-due-bad">{{ abs($daysLeft) }}d overdue</div>@elseif($daysLeft === 0)<div class="rf-due-soon">today</div>@else<div class="rf-muted">{{ $daysLeft }}d left</div>@endif @elseif($r->status === 'paid'){{ $r->paid_at?->format('d M') }}@else —@endif</td>
+                <td><button type="button" class="rf-open" aria-expanded="false" title="Details and actions">▸</button></td>
+            </tr>
+            <tr class="rf-detail" data-for="{{ $r->id }}" hidden><td colspan="{{ (($canManage || $canDeduct) && $listTab) ? 9 : 8 }}">
+                <div class="rf-panel">
+                    <div class="rf-pane">
+                        <h4>Booking</h4>
+                        @if($b)<div><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">Booking #{{ $b->id }}</a> · {{ $b->listing->name ?? '' }}<div class="rf-muted">{{ trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }} · {{ $b->folio_no }}</div></div>
+                        @else<div class="rf-muted">No booking linked yet.</div>@endif
+                        @if($r->match_note)<div class="rf-note">{{ $r->match_note }}</div>@endif
+                        @if(($canManage || $canDeduct) && $pending)
+                            @if(!empty($r->suggestions))
+                            <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
+                                @foreach($r->suggestions as $s)@php $sb = $s['booking']; @endphp
+                                <form method="post" action="{{ route('admin.refunds.attach', $r) }}" class="rf-sugg-row">@csrf<input type="hidden" name="booking_id" value="{{ $sb->id }}">
+                                    <div class="rf-sugg-t"><b>{{ $sb->listing->name ?? '' }}</b> · {{ trim(($sb->user->name ?? '') . ' ' . ($sb->user->last_name ?? '')) ?: '—' }}<div class="rf-muted">{{ \Carbon\Carbon::parse($sb->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($sb->check_out)->format('d M') }} · {{ $sb->source }} · {{ $sb->folio_no }} · {{ $s['why'] }}</div></div>
+                                    <button class="btn btn-secondary rf-sm" type="submit">Pick</button>
+                                </form>
+                                @endforeach
+                            </div>
+                            @endif
+                            <div class="rf-forms">
+                                <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN folio or RES" value="{{ $r->booking_id }}"><button class="btn btn-secondary rf-sm" type="submit">Link</button></form>
+                                <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request with the same bank details">@csrf<input name="unit_no" placeholder="Other unit, e.g. 01-30" maxlength="40" required><button class="btn btn-secondary rf-sm" type="submit">Split</button></form>
+                            </div>
+                        @endif
+                        <div class="rf-muted" style="margin-top:8px">{{ $r->email }}@if($r->staff) · served by {{ $r->staff->name }} ★{{ $r->staff_rating ?? '–' }}@endif · clean ★{{ $r->rating_clean ?? '–' }} · service ★{{ $r->rating_service ?? '–' }}</div>
+                        @if($r->comments)<div class="rf-muted">“{{ $r->comments }}”</div>@endif
+                    </div>
+                    <div class="rf-pane">
+                        <h4>Deposit &amp; deduction</h4>
+                        <div>Deposit <b>RM {{ number_format($r->deposit_amount ?? 0, 2) }}</b>@if($r->deduction_amount > 0) · <span class="rf-deduct">deduct RM {{ number_format($r->deduction_amount, 2) }}</span>@endif @if($due !== null) · refund <b class="rf-due">RM {{ number_format($due, 2) }}</b>@endif</div>
+                        @if($r->deduction_at)<div class="rf-muted">{{ $r->deduction_amount > 0 ? $r->deduction_reason : 'Checked, nothing to deduct' }} · {{ $r->deductor->name ?? '' }}, {{ $r->deduction_at->format('d M H:i') }}</div>
+                        @elseif($pending)<div class="rf-muted">{{ $opsOpen ? 'Operations can record a deduction until ' . $r->ops_cutoff_at?->format('D d M, g:ia') : 'Cut-off passed, nothing recorded: full deposit.' }}</div>@endif
+                        @if($pending && (($canDeduct && $opsOpen) || $canManage))
                         <form method="post" action="{{ route('admin.refunds.deduct', $r) }}" class="rf-ded-form">@csrf
                             <input name="deposit_amount" type="number" step="0.01" min="0" placeholder="Deposit RM" value="{{ $r->deposit_amount }}">
-                            <input name="deduction_amount" type="number" step="0.01" min="0" placeholder="Deduct RM" value="{{ $r->deduction_amount > 0 ? $r->deduction_amount : '' }}">
-                            <input name="deduction_reason" placeholder="Reason (needed if deducting)" maxlength="255" value="{{ $r->deduction_reason }}">
-                            <button class="btn btn-secondary" type="submit">Save</button>
+                            <input name="deduction_amount" type="number" step="0.01" min="0" placeholder="Deduct RM (0 = none)" value="{{ $r->deduction_amount > 0 ? $r->deduction_amount : '' }}">
+                            <input name="deduction_reason" placeholder="Reason, needed if deducting" maxlength="255" value="{{ $r->deduction_reason }}">
+                            <button class="btn btn-secondary rf-sm" type="submit">Save</button>
                         </form>
-                    </details>
-                    @elseif($canManage && $r->status === 'pending')
-                    <details class="rf-ded"><summary>Edit (after cut-off)</summary>
-                        <form method="post" action="{{ route('admin.refunds.deduct', $r) }}" class="rf-ded-form">@csrf
-                            <input name="deposit_amount" type="number" step="0.01" min="0" placeholder="Deposit RM" value="{{ $r->deposit_amount }}">
-                            <input name="deduction_amount" type="number" step="0.01" min="0" placeholder="Deduct RM" value="{{ $r->deduction_amount > 0 ? $r->deduction_amount : '' }}">
-                            <input name="deduction_reason" placeholder="Reason (needed if deducting)" maxlength="255" value="{{ $r->deduction_reason }}">
-                            <button class="btn btn-secondary" type="submit">Save</button>
-                        </form>
-                    </details>
-                    @endif
-                </td>
-                <td class="rf-wrap">
-                    @if($canManage)
-                        <div class="rf-bank"><span>{{ $r->bank_account }}</span><button type="button" data-copy="{{ $r->bank_account }}" onclick="navigator.clipboard.writeText(this.dataset.copy).then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='copy',1200)})">copy</button></div>
-                        <div class="rf-muted">{{ $r->bank_holder }}</div><div class="rf-muted">{{ $r->bank_name }}</div>
-                    @else<div class="rf-bank">{{ $r->maskedAccount() }}</div><div class="rf-muted">{{ $r->bank_name }}</div>@endif
-                </td>
-                <td><div class="rf-stars" title="Cleanliness {{ $r->rating_clean }}/5, service {{ $r->rating_service }}/5">★{{ $r->rating_clean ?? '–' }} <span class="rf-muted">clean</span><br>★{{ $r->rating_service ?? '–' }} <span class="rf-muted">service</span></div>
-                    @if($r->staff)<div class="rf-muted" title="{{ $r->staff->name }}">{{ \Illuminate\Support\Str::limit($r->staff->name, 10) }} ★{{ $r->staff_rating ?? '–' }}</div>@endif
-                    @if($r->comments)<div class="rf-muted rf-ell" title="{{ $r->comments }}">“{{ \Illuminate\Support\Str::limit($r->comments, 30) }}”</div>@endif
-                </td>
-                <td>@if($r->status === 'pending' && $r->due_on)
-                        {{ $r->due_on->format('d M') }}
-                        @if($daysLeft < 0)<div class="rf-due-bad">{{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} overdue</div>
-                        @elseif($daysLeft === 0)<div class="rf-due-soon">due today</div>
-                        @else<div class="rf-muted">{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }} left</div>@endif
-                    @else — @endif</td>
-                @if($canManage || $canDeduct)
-                <td class="rf-act">
-                    @if($canManage && $r->status === 'pending')
-                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form" data-received="{{ $r->received_at ? 1 : 0 }}">@csrf<input name="amount_paid" type="number" step="0.01" min="0" placeholder="RM" value="{{ $due !== null ? number_format($due, 2, '.', '') : '' }}" title="Amount paid" style="width:70px;flex:0 0 70px"><input name="reference" placeholder="Bank ref" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
-                    @endif
-                    @if(($canManage || $canDeduct) && $r->status === 'pending')
-                        <button type="button" class="rf-more" onclick="var d=this.nextElementSibling;d.hidden=!d.hidden;this.textContent=d.hidden?'More ▾':'Less ▴'">More ▾</button>
-                        <div class="rf-more-box" {{ $r->match !== 'matched' ? '' : 'hidden' }}>
-                        <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN or RES" value="{{ $r->booking_id }}" title="Booking number, eZee folio (FN4525) or reservation (RES4465)"><button class="btn btn-secondary" type="submit">Link</button></form>
-                        @if(!empty($r->suggestions))
-                        <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
-                            @foreach($r->suggestions as $s)
-                            @php $sb = $s['booking']; @endphp
-                            <form method="post" action="{{ route('admin.refunds.attach', $r) }}" class="rf-sugg-row">@csrf<input type="hidden" name="booking_id" value="{{ $sb->id }}">
-                                <div class="rf-sugg-t"><b>{{ $sb->listing->name ?? '' }}</b> · {{ trim(($sb->user->name ?? '') . ' ' . ($sb->user->last_name ?? '')) ?: '—' }}<div class="rf-muted">{{ \Carbon\Carbon::parse($sb->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($sb->check_out)->format('d M') }} · {{ $sb->source }} · {{ $sb->folio_no }} · {{ $s['why'] }}</div></div>
-                                <button class="btn btn-secondary" type="submit">Pick</button>
-                            </form>
-                            @endforeach
+                        @endif
+                        @if($pending)
+                        <div class="rf-recv" data-id="{{ $r->id }}" style="margin-top:8px">
+                            @if($r->received_at)<span class="rf-chip rf-chip--ok">Deposit received ✓</span> <span class="rf-muted">{{ $r->receiver->name ?? '' }}, {{ $r->received_at->format('d M H:i') }}</span>
+                            @else<span class="rf-chip rf-chip--warn">Deposit receipt not confirmed</span>@endif
+                            @if($canManage)<form method="post" action="{{ route('admin.refunds.received', $r) }}" class="rf-recv-form" style="display:inline">@csrf<button type="submit" class="rf-more">{{ $r->received_at ? 'undo' : 'Confirm received' }}</button></form>@endif
                         </div>
                         @endif
-                        @if($canManage)<form method="post" action="{{ route('admin.refunds.reject', $r) }}" onsubmit="return confirm('Reject request #{{ $r->id }}? The record is kept.')">@csrf<input name="note" placeholder="Reason" required maxlength="255"><button class="btn btn-secondary" type="submit">Reject</button></form>@endif
-                        <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request for it with the same bank details">@csrf<input name="unit_no" placeholder="Other unit" maxlength="40" required><button class="btn btn-secondary" type="submit">Split</button></form>
-                        </div>
-                    @elseif($canManage)
-                        <form method="post" action="{{ route('admin.refunds.reopen', $r) }}">@csrf<button class="btn btn-secondary" type="submit">Reopen</button></form>
-                    @endif
-                </td>
-                @endif
-            </tr>
+                    </div>
+                    <div class="rf-pane">
+                        <h4>Bank &amp; payment</h4>
+                        @if($canManage)
+                            <div class="rf-bank"><span>{{ $r->bank_account }}</span><button type="button" data-copy="{{ $r->bank_account }}" onclick="navigator.clipboard.writeText(this.dataset.copy).then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='copy',1200)})">copy</button></div>
+                            <div>{{ $r->bank_holder }} · {{ $r->bank_name }}</div>
+                        @else<div class="rf-bank">{{ $r->maskedAccount() }}</div><div>{{ $r->bank_name }}</div>@endif
+                        @if($r->status === 'paid')<div style="margin-top:6px">Paid <b>RM {{ number_format($r->amount_paid ?? 0, 2) }}</b> on {{ $r->paid_at?->format('d M H:i') }} by {{ $r->payer->name ?? '' }}{{ $r->reference ? ' · ref ' . $r->reference : '' }}</div>@endif
+                        @if($canManage && $pending)
+                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form rf-forms" data-received="{{ $r->received_at ? 1 : 0 }}" style="margin-top:8px">@csrf<input name="amount_paid" type="number" step="0.01" min="0" placeholder="RM" value="{{ $due !== null ? number_format($due, 2, '.', '') : '' }}" style="width:90px"><input name="reference" placeholder="Bank ref" maxlength="120"><button class="btn btn-primary rf-sm" type="submit">Mark paid</button></form>
+                        <form method="post" action="{{ route('admin.refunds.reject', $r) }}" class="rf-forms" onsubmit="return confirm('Reject request #{{ $r->id }}? The record is kept.')">@csrf<input name="note" placeholder="Reject with reason" required maxlength="255"><button class="btn btn-secondary rf-sm" type="submit">Reject</button></form>
+                        @elseif($canManage)
+                        <form method="post" action="{{ route('admin.refunds.reopen', $r) }}" style="margin-top:8px">@csrf<button class="btn btn-secondary rf-sm" type="submit">Reopen</button></form>
+                        @endif
+                    </div>
+                </div>
+            </td></tr>
         @empty
-            <tr><td colspan="{{ ($canManage || $canDeduct) ? 10 : 8 }}" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
+            <tr><td colspan="9" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
         @endforelse
         </tbody>
     </table>
-    @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)<div style="margin-top:10px">{{ $rows->links() }}</div>@endif
+    @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)<div style="padding:10px 12px">{{ $rows->links() }}</div>@endif
 </div></div>
 @endif
 @endsection
@@ -288,38 +286,52 @@
 @push('scripts')
 <script>
 (function(){
-    var flash = function(msg){ var el = document.createElement('div'); el.className = 'rf-flash'; el.textContent = msg; document.body.appendChild(el); setTimeout(function(){ el.remove(); }, 2600); };
+    var flash = function(msg){ var el = document.createElement('div'); el.className = 'rf-flash'; el.textContent = msg; document.body.appendChild(el); setTimeout(function(){ el.remove(); }, 3000); };
     var setCount = function(sel, n){ document.querySelectorAll(sel).forEach(function(e){ e.textContent = n; }); };
     var applyCounts = function(c){ if (!c) return; setCount('.rf-tile--main b, .rf-tabs a[href="?tab=pending"] i', c.pending); setCount('.rf-tile--warn b, .rf-tabs a[href="?tab=verify"] i', c.verify); setCount('.rf-tile--bad b', c.overdue); setCount('.rf-tabs a[href="?tab=paid"] i', c.paid); };
-    var vanish = function(id){ var tr = document.querySelector('tr[data-id="' + id + '"]'); if (!tr) return; tr.classList.add('rf-gone'); setTimeout(function(){ tr.remove(); }, 450); };
-    var post = function(form){ var btn = form.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.textContent = '…'; }
-        return fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
-            .then(function(r){ return r.json(); }); };
-    // Finance: confirm deposit received, in place.
+    var rowOf = function(id){ return document.querySelector('tr.rf-row[data-id="' + id + '"]'); };
+    var vanish = function(id){ var tr = rowOf(id), d = document.querySelector('tr.rf-detail[data-for="' + id + '"]'); [tr, d].forEach(function(x){ if (x) { x.classList.add('rf-gone'); setTimeout(function(){ x.remove(); }, 450); } }); };
+    var stepOn = function(id, name, title){ var tr = rowOf(id); if (!tr) return; tr.querySelectorAll('.rf-step').forEach(function(s){ if (s.textContent.trim() === name) { s.classList.add('on'); s.classList.remove('off'); if (title) s.title = title; } }); };
+    var post = function(form, extra){ var fd = new FormData(form); if (extra) Object.keys(extra).forEach(function(k){ fd.set(k, extra[k]); }); var btn = form.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; }
+        return fetch(form.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' }).then(function(r){ return r.json(); }).finally(function(){ if (btn) btn.disabled = false; }); };
+    // Expand / collapse details
+    document.querySelectorAll('.rf-open').forEach(function(b){ b.addEventListener('click', function(){ var tr = b.closest('tr'), d = document.querySelector('tr.rf-detail[data-for="' + tr.dataset.id + '"]'); d.hidden = !d.hidden; b.textContent = d.hidden ? '▸' : '▾'; b.setAttribute('aria-expanded', d.hidden ? 'false' : 'true'); tr.classList.toggle('open', !d.hidden); }); });
+    document.querySelectorAll('tr.rf-row').forEach(function(tr){ tr.addEventListener('click', function(e){ if (e.target.closest('a, button, input, form, label')) return; tr.querySelector('.rf-open').click(); }); });
+    // Open verify rows by default on the Verify tab
+    if (location.search.indexOf('tab=verify') !== -1) document.querySelectorAll('.rf-open').forEach(function(b){ b.click(); });
+    // Received toggle in place
     document.querySelectorAll('form.rf-recv-form').forEach(function(form){
         form.addEventListener('submit', function(e){ e.preventDefault();
-            post(form).then(function(d){ if (d && d.ok) { var box = form.closest('.rf-recv'); box.innerHTML = (d.received ? '<span class="rf-chip rf-chip--ok">Received ✓</span> <span class="rf-muted">' + d.by + ', ' + d.at + '</span>' : '<span class="rf-chip rf-chip--warn">Receipt unconfirmed</span>') + ' '; box.appendChild(form); var b = form.querySelector('button'); b.disabled = false; b.textContent = d.received ? 'undo' : 'Confirm received'; var pf = document.querySelector('tr[data-id="' + d.id + '"] form.rf-paid-form'); if (pf) pf.dataset.received = d.received ? '1' : '0'; flash(d.message); } else { form.submit(); } }).catch(function(){ form.submit(); });
+            post(form).then(function(d){ if (d && d.ok) { var box = form.closest('.rf-recv'); box.innerHTML = (d.received ? '<span class="rf-chip rf-chip--ok">Deposit received ✓</span> <span class="rf-muted">' + d.by + ', ' + d.at + '</span>' : '<span class="rf-chip rf-chip--warn">Deposit receipt not confirmed</span>') + ' '; box.appendChild(form); form.querySelector('button').textContent = d.received ? 'undo' : 'Confirm received'; var pf = document.querySelector('tr.rf-detail[data-for="' + d.id + '"] form.rf-paid-form'); if (pf) pf.dataset.received = d.received ? '1' : '0'; var s = rowOf(d.id).querySelectorAll('.rf-step')[1]; if (s) s.classList.toggle('on', d.received); flash(d.message); } else { form.submit(); } }).catch(function(){ form.submit(); });
         });
     });
-    // Single Paid: update the row in place, no page reload.
+    // Single Mark paid in place
     document.querySelectorAll('form.rf-paid-form').forEach(function(form){
         form.addEventListener('submit', function(e){ e.preventDefault();
             if (form.dataset.received !== '1' && !confirm('Deposit receipt is not confirmed for this request. Pay anyway?')) return;
-            post(form).then(function(d){ if (d && d.ok) { flash(d.message); vanish(d.id); applyCounts(d.counts); } else { form.submit(); } }).catch(function(){ form.submit(); });
+            post(form).then(function(d){ if (d && d.ok) { flash(d.message); if (location.search.indexOf('tab=paid') === -1) vanish(d.id); else stepOn(d.id, 'Paid'); applyCounts(d.counts); } else { form.submit(); } }).catch(function(){ form.submit(); });
         });
     });
-    // Bulk: tick boxes, one request for all.
+    // Bulk bar
     var all = document.getElementById('rf-all'), bulk = document.getElementById('rf-bulk'), n = document.getElementById('rf-bulk-n');
     var picks = function(){ return Array.prototype.slice.call(document.querySelectorAll('.rf-pick:checked')); };
     var refresh = function(){ var k = picks().length; if (bulk) { bulk.hidden = k === 0; n.textContent = k; } };
     document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.addEventListener('change', refresh); });
     if (all) all.addEventListener('change', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = all.checked; }); refresh(); });
     var clear = document.getElementById('rf-bulk-clear'); if (clear) clear.addEventListener('click', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = false; }); if (all) all.checked = false; refresh(); });
-    if (bulk) bulk.addEventListener('submit', function(e){ e.preventDefault(); var ids = picks().map(function(cb){ return cb.value; }); if (!ids.length) return;
-        if (!confirm('Mark ' + ids.length + ' request' + (ids.length === 1 ? '' : 's') + ' as paid?')) return;
-        bulk.querySelectorAll('input[name="ids[]"]').forEach(function(i){ i.remove(); });
-        ids.forEach(function(id){ var i = document.createElement('input'); i.type = 'hidden'; i.name = 'ids[]'; i.value = id; bulk.appendChild(i); });
-        post(bulk).then(function(d){ if (d && d.ok) { flash(d.message); picks().forEach(function(cb){ cb.checked = false; }); d.ids.forEach(vanish); applyCounts(d.counts); if (all) all.checked = false; refresh(); var b = bulk.querySelector('button[type=submit]'); b.disabled = false; b.textContent = 'Mark selected as paid'; } else { bulk.submit(); } }).catch(function(){ bulk.submit(); });
+    if (bulk) bulk.querySelectorAll('button[data-action]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var ids = picks().map(function(cb){ return cb.value; }); if (!ids.length) return;
+            var labels = { paid: 'Mark ' + ids.length + ' request(s) as paid? Only rows with deposit receipt confirmed will be paid.', received: 'Confirm deposit received for ' + ids.length + ' request(s)?', nodeduct: 'Record "checked, nothing to deduct" on ' + ids.length + ' request(s)?' };
+            if (!confirm(labels[btn.dataset.action])) return;
+            bulk.querySelectorAll('input[name="ids[]"]').forEach(function(i){ i.remove(); });
+            ids.forEach(function(id){ var i = document.createElement('input'); i.type = 'hidden'; i.name = 'ids[]'; i.value = id; bulk.appendChild(i); });
+            document.getElementById('rf-bulk-action').value = btn.dataset.action;
+            btn.disabled = true;
+            post(bulk).then(function(d){ btn.disabled = false; if (d && d.ok) { flash(d.message); picks().forEach(function(cb){ cb.checked = false; }); if (all) all.checked = false; refresh();
+                if (d.action === 'paid') { d.ids.forEach(vanish); } else { d.ids.forEach(function(id){ stepOn(id, d.action === 'received' ? 'Rcvd' : 'Ops', (d.action === 'received' ? 'Deposit receipt confirmed by ' : 'Operations checked, nothing to deduct, ') + d.by + ' ' + d.at); var pf = document.querySelector('tr.rf-detail[data-for="' + id + '"] form.rf-paid-form'); if (pf && d.action === 'received') pf.dataset.received = '1'; }); }
+                applyCounts(d.counts); } else { flash((d && d.message) || 'Something went wrong, reload the page.'); } }).catch(function(){ btn.disabled = false; flash('Network error, reload the page.'); });
+        });
     });
 })();
 </script>
