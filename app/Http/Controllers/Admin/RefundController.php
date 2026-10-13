@@ -38,7 +38,7 @@ class RefundController extends Controller
 
         $counts = $this->counts() + [
             'rejected' => RefundRequest::where('status', 'rejected')->count(),
-            'today'    => RefundRequest::where('created_at', '>=', today())->count(),
+            'received' => RefundRequest::where('created_at', '>=', today())->count(),
         ];
 
         $rows = collect();
@@ -71,7 +71,15 @@ class RefundController extends Controller
 
     private function filtered(string $tab, string $q, string $prop, string $from = '', string $to = '')
     {
-        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer', 'deductor', 'receiver'])->orderByDesc('id');
+        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer', 'deductor', 'receiver']);
+        // Pending work is ordered by the 3-working-day target: most urgent first. Paid by payment date.
+        if ($tab === 'paid') {
+            $query->orderByDesc('paid_at')->orderByDesc('id');
+        } elseif (in_array($tab, ['pending', 'verify'], true)) {
+            $query->orderBy('due_on')->orderBy('id');
+        } else {
+            $query->orderByDesc('id');
+        }
         $dateCol = $tab === 'paid' ? 'paid_at' : 'created_at';
         if ($from !== '') {
             $query->where($dateCol, '>=', $from . ' 00:00:00');
@@ -295,11 +303,19 @@ class RefundController extends Controller
 
     private function counts(): array
     {
+        $pending = RefundRequest::where('status', 'pending');
+        $month = RefundRequest::where('status', 'paid')->where('paid_at', '>=', now()->subDays(30))->get(['paid_at', 'due_on']);
+        $paidMonth = $month->count();
+        $onTime = $month->filter(fn ($r) => $r->due_on && $r->paid_at && $r->paid_at->lte($r->due_on->copy()->endOfDay()))->count();
         return [
-            'pending' => RefundRequest::where('status', 'pending')->count(),
-            'verify'  => RefundRequest::where('status', 'pending')->where('match', '!=', 'matched')->count(),
-            'overdue' => RefundRequest::where('status', 'pending')->where('due_on', '<', today())->count(),
-            'paid'    => RefundRequest::where('status', 'paid')->count(),
+            'pending'  => (clone $pending)->count(),
+            'verify'   => (clone $pending)->where('match', '!=', 'matched')->count(),
+            'overdue'  => (clone $pending)->where('due_on', '<', today())->count(),
+            'today'    => (clone $pending)->where('due_on', today())->count(),
+            'ready'    => (clone $pending)->whereNotNull('received_at')->where(fn ($q) => $q->whereNotNull('deduction_at')->orWhere('ops_cutoff_at', '<', now()))->count(),
+            'paid'     => RefundRequest::where('status', 'paid')->count(),
+            'paid30'   => $paidMonth,
+            'ontime30' => $paidMonth ? (int) round($onTime / $paidMonth * 100) : null,
         ];
     }
 

@@ -7,7 +7,8 @@
 .rf-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}.rf-head h1{margin:0 0 2px;font-size:20px}.rf-sub{margin:0;font-size:12.5px;color:var(--text-secondary);max-width:760px;line-height:1.45}
 .rf-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}@media (max-width:900px){.rf-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .rf-tile{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;display:grid;gap:3px;text-decoration:none;color:inherit;transition:box-shadow .12s}.rf-tile:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}.rf-tile span{font-size:11.5px;color:var(--text-secondary)}.rf-tile b{font-size:20px;line-height:1.15}
-.rf-tile--main{background:#0f766e;border-color:#0f766e;color:#fff}.rf-tile--main span{color:rgba(255,255,255,.85)}.rf-tile--warn b{color:#b45309}.rf-tile--bad b{color:#b91c1c}.rf-tile.on{outline:2px solid #0f766e;outline-offset:1px}
+.rf-tiles--6{grid-template-columns:repeat(6,minmax(0,1fr))}@media (max-width:1100px){.rf-tiles--6{grid-template-columns:repeat(3,minmax(0,1fr))}}.rf-tile small{font-size:11px;color:var(--text-secondary);line-height:1.2}
+.rf-tile--main{background:#0f766e;border-color:#0f766e;color:#fff}.rf-tile--main span,.rf-tile--main small{color:rgba(255,255,255,.85)}.rf-tile--warn b{color:#b45309}.rf-tile--bad b{color:#b91c1c}.rf-tile--ok b{color:#166534}.rf-tile.on{outline:2px solid #0f766e;outline-offset:1px}
 .rf-link{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px}.rf-link code{background:#fff;border:1px solid #99f6e4;border-radius:6px;padding:3px 8px;font-size:12px;word-break:break-all}
 .rf-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border,#e5e7eb);margin-bottom:10px;flex-wrap:wrap;align-items:center}.rf-tabs a{padding:8px 12px;font-size:13px;color:var(--text-secondary);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}.rf-tabs a.on{color:#0f766e;border-color:#0f766e;font-weight:600}.rf-tabs a i{font-style:normal;background:#f1f5f9;border-radius:999px;padding:0 6px;font-size:11px;margin-left:4px}.rf-tabs a.on i{background:#ccfbf1;color:#0f766e}
 .rf-filter{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}.rf-filter input,.rf-filter select{padding:5px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;font-family:inherit}
@@ -20,6 +21,10 @@
 .rf-table td.rf-wrap{white-space:normal;max-width:220px}.rf-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
 .rf-list{table-layout:fixed;min-width:0!important;width:100%}.rf-list th,.rf-list td{padding:8px 7px;vertical-align:middle;overflow:hidden}.rf-list td.rf-wrap,.rf-list td.num{white-space:normal}.rf-list .rf-steps{white-space:normal}.rf-detail td{overflow:visible}.rf-list .rf-tick{padding-left:10px}.rf-list tr.rf-row{cursor:pointer}.rf-list tr.rf-row:hover{background:#f8fafc}.rf-list tr.rf-row.open{background:#f0fdfa}.rf-open{border:1px solid var(--border,#e5e7eb);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer;color:#0f766e;font-size:13px}
+.rf-pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:#f1f5f9;color:#475569;white-space:nowrap}.rf-pill--bad{background:#fee2e2;color:#991b1b}.rf-pill--warn{background:#fef3c7;color:#92400e}.rf-pill--soon{background:#fef9c3;color:#854d0e}.rf-pill--ok{background:#dcfce7;color:#166534}
+.rf-section td{background:#f8fafc;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);padding:6px 10px!important;border-bottom:1px solid var(--border,#e5e7eb)}.rf-section--overdue td{color:#991b1b;background:#fef2f2}.rf-section--due-today td{color:#92400e;background:#fffbeb}
+.rf-row.ready td.rf-tick{box-shadow:inset 3px 0 #16a34a}
+.rf-quick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;margin:0 0 8px}.rf-qbtn{border:1px solid var(--border,#e5e7eb);background:#fff;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;color:#0f766e;font-weight:600}.rf-qbtn:hover{background:#f0fdfa}
 .rf-steps{white-space:nowrap}.rf-step{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 6px;border-radius:999px;background:#f1f5f9;color:#94a3b8;margin-right:2px}.rf-step.on{background:#dcfce7;color:#166534}.rf-step.off{background:#fee2e2;color:#991b1b;text-decoration:line-through}
 .rf-detail td{background:#fafcfb;padding:12px 14px 14px;border-bottom:2px solid #ccfbf1}.rf-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}@media (max-width:1000px){.rf-panel{grid-template-columns:1fr}}.rf-pane{background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.45;min-width:0}.rf-pane h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary)}
 .rf-forms{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.rf-forms input{flex:1;min-width:120px;padding:5px 7px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-forms form{display:flex;gap:4px;flex:1;min-width:200px}
@@ -49,7 +54,7 @@
 <div class="rf-head">
     <div>
         <h1>Deposit refunds</h1>
-        <p class="rf-sub">Guests fill in the refund form from the link in the check-out message. Each request is matched to its stay; Finance checks the deposit in eZee and marks it paid within 3 working days. Bank details are encrypted and shown only to Finance. Nothing is ever deleted.</p>
+        <p class="rf-sub"><b>Target: every deposit refunded within 3 working days of the guest's request.</b> Operations record deductions by noon the next working day; Finance confirms receipt and pays. Bank details are encrypted and shown only to Finance. Nothing is ever deleted.</p>
     </div>
 </div>
 
@@ -67,12 +72,13 @@
 </div>
 @endif
 
-<div class="rf-tiles">
-    <a class="rf-tile rf-tile--main {{ $tab === 'pending' ? 'on' : '' }}" href="?tab=pending"><span>Pending</span><b>{{ $counts['pending'] }}</b></a>
-    <a class="rf-tile rf-tile--warn {{ $tab === 'verify' ? 'on' : '' }}" href="?tab=verify"><span>Need verifying</span><b>{{ $counts['verify'] }}</b></a>
-    <a class="rf-tile rf-tile--bad" href="?tab=pending"><span>Overdue (past 3 working days)</span><b>{{ $counts['overdue'] }}</b></a>
-    <a class="rf-tile" href="?tab=all"><span>Received today</span><b>{{ $counts['today'] }}</b></a>
-    <a class="rf-tile {{ $tab === 'paid' ? 'on' : '' }}" href="?tab=paid"><span>Paid</span><b>{{ $counts['paid'] }}</b></a>
+<div class="rf-tiles rf-tiles--6">
+    <a class="rf-tile rf-tile--main {{ $tab === 'pending' ? 'on' : '' }}" href="?tab=pending"><span>Pending</span><b>{{ $counts['pending'] }}</b><small>target: refund in 3 working days</small></a>
+    <a class="rf-tile rf-tile--bad" href="?tab=pending"><span>Overdue</span><b>{{ $counts['overdue'] }}</b><small>past the 3-day target</small></a>
+    <a class="rf-tile rf-tile--warn" href="?tab=pending"><span>Due today</span><b>{{ $counts['today'] }}</b><small>pay before close of day</small></a>
+    <a class="rf-tile rf-tile--ok" href="?tab=pending"><span>Ready to pay</span><b>{{ $counts['ready'] }}</b><small>Ops checked · deposit received</small></a>
+    <a class="rf-tile {{ $tab === 'verify' ? 'on' : '' }}" href="?tab=verify"><span>Need verifying</span><b>{{ $counts['verify'] }}</b><small>no clean booking match</small></a>
+    <a class="rf-tile {{ $tab === 'paid' ? 'on' : '' }}" href="?tab=paid"><span>Paid on time</span><b>{{ $counts['ontime30'] === null ? '—' : $counts['ontime30'] . '%' }}</b><small>{{ $counts['paid30'] }} paid in the last 30 days</small></a>
 </div>
 
 <div class="rf-tabs">
@@ -167,6 +173,9 @@
     <button class="btn btn-secondary rf-sm" type="button" id="rf-bulk-clear">Clear</button>
 </form>
 @endif
+@if(($canManage || $canDeduct) && $listTab && $rows->count())
+<div class="rf-quick"><span class="rf-muted">Select:</span><button type="button" class="rf-qbtn" data-select="ready">ready to pay</button><button type="button" class="rf-qbtn" data-select="overdue">overdue</button><button type="button" class="rf-qbtn" data-select="today">due today</button><button type="button" class="rf-qbtn" data-select="unchecked">ops not checked</button><span class="rf-muted" style="margin-left:auto">sorted by due date, most urgent first</span></div>
+@endif
 <div class="card"><div class="card-body" style="padding:0">
     <table class="rf-table rf-list">
         <colgroup>@if(($canManage || $canDeduct) && $listTab)<col style="width:34px">@endif<col style="width:54px"><col style="width:21%"><col style="width:20%"><col style="width:15%"><col style="width:92px"><col style="width:148px"><col style="width:66px"><col style="width:40px"></colgroup>
@@ -184,7 +193,15 @@
                 $opsDone = (bool) $r->deduction_at; $opsOpen = !$r->opsCutoffPassed();
                 $pending = $r->status === 'pending';
             @endphp
-            <tr class="rf-row {{ $rowClass }}" data-id="{{ $r->id }}">
+            @php
+                $bucket = $pending ? ($daysLeft < 0 ? 'Overdue' : ($daysLeft === 0 ? 'Due today' : ($daysLeft === 1 ? 'Due tomorrow' : 'Due later'))) : null;
+                $ready = $pending && $r->received_at && ($opsDone || !$opsOpen);
+            @endphp
+            @if($bucket && $bucket !== ($lastBucket ?? null) && in_array($tab, ['pending', 'verify'], true))
+            <tr class="rf-section rf-section--{{ \Illuminate\Support\Str::slug($bucket) }}"><td colspan="{{ (($canManage || $canDeduct) && $listTab) ? 9 : 8 }}">{{ $bucket }}</td></tr>
+            @php $lastBucket = $bucket; @endphp
+            @endif
+            <tr class="rf-row {{ $rowClass }} {{ $ready ? 'ready' : '' }}" data-id="{{ $r->id }}" data-ready="{{ $ready ? 1 : 0 }}" data-overdue="{{ $pending && $daysLeft < 0 ? 1 : 0 }}" data-today="{{ $pending && $daysLeft === 0 ? 1 : 0 }}" data-unchecked="{{ $pending && !$opsDone && $opsOpen ? 1 : 0 }}">
                 @if(($canManage || $canDeduct) && $listTab)<td class="rf-tick">@if($pending)<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
                 <td><b>{{ $r->id }}</b>@if($r->group_key)<div class="rf-grp" title="One guest, several units">{{ $r->group_index }}/{{ $r->group_size }}</div>@endif</td>
                 <td class="rf-wrap"><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }} · {{ $r->created_at->format('d M H:i') }}</div></td>
@@ -207,7 +224,13 @@
                     <span class="rf-step {{ $r->status === 'paid' ? 'on' : '' }}" title="{{ $r->status === 'paid' ? 'Paid ' . $r->paid_at?->format('d M') . ' by ' . ($r->payer->name ?? '') : 'Not paid yet' }}">Paid</span>
                     @endif
                 </td>
-                <td>@if($pending && $r->due_on){{ $r->due_on->format('d M') }}@if($daysLeft < 0)<div class="rf-due-bad">{{ abs($daysLeft) }}d overdue</div>@elseif($daysLeft === 0)<div class="rf-due-soon">today</div>@else<div class="rf-muted">{{ $daysLeft }}d left</div>@endif @elseif($r->status === 'paid'){{ $r->paid_at?->format('d M') }}@else —@endif</td>
+                <td>@if($pending && $r->due_on)
+                        @if($daysLeft < 0)<span class="rf-pill rf-pill--bad">{{ abs($daysLeft) }}d late</span>@elseif($daysLeft === 0)<span class="rf-pill rf-pill--warn">today</span>@elseif($daysLeft === 1)<span class="rf-pill rf-pill--soon">tomorrow</span>@else<span class="rf-pill">{{ $daysLeft }}d</span>@endif
+                        <div class="rf-muted">{{ $r->due_on->format('D d M') }}</div>
+                    @elseif($r->status === 'paid')
+                        @php $late = $r->paid_at && $r->due_on && $r->paid_at->gt($r->due_on->copy()->endOfDay()); @endphp
+                        <span class="rf-pill {{ $late ? 'rf-pill--bad' : 'rf-pill--ok' }}">{{ $late ? 'late' : 'on time' }}</span><div class="rf-muted">{{ $r->paid_at?->format('D d M') }}</div>
+                    @else —@endif</td>
                 <td><button type="button" class="rf-open" aria-expanded="false" title="Details and actions">▸</button></td>
             </tr>
             <tr class="rf-detail" data-for="{{ $r->id }}" hidden><td colspan="{{ (($canManage || $canDeduct) && $listTab) ? 9 : 8 }}">
@@ -318,6 +341,7 @@
     var refresh = function(){ var k = picks().length; if (bulk) { bulk.hidden = k === 0; n.textContent = k; } };
     document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.addEventListener('change', refresh); });
     if (all) all.addEventListener('change', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = all.checked; }); refresh(); });
+    document.querySelectorAll('.rf-qbtn').forEach(function(b){ b.addEventListener('click', function(){ var k = b.dataset.select; document.querySelectorAll('tr.rf-row').forEach(function(tr){ var cb = tr.querySelector('.rf-pick'); if (cb) cb.checked = tr.dataset[k] === '1'; }); refresh(); if (!picks().length) flash('No request matches "' + b.textContent + '" on this page.'); }); });
     var clear = document.getElementById('rf-bulk-clear'); if (clear) clear.addEventListener('click', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = false; }); if (all) all.checked = false; refresh(); });
     if (bulk) bulk.querySelectorAll('button[data-action]').forEach(function(btn){
         btn.addEventListener('click', function(){
