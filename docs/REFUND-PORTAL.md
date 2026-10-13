@@ -16,6 +16,8 @@ Fills in: name as per reservation, contact number, email, property, unit, check-
 ## Finance (Operations → Deposit refunds)
 
 - **Pending** — everything not yet paid. Rows marked **Matched** were tied to a booking automatically (property + unit + check-out date). Open the booking link, check the deposit in eZee, pay, then click **Paid** (bank reference optional).
+- Matching accepts the Homemoka unit name ("11-08", "Alinea 11-08") and the eZee room code guests see in their messages ("AL-11-08", "BS 03-06"). A code that belongs to another property is flagged, not matched.
+- **Date range** boxes on the filter bar: submitted dates on Pending / Verify / All, paid dates on Paid. Export CSV follows the same range, so a paid-date range matches a bank statement period.
 - **Verify** — no clean match (wrong unit, wrong date, name differs, or the same booking already has a request = **Duplicate**). Find the stay, type the booking number in the **Link** box, or **Reject** with a reason. Nothing is ever deleted.
 - **Due** — 3 working days after the guest submitted. Overdue rows turn red.
 - **Export CSV** — the current list with bank details, for the bank's bulk payment file. Finance only; every export is logged.
