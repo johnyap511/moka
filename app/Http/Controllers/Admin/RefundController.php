@@ -44,7 +44,7 @@ class RefundController extends Controller
         $rows = collect();
         if ($tab !== 'feedback') {
             $rows = $this->filtered($tab, $q, $prop, $from, $to)->paginate(40)->withQueryString();
-            if (admin_can('refunds.manage')) {
+            if (admin_can('refunds.manage') || admin_can('refunds.deduct')) {
                 foreach ($rows as $r) {
                     $r->suggestions = ($r->status === 'pending' && $r->match !== 'matched') ? Refunds::suggestions($r) : [];
                 }
@@ -71,7 +71,7 @@ class RefundController extends Controller
 
     private function filtered(string $tab, string $q, string $prop, string $from = '', string $to = '')
     {
-        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer', 'deductor'])->orderByDesc('id');
+        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer', 'deductor', 'receiver'])->orderByDesc('id');
         $dateCol = $tab === 'paid' ? 'paid_at' : 'created_at';
         if ($from !== '') {
             $query->where($dateCol, '>=', $from . ' 00:00:00');
@@ -162,12 +162,12 @@ class RefundController extends Controller
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
             // Column order follows Najihah's working sheet (12 Oct 2026); "Finance review" is left blank for her notes.
-            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Deposit', 'Deduction', 'Deduction reason', 'Refund due', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
+            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
             foreach ($rows as $r) {
                 fputcsv($out, [
                     $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
                     $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
-                    $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : '', $r->deduction_reason, $r->refundDue(),
+                    $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : '', $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(), $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
                     $r->bank_holder, "\t" . $r->bank_account, $r->bank_name,   // tab keeps Excel from mangling long numbers
                     $r->phone, $r->email,
                     $r->booking_id, $r->match, $r->match_note, '',
@@ -236,14 +236,19 @@ class RefundController extends Controller
         $request->validate(['ids' => 'required|array|min:1|max:200', 'ids.*' => 'integer', 'reference' => 'nullable|string|max:120']);
         $ref = $request->input('reference') ?: null;
         $rows = RefundRequest::whereIn('id', $request->input('ids'))->where('status', 'pending')->get();
-        $done = [];
+        $done = []; $unreceived = 0;
         foreach ($rows as $r) {
+            if (!$r->received_at) {
+                $unreceived++;
+                continue;
+            }
             $r->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $ref, 'amount_paid' => $r->refundDue()]);
             $done[] = $r->id;
         }
         $this->log(null, 'Refunds paid in bulk', ['ids' => $done, 'reference' => $ref]);
         $skipped = count($request->input('ids')) - count($done);
-        $msg = count($done) . ' request' . (count($done) === 1 ? '' : 's') . ' marked paid' . ($ref ? ' (ref ' . $ref . ')' : '') . ($skipped ? '; ' . $skipped . ' skipped, not pending' : '') . '.';
+        $skipped -= $unreceived;
+        $msg = count($done) . ' request' . (count($done) === 1 ? '' : 's') . ' marked paid' . ($ref ? ' (ref ' . $ref . ')' : '') . ($unreceived ? '; ' . $unreceived . ' skipped: deposit not confirmed received' : '') . ($skipped ? '; ' . $skipped . ' skipped, not pending' : '') . '.';
         if ($request->wantsJson()) {
             return response()->json(['ok' => true, 'ids' => $done, 'message' => $msg, 'counts' => $this->counts()]);
         }
@@ -280,7 +285,7 @@ class RefundController extends Controller
     /** Finance ties a "verify" request to the booking they found, or clears a wrong match. */
     public function attach(Request $request, RefundRequest $refund)
     {
-        $this->manage();
+        $this->manageOrDeduct();
         $request->validate(['booking_id' => 'nullable|string|max:40']);
         $id = trim((string) $request->input('booking_id'));
         if ($id !== '') {
@@ -301,6 +306,24 @@ class RefundController extends Controller
         }
         $refund->update(['booking_id' => null, 'match' => 'verify', 'duplicate_of' => null, 'match_note' => Str::limit('Match cleared by ' . Auth::user()->name . ' on ' . now()->format('d M'), 250)]);
         return back()->with('success', 'Request #' . $refund->id . ' unlinked.');
+    }
+
+    /** Finance confirms the deposit was received (bank statement / SQL accounting) before paying. Click again to undo. */
+    public function received(Request $request, RefundRequest $refund)
+    {
+        $this->manage();
+        if ($refund->received_at) {
+            $refund->update(['received_at' => null, 'received_by' => null]);
+            $msg = 'Request #' . $refund->id . ': deposit receipt unconfirmed.';
+        } else {
+            $refund->update(['received_at' => now(), 'received_by' => Auth::id()]);
+            $msg = 'Request #' . $refund->id . ': deposit confirmed received.';
+        }
+        $this->log($refund, 'Refund deposit receipt ' . ($refund->received_at ? 'confirmed' : 'unconfirmed'), []);
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'id' => $refund->id, 'received' => (bool) $refund->received_at, 'by' => Auth::user()->name, 'at' => now()->format('d M H:i'), 'message' => $msg]);
+        }
+        return back()->with('success', $msg);
     }
 
     /** Operation Team records the deposit held and any deduction with its reason, so Finance knows what to refund. */
@@ -337,11 +360,19 @@ class RefundController extends Controller
     /** Split a request naming two units into a second request for the other unit (same guest, same bank details). */
     public function split(Request $request, RefundRequest $refund)
     {
-        $this->manage();
+        $this->manageOrDeduct();
         $request->validate(['unit_no' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \\/.-]{2,40}$/']]);
         $new = Refunds::split($refund, $request->input('unit_no'));
         $this->log($new, 'Refund split', ['from' => $refund->id, 'unit' => $new->unit_no, 'match' => $new->match, 'booking_id' => $new->booking_id]);
         return back()->with('success', 'Request #' . $new->id . ' created for unit ' . $new->unit_no . ' (' . ($new->match === 'matched' ? 'matched to booking #' . $new->booking_id : 'needs verifying') . '), grouped with #' . $refund->id . '.');
+    }
+
+    /** Identifying the booking (Link, Pick, Split) is open to Operations too; paying is not. */
+    private function manageOrDeduct(): void
+    {
+        if (!admin_can('refunds.manage') && !admin_can('refunds.deduct')) {
+            abort(403);
+        }
     }
 
     private function manage(): void

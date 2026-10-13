@@ -285,6 +285,16 @@ class Refunds
         return array_intersect($a, $c) ? null : 'Name differs: booking is under ' . $guest;
     }
 
+    /** Noon (config) on the next working day after submission: Operations' deadline to record a deduction. */
+    public static function opsCutoff(Carbon $submitted): Carbon
+    {
+        $d = $submitted->copy()->addDay();
+        while (!$d->isWeekday()) {
+            $d->addDay();
+        }
+        return $d->setTime((int) config('moka.refund_ops_cutoff_hour', 12), 0, 0);
+    }
+
     /** Working days (Mon–Fri) after the submission day. */
     public static function dueOn(Carbon $submitted): Carbon
     {
@@ -345,7 +355,7 @@ class Refunds
             'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
         ];
         $new = self::submit($in, $r->link, $r->ip, ['key' => $key, 'index' => $size, 'size' => $size], false);
-        $new->forceFill(['created_at' => $r->created_at, 'due_on' => $r->due_on, 'match_note' => Str::limit(trim('Split from request #' . $r->id . '. ' . ($new->match_note ?? '')), 250)])->save();
+        $new->forceFill(['created_at' => $r->created_at, 'due_on' => $r->due_on, 'ops_cutoff_at' => $r->ops_cutoff_at, 'deposit_amount' => $r->deposit_amount, 'match_note' => Str::limit(trim('Split from request #' . $r->id . '. ' . ($new->match_note ?? '')), 250)])->save();
         return $new;
     }
 
@@ -423,6 +433,8 @@ class Refunds
             'staff_comment'  => !empty($in['staff_user_id']) ? ($in['staff_comment'] ?? null) : null,
             'status'         => 'pending',
             'due_on'         => self::dueOn($now),
+            'deposit_amount' => config('moka.refund_deposit', 200),
+            'ops_cutoff_at'  => self::opsCutoff($now),
             'ip'             => $ip,
         ]);
     }

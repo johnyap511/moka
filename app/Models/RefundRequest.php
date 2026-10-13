@@ -22,6 +22,8 @@ class RefundRequest extends Model
         'due_on'       => 'date',
         'paid_at'      => 'datetime',
         'deduction_at' => 'datetime',
+        'ops_cutoff_at' => 'datetime',
+        'received_at'  => 'datetime',
     ];
 
     public function booking()
@@ -55,6 +57,17 @@ class RefundRequest extends Model
     public function refundDue(): ?float
     {
         return $this->deposit_amount === null ? null : max(0, round((float) $this->deposit_amount - (float) $this->deduction_amount, 2));
+    }
+
+    public function receiver()
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    /** Operations' window to record a deduction has closed. */
+    public function opsCutoffPassed(): bool
+    {
+        return $this->ops_cutoff_at !== null && $this->ops_cutoff_at->isPast();
     }
 
     public function deductor()

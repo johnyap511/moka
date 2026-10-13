@@ -23,6 +23,11 @@ return [
 
     // Deposit refund portal (12 Oct 2026). Optional Cloudflare Turnstile on the guest
     // form: set both keys to turn the bot check on; leave empty and the form works without it.
+    // Deposit refunds (Sam, 13 Oct 2026): every stay holds RM 200; Operations record deductions by noon
+    // the next working day after the request; Finance confirms receipt before paying.
+    'refund_deposit'         => (float) env('MOKA_REFUND_DEPOSIT', 200),
+    'refund_ops_cutoff_hour' => (int) env('MOKA_REFUND_OPS_CUTOFF_HOUR', 12),
+
     // Admin accounts never offered in the guest form's "who served you" list (shared logins).
     'refund_staff_exclude' => ['Intern', 'Intern Moka'],
 

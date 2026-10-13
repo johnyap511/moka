@@ -17,6 +17,13 @@ Fills in: name as per reservation, contact number, email, property, unit, check-
 
 The guest taps "+ Add another unit" on the form (up to three). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.
 
+## Daily workflow and cut-offs
+
+1. Guest submits on check-out day. Deposit is RM 200 on every request (config `moka.refund_deposit`).
+2. **Operation Team, by 12:00 noon the next working day** (the row shows "Ops cut-off …"): record any deduction with its reason, and help identify unmatched requests with Pick, Link (booking #, FN folio or RES) or Split. After the cut-off the deduction box closes for Operations; Finance Manager / Admin can still edit.
+3. **Finance, daily**: check the deposit was received (bank statement / SQL accounting), click **Confirm received** on the row, then tick the confirmed rows and **Mark selected as paid** with the bank reference. Bulk payment skips rows whose receipt is not confirmed; a single Paid on an unconfirmed row asks first.
+4. **Month end**: Paid tab with the month's paid-date range, read the total, export the CSV, tie to the bank statement as a second check.
+
 ## Deductions (Operation Team)
 
 When part of a deposit is kept (damage, missing item, extra cleaning), the Operation Team records it on the request before Finance pays: open the row's **Deposit / deduct** box in the Deposit column, enter the deposit held, the amount deducted and the reason, Save. The row then shows "Refund RM X" (deposit less deduction) with who recorded it and when. A deduction without a reason, or larger than the deposit, is refused. Finance's Paid box is prefilled with the refund due and records the amount actually paid; the Paid tab shows a total for the chosen date range, and the CSV carries Deposit, Deduction, Deduction reason, Refund due and Amount paid.
