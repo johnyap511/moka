@@ -50,6 +50,17 @@ class RefundRequest extends Model
         return $n === '' ? '—' : str_repeat('•', max(0, strlen($n) - 4)) . substr($n, -4);
     }
 
+    /** Deposit less deduction, when the deposit is known. */
+    public function refundDue(): ?float
+    {
+        return $this->deposit_amount === null ? null : max(0, round((float) $this->deposit_amount - (float) $this->deduction_amount, 2));
+    }
+
+    public function deductor()
+    {
+        return $this->belongsTo(User::class, 'deduction_by');
+    }
+
     public function isOverdue(): bool
     {
         return $this->status === 'pending' && $this->due_on && $this->due_on->isPast() && !$this->due_on->isToday();

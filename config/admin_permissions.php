@@ -56,6 +56,7 @@ return [
             'refunds.view'     => 'View deposit refund requests (bank account masked)',
             'refunds.manage'   => 'See bank details, mark refunds paid',
             'refunds.feedback' => 'View guest feedback and team KPI',
+            'refunds.deduct'   => 'Record the deposit held and any deduction on a refund request',
         ],
     ],
     'roles' => [
@@ -79,7 +80,7 @@ return [
                 'calendar.view',
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate', 'reports.units',
-                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
             ],
         ],
         'operations_manager' => [
@@ -97,7 +98,7 @@ return [
                 'settings.view',
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate', 'reports.units',
-                'refunds.link', 'refunds.view', 'refunds.feedback',
+                'refunds.link', 'refunds.view', 'refunds.feedback', 'refunds.deduct',
             ],
         ],
         'operations' => [
@@ -112,7 +113,7 @@ return [
                 'calendar.view',
                 'sales.own',
                 'reports.generate',
-                'refunds.link',
+                'refunds.link', 'refunds.view', 'refunds.deduct',
             ],
         ],
         'finance_manager' => [
@@ -130,7 +131,7 @@ return [
                 'settings.view',
                 'sales.view', 'sales.manage',
                 'reports.generate', 'reports.units',
-                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
             ],
         ],
         'finance' => [
@@ -146,7 +147,7 @@ return [
                 'calendar.view',
                 'sales.view', 'sales.manage',
                 'reports.generate',
-                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback',
+                'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
             ],
         ],
         'sales' => [

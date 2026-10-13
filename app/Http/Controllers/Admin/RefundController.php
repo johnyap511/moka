@@ -57,6 +57,8 @@ class RefundController extends Controller
             'link'       => Refunds::currentLink(),
             'properties' => array_keys(Refunds::PROPERTIES),
             'canManage'  => admin_can('refunds.manage'),
+            'canDeduct'  => admin_can('refunds.deduct'),
+            'paidTotal'  => $tab === 'paid' ? (clone $this->filtered('paid', $q, $prop, $from, $to))->sum('amount_paid') : null,
         ]);
     }
 
@@ -69,7 +71,7 @@ class RefundController extends Controller
 
     private function filtered(string $tab, string $q, string $prop, string $from = '', string $to = '')
     {
-        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer'])->orderByDesc('id');
+        $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer', 'deductor'])->orderByDesc('id');
         $dateCol = $tab === 'paid' ? 'paid_at' : 'created_at';
         if ($from !== '') {
             $query->where($dateCol, '>=', $from . ' 00:00:00');
@@ -160,15 +162,16 @@ class RefundController extends Controller
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
             // Column order follows Najihah's working sheet (12 Oct 2026); "Finance review" is left blank for her notes.
-            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
+            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Deposit', 'Deduction', 'Deduction reason', 'Refund due', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
             foreach ($rows as $r) {
                 fputcsv($out, [
                     $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
                     $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
+                    $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : '', $r->deduction_reason, $r->refundDue(),
                     $r->bank_holder, "\t" . $r->bank_account, $r->bank_name,   // tab keeps Excel from mangling long numbers
                     $r->phone, $r->email,
                     $r->booking_id, $r->match, $r->match_note, '',
-                    $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->reference,
+                    $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->amount_paid, $r->reference,
                     $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
                 ]);
             }
@@ -213,12 +216,13 @@ class RefundController extends Controller
     public function paid(Request $request, RefundRequest $refund)
     {
         $this->manage();
-        $request->validate(['reference' => 'nullable|string|max:120']);
+        $request->validate(['reference' => 'nullable|string|max:120', 'amount_paid' => 'nullable|numeric|min:0|max:100000']);
         if ($refund->status === 'paid') {
             return back()->with('error', 'Request #' . $refund->id . ' is already marked paid.');
         }
-        $refund->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $request->input('reference') ?: null]);
-        $this->log($refund, 'Refund paid', ['reference' => $refund->reference]);
+        $amount = $request->filled('amount_paid') ? round((float) $request->input('amount_paid'), 2) : $refund->refundDue();
+        $refund->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $request->input('reference') ?: null, 'amount_paid' => $amount]);
+        $this->log($refund, 'Refund paid', ['reference' => $refund->reference, 'amount_paid' => $amount]);
         if ($request->wantsJson()) {
             return response()->json(['ok' => true, 'id' => $refund->id, 'message' => 'Request #' . $refund->id . ' marked paid.', 'counts' => $this->counts()]);
         }
@@ -234,7 +238,7 @@ class RefundController extends Controller
         $rows = RefundRequest::whereIn('id', $request->input('ids'))->where('status', 'pending')->get();
         $done = [];
         foreach ($rows as $r) {
-            $r->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $ref]);
+            $r->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $ref, 'amount_paid' => $r->refundDue()]);
             $done[] = $r->id;
         }
         $this->log(null, 'Refunds paid in bulk', ['ids' => $done, 'reference' => $ref]);
@@ -297,6 +301,37 @@ class RefundController extends Controller
         }
         $refund->update(['booking_id' => null, 'match' => 'verify', 'duplicate_of' => null, 'match_note' => Str::limit('Match cleared by ' . Auth::user()->name . ' on ' . now()->format('d M'), 250)]);
         return back()->with('success', 'Request #' . $refund->id . ' unlinked.');
+    }
+
+    /** Operation Team records the deposit held and any deduction with its reason, so Finance knows what to refund. */
+    public function deduct(Request $request, RefundRequest $refund)
+    {
+        if (!admin_can('refunds.deduct')) {
+            abort(403);
+        }
+        if ($refund->status === 'paid') {
+            return back()->with('error', 'Request #' . $refund->id . ' is already paid; reopen it first.');
+        }
+        $in = $request->validate([
+            'deposit_amount'   => 'nullable|numeric|min:0|max:100000',
+            'deduction_amount' => 'nullable|numeric|min:0|max:100000',
+            'deduction_reason' => 'nullable|string|max:255',
+        ]);
+        $deduction = round((float) ($in['deduction_amount'] ?? 0), 2);
+        if ($deduction > 0 && blank($in['deduction_reason'] ?? null)) {
+            return back()->with('error', 'Give the reason for the deduction on request #' . $refund->id . '.');
+        }
+        $deposit = $request->filled('deposit_amount') ? round((float) $in['deposit_amount'], 2) : $refund->deposit_amount;
+        if ($deposit !== null && $deduction > $deposit) {
+            return back()->with('error', 'The deduction (RM ' . number_format($deduction, 2) . ') is more than the deposit (RM ' . number_format($deposit, 2) . ') on request #' . $refund->id . '.');
+        }
+        $refund->update([
+            'deposit_amount' => $deposit, 'deduction_amount' => $deduction, 'deduction_reason' => $deduction > 0 ? $in['deduction_reason'] : null,
+            'deduction_by' => Auth::id(), 'deduction_at' => now(),
+        ]);
+        $this->log($refund, 'Refund deposit / deduction recorded', ['deposit' => $deposit, 'deduction' => $deduction, 'reason' => $refund->deduction_reason]);
+        $due = $refund->refundDue();
+        return back()->with('success', 'Request #' . $refund->id . ': deposit ' . ($deposit === null ? 'not set' : 'RM ' . number_format($deposit, 2)) . ', deduction RM ' . number_format($deduction, 2) . ($due !== null ? ', refund RM ' . number_format($due, 2) : '') . '.');
     }
 
     /** Split a request naming two units into a second request for the other unit (same guest, same bank details). */
