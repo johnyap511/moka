@@ -22,6 +22,9 @@ return [
     // IndexNow key (not a secret: the spec requires it to be public at /<key>.txt). Rotate by changing it here.
     'indexnow_key' => 'de630c13434d9b58590bb24f1e9c18d4',
 
+    // Google Analytics 4 measurement ID (G-XXXXXXXXXX). Empty = no tag. Public pages only; set in the server .env.
+    'ga4_id' => env('MOKA_GA4_ID'),
+
     // One-paragraph summary and the quotable facts AI assistants and search engines are given
     // (llms.txt, the "MOKA at a glance" block, Organization schema). Keep every line true and dated.
     'summary' => 'MOKA (Moka Venture Sdn Bhd) is a Malaysian short-stay and rental property management company founded in 2018 by Sam Kong. It runs Airbnb, short-term, monthly and corporate rentals for property owners in Kuala Lumpur, Selangor, Penang, Johor Bahru and Kota Kinabalu on a commission-only fee, and renovates and furnishes units through its Innspace arm.',

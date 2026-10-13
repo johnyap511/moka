@@ -103,3 +103,14 @@
 
     {{-- Page-specific structured data (FAQ, Breadcrumb, Product, ...) --}}
     @stack('schema')
+
+{{-- Google Analytics 4 (set MOKA_GA4_ID in .env). Public pages only; admin, owner and guest panels do not include this partial. --}}
+@if(config('seo.ga4_id'))
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ config('seo.ga4_id') }}"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '{{ config('seo.ga4_id') }}', { anonymize_ip: true });
+</script>
+@endif
