@@ -21,7 +21,9 @@ The guest taps "+ Add another unit" on the form (up to three). One request is cr
 
 1. Guest submits on check-out day. Deposit is RM 200 on every request (config `moka.refund_deposit`).
 2. **Operation Team, by 12:00 noon the next working day** (the row shows "Ops cut-off …"): record any deduction with its reason, and help identify unmatched requests with Pick, Link (booking #, FN folio or RES) or Split. After the cut-off the deduction box closes for Operations; Finance Manager / Admin can still edit.
-3. **Finance, daily**: check the deposit was received (bank statement / SQL accounting), click **Confirm received** on the row, then tick the confirmed rows and **Mark selected as paid** with the bank reference. Bulk payment skips rows whose receipt is not confirmed; a single Paid on an unconfirmed row asks first.
+3. **Finance, daily**: check the deposits on the bank statement / SQL accounting, tick the rows and click **✓ Deposit received** in the bulk bar (or Confirm received inside a row), then tick again and **Mark paid** with the bank reference. Bulk payment skips rows whose receipt is not confirmed; a single Mark paid on an unconfirmed row asks first. Operations tick rows and click **✓ No deduction** to record a clean check in bulk.
+
+Each request is one line: guest, stay, booking match, refund amount, and three progress chips, Ops (deduction checked), Rcvd (deposit received), Paid. Click the arrow or the line to open the Booking, Deposit and Bank panels with the forms.
 4. **Month end**: Paid tab with the month's paid-date range, read the total, export the CSV, tie to the bank statement as a second check.
 
 ## Deductions (Operation Team)
