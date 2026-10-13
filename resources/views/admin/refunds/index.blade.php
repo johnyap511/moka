@@ -261,7 +261,7 @@
         if (!confirm('Mark ' + ids.length + ' request' + (ids.length === 1 ? '' : 's') + ' as paid?')) return;
         bulk.querySelectorAll('input[name="ids[]"]').forEach(function(i){ i.remove(); });
         ids.forEach(function(id){ var i = document.createElement('input'); i.type = 'hidden'; i.name = 'ids[]'; i.value = id; bulk.appendChild(i); });
-        post(bulk).then(function(d){ if (d && d.ok) { flash(d.message); d.ids.forEach(vanish); applyCounts(d.counts); if (all) all.checked = false; refresh(); var b = bulk.querySelector('button[type=submit]'); b.disabled = false; b.textContent = 'Mark selected as paid'; } else { bulk.submit(); } }).catch(function(){ bulk.submit(); });
+        post(bulk).then(function(d){ if (d && d.ok) { flash(d.message); picks().forEach(function(cb){ cb.checked = false; }); d.ids.forEach(vanish); applyCounts(d.counts); if (all) all.checked = false; refresh(); var b = bulk.querySelector('button[type=submit]'); b.disabled = false; b.textContent = 'Mark selected as paid'; } else { bulk.submit(); } }).catch(function(){ bulk.submit(); });
     });
 })();
 </script>
