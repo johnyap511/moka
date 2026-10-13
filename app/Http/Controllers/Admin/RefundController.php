@@ -33,6 +33,7 @@ class RefundController extends Controller
         }
         $q    = trim((string) $request->input('q', ''));
         $prop = (string) $request->input('property', '');
+        [$from, $to] = $this->range($request);
         $ym   = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : now()->format('Y-m');
 
         $counts = [
@@ -46,11 +47,11 @@ class RefundController extends Controller
 
         $rows = collect();
         if ($tab !== 'feedback') {
-            $rows = $this->filtered($tab, $q, $prop)->paginate(40)->withQueryString();
+            $rows = $this->filtered($tab, $q, $prop, $from, $to)->paginate(40)->withQueryString();
         }
 
         return view('admin.refunds.index', [
-            'tab' => $tab, 'q' => $q, 'prop' => $prop, 'ym' => $ym, 'rows' => $rows, 'counts' => $counts,
+            'tab' => $tab, 'q' => $q, 'prop' => $prop, 'from' => $from, 'to' => $to, 'ym' => $ym, 'rows' => $rows, 'counts' => $counts,
             'feedback'   => $tab === 'feedback' ? $this->feedback($ym) : null,
             'link'       => Refunds::currentLink(),
             'properties' => array_keys(Refunds::PROPERTIES),
@@ -58,9 +59,23 @@ class RefundController extends Controller
         ]);
     }
 
-    private function filtered(string $tab, string $q, string $prop)
+    /** Optional date range (Y-m-d). On the Paid tab it applies to the paid date, elsewhere to the submission date. */
+    private function range(Request $request): array
+    {
+        $ok = fn ($v) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $v) ? $v : '';
+        return [$ok($request->input('from')), $ok($request->input('to'))];
+    }
+
+    private function filtered(string $tab, string $q, string $prop, string $from = '', string $to = '')
     {
         $query = RefundRequest::with(['booking.listing', 'booking.user', 'staff', 'payer'])->orderByDesc('id');
+        $dateCol = $tab === 'paid' ? 'paid_at' : 'created_at';
+        if ($from !== '') {
+            $query->where($dateCol, '>=', $from . ' 00:00:00');
+        }
+        if ($to !== '') {
+            $query->where($dateCol, '<=', $to . ' 23:59:59');
+        }
         if (in_array($tab, ['pending', 'paid', 'rejected'], true)) {
             $query->where('status', $tab);
         }
@@ -136,20 +151,23 @@ class RefundController extends Controller
     {
         $this->manage();
         $tab  = (string) $request->input('tab', 'pending');
-        $rows = $this->filtered($tab === 'feedback' ? 'all' : $tab, trim((string) $request->input('q', '')), (string) $request->input('property', ''))->get();
-        $this->log(null, 'Refund CSV exported', ['tab' => $tab, 'rows' => $rows->count()]);
+        [$from, $to] = $this->range($request);
+        $rows = $this->filtered($tab === 'feedback' ? 'all' : $tab, trim((string) $request->input('q', '')), (string) $request->input('property', ''), $from, $to)->get();
+        $this->log(null, 'Refund CSV exported', ['tab' => $tab, 'from' => $from, 'to' => $to, 'rows' => $rows->count()]);
 
-        $name = 'deposit-refunds-' . $tab . '-' . now()->format('Ymd-Hi') . '.csv';
+        $name = 'deposit-refunds-' . $tab . ($from || $to ? '-' . ($from ?: 'start') . '-to-' . ($to ?: 'today') : '') . '-' . now()->format('Ymd-Hi') . '.csv';
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Request', 'Submitted', 'Status', 'Due', 'Guest', 'Phone', 'Email', 'Property', 'Unit', 'Check-out', 'Booking', 'Match', 'Note', 'Bank', 'Account holder', 'Account number', 'Paid on', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
+            // Column order follows Najihah's working sheet (12 Oct 2026); "Finance review" is left blank for her notes.
+            fputcsv($out, ['Request', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
             foreach ($rows as $r) {
                 fputcsv($out, [
                     $r->id, $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
-                    $r->name, $r->phone, $r->email, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
-                    $r->booking_id, $r->match, $r->match_note,
-                    $r->bank_name, $r->bank_holder, "\t" . $r->bank_account,   // tab keeps Excel from mangling long numbers
-                    $r->paid_at?->format('Y-m-d'), $r->reference,
+                    $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
+                    $r->bank_holder, "\t" . $r->bank_account, $r->bank_name,   // tab keeps Excel from mangling long numbers
+                    $r->phone, $r->email,
+                    $r->booking_id, $r->match, $r->match_note, '',
+                    $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->reference,
                     $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
                 ]);
             }

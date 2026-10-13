@@ -30,7 +30,7 @@
 @php
     $stars = fn ($n) => $n ? str_repeat('★', (int) $n) . str_repeat('☆', 5 - (int) $n) : '—';
     $matchChip = ['matched' => ['Matched', 'rf-chip--ok'], 'verify' => ['Verify', 'rf-chip--warn'], 'duplicate' => ['Duplicate', 'rf-chip--dup']];
-    $qs = fn (array $extra) => '?' . http_build_query(array_filter(['tab' => $tab, 'q' => $q, 'property' => $prop] + $extra, fn ($v) => $v !== '' && $v !== null));
+    $qs = fn (array $extra) => '?' . http_build_query(array_filter(['tab' => $tab, 'q' => $q, 'property' => $prop, 'from' => $from, 'to' => $to] + $extra, fn ($v) => $v !== '' && $v !== null));
 @endphp
 
 <div class="rf-head">
@@ -77,9 +77,12 @@
     <form method="get" class="rf-filter">
         <input type="hidden" name="tab" value="{{ $tab }}">
         <select name="property" onchange="this.form.submit()"><option value="">All properties</option>@foreach($properties as $p)<option value="{{ $p }}" {{ $prop === $p ? 'selected' : '' }}>{{ $p }}</option>@endforeach</select>
-        <input type="search" name="q" value="{{ $q }}" placeholder="Name, phone, unit, booking #" style="width:200px">
-        <button class="btn btn-secondary rf-sm" type="submit">Search</button>
-        @if($canManage)<a class="btn btn-secondary rf-sm" href="{{ route('admin.refunds.export') }}{{ $qs([]) }}" title="CSV of this list with bank details, for the payment run">Export CSV</a>@endif
+        <input type="search" name="q" value="{{ $q }}" placeholder="Name, phone, unit, booking #" style="width:180px">
+        <input type="date" name="from" value="{{ $from }}" title="{{ $tab === 'paid' ? 'Paid from' : 'Submitted from' }}">
+        <span class="rf-muted">to</span>
+        <input type="date" name="to" value="{{ $to }}" title="{{ $tab === 'paid' ? 'Paid to' : 'Submitted to' }}">
+        <button class="btn btn-secondary rf-sm" type="submit">Apply</button>
+        @if($canManage)<a class="btn btn-secondary rf-sm" href="{{ route('admin.refunds.export') }}{{ $qs([]) }}" title="CSV of this list with bank details{{ $from || $to ? ', ' . ($tab === 'paid' ? 'paid' : 'submitted') . ' ' . ($from ?: '…') . ' to ' . ($to ?: '…') : '' }}">Export CSV{{ $from || $to ? ' (range)' : '' }}</a>@endif
         <a class="btn btn-secondary rf-sm" href="{{ route('admin.refunds.contacts') }}" title="Guests who ticked the offers box: name, email, phone. No bank details.">Contacts CSV</a>
     </form>
     @else

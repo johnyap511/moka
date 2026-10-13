@@ -114,10 +114,25 @@ class Refunds
             return [null, 'verify', 'No unit number'];
         }
 
-        $listings = Listing::withoutGlobalScope('notArchived')
-            ->where('name', 'like', $prefix . '%')
-            ->get(['id', 'name'])
-            ->filter(fn ($l) => str_ends_with(self::compact($l->name), $unitKey));
+        $inProperty = Listing::withoutGlobalScope('notArchived')->where('name', 'like', $prefix . '%')->get(['id', 'name']);
+
+        // 1. Homemoka unit names: "Alinea 11-08" ends with the typed "11-08".
+        $listings = $inProperty->filter(fn ($l) => str_ends_with(self::compact($l->name), $unitKey));
+
+        // 2. eZee room codes, which is what guests see in their messages: "AL-11-08",
+        //    "BS 03-06", "C2-07-10" (Najihah, 12 Oct 2026: two Alinea guests typed the code).
+        if ($listings->isEmpty()) {
+            $mapped = \Illuminate\Support\Facades\DB::table('ezee_room_mappings')
+                ->whereNull('archived_at')->whereNotNull('listing_id')
+                ->get(['room_name', 'listing_id'])
+                ->filter(fn ($m) => self::compact($m->room_name) === $unitKey || str_ends_with(self::compact($m->room_name), $unitKey))
+                ->pluck('listing_id')->unique();
+            $listings = $inProperty->whereIn('id', $mapped->all());
+            if ($listings->isEmpty() && $mapped->isNotEmpty()) {
+                $elsewhere = Listing::withoutGlobalScope('notArchived')->whereIn('id', $mapped->all())->value('name');
+                return [null, 'verify', 'Unit "' . $unit . '" is ' . $elsewhere . ', not at ' . $prefix];
+            }
+        }
 
         if ($listings->isEmpty()) {
             return [null, 'verify', 'No unit "' . $unit . '" at ' . $prefix];
