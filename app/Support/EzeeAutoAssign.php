@@ -1127,7 +1127,12 @@ class EzeeAutoAssign
         // row; without it, TotalExtraCharge would drag deposits and incidentals
         // into the cleaning fee.
         $hasBreakdown = EzeePricing::cleaningFromCharges($ezeeBooking) !== null;
-        $roomDiffers  = abs($ours['room'] - $theirs['room']) > 1.00;
+        // The nightly rate is stored to the cent, so a year-long tenancy can differ
+        // from eZee's total by up to half a cent per night without anything having
+        // changed (RES22098: 364 nights, 50.3659 → 50.37, RM 1.48). Repricing then
+        // changed nothing and the same drift was logged every hour (9–13 Oct 2026).
+        $tolerance    = max(1.00, round(0.0051 * $nights, 2));
+        $roomDiffers  = abs($ours['room'] - $theirs['room']) > $tolerance;
         $cleanDiffers = $hasBreakdown && (abs($ours['cleaning'] - $theirs['cleaning']) > 0.05 || abs($ours['sst_cf'] - $theirs['sst_cf']) > 0.05);
         if (!$roomDiffers && !$cleanDiffers) {
             return null;
