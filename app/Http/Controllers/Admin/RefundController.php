@@ -36,11 +36,7 @@ class RefundController extends Controller
         [$from, $to] = $this->range($request);
         $ym   = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : now()->format('Y-m');
 
-        $counts = [
-            'pending'  => RefundRequest::where('status', 'pending')->count(),
-            'verify'   => RefundRequest::where('status', 'pending')->where('match', '!=', 'matched')->count(),
-            'overdue'  => RefundRequest::where('status', 'pending')->where('due_on', '<', today())->count(),
-            'paid'     => RefundRequest::where('status', 'paid')->count(),
+        $counts = $this->counts() + [
             'rejected' => RefundRequest::where('status', 'rejected')->count(),
             'today'    => RefundRequest::where('created_at', '>=', today())->count(),
         ];
@@ -223,7 +219,41 @@ class RefundController extends Controller
         }
         $refund->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $request->input('reference') ?: null]);
         $this->log($refund, 'Refund paid', ['reference' => $refund->reference]);
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'id' => $refund->id, 'message' => 'Request #' . $refund->id . ' marked paid.', 'counts' => $this->counts()]);
+        }
         return back()->with('success', 'Request #' . $refund->id . ' marked paid.');
+    }
+
+    /** Tick several pending requests and mark them paid in one go (Sam, 13 Oct 2026). */
+    public function bulkPaid(Request $request)
+    {
+        $this->manage();
+        $request->validate(['ids' => 'required|array|min:1|max:200', 'ids.*' => 'integer', 'reference' => 'nullable|string|max:120']);
+        $ref = $request->input('reference') ?: null;
+        $rows = RefundRequest::whereIn('id', $request->input('ids'))->where('status', 'pending')->get();
+        $done = [];
+        foreach ($rows as $r) {
+            $r->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => Auth::id(), 'reference' => $ref]);
+            $done[] = $r->id;
+        }
+        $this->log(null, 'Refunds paid in bulk', ['ids' => $done, 'reference' => $ref]);
+        $skipped = count($request->input('ids')) - count($done);
+        $msg = count($done) . ' request' . (count($done) === 1 ? '' : 's') . ' marked paid' . ($ref ? ' (ref ' . $ref . ')' : '') . ($skipped ? '; ' . $skipped . ' skipped, not pending' : '') . '.';
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'ids' => $done, 'message' => $msg, 'counts' => $this->counts()]);
+        }
+        return back()->with('success', $msg);
+    }
+
+    private function counts(): array
+    {
+        return [
+            'pending' => RefundRequest::where('status', 'pending')->count(),
+            'verify'  => RefundRequest::where('status', 'pending')->where('match', '!=', 'matched')->count(),
+            'overdue' => RefundRequest::where('status', 'pending')->where('due_on', '<', today())->count(),
+            'paid'    => RefundRequest::where('status', 'paid')->count(),
+        ];
     }
 
     public function reject(Request $request, RefundRequest $refund)

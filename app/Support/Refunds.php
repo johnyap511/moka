@@ -152,7 +152,7 @@ class Refunds
             if ($units->isNotEmpty()) {
                 $add($live()->whereIn('listing_id', $units)
                     ->whereBetween('check_out', [$day->copy()->subDays(3)->toDateString(), $day->copy()->addDays(3)->toDateString()])
-                    ->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get(), 'same unit, check-out within 3 days');
+                    ->get()->sortBy(fn ($b) => abs(Carbon::parse($b->check_out)->diffInDays($day)))->take($limit), 'same unit, check-out within 3 days');
             }
         }
 
@@ -166,7 +166,7 @@ class Refunds
                             $w->orWhere('name', 'like', '%' . $word . '%')->orWhere('last_name', 'like', '%' . $word . '%');
                         }
                     });
-                })->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get();
+                })->get()->sortBy(fn ($b) => abs(Carbon::parse($b->check_out)->diffInDays($day)))->take($limit);
             $add($q, 'similar guest name at ' . $prefix . ', check-out within 7 days');
         }
 
@@ -176,7 +176,7 @@ class Refunds
             if ($users->isNotEmpty()) {
                 $add($live()->whereIn('user_id', $users)
                     ->whereBetween('check_out', [$day->copy()->subDays(14)->toDateString(), $day->copy()->addDays(14)->toDateString()])
-                    ->orderByRaw('ABS(DATEDIFF(check_out, ?))', [$day->toDateString()])->limit($limit)->get(), 'same phone number, check-out within 14 days');
+                    ->get()->sortBy(fn ($b) => abs(Carbon::parse($b->check_out)->diffInDays($day)))->take($limit), 'same phone number, check-out within 14 days');
             }
         }
 

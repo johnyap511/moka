@@ -18,6 +18,9 @@
 .rf-stars{color:#f59e0b;letter-spacing:1px;white-space:nowrap}.rf-note{font-size:11.5px;color:#92400e;margin-top:3px;line-height:1.35}.rf-due-bad{color:#b91c1c;font-weight:600}.rf-due-soon{color:#b45309;font-weight:600}
 .rf-act{display:grid;gap:5px;min-width:215px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 10px;font-size:12px;white-space:nowrap}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
+.rf-tick{width:28px;text-align:center}.rf-tick input{width:16px;height:16px;cursor:pointer;accent-color:#0f766e}
+.rf-bulk[hidden]{display:none}.rf-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#0f766e;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px;position:sticky;top:8px;z-index:5}.rf-bulk input{padding:5px 8px;font-size:12.5px;border:1px solid rgba(255,255,255,.4);border-radius:8px;min-width:200px}.rf-bulk .rf-muted{color:rgba(255,255,255,.8)}
+.rf-table tr.rf-gone{opacity:.35;transition:opacity .4s}.rf-flash{position:fixed;right:16px;bottom:16px;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:50}
 .rf-sugg{border:1px dashed #99f6e4;border-radius:8px;padding:6px 8px;background:#f0fdfa;display:grid;gap:4px;max-width:420px}.rf-sugg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700}.rf-sugg-row{display:flex;gap:6px;align-items:center;justify-content:space-between}.rf-sugg-t{font-size:12px;line-height:1.3;white-space:normal;min-width:0}.rf-sugg-t .rf-muted{white-space:normal}
 .rf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media (max-width:900px){.rf-grid{grid-template-columns:1fr}}
 .rf-h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}.rf-quote{border-left:3px solid #99f6e4;padding:4px 10px;margin:6px 0;font-size:12.5px;line-height:1.4}.rf-quote small{display:block;color:var(--text-secondary)}.rf-quote.unv{border-color:#fde68a}
@@ -142,9 +145,19 @@
         </div></div>
     </div>
 @else
+@if($canManage && $tab !== 'paid' && $tab !== 'rejected')
+<form method="post" action="{{ route('admin.refunds.bulk-paid') }}" id="rf-bulk" class="rf-bulk" hidden>@csrf
+    <b><span id="rf-bulk-n">0</span> selected</b>
+    <input name="reference" placeholder="Bank ref for all (optional)" maxlength="120">
+    <button class="btn btn-primary rf-sm" type="submit">Mark selected as paid</button>
+    <button class="btn btn-secondary rf-sm" type="button" id="rf-bulk-clear">Clear</button>
+    <span class="rf-muted">Tick the boxes on the left. Only pending requests can be ticked.</span>
+</form>
+@endif
 <div class="card"><div class="card-body" style="overflow:auto">
     <table class="rf-table">
         <thead><tr>
+            @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<th class="rf-tick"><input type="checkbox" id="rf-all" title="Select all pending on this page" aria-label="Select all"></th>@endif
             <th>#</th><th>Submitted</th><th>Guest</th><th>Stay</th><th>Booking</th>
             <th>{{ $canManage ? 'Refund to' : 'Bank' }}</th><th>Ratings</th><th>Due</th>
             @if($canManage)<th>Action</th>@endif
@@ -157,7 +170,8 @@
                 $rowClass = $r->isOverdue() ? 'overdue' : ($r->status === 'pending' ? ($r->match === 'duplicate' ? 'dup' : ($r->match !== 'matched' ? 'verify' : '')) : '');
                 $daysLeft = $r->due_on ? today()->diffInDays($r->due_on, false) : null;
             @endphp
-            <tr class="{{ $rowClass }}">
+            <tr class="{{ $rowClass }}" data-id="{{ $r->id }}">
+                @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<td class="rf-tick">@if($r->status === 'pending')<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
                 <td>{{ $r->id }}</td>
                 <td>{{ $r->created_at->format('d M') }}<div class="rf-muted">{{ $r->created_at->format('H:i') }}</div></td>
                 <td><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }}</div><div class="rf-muted">{{ $r->email }}</div></td>
@@ -190,7 +204,7 @@
                 @if($canManage)
                 <td class="rf-act">
                     @if($r->status === 'pending')
-                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}">@csrf<input name="reference" placeholder="Bank ref (optional)" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
+                        <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form">@csrf<input name="reference" placeholder="Bank ref (optional)" maxlength="120"><button class="btn btn-primary" type="submit">Paid</button></form>
                         <form method="post" action="{{ route('admin.refunds.attach', $r) }}">@csrf<input name="booking_id" placeholder="Booking #, FN folio or RES" value="{{ $r->booking_id }}" title="Booking number, eZee folio (FN4525) or reservation (RES4465)"><button class="btn btn-secondary" type="submit">Link</button></form>
                         @if(!empty($r->suggestions))
                         <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
@@ -211,7 +225,7 @@
                 @endif
             </tr>
         @empty
-            <tr><td colspan="{{ $canManage ? 9 : 8 }}" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
+            <tr><td colspan="{{ $canManage ? 10 : 8 }}" class="rf-empty">Nothing here{{ $q !== '' ? ' for “' . $q . '”' : '' }}{{ $prop !== '' ? ' at ' . $prop : '' }}.</td></tr>
         @endforelse
         </tbody>
     </table>
@@ -219,3 +233,36 @@
 </div></div>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+    var flash = function(msg){ var el = document.createElement('div'); el.className = 'rf-flash'; el.textContent = msg; document.body.appendChild(el); setTimeout(function(){ el.remove(); }, 2600); };
+    var setCount = function(sel, n){ document.querySelectorAll(sel).forEach(function(e){ e.textContent = n; }); };
+    var applyCounts = function(c){ if (!c) return; setCount('.rf-tile--main b, .rf-tabs a[href="?tab=pending"] i', c.pending); setCount('.rf-tile--warn b, .rf-tabs a[href="?tab=verify"] i', c.verify); setCount('.rf-tile--bad b', c.overdue); setCount('.rf-tabs a[href="?tab=paid"] i', c.paid); };
+    var vanish = function(id){ var tr = document.querySelector('tr[data-id="' + id + '"]'); if (!tr) return; tr.classList.add('rf-gone'); setTimeout(function(){ tr.remove(); }, 450); };
+    var post = function(form){ var btn = form.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.textContent = '…'; }
+        return fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(function(r){ return r.json(); }); };
+    // Single Paid: update the row in place, no page reload.
+    document.querySelectorAll('form.rf-paid-form').forEach(function(form){
+        form.addEventListener('submit', function(e){ e.preventDefault();
+            post(form).then(function(d){ if (d && d.ok) { flash(d.message); vanish(d.id); applyCounts(d.counts); } else { form.submit(); } }).catch(function(){ form.submit(); });
+        });
+    });
+    // Bulk: tick boxes, one request for all.
+    var all = document.getElementById('rf-all'), bulk = document.getElementById('rf-bulk'), n = document.getElementById('rf-bulk-n');
+    var picks = function(){ return Array.prototype.slice.call(document.querySelectorAll('.rf-pick:checked')); };
+    var refresh = function(){ var k = picks().length; if (bulk) { bulk.hidden = k === 0; n.textContent = k; } };
+    document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.addEventListener('change', refresh); });
+    if (all) all.addEventListener('change', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = all.checked; }); refresh(); });
+    var clear = document.getElementById('rf-bulk-clear'); if (clear) clear.addEventListener('click', function(){ document.querySelectorAll('.rf-pick').forEach(function(cb){ cb.checked = false; }); if (all) all.checked = false; refresh(); });
+    if (bulk) bulk.addEventListener('submit', function(e){ e.preventDefault(); var ids = picks().map(function(cb){ return cb.value; }); if (!ids.length) return;
+        if (!confirm('Mark ' + ids.length + ' request' + (ids.length === 1 ? '' : 's') + ' as paid?')) return;
+        bulk.querySelectorAll('input[name="ids[]"]').forEach(function(i){ i.remove(); });
+        ids.forEach(function(id){ var i = document.createElement('input'); i.type = 'hidden'; i.name = 'ids[]'; i.value = id; bulk.appendChild(i); });
+        post(bulk).then(function(d){ if (d && d.ok) { flash(d.message); d.ids.forEach(vanish); applyCounts(d.counts); if (all) all.checked = false; refresh(); var b = bulk.querySelector('button[type=submit]'); b.disabled = false; b.textContent = 'Mark selected as paid'; } else { bulk.submit(); } }).catch(function(){ bulk.submit(); });
+    });
+})();
+</script>
+@endpush
