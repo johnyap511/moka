@@ -160,10 +160,10 @@ class RefundController extends Controller
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
             // Column order follows Najihah's working sheet (12 Oct 2026); "Finance review" is left blank for her notes.
-            fputcsv($out, ['Request', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
+            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
             foreach ($rows as $r) {
                 fputcsv($out, [
-                    $r->id, $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
+                    $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
                     $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
                     $r->bank_holder, "\t" . $r->bank_account, $r->bank_name,   // tab keeps Excel from mangling long numbers
                     $r->phone, $r->email,
@@ -297,6 +297,16 @@ class RefundController extends Controller
         }
         $refund->update(['booking_id' => null, 'match' => 'verify', 'duplicate_of' => null, 'match_note' => Str::limit('Match cleared by ' . Auth::user()->name . ' on ' . now()->format('d M'), 250)]);
         return back()->with('success', 'Request #' . $refund->id . ' unlinked.');
+    }
+
+    /** Split a request naming two units into a second request for the other unit (same guest, same bank details). */
+    public function split(Request $request, RefundRequest $refund)
+    {
+        $this->manage();
+        $request->validate(['unit_no' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \\/.-]{2,40}$/']]);
+        $new = Refunds::split($refund, $request->input('unit_no'));
+        $this->log($new, 'Refund split', ['from' => $refund->id, 'unit' => $new->unit_no, 'match' => $new->match, 'booking_id' => $new->booking_id]);
+        return back()->with('success', 'Request #' . $new->id . ' created for unit ' . $new->unit_no . ' (' . ($new->match === 'matched' ? 'matched to booking #' . $new->booking_id : 'needs verifying') . '), grouped with #' . $refund->id . '.');
     }
 
     private function manage(): void

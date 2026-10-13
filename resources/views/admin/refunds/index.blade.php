@@ -18,6 +18,7 @@
 .rf-stars{color:#f59e0b;letter-spacing:1px;white-space:nowrap}.rf-note{font-size:11.5px;color:#92400e;margin-top:3px;line-height:1.35}.rf-due-bad{color:#b91c1c;font-weight:600}.rf-due-soon{color:#b45309;font-weight:600}
 .rf-act{display:grid;gap:5px;min-width:215px}.rf-act form{display:flex;gap:4px}.rf-act input{flex:1;min-width:0;padding:4px 6px;font-size:12px;border:1px solid var(--border,#e5e7eb);border-radius:6px}.rf-act .btn{padding:4px 10px;font-size:12px;white-space:nowrap}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
+.rf-grp{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:#0f766e;background:#ccfbf1;border-radius:999px;padding:0 6px;white-space:nowrap}
 .rf-tick{width:28px;text-align:center}.rf-tick input{width:16px;height:16px;cursor:pointer;accent-color:#0f766e}
 .rf-bulk[hidden]{display:none}.rf-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#0f766e;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px;position:sticky;top:8px;z-index:5}.rf-bulk input{padding:5px 8px;font-size:12.5px;border:1px solid rgba(255,255,255,.4);border-radius:8px;min-width:200px}.rf-bulk .rf-muted{color:rgba(255,255,255,.8)}
 .rf-table tr.rf-gone{opacity:.35;transition:opacity .4s}.rf-flash{position:fixed;right:16px;bottom:16px;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:50}
@@ -172,7 +173,7 @@
             @endphp
             <tr class="{{ $rowClass }}" data-id="{{ $r->id }}">
                 @if($canManage && $tab !== 'paid' && $tab !== 'rejected')<td class="rf-tick">@if($r->status === 'pending')<input type="checkbox" class="rf-pick" value="{{ $r->id }}" aria-label="Select request {{ $r->id }}">@endif</td>@endif
-                <td>{{ $r->id }}</td>
+                <td>{{ $r->id }}@if($r->group_key)<div class="rf-grp" title="One guest, several units: paid together, one deposit each">{{ $r->group_index }} of {{ $r->group_size }}</div>@endif</td>
                 <td>{{ $r->created_at->format('d M') }}<div class="rf-muted">{{ $r->created_at->format('H:i') }}</div></td>
                 <td><b>{{ $r->name }}</b><div class="rf-muted">{{ $r->phone }}</div><div class="rf-muted">{{ $r->email }}</div></td>
                 <td>{{ \Illuminate\Support\Str::before($r->property, ' by') }}<div><b>{{ $r->unit_no }}</b></div><div class="rf-muted">out {{ $r->check_out->format('d M Y') }}</div></td>
@@ -218,6 +219,7 @@
                         </div>
                         @endif
                         <form method="post" action="{{ route('admin.refunds.reject', $r) }}" onsubmit="return confirm('Reject request #{{ $r->id }}? The record is kept.')">@csrf<input name="note" placeholder="Reason" required maxlength="255"><button class="btn btn-secondary" type="submit">Reject</button></form>
+                        <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request for it with the same bank details">@csrf<input name="unit_no" placeholder="Other unit, e.g. 01-30" maxlength="40" required><button class="btn btn-secondary" type="submit">Split</button></form>
                     @else
                         <form method="post" action="{{ route('admin.refunds.reopen', $r) }}">@csrf<button class="btn btn-secondary" type="submit">Reopen</button></form>
                     @endif

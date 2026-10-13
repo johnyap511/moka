@@ -60,6 +60,8 @@ class RefundController extends Controller
             'phone'          => ['required', 'string', 'max:40', 'regex:/^\+?[\d\s().-]{7,30}$/'],
             'property'       => ['required', 'string', 'in:' . implode(',', array_keys(Refunds::PROPERTIES))],
             'unit_no'        => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \/.-]{2,40}$/'],
+            'unit_no_2'      => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \/.-]{2,40}$/'],
+            'unit_no_3'      => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \/.-]{2,40}$/'],
             'check_out'      => ['required', 'date_format:Y-m-d', 'after:' . now()->subDays(400)->toDateString(), 'before:' . now()->addDays(2)->toDateString()],
             'bank_name'      => ['required', 'string', 'min:2', 'max:80'],
             'bank_holder'    => ['required', 'string', 'min:2', 'max:120'],
@@ -84,13 +86,15 @@ class RefundController extends Controller
             'date_format'        => 'Please check the date.',
             'phone.regex'        => 'Please enter a phone number, e.g. 012-345 6789.',
             'unit_no.regex'      => 'Please enter the unit number as shown on your door, e.g. E-23A-01.',
+            'unit_no_2.regex'    => 'Please enter the unit number as shown on your door, e.g. E-23A-01.',
+            'unit_no_3.regex'    => 'Please enter the unit number as shown on your door, e.g. E-23A-01.',
             'bank_account.regex' => 'Please enter the account number with digits only.',
             'check_out.after'    => 'Please check the check-out date.',
             'check_out.before'   => 'Please check the check-out date.',
             'staff_user_id.in'   => 'Please pick a team member from the list.',
         ]);
 
-        Refunds::submit($in, $link, $request->ip());
+        Refunds::submitMany($in, [$in['unit_no'], $in['unit_no_2'] ?? null, $in['unit_no_3'] ?? null], $link, $request->ip());
 
         return redirect()->route('refund.thanks');
     }

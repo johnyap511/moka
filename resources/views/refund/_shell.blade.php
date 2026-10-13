@@ -47,6 +47,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 .btn{display:block;width:100%;padding:16px;border:0;border-radius:14px;background:var(--teal);color:#fff;font:inherit;font-weight:700;font-size:17px;cursor:pointer;box-shadow:0 6px 16px -8px rgba(15,118,110,.7)}
 .btn:hover{background:var(--teal-d)}.btn[disabled]{opacity:.65;cursor:wait}
 .consent{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;color:var(--ink);margin:0 0 14px;padding:0 2px}.consent input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--teal);flex:none}
+.addunit{background:none;border:0;color:var(--teal);font:inherit;font-size:14px;font-weight:600;padding:8px 0 0;cursor:pointer}
 .hp{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden}
 .lock{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:12px;justify-content:center}
 .co{text-align:center;margin-top:14px;color:var(--muted);font-size:12.5px}.co-name{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;color:var(--ink);font-size:13px}.co-name img{height:18px}

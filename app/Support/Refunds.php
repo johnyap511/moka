@@ -299,8 +299,58 @@ class Refunds
         return $d;
     }
 
+    /**
+     * One form, one or more units: a request per unit, grouped when there are
+     * several, so each reconciles to its own eZee deposit and Finance can pay
+     * them together.
+     *
+     * @param  string[]  $units
+     * @return RefundRequest[]
+     */
+    public static function submitMany(array $in, array $units, ?RefundLink $link, ?string $ip): array
+    {
+        $units = array_values(array_unique(array_filter(array_map(fn ($u) => strtoupper(trim((string) $u)), $units))));
+        if (count($units) <= 1) {
+            return [self::submit(['unit_no' => $units[0] ?? $in['unit_no']] + $in, $link, $ip)];
+        }
+        $key = Str::lower(Str::random(12));
+        $out = [];
+        foreach ($units as $i => $unit) {
+            $out[] = self::submit(['unit_no' => $unit] + $in, $link, $ip, ['key' => $key, 'index' => $i + 1, 'size' => count($units)]);
+        }
+        return $out;
+    }
+
+    /**
+     * Finance splits a request that names two units ("01-28 and 01-30") into a
+     * second request for the other unit: same guest, same bank details, grouped.
+     */
+    public static function split(RefundRequest $r, string $unit): RefundRequest
+    {
+        $unit = strtoupper(trim($unit));
+        if ($unit === '') {
+            throw new \InvalidArgumentException('Give the other unit number.');
+        }
+        $key = $r->group_key ?: Str::lower(Str::random(12));
+        $size = ($r->group_key ? RefundRequest::where('group_key', $key)->count() : 1) + 1;
+        if (!$r->group_key) {
+            $r->update(['group_key' => $key, 'group_index' => 1, 'group_size' => $size]);
+        } else {
+            RefundRequest::where('group_key', $key)->update(['group_size' => $size]);
+        }
+        $in = [
+            'name' => $r->name, 'email' => $r->email, 'phone' => $r->phone, 'property' => $r->property, 'unit_no' => $unit,
+            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account,
+            'rating_clean' => $r->rating_clean, 'rating_service' => $r->rating_service, 'comments' => $r->comments,
+            'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
+        ];
+        $new = self::submit($in, $r->link, $r->ip, ['key' => $key, 'index' => $size, 'size' => $size], false);
+        $new->forceFill(['created_at' => $r->created_at, 'due_on' => $r->due_on, 'match_note' => Str::limit(trim('Split from request #' . $r->id . '. ' . ($new->match_note ?? '')), 250)])->save();
+        return $new;
+    }
+
     /** Store a guest submission; returns the saved request. */
-    public static function submit(array $in, ?RefundLink $link, ?string $ip): RefundRequest
+    public static function submit(array $in, ?RefundLink $link, ?string $ip, ?array $group = null, bool $applyPhoneCap = true): RefundRequest
     {
         [$booking, $match, $note] = self::match($in['property'], $in['unit_no'], $in['check_out'], $in['name']);
 
@@ -315,7 +365,7 @@ class Refunds
             }
         }
 
-        if ($phoneDigits !== '') {
+        if ($phoneDigits !== '' && $applyPhoneCap && !$group) {
             $today = RefundRequest::where('phone_digits', $phoneDigits)->where('created_at', '>=', now()->subDay())->count();
             if ($today >= self::MAX_PER_PHONE_PER_DAY) {
                 $match = $match === 'matched' ? 'verify' : $match;
@@ -351,6 +401,9 @@ class Refunds
             'match'          => $match,
             'match_note'     => $notes ? Str::limit(implode('; ', $notes), 250, '…') : null,
             'duplicate_of'   => isset($earlier) ? $earlier->id : null,
+            'group_key'      => $group['key'] ?? null,
+            'group_index'    => $group['index'] ?? null,
+            'group_size'     => $group['size'] ?? null,
             'name'           => $in['name'],
             'email'          => $in['email'] ?? null,
             'phone'          => $in['phone'] ?? null,
