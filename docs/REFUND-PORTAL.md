@@ -17,6 +17,10 @@ Fills in: name as per reservation, contact number, email, property, unit, check-
 
 The guest taps "+ Add another unit" on the form (up to three). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.
 
+## Deductions (Operation Team)
+
+When part of a deposit is kept (damage, missing item, extra cleaning), the Operation Team records it on the request before Finance pays: open the row's **Deposit / deduct** box in the Deposit column, enter the deposit held, the amount deducted and the reason, Save. The row then shows "Refund RM X" (deposit less deduction) with who recorded it and when. A deduction without a reason, or larger than the deposit, is refused. Finance's Paid box is prefilled with the refund due and records the amount actually paid; the Paid tab shows a total for the chosen date range, and the CSV carries Deposit, Deduction, Deduction reason, Refund due and Amount paid.
+
 ## Finance (Operations → Deposit refunds)
 
 - **Pending** — everything not yet paid. Rows marked **Matched** were tied to a booking automatically (property + unit + check-out date). Open the booking link, check the deposit in eZee, pay, then click **Paid** (bank reference optional).
@@ -32,8 +36,8 @@ The guest taps "+ Add another unit" on the form (up to three). One request is cr
 | Role | Dashboard link | Requests | Bank details, Paid / Reject / Link, CSV | Feedback |
 |---|---|---|---|---|
 | Finance Team, Finance Manager, Admin, Super Admin | yes | yes | yes | yes |
-| Operation Manager | yes | yes, account masked | no | yes |
-| Operation Team | yes | no | no | no |
+| Operation Manager | yes | yes, account masked, can record deposit / deduction | no | yes |
+| Operation Team | yes | yes, account masked, can record deposit / deduction | no | no |
 
 ## Protection
 
