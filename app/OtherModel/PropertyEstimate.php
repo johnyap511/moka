@@ -17,6 +17,6 @@ class PropertyEstimate extends Model
      * @var array
      */
     protected $fillable = [
-        'address', 'email', 'phone', 'bedroom', 'type', 'status'
+        'name', 'address', 'email', 'phone', 'bedroom', 'type', 'status'
     ];
 }
