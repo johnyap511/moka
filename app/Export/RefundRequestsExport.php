@@ -27,7 +27,8 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
 
     public function headings(): array
     {
-        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating'];
+        // Order per Finance (Sakinah, 14 Oct 2026): bank and contact right after the stay, workflow columns at the end.
+        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received'];
     }
 
     public function array(): array
@@ -35,12 +36,12 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
         return $this->rows->map(fn ($r) => [
             $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
             $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
-            $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : null, $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(),
-            $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
             $r->bank_holder, $r->bank_account, $r->bank_name, $r->phone, $r->email,
             $r->booking_id, $r->match, $r->match_note, '',
             $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->amount_paid, $r->reference,
             $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
+            $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : null, $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(),
+            $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
         ])->all();
     }
 
@@ -59,7 +60,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
 
     public function columnWidths(): array
     {
-        return ['A' => 9, 'B' => 8, 'C' => 16, 'D' => 9, 'E' => 11, 'F' => 26, 'G' => 20, 'H' => 12, 'I' => 11, 'J' => 9, 'K' => 10, 'L' => 24, 'M' => 16, 'N' => 10, 'O' => 22, 'P' => 26, 'Q' => 18, 'R' => 16, 'S' => 15, 'T' => 26, 'U' => 9, 'V' => 10, 'W' => 40, 'X' => 24, 'Y' => 11, 'Z' => 14, 'AA' => 11, 'AB' => 14];
+        return ['A' => 9, 'B' => 8, 'C' => 16, 'D' => 9, 'E' => 11, 'F' => 26, 'G' => 20, 'H' => 12, 'I' => 11, 'J' => 26, 'K' => 18, 'L' => 16, 'M' => 15, 'N' => 26, 'O' => 9, 'P' => 10, 'Q' => 40, 'R' => 24, 'S' => 11, 'T' => 14, 'U' => 11, 'V' => 14, 'W' => 10, 'X' => 8, 'Y' => 16, 'Z' => 10, 'AA' => 9, 'AB' => 10, 'AC' => 24, 'AD' => 16, 'AE' => 10, 'AF' => 22];
     }
 
     public function styles(Worksheet $sheet): array
