@@ -335,7 +335,7 @@ $PAGE = 25;
         @if(admin_can('sales.manage'))
         <form method="post" action="{{ route('admin.sales.upload') }}" enctype="multipart/form-data" class="sc-uploadrow">
             @csrf<input type="hidden" name="month" value="{{ $ym }}">
-            <label class="sc-file"><input type="file" name="files[]" accept=".xlsx,.xls" multiple required><span>Choose Excel files</span></label>
+            <label class="sc-file" id="scFilePick"><input type="file" name="files[]" accept=".xlsx,.xls" multiple required onchange="var f=this.files,s=this.nextElementSibling;s.textContent=f.length?(f.length===1?f[0].name:f.length+' files: '+Array.from(f).map(function(x){return x.name}).join(', ')):'Choose Excel files';this.parentNode.classList.toggle('has-files',f.length>0)"><span>Choose Excel files</span></label>
             <select name="hotel"><option value="">Detect property</option>@foreach($hotels as $code => $name)<option value="{{ $code }}">{{ $name }}</option>@endforeach</select>
             <button type="submit" class="btn btn-primary btn-sm" onclick="this.disabled=true;this.textContent='Uploading…';this.form.submit()">Upload</button>
         </form>
@@ -502,7 +502,7 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 .sc-pane__foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .sc-kpi .ctr{text-align:center}.sc-kpi input[type=number]{width:64px;text-align:center}.sc-kpi .sc-wide{width:100%;min-width:160px}.sc-kpi input[type=checkbox]{width:15px;height:15px}
 .sc-uploadrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sc-uploadrow select{padding:6px 8px;font-size:12.5px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff}
-.sc-file{position:relative;display:inline-flex;align-items:center;padding:6px 12px;border:1px dashed #94a3b8;border-radius:8px;font-size:12.5px;font-weight:600;color:#334155;background:#f8fafc;cursor:pointer}.sc-file:hover{background:#f1f5f9}.sc-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}.sc-file--sm{padding:3px 10px;font-weight:500;border-style:solid}
+.sc-file{position:relative;display:inline-flex;align-items:center;padding:6px 12px;border:1px dashed #94a3b8;border-radius:8px;font-size:12.5px;font-weight:600;color:#334155;background:#f8fafc;cursor:pointer}.sc-file:hover{background:#f1f5f9}.sc-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}.sc-file--sm{padding:3px 10px;font-weight:500;border-style:solid}.sc-file.has-files{border-style:solid;border-color:#0f766e;background:#ecfdf5;color:#115e59;max-width:420px}.sc-file.has-files span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sc-cover{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}.sc-cover__item{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:6px 10px;display:grid;gap:1px}.sc-cover__item span{font-size:11.5px;color:var(--text-secondary)}.sc-cover__item b{font-size:12.5px;font-weight:600}.sc-cover__item.is-stale{border-color:#fcd34d;background:#fffbeb}.sc-cover__item.is-stale b{color:#b45309}
 .sc-uploads .sc-file-name{font-size:11px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sc-link{background:none;border:0;padding:0;font:inherit;font-size:12px;color:#0f766e;cursor:pointer;text-decoration:underline}
