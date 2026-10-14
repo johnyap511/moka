@@ -158,7 +158,7 @@ class RefundController extends Controller
     }
 
     /** CSV of the current list, for the bank payment run. Finance only: it carries account numbers. */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request)
     {
         $this->manage();
         $tab  = (string) $request->input('tab', 'pending');
@@ -166,32 +166,16 @@ class RefundController extends Controller
         $rows = $this->filtered($tab === 'feedback' ? 'all' : $tab, trim((string) $request->input('q', '')), (string) $request->input('property', ''), $from, $to)->get();
         $this->log(null, 'Refund CSV exported', ['tab' => $tab, 'from' => $from, 'to' => $to, 'rows' => $rows->count()]);
 
-        $name = 'deposit-refunds-' . $tab . ($from || $to ? '-' . ($from ?: 'start') . '-to-' . ($to ?: 'today') : '') . '-' . now()->format('Ymd-Hi') . '.csv';
-        return response()->streamDownload(function () use ($rows) {
-            $out = fopen('php://output', 'w');
-            // Column order follows Najihah's working sheet (12 Oct 2026); "Finance review" is left blank for her notes.
-            fputcsv($out, ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating']);
-            foreach ($rows as $r) {
-                fputcsv($out, [
-                    $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
-                    $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
-                    $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : '', $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(), $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
-                    $r->bank_holder, "\t" . $r->bank_account, $r->bank_name,   // tab keeps Excel from mangling long numbers
-                    $r->phone, $r->email,
-                    $r->booking_id, $r->match, $r->match_note, '',
-                    $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->amount_paid, $r->reference,
-                    $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
-                ]);
-            }
-            fclose($out);
-        }, $name, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        $name = 'deposit-refunds-' . $tab . ($from || $to ? '-' . ($from ?: 'start') . '-to-' . ($to ?: 'today') : '') . '-' . now()->format('Ymd-Hi') . '.xlsx';
+        // Excel file rather than CSV: Excel turned units like "11-19" into dates and dropped leading zeros (Sakinah, 14 Oct 2026).
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Export\RefundRequestsExport($rows), $name);
     }
 
     /**
      * Guest contact list for email and message blasts (Sam, 12 Oct 2026): one row
      * per guest who ticked the consent box, newest stay first, no bank details.
      */
-    public function contacts(): StreamedResponse
+    public function contacts()
     {
         if (!admin_can('refunds.view')) {
             abort(403);
@@ -200,14 +184,7 @@ class RefundController extends Controller
             ->unique(fn ($r) => strtolower((string) $r->email) . '|' . $r->phone_digits)->values();
         $this->log(null, 'Refund contacts exported', ['rows' => $rows->count()]);
 
-        return response()->streamDownload(function () use ($rows) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Name', 'Email', 'Phone', 'Property', 'Unit', 'Last check-out', 'Consent given on']);
-            foreach ($rows as $r) {
-                fputcsv($out, [$r->name, $r->email, $r->phone, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'), $r->created_at->format('Y-m-d')]);
-            }
-            fclose($out);
-        }, 'moka-guest-contacts-' . now()->format('Ymd') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Export\RefundContactsExport($rows), 'moka-guest-contacts-' . now()->format('Ymd') . '.xlsx');
     }
 
     /** A fresh 48-hour link, on request. */
