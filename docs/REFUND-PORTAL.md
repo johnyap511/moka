@@ -39,7 +39,7 @@ When part of a deposit is kept (damage, missing item, extra cleaning), the Opera
 - **Date range** boxes on the filter bar: submitted dates on Pending / Verify / All, paid dates on Paid. Export CSV follows the same range, so a paid-date range matches a bank statement period.
 - **Verify** — no clean match (wrong unit, wrong date, or the same booking already has a request = **Duplicate**). The row shows **Likely bookings** (same unit within 3 days, similar guest name at that property within 7 days, same phone within 14 days): click **Pick** to link one. Or type into the **Link** box: booking number, eZee folio (FN4525) or reservation (RES4465). Or **Reject** with a reason. Nothing is ever deleted.
 - **Due** — 3 working days after the guest submitted. Overdue rows turn red.
-- **Export CSV** — the current list with bank details, for the bank's bulk payment file. Finance only; every export is logged.
+- **Export Excel** — the current list with bank details, for the bank's bulk payment file. Finance only; every export is logged. It is an .xlsx with text cells, so units like 11-19 stay as typed and account numbers keep leading zeros (a CSV opened in Excel turned them into dates and numbers).
 - **Guest feedback** — cleanliness and service by property, and the team KPI (who was named, average rating, compliments). Only requests tied to a real stay count, so made-up submissions cannot move anyone's score.
 
 ## Who sees what
