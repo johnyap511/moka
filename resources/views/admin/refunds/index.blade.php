@@ -39,7 +39,7 @@
 .rf-sugg{border:1px dashed #99f6e4;border-radius:8px;padding:6px 8px;background:#f0fdfa;display:grid;gap:4px}.rf-sugg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700}.rf-sugg-row{display:flex;gap:6px;align-items:center;justify-content:space-between}.rf-sugg-t{font-size:12px;line-height:1.3;white-space:normal;min-width:0}.rf-sugg-t .rf-muted{white-space:normal}
 .rf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media (max-width:900px){.rf-grid{grid-template-columns:1fr}}
 .rf-h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}.rf-quote{border-left:3px solid #99f6e4;padding:4px 10px;margin:6px 0;font-size:12.5px;line-height:1.4}.rf-quote small{display:block;color:var(--text-secondary)}.rf-quote.unv{border-color:#fde68a}
-.rf-sm{padding:4px 10px;font-size:12px}
+.rf-sm{padding:4px 10px;font-size:12px}.rf-recv-btn{display:block;margin-top:6px;background:#0f766e;border-color:#0f766e}.rf-recv-btn:hover{background:#115e59;border-color:#115e59}.rf-rate{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;margin-top:6px;font-size:12px;color:#475569}.rf-rate .rf-stars{font-size:14px;letter-spacing:1px;color:#f59e0b}.rf-rate .rf-stars i{font-style:normal;color:#e2e8f0}
 .rf-mnav{display:flex;gap:6px;align-items:center}.rf-mnav a{text-decoration:none;font-size:14px;color:#0f766e;padding:0 6px}
 .rf-kpi-bar{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;width:70px;display:inline-block;vertical-align:middle;margin-left:6px}.rf-kpi-bar i{display:block;height:100%;background:#0f766e}
 </style>
@@ -48,6 +48,7 @@
 @section('content')
 @php
     $stars = fn ($n) => $n ? str_repeat('★', (int) $n) . str_repeat('☆', 5 - (int) $n) : '—';
+    $gold = fn ($n) => $n ? '<span class="rf-stars" title="' . (int) $n . ' of 5">' . str_repeat('★', (int) $n) . '<i>' . str_repeat('★', 5 - (int) $n) . '</i></span>' : '<span class="rf-muted">not rated</span>';
     $matchChip = ['matched' => ['Matched', 'rf-chip--ok'], 'verify' => ['Verify', 'rf-chip--warn'], 'duplicate' => ['Duplicate', 'rf-chip--dup']];
     $qs = fn (array $extra) => '?' . http_build_query(array_filter(['tab' => $tab, 'q' => $q, 'property' => $prop, 'from' => $from, 'to' => $to] + $extra, fn ($v) => $v !== '' && $v !== null));
 @endphp
@@ -274,7 +275,8 @@
                                 <form method="post" action="{{ route('admin.refunds.split', $r) }}" title="Guest stayed in another unit too: creates a second request with the same bank details">@csrf<input name="unit_no" placeholder="Other unit, e.g. 01-30" maxlength="40" required><button class="btn btn-secondary rf-sm" type="submit">Split</button></form>
                             </div>
                         @endif
-                        <div class="rf-muted" style="margin-top:8px">{{ $r->email }}@if($r->staff) · served by {{ $r->staff->name }} ★{{ $r->staff_rating ?? '–' }}@endif · clean ★{{ $r->rating_clean ?? '–' }} · service ★{{ $r->rating_service ?? '–' }}</div>
+                        <div class="rf-muted" style="margin-top:8px">{{ $r->email }}</div>
+                        <div class="rf-rate"><span>Clean</span>{!! $gold($r->rating_clean) !!}<span>Service</span>{!! $gold($r->rating_service) !!}@if($r->staff)<span>{{ $r->staff->name }}</span>{!! $gold($r->staff_rating) !!}@endif</div>
                         @if($r->comments)<div class="rf-muted">“{{ $r->comments }}”</div>@endif
                     </div>
                     <div class="rf-pane">
@@ -294,7 +296,7 @@
                         <div class="rf-recv" data-id="{{ $r->id }}" style="margin-top:8px">
                             @if($r->received_at)<span class="rf-chip rf-chip--ok">Deposit received ✓</span> <span class="rf-muted">{{ $r->receiver->name ?? '' }}, {{ $r->received_at->format('d M H:i') }}</span>
                             @else<span class="rf-chip rf-chip--warn">Deposit receipt not confirmed</span>@endif
-                            @if($canManage)<form method="post" action="{{ route('admin.refunds.received', $r) }}" class="rf-recv-form" style="display:inline">@csrf<button type="submit" class="rf-more">{{ $r->received_at ? 'undo' : 'Confirm received' }}</button></form>@endif
+                            @if($canManage)<form method="post" action="{{ route('admin.refunds.received', $r) }}" class="rf-recv-form" style="display:inline">@csrf<button type="submit" class="{{ $r->received_at ? 'rf-more' : 'btn btn-primary rf-sm rf-recv-btn' }}">{{ $r->received_at ? 'undo' : '✓ Confirm deposit received' }}</button></form>@endif
                         </div>
                         @endif
                     </div>
@@ -343,7 +345,7 @@
     // Received toggle in place
     document.querySelectorAll('form.rf-recv-form').forEach(function(form){
         form.addEventListener('submit', function(e){ e.preventDefault();
-            post(form).then(function(d){ if (d && d.ok) { var box = form.closest('.rf-recv'); box.innerHTML = (d.received ? '<span class="rf-chip rf-chip--ok">Deposit received ✓</span> <span class="rf-muted">' + d.by + ', ' + d.at + '</span>' : '<span class="rf-chip rf-chip--warn">Deposit receipt not confirmed</span>') + ' '; box.appendChild(form); form.querySelector('button').textContent = d.received ? 'undo' : 'Confirm received'; var pf = document.querySelector('tr.rf-detail[data-for="' + d.id + '"] form.rf-paid-form'); if (pf) pf.dataset.received = d.received ? '1' : '0'; var s = rowOf(d.id).querySelectorAll('.rf-step')[1]; if (s) s.classList.toggle('on', d.received); flash(d.message); } else { form.submit(); } }).catch(function(){ form.submit(); });
+            post(form).then(function(d){ if (d && d.ok) { var box = form.closest('.rf-recv'); box.innerHTML = (d.received ? '<span class="rf-chip rf-chip--ok">Deposit received ✓</span> <span class="rf-muted">' + d.by + ', ' + d.at + '</span>' : '<span class="rf-chip rf-chip--warn">Deposit receipt not confirmed</span>') + ' '; box.appendChild(form); var rb = form.querySelector('button'); rb.textContent = d.received ? 'undo' : '✓ Confirm deposit received'; rb.className = d.received ? 'rf-more' : 'btn btn-primary rf-sm rf-recv-btn'; var pf = document.querySelector('tr.rf-detail[data-for="' + d.id + '"] form.rf-paid-form'); if (pf) pf.dataset.received = d.received ? '1' : '0'; var s = rowOf(d.id).querySelectorAll('.rf-step')[1]; if (s) s.classList.toggle('on', d.received); flash(d.message); } else { form.submit(); } }).catch(function(){ form.submit(); });
         });
     });
     // Single Mark paid in place
