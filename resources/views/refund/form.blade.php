@@ -54,15 +54,15 @@
             <label for="unit_no"><span class="req">Unit number</span> <small>e.g. E-23A-01</small></label>
             <input type="text" id="unit_no" name="unit_no" value="{{ old('unit_no') }}" class="{{ $e('unit_no') }}" required autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase">
             @error('unit_no')<div class="err">{{ $message }}</div>@enderror
-            <div id="more-units" style="{{ old('unit_no_2') || old('unit_no_3') ? '' : 'display:none' }}">
-                <div style="margin-top:12px"><label for="unit_no_2">Second unit <small>If you stayed in more than one unit</small></label>
-                <input type="text" id="unit_no_2" name="unit_no_2" value="{{ old('unit_no_2') }}" class="{{ $e('unit_no_2') }}" autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase">
-                @error('unit_no_2')<div class="err">{{ $message }}</div>@enderror</div>
-                <div id="unit3" style="margin-top:12px;{{ old('unit_no_3') ? '' : 'display:none' }}"><label for="unit_no_3">Third unit</label>
-                <input type="text" id="unit_no_3" name="unit_no_3" value="{{ old('unit_no_3') }}" class="{{ $e('unit_no_3') }}" autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase">
-                @error('unit_no_3')<div class="err">{{ $message }}</div>@enderror</div>
+            <div id="more-units">
+                @foreach((array) old('units', []) as $i => $u)
+                <div class="unit-row"><label for="units_{{ $i }}">Unit {{ $loop->iteration + 1 }}</label>
+                <div class="unit-in"><input type="text" id="units_{{ $i }}" name="units[{{ $i }}]" value="{{ $u }}" class="{{ $e('units.' . $i) }}" autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase"><button type="button" class="unit-rm" aria-label="Remove this unit">&times;</button></div>
+                @error('units.' . $i)<div class="err">{{ $message }}</div>@enderror</div>
+                @endforeach
             </div>
-            <button type="button" class="addunit" id="add-unit">+ Add another unit</button>
+            @error('units')<div class="err">{{ $message }}</div>@enderror
+            <button type="button" class="addunit" id="add-unit"><b>+</b> Add another unit <small>if you stayed in more than one, up to 10</small></button>
         </div>
         <div class="field">
             <label for="check_out"><span class="req">Check-out date</span></label>
@@ -159,10 +159,15 @@
 (function(){
     var f=document.getElementById('rf'),b=document.getElementById('rf-submit');
     f.addEventListener('submit',function(){b.disabled=true;b.textContent='Sending…';});
-    ['unit_no','unit_no_2','unit_no_3'].forEach(function(id){ var u=document.getElementById(id); u&&u.addEventListener('input',function(){this.value=this.value.toUpperCase();}); });
-    var add=document.getElementById('add-unit'),more=document.getElementById('more-units'),u3=document.getElementById('unit3');
-    add&&add.addEventListener('click',function(){ if(more.style.display==='none'){ more.style.display=''; document.getElementById('unit_no_2').focus(); add.textContent='+ Add a third unit'; } else if(u3.style.display==='none'){ u3.style.display=''; document.getElementById('unit_no_3').focus(); add.style.display='none'; } });
-    if(more.style.display!=='none'){ add.textContent='+ Add a third unit'; if(u3.style.display!=='none') add.style.display='none'; }
+    var more=document.getElementById('more-units'),add=document.getElementById('add-unit'),MAX=9,seq=more.children.length;
+    function relabel(){ var rows=more.querySelectorAll('.unit-row'); rows.forEach(function(r,i){ r.querySelector('label').textContent='Unit '+(i+2); }); add.style.display=rows.length>=MAX?'none':''; }
+    function addRow(){ if(more.querySelectorAll('.unit-row').length>=MAX) return; var i=seq++; var d=document.createElement('div'); d.className='unit-row';
+        d.innerHTML='<label for="units_'+i+'">Unit</label><div class="unit-in"><input type="text" id="units_'+i+'" name="units['+i+']" autocapitalize="characters" autocomplete="off" maxlength="40" style="text-transform:uppercase"><button type="button" class="unit-rm" aria-label="Remove this unit">&times;</button></div>';
+        more.appendChild(d); relabel(); d.querySelector('input').focus(); }
+    add.addEventListener('click',addRow);
+    more.addEventListener('click',function(e){ var b=e.target.closest('.unit-rm'); if(b){ b.closest('.unit-row').remove(); relabel(); } });
+    document.getElementById('rf').addEventListener('input',function(e){ if(e.target.matches('#unit_no, #more-units input')) e.target.value=e.target.value.toUpperCase(); });
+    relabel();
     var s=document.getElementById('staff_user_id'),m=document.getElementById('staff-more');
     s&&s.addEventListener('change',function(){m.style.display=this.value?'':'none';});
     var first=document.querySelector('.is-err');first&&first.scrollIntoView({block:'center'});

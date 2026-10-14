@@ -15,7 +15,7 @@ Fills in: name as per reservation, contact number, email, property, unit, check-
 
 ## One guest, several units
 
-The guest taps "+ Add another unit" on the form (up to three). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.
+The guest taps "+ Add another unit" on the form (up to ten units in one form; each extra row has a remove button). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.
 
 ## Daily workflow and cut-offs
 
