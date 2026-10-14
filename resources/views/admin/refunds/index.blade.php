@@ -248,8 +248,13 @@
                             <div>Request #{{ $sib->id }} · {{ $sib->name }} · {{ $sib->created_at->format('d M H:i') }} · {{ $sib->status === 'paid' ? 'PAID ' . $sib->paid_at?->format('d M') : $sib->status }}</div>
                             @endforeach
                             <div class="rf-muted">One deposit per booking. Pay the guest who paid the deposit (check the eZee folio) and reject the other.</div>
-                            @if($canManage && $pending && $r->match === 'duplicate')
-                            <form method="post" action="{{ route('admin.refunds.reject', $r) }}" style="margin-top:6px" onsubmit="return confirm('Reject request #{{ $r->id }} as a duplicate of #{{ $r->duplicate_of }}?')">@csrf<input type="hidden" name="note" value="Duplicate of request #{{ $r->duplicate_of }} (same booking)"><button class="btn btn-secondary rf-sm" type="submit">Reject this one as duplicate</button></form>
+                            @if($canManage && $pending)
+                            <div class="rf-forms">
+                                <form method="post" action="{{ route('admin.refunds.reject', $r) }}" onsubmit="return confirm('Reject request #{{ $r->id }} as the wrong claim on this booking?')">@csrf<input type="hidden" name="note" value="{{ $r->match === 'duplicate' ? 'Duplicate of request #' . $r->duplicate_of . ' (same booking)' : 'Wrong claim on booking #' . $r->booking_id . ', replaced by request #' . ($r->siblings->first()->id ?? '') }}"><button class="btn btn-secondary rf-sm" type="submit">Reject this one{{ $r->match === 'duplicate' ? ' as duplicate' : ', keep the other' }}</button></form>
+                                @foreach($r->siblings->where('status', 'pending') as $sib)
+                                <form method="post" action="{{ route('admin.refunds.reject', $sib) }}" onsubmit="return confirm('Reject request #{{ $sib->id }} ({{ $sib->name }}) and keep #{{ $r->id }}?')">@csrf<input type="hidden" name="note" value="Wrong claim on booking #{{ $r->booking_id }}, replaced by request #{{ $r->id }}"><button class="btn btn-secondary rf-sm" type="submit">Keep this one, reject #{{ $sib->id }}</button></form>
+                                @endforeach
+                            </div>
                             @endif
                         </div>
                         @endif

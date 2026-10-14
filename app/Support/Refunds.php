@@ -359,6 +359,28 @@ class Refunds
         return $new;
     }
 
+    /**
+     * One deposit per booking: among the live (not rejected) requests on a booking,
+     * the earliest is the match and the rest are duplicates of it. Re-run whenever a
+     * request is rejected, reopened or re-linked, so rejecting a wrong match promotes
+     * the right one to Matched by itself (Sam, 14 Oct 2026).
+     */
+    public static function settleClaims(?int $bookingId): void
+    {
+        if (!$bookingId) {
+            return;
+        }
+        $claims = RefundRequest::where('booking_id', $bookingId)->where('status', '!=', 'rejected')->orderBy('id')->get();
+        $first = $claims->first();
+        foreach ($claims as $i => $c) {
+            $want = $i === 0 ? ['match' => 'matched', 'duplicate_of' => null] : ['match' => 'duplicate', 'duplicate_of' => $first->id];
+            if ($c->match !== $want['match'] || (int) $c->duplicate_of !== (int) $want['duplicate_of']) {
+                $note = $i === 0 ? 'Now the only live claim on this booking' : 'Same booking as request #' . $first->id;
+                $c->update($want + ['match_note' => Str::limit(trim(preg_replace('/;?\s*Same booking as request #\d+/', '', (string) $c->match_note) . '; ' . $note, '; '), 250)]);
+            }
+        }
+    }
+
     /** Store a guest submission; returns the saved request. */
     public static function submit(array $in, ?RefundLink $link, ?string $ip, ?array $group = null, bool $applyPhoneCap = true): RefundRequest
     {

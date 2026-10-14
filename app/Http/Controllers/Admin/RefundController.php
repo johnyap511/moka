@@ -306,6 +306,7 @@ class RefundController extends Controller
         $this->manage();
         $request->validate(['note' => 'required|string|max:255']);
         $refund->update(['status' => 'rejected', 'note' => $request->input('note')]);
+        Refunds::settleClaims($refund->booking_id);
         $this->log($refund, 'Refund rejected', ['note' => $refund->note]);
         return back()->with('success', 'Request #' . $refund->id . ' rejected. The record is kept.');
     }
@@ -314,6 +315,7 @@ class RefundController extends Controller
     {
         $this->manage();
         $refund->update(['status' => 'pending', 'paid_at' => null, 'paid_by' => null]);
+        Refunds::settleClaims($refund->booking_id);
         $this->log($refund, 'Refund reopened', []);
         return back()->with('success', 'Request #' . $refund->id . ' is pending again.');
     }
@@ -330,20 +332,26 @@ class RefundController extends Controller
                 return back()->with('error', '"' . $id . '" did not resolve to a booking. Use the booking number, the eZee folio (FN4525) or the reservation (RES4465).');
             }
             $booking->load('listing');
-            $dup = RefundRequest::where('booking_id', $booking->id)->where('id', '!=', $refund->id)->orderBy('id')->first();
+            $dup = RefundRequest::where('booking_id', $booking->id)->where('id', '!=', $refund->id)->where('status', '!=', 'rejected')->orderBy('id')->first();
+            $old = $refund->booking_id;
             $refund->update([
                 'booking_id'   => $booking->id,
                 'match'        => $dup ? 'duplicate' : 'matched',
                 'duplicate_of' => $dup?->id,
                 'match_note'   => Str::limit('Linked by ' . Auth::user()->name . ' on ' . now()->format('d M') . ($dup ? '; same booking as request #' . $dup->id : ''), 250),
             ]);
+            if ($old && $old !== $booking->id) {
+                Refunds::settleClaims($old);
+            }
             $this->log($refund, 'Refund linked to booking', ['booking_id' => $booking->id, 'duplicate_of' => $dup?->id]);
             if ($dup) {
                 return back()->with('error', 'Request #' . $refund->id . ' linked to booking #' . $booking->id . ' (' . ($booking->listing->name ?? '') . '), but request #' . $dup->id . ' (' . $dup->name . ') already claims this booking, so it is flagged Duplicate. One deposit per booking: reject one of the two.');
             }
             return back()->with('success', 'Request #' . $refund->id . ' matched to booking #' . $booking->id . ' (' . ($booking->listing->name ?? '') . ').');
         }
+        $old = $refund->booking_id;
         $refund->update(['booking_id' => null, 'match' => 'verify', 'duplicate_of' => null, 'match_note' => Str::limit('Match cleared by ' . Auth::user()->name . ' on ' . now()->format('d M'), 250)]);
+        Refunds::settleClaims($old);
         return back()->with('success', 'Request #' . $refund->id . ' unlinked.');
     }
 
