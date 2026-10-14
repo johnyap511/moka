@@ -49,6 +49,11 @@ class RefundController extends Controller
                     $r->suggestions = ($r->status === 'pending' && $r->match !== 'matched') ? Refunds::suggestions($r) : [];
                 }
             }
+            // Other requests claiming the same booking: one deposit per booking, so Finance sees both sides.
+            $byBooking = RefundRequest::whereIn('booking_id', $rows->pluck('booking_id')->filter()->unique())->get(['id', 'booking_id', 'name', 'status', 'created_at', 'paid_at'])->groupBy('booking_id');
+            foreach ($rows as $r) {
+                $r->siblings = $r->booking_id ? ($byBooking->get($r->booking_id, collect())->where('id', '!=', $r->id)->values()) : collect();
+            }
         }
 
         return view('admin.refunds.index', [
@@ -332,8 +337,11 @@ class RefundController extends Controller
                 'duplicate_of' => $dup?->id,
                 'match_note'   => Str::limit('Linked by ' . Auth::user()->name . ' on ' . now()->format('d M') . ($dup ? '; same booking as request #' . $dup->id : ''), 250),
             ]);
-            $this->log($refund, 'Refund linked to booking', ['booking_id' => $booking->id]);
-            return back()->with('success', 'Request #' . $refund->id . ' linked to booking #' . $booking->id . ' (' . ($booking->listing->name ?? '') . ').');
+            $this->log($refund, 'Refund linked to booking', ['booking_id' => $booking->id, 'duplicate_of' => $dup?->id]);
+            if ($dup) {
+                return back()->with('error', 'Request #' . $refund->id . ' linked to booking #' . $booking->id . ' (' . ($booking->listing->name ?? '') . '), but request #' . $dup->id . ' (' . $dup->name . ') already claims this booking, so it is flagged Duplicate. One deposit per booking: reject one of the two.');
+            }
+            return back()->with('success', 'Request #' . $refund->id . ' matched to booking #' . $booking->id . ' (' . ($booking->listing->name ?? '') . ').');
         }
         $refund->update(['booking_id' => null, 'match' => 'verify', 'duplicate_of' => null, 'match_note' => Str::limit('Match cleared by ' . Auth::user()->name . ' on ' . now()->format('d M'), 250)]);
         return back()->with('success', 'Request #' . $refund->id . ' unlinked.');

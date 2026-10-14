@@ -21,6 +21,7 @@
 .rf-table td.rf-wrap{white-space:normal;max-width:220px}.rf-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .rf-empty{color:var(--text-secondary);padding:22px!important;text-align:center}
 .rf-list{table-layout:fixed;min-width:0!important;width:100%}.rf-list th,.rf-list td{padding:8px 7px;vertical-align:middle;overflow:hidden}.rf-list td.rf-wrap,.rf-list td.num{white-space:normal}.rf-list .rf-steps{white-space:normal}.rf-detail td{overflow:visible}.rf-list .rf-tick{padding-left:10px}.rf-list tr.rf-row{cursor:pointer}.rf-list tr.rf-row:hover{background:#f8fafc}.rf-list tr.rf-row.open{background:#f0fdfa}.rf-open{border:1px solid var(--border,#e5e7eb);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer;color:#0f766e;font-size:13px}
+.rf-dupbox{margin-top:8px;padding:8px 10px;border:1px solid #fecaca;background:#fef2f2;border-radius:8px;font-size:12px;line-height:1.45}.rf-dupbox b{color:#991b1b;display:block;margin-bottom:2px}
 .rf-pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:#f1f5f9;color:#475569;white-space:nowrap}.rf-pill--bad{background:#fee2e2;color:#991b1b}.rf-pill--warn{background:#fef3c7;color:#92400e}.rf-pill--soon{background:#fef9c3;color:#854d0e}.rf-pill--ok{background:#dcfce7;color:#166534}
 .rf-section td{background:#f8fafc;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);padding:6px 10px!important;border-bottom:1px solid var(--border,#e5e7eb)}.rf-section--overdue td{color:#991b1b;background:#fef2f2}.rf-section--due-today td{color:#92400e;background:#fffbeb}
 .rf-row.ready td.rf-tick{box-shadow:inset 3px 0 #16a34a}
@@ -208,7 +209,7 @@
                 <td class="rf-wrap">{{ \Illuminate\Support\Str::before($r->property, ' by') }} <b>{{ $r->unit_no }}</b><div class="rf-muted">out {{ $r->check_out->format('d M') }}</div></td>
                 <td>
                     @if($r->status === 'rejected')<span class="rf-chip rf-chip--rej">Rejected</span>
-                    @else<span class="rf-chip {{ $mClass }}">{{ $mLabel }}</span>@endif
+                    @else<span class="rf-chip {{ $mClass }}">{{ $mLabel }}{{ $r->match === 'duplicate' && $r->duplicate_of ? ' · see #' . $r->duplicate_of : '' }}</span>@endif
                     @if($b)<div class="rf-muted"><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">#{{ $b->id }}</a> {{ \Illuminate\Support\Str::limit(trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')), 18) }}</div>@endif
                 </td>
                 <td class="num">
@@ -240,6 +241,18 @@
                         @if($b)<div><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">Booking #{{ $b->id }}</a> · {{ $b->listing->name ?? '' }}<div class="rf-muted">{{ trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }} · {{ $b->folio_no }}</div></div>
                         @else<div class="rf-muted">No booking linked yet.</div>@endif
                         @if($r->match_note)<div class="rf-note">{{ $r->match_note }}</div>@endif
+                        @if($r->siblings->isNotEmpty())
+                        <div class="rf-dupbox">
+                            <b>{{ $r->match === 'duplicate' ? 'Duplicate claim' : 'Also claimed by' }}</b>
+                            @foreach($r->siblings as $sib)
+                            <div>Request #{{ $sib->id }} · {{ $sib->name }} · {{ $sib->created_at->format('d M H:i') }} · {{ $sib->status === 'paid' ? 'PAID ' . $sib->paid_at?->format('d M') : $sib->status }}</div>
+                            @endforeach
+                            <div class="rf-muted">One deposit per booking. Pay the guest who paid the deposit (check the eZee folio) and reject the other.</div>
+                            @if($canManage && $pending && $r->match === 'duplicate')
+                            <form method="post" action="{{ route('admin.refunds.reject', $r) }}" style="margin-top:6px" onsubmit="return confirm('Reject request #{{ $r->id }} as a duplicate of #{{ $r->duplicate_of }}?')">@csrf<input type="hidden" name="note" value="Duplicate of request #{{ $r->duplicate_of }} (same booking)"><button class="btn btn-secondary rf-sm" type="submit">Reject this one as duplicate</button></form>
+                            @endif
+                        </div>
+                        @endif
                         @if(($canManage || $canDeduct) && $pending)
                             @if(!empty($r->suggestions))
                             <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
