@@ -52,9 +52,12 @@ class PmsReconcile
 
         // eZee side: live reservations overlapping the window
         $rows = EzeeBooking::where('status', '<>', 1)
-            ->where('Start', '<=', $to)->where('End', '>=', $from)
+            ->where('Start', '<=', $to)->where('End', '>', $from)
             ->whereNotNull('RoomName')->where('RoomName', '<>', '')
-            ->orderBy('Start')->get();
+            ->where('SubBookingId', 'not like', 'NORES%')   // rows built from report uploads are not eZee reservations
+            ->orderBy('Start')->get()
+            // eZee keeps a few dead rows from 2022–2025 with an End years later; a real stay is at most a year.
+            ->filter(fn ($eb) => Carbon::parse($eb->Start)->diffInDays(Carbon::parse($eb->End)) <= 400)->values();
 
         foreach ($rows as $eb) {
             $b   = $eb->book_id ? Booking::withoutGlobalScopes()->find($eb->book_id) : null;
@@ -77,6 +80,10 @@ class PmsReconcile
             }
             $chain = collect(BookingSplitter::stayChain($b, substr((string) $eb->TransactionId, 0, 5)))->filter(fn ($x) => (int) $x->status !== 1);
             $l = $map->resolve($eb);
+            if (!$l && preg_match('/^(.*?)\s*\(.*\)\s*$/', (string) $eb->RoomName, $m)) {
+                // eZee carries duplicate rooms for one unit: "BS 07-30 (No Monthly)", "H-23-3A (Rental Unit)", "C2-07-10 (With Karaoke)".
+                $l = $map->listingForUnitName(trim($m[1]));
+            }
             if (!$l) {
                 $add('F', 'eZee room "' . $eb->RoomName . '" has no Homemoka unit; booking #' . $b->id . ' sits on ' . ($b->listing?->name ?? '?'));
                 continue;
@@ -86,6 +93,8 @@ class PmsReconcile
                 $unit = Listing::withoutGlobalScope('notArchived')->find($b->listing_id);
                 if ($isExtra($l) && $isExtra($unit)) {
                     // one extra room is as good as another
+                } elseif ((string) $eb->Start === (string) $eb->End && $isExtra($unit)) {
+                    // day use (hourly) is parked on an extra room on purpose: company revenue, not the owner's
                 } elseif ($isExtra($l)) {
                     $add('C', 'Booking #' . $b->id . ' on ' . ($unit?->name ?? '?') . '; eZee moved the stay to ' . $l->name, $unit);
                 } else {
@@ -104,6 +113,9 @@ class PmsReconcile
             } catch (\Throwable $e) {
                 $d = null;
             }
+            if ($d && !$d['room_differs'] && preg_match('/-\d+$/', (string) $eb->SubBookingId)) {
+                $d = null;   // a "-1"/"-2" split carries the folio's cleaning on one row only
+            }
             if ($d) {
                 $add('G', sprintf('Room here RM %s, eZee RM %s%s (booking #%d)', number_format($d['ours']['room'], 2), number_format($d['theirs']['room'], 2), $d['clean_differs'] ? '; cleaning differs' : '', $b->id), $l);
             }
@@ -121,6 +133,10 @@ class PmsReconcile
             }
             if ($b->folio_no && isset($linkedFolios[self::folioKey($b->folio_no, $b->listing_id)])) {
                 continue;   // a segment of a stay that is linked through another row
+            }
+            $chainIds = collect(BookingSplitter::stayChain($b))->pluck('id');
+            if ($chainIds->count() > 1 && $chainIds->intersect($linked)->isNotEmpty()) {
+                continue;   // split stay or month segment whose sibling carries the eZee link
             }
             $fp = 'H:b' . $b->id;
             $found[$fp] = [
@@ -150,14 +166,14 @@ class PmsReconcile
         }
 
         // Open differences inside the window that this run did not find have been cleared by the data.
-        $cleared = PmsDifference::open()->where('stay_from', '<=', $to)->where('stay_to', '>=', $from)
+        $cleared = PmsDifference::open()->where('stay_from', '<=', $to)->where('stay_to', '>', $from)
             ->whereNotIn('fingerprint', array_keys($found) ?: ['-'])
             ->update(['resolved_at' => $now, 'resolution' => 'No longer present: cleared by the data', 'auto_resolved' => true]);
 
         return PmsReconcileRun::create([
             'scope' => $scope, 'month' => $month, 'from' => $from, 'to' => $to,
             'reservations' => $rows->count(), 'bookings' => $bookings->count(),
-            'open' => PmsDifference::open()->where('stay_from', '<=', $to)->where('stay_to', '>=', $from)->count(),
+            'open' => PmsDifference::open()->where('stay_from', '<=', $to)->where('stay_to', '>', $from)->count(),
             'new' => $new, 'cleared' => $cleared, 'user_id' => $userId,
             'duration_ms' => (int) round((microtime(true) - $t0) * 1000), 'ran_at' => $now,
         ]);
