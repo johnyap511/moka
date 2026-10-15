@@ -39,6 +39,15 @@
                     <p class="or-help">Used only to flag units that are new or gone. Leave empty to reuse the master from last month's run.</p>
                     <input type="file" name="prev" accept=".xlsx">
                 </details>
+                @php $pmsGate = \App\Support\PmsReconcile::gate(old('month', $defaultMonth)); @endphp
+                <div style="font-size:12.5px;padding:8px 10px;border-radius:8px;margin:6px 0;{{ $pmsGate['ok'] ? 'background:#dcfce7;color:#166534' : 'background:#fef3c7;color:#92400e' }}">
+                    <b>PMS check for {{ \Carbon\Carbon::createFromFormat('Y-m', old('month', $defaultMonth))->format('F Y') }}:</b>
+                    {{ $pmsGate['ok'] ? 'clear, checked ' . $pmsGate['run']->ran_at->format('j M H:i') . ' with no open difference.' : $pmsGate['why'] }}
+                    <a href="/admin/pms-check?month={{ old('month', $defaultMonth) }}">Open the PMS check</a>
+                    @if(!$pmsGate['ok'] && admin_is_super())
+                    <label style="display:block;margin-top:6px">Override (super admin, reason required) <input name="gate_override" maxlength="200" placeholder="Why this run may go ahead" style="width:100%;margin-top:3px"></label>
+                    @endif
+                </div>
                 <button class="btn btn-primary" type="submit">Upload and continue</button>
             </form>
         </div>

@@ -94,6 +94,14 @@
         <div class="val">{{ $totalGuests }}</div>
         <div class="lbl">Registered Guests</div>
     </div>
+    @if(admin_can('ezee.view'))
+    @php $pmsOpen = \App\Support\PmsReconcile::openCount(); $pmsRun = \App\Support\PmsReconcile::latestRun(); @endphp
+    <a href="/admin/pms-check" class="stat-card" style="text-decoration:none;color:inherit;{{ $pmsOpen ? 'border-color:#f59e0b' : '' }}">
+        <div class="val" style="{{ $pmsOpen ? 'color:#b45309' : 'color:#047857' }}">{{ $pmsOpen }}</div>
+        <div class="lbl">PMS differences open</div>
+        <div class="text-sm text-secondary mt-1">{{ $pmsRun ? 'checked ' . $pmsRun->ran_at->format('j M H:i') : 'not checked yet' }}</div>
+    </a>
+    @endif
 </div>
 
 {{-- Recent Bookings removed on request. The controller still provides

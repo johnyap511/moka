@@ -227,3 +227,9 @@ Route::get('/tenancy-statements/{statement}', 'Admin\TenancyStatementController@
 Route::get('/tenancy-statements/{statement}/pdf', 'Admin\TenancyStatementController@download')->name('admin.tenancy.pdf');
 Route::post('/tenancy-statements/{statement}/pdf', 'Admin\TenancyStatementController@attachPdf')->name('admin.tenancy.attach-pdf');
 Route::post('/tenancy-statements/{statement}/void', 'Admin\TenancyStatementController@void')->name('admin.tenancy.void');
+
+// PMS check: eZee vs Homemoka differences, daily and month-end gate for owner reports (15 Oct 2026)
+Route::get('/pms-check', 'Admin\PmsDifferenceController@index')->name('admin.pms.index');
+Route::post('/pms-check/run', 'Admin\PmsDifferenceController@run')->name('admin.pms.run');
+Route::post('/pms-check/{difference}/resolve', 'Admin\PmsDifferenceController@resolve')->name('admin.pms.resolve');
+Route::post('/pms-check/{difference}/reopen', 'Admin\PmsDifferenceController@reopen')->name('admin.pms.reopen');

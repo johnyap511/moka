@@ -84,6 +84,8 @@ canvas{display:block}
     <div>
         <h1>{{ $heading ?? 'Hello ' . Auth::user()->name }}</h1>
         <p>{{ $listing->name ?? 'Your portfolio' }}{!! $isPool ? ' · <b>' . e($pool['group']->name ?? 'Pool') . '</b>, ' . $pool['units'] . ' units, pool figures' : '' !!} · {{ $selDate->format('F Y') }}</p>
+        @php $pmsStamp = \App\Support\PmsReconcile::latestRun(); @endphp
+        <p style="font-size:11.5px;color:var(--text-secondary,#64748b);margin-top:2px">Live figures, provisional until your monthly report.{{ $pmsStamp ? ' Last checked against the property management system ' . $pmsStamp->ran_at->format('j M Y, H:i') . '.' : '' }}</p>
     </div>
 </div>
 

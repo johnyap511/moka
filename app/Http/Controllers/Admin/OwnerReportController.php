@@ -42,12 +42,25 @@ class OwnerReportController extends Controller
             'prev'   => 'nullable|file|mimes:xlsx|max:30720',
         ], [], ['master' => 'Master file', 'recon' => 'Reconciled file', 'prev' => 'previous month master']);
 
+        // Month-end gate (Sam, 15 Oct 2026): no report run while eZee and Homemoka disagree on
+        // that month. A super admin may override with a reason, which is logged on the run.
+        $gate = \App\Support\PmsReconcile::gate($request->input('month'));
+        if (!$gate['ok']) {
+            $override = admin_is_super() && trim((string) $request->input('gate_override')) !== '';
+            if (!$override) {
+                return back()->withInput()->with('error', 'PMS check: ' . $gate['why'] . ' Open the PMS check page, run the month check and clear the differences first.');
+            }
+        }
+
         $run = ReportRun::create([
             'month' => $request->input('month'), 'status' => 'draft', 'user_id' => Auth::id(),
             'master_name' => $request->file('master')->getClientOriginalName(),
             'recon_name' => $request->file('recon') ? $request->file('recon')->getClientOriginalName() : 'Built by Homemoka',
             'prev_name' => $request->file('prev') ? $request->file('prev')->getClientOriginalName() : null,
         ]);
+        if (!$gate['ok']) {
+            $run->update(['log' => 'PMS gate overridden by ' . (Auth::user()->name ?? 'super admin') . ': ' . trim((string) $request->input('gate_override')) . "\n"]);
+        }
         File::ensureDirectoryExists($run->dir(), 0755);
         $request->file('master')->move($run->dir(), 'master.xlsx');
         if ($request->file('recon')) {

@@ -53,6 +53,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('ezee:notifications')->hourlyAt(10)->withoutOverlapping();
         // Charges posted at checkout do not always change eZee's modified time: re-read yesterday's and today's departures before the 06:00 reconcile.
         $schedule->command('ezee:refresh-departures')->dailyAt('05:40')->withoutOverlapping();
+        // PMS check (15 Oct 2026): after the 06:00 reconcile, compare eZee with Homemoka on unit,
+        // dates, status and amount for the last 60 days and keep the differences for a person.
+        $schedule->command('pms:reconcile', ['--days' => 60])->dailyAt('06:30')->withoutOverlapping()->runInBackground();
         // Owner reports: hand a queued run to the report service (a web request cannot wait the minutes it takes).
         $schedule->command('reports:run')->everyMinute()->withoutOverlapping(30)->runInBackground();
         // Tell Bing (and the answer engines on its index) about pages published or updated today.
