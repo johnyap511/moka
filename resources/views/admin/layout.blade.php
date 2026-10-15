@@ -331,8 +331,14 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     </a>
     @endif
 
-    @if(admin_can('finance.view') || admin_can('ezee.view') || admin_can('sales.view') || admin_can('sales.own') || admin_can('reports.generate'))
+    @if(admin_can('finance.view') || admin_can('ezee.view') || admin_can('sales.view') || admin_can('sales.own') || admin_can('reports.generate') || admin_can('tenancy.view'))
     <div class="sidebar-section">Finance</div>
+    @endif
+    @if(admin_can('tenancy.view'))
+    <a href="/admin/tenancy-statements" class="sidebar-link {{ request()->is('admin/tenancy-statements*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h4M5 3h14a1 1 0 011 1v16l-3-2-3 2-3-2-3 2-3-2V4a1 1 0 011-1z"/></svg>
+        Tenancy statements
+    </a>
     @endif
     @if(admin_can('finance.view'))
     {{-- Payments (/admin/payment/upcoming) hidden on request (Sam, 12 Oct 2026); the route still works if visited directly. --}}

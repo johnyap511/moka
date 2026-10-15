@@ -218,3 +218,12 @@ Route::post('/sales-commission/payout', 'Admin\SalesCommissionController@addPayo
 Route::get('/sales-commission/sop', 'Admin\SalesCommissionController@sop')->name('admin.sales.sop');
 Route::post('/sales-commission/sop', 'Admin\SalesCommissionController@uploadSop')->name('admin.sales.sop.upload');
 Route::post('/sales-commission/upload/{id}/delete', 'Admin\SalesCommissionController@deleteUpload')->name('admin.sales.upload.delete');
+
+// Tenancy settlement statements: utility proration + deposit settlement, final PDF kept (15 Oct 2026)
+Route::get('/tenancy-statements', 'Admin\TenancyStatementController@index')->name('admin.tenancy.index');
+Route::get('/tenancy-statements/new', 'Admin\TenancyStatementController@create')->name('admin.tenancy.create');
+Route::post('/tenancy-statements', 'Admin\TenancyStatementController@store')->name('admin.tenancy.store');
+Route::get('/tenancy-statements/{statement}', 'Admin\TenancyStatementController@show')->name('admin.tenancy.show');
+Route::get('/tenancy-statements/{statement}/pdf', 'Admin\TenancyStatementController@download')->name('admin.tenancy.pdf');
+Route::post('/tenancy-statements/{statement}/pdf', 'Admin\TenancyStatementController@attachPdf')->name('admin.tenancy.attach-pdf');
+Route::post('/tenancy-statements/{statement}/void', 'Admin\TenancyStatementController@void')->name('admin.tenancy.void');

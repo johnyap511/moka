@@ -32,7 +32,17 @@ return [
     'refund_staff_exclude' => ['Intern', 'Intern Moka'],
 
     // Company registration number shown on the guest refund page (SSM), once Sam supplies it.
-    'company_reg'      => env('MOKA_COMPANY_REG'),
+    'company_reg'      => env('MOKA_COMPANY_REG', '202001018827 (1375147-V)'),
+
+    // Company block printed on tenancy settlement statements (from Finance's calculator, 15 Oct 2026).
+    'company' => [
+        'name'  => 'MOKA VENTURE SDN. BHD.',
+        'reg'   => env('MOKA_COMPANY_REG', '202001018827 (1375147-V)'),
+        'addr1' => '11.1, 11th Floor Menara Lien Hoe, 8, Persiaran Tropicana, Tropicana Golf & Country Resort,',
+        'addr2' => '47410 Petaling Jaya, Selangor Darul Ehsan, Malaysia.',
+        'email' => 'hello@homemoka.com',
+        'phone' => '+603-6789 2288',
+    ],
 
     'turnstile_site'   => env('MOKA_TURNSTILE_SITE'),
     'turnstile_secret' => env('MOKA_TURNSTILE_SECRET'),

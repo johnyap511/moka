@@ -57,6 +57,9 @@ return [
             'refunds.manage'   => 'See bank details, mark refunds paid',
             'refunds.feedback' => 'View guest feedback and team KPI',
             'refunds.deduct'   => 'Record the deposit held and any deduction on a refund request',
+
+            'tenancy.view'     => 'View tenancy settlement statements and download their PDFs',
+            'tenancy.manage'   => 'Issue and void tenancy settlement statements (Finance)',
         ],
     ],
     'roles' => [
@@ -81,6 +84,7 @@ return [
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate', 'reports.units',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
+                'tenancy.view', 'tenancy.manage',
             ],
         ],
         'operations_manager' => [
@@ -99,6 +103,7 @@ return [
                 'sales.view', 'sales.manage', 'sales.own',
                 'reports.generate', 'reports.units',
                 'refunds.link', 'refunds.view', 'refunds.feedback', 'refunds.deduct',
+                'tenancy.view',
             ],
         ],
         'operations' => [
@@ -132,6 +137,7 @@ return [
                 'sales.view', 'sales.manage',
                 'reports.generate', 'reports.units',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
+                'tenancy.view', 'tenancy.manage',
             ],
         ],
         'finance' => [
@@ -148,6 +154,7 @@ return [
                 'sales.view', 'sales.manage',
                 'reports.generate',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
+                'tenancy.view', 'tenancy.manage',
             ],
         ],
         'sales' => [
