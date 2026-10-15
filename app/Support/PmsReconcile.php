@@ -82,7 +82,11 @@ class PmsReconcile
             $l = $map->resolve($eb);
             if (!$l && preg_match('/^(.*?)\s*\(.*\)\s*$/', (string) $eb->RoomName, $m)) {
                 // eZee carries duplicate rooms for one unit: "BS 07-30 (No Monthly)", "H-23-3A (Rental Unit)", "C2-07-10 (With Karaoke)".
+                $code = EzeeUnitMap::compact(trim($m[1]));
                 $l = $map->listingForUnitName(trim($m[1]));
+                if (!$l && $code !== '' && $b->listing && str_ends_with(EzeeUnitMap::compact((string) $b->listing->name), $code)) {
+                    $l = $b->listing;   // the booking already sits on the unit the room name spells
+                }
             }
             if (!$l) {
                 $add('F', 'eZee room "' . $eb->RoomName . '" has no Homemoka unit; booking #' . $b->id . ' sits on ' . ($b->listing?->name ?? '?'));
@@ -137,6 +141,10 @@ class PmsReconcile
             $chainIds = collect(BookingSplitter::stayChain($b))->pluck('id');
             if ($chainIds->count() > 1 && $chainIds->intersect($linked)->isNotEmpty()) {
                 continue;   // split stay or month segment whose sibling carries the eZee link
+            }
+            if ($b->folio_no && EzeeBooking::where('status', '<>', 1)->where('folio_no', $b->folio_no)
+                    ->where('Start', '<=', $b->check_out)->where('End', '>=', $b->check_in)->exists()) {
+                continue;   // eZee has a live row on this folio over these dates; the link sits on another segment
             }
             $fp = 'H:b' . $b->id;
             $found[$fp] = [
