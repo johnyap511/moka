@@ -218,7 +218,7 @@ class Refunds
         return $candidates->sortBy(fn ($b) => abs(Carbon::parse($b->check_out)->diffInDays($day, false)))->first();
     }
 
-    public static function match(string $property, string $unit, string $checkOut, string $name): array
+    public static function match(string $property, string $unit, string $checkOut, string $name, ?string $phone = null): array
     {
         $prefix = self::PROPERTIES[$property] ?? null;
         if (!$prefix) {
@@ -259,7 +259,15 @@ class Refunds
         $exact = $find($day, $day);
         if ($exact->count() === 1) {
             $b = $exact->first();
-            return [$b, 'matched', self::nameNote($b, $name)];
+            $nameNote = self::nameNote($b, $name);
+            // Matched only when the person is confirmed too: the name overlaps the booking's
+            // guest name, or the phone number is the booking's. Unit + date alone is not
+            // proof (16 Oct 2026: a mis-read check-out date landed on the previous guest's
+            // booking and was shown as "matched"). Otherwise Finance verifies.
+            if ($nameNote === null || self::samePhone($b, $phone)) {
+                return [$b, 'matched', $nameNote === null ? null : $nameNote . ' (phone matches the booking)'];
+            }
+            return [$b, 'verify', $nameNote . '; phone differs too. Confirm this is the guest who stayed before paying.'];
         }
         if ($exact->count() > 1) {
             return [$exact->first(), 'verify', $exact->count() . ' bookings check out that day on this unit'];
@@ -272,6 +280,14 @@ class Refunds
         }
 
         return [null, 'verify', 'No booking checking out ' . Carbon::parse($day)->format('d M Y') . ' on ' . $listings->first()->name];
+    }
+
+    /** Last eight digits of the booking guest's phone equal the request's. */
+    private static function samePhone(Booking $b, ?string $phone): bool
+    {
+        $a = self::digits((string) $phone);
+        $c = self::digits((string) ($b->user->phone ?? ''));
+        return strlen($a) >= 8 && strlen($c) >= 8 && substr($a, -8) === substr($c, -8);
     }
 
     private static function nameNote(Booking $b, string $name): ?string
@@ -384,7 +400,7 @@ class Refunds
     /** Store a guest submission; returns the saved request. */
     public static function submit(array $in, ?RefundLink $link, ?string $ip, ?array $group = null, bool $applyPhoneCap = true): RefundRequest
     {
-        [$booking, $match, $note] = self::match($in['property'], $in['unit_no'], $in['check_out'], $in['name']);
+        [$booking, $match, $note] = self::match($in['property'], $in['unit_no'], $in['check_out'], $in['name'], $in['phone'] ?? null);
 
         $phoneDigits = self::digits($in['phone'] ?? '');
         $notes = array_filter([$note]);

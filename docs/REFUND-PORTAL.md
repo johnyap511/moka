@@ -34,6 +34,7 @@ When part of a deposit is kept (damage, missing item, extra cleaning), the Opera
 
 ## Finance (Operations → Deposit refunds)
 
+- **Matching rule (tightened 16 Oct 2026).** A request is **Matched** only when all three agree: the unit, the check-out date (exactly), and the person (the name shares a word with the booking's guest name, or the phone's last eight digits are the booking's). Unit + date alone, or a ±1-day date, gives **Verify** with the nearest booking suggested, never Matched. Guest email/phone are copied onto the booking only for Matched requests.
 - **Pending** — everything not yet paid. Rows marked **Matched** were tied to a booking automatically (property + unit + check-out date). Open the booking link, check the deposit in eZee, pay, then click **Paid** (bank reference optional).
 - Matching accepts the Homemoka unit name ("11-08", "Alinea 11-08") and the eZee room code guests see in their messages ("AL-11-08", "BS 03-06"). A code that belongs to another property is flagged, not matched.
 - **Date range** boxes on the filter bar: submitted dates on Pending / Verify / All, paid dates on Paid. Export CSV follows the same range, so a paid-date range matches a bank statement period.
