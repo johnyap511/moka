@@ -17,7 +17,8 @@
 .fc-event-title { font-weight: 500; }
 .fc-daygrid-event-dot { display: none; }
 /* Event popup */
-.cal-popup { position:fixed; background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 8px 32px rgba(0,0,0,.18); z-index:9999; min-width:240px; max-width:300px; font-size:13px; }
+.cal-popup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 12px 40px rgba(0,0,0,.25); z-index:9999; width:min(340px, calc(100vw - 32px)); max-height:calc(100vh - 32px); overflow:auto; font-size:13px; }
+.cal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.35); z-index:9998; display:none; }
 .cal-popup h4 { margin:0 0 8px; font-size:14px; font-weight:600; }
 .cal-popup .row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); }
 .cal-popup .row:last-child { border:none; }
@@ -81,6 +82,7 @@
 </div>
 
 {{-- Event detail popup --}}
+<div id="cal-backdrop" class="cal-backdrop" onclick="closePopup()"></div>
 <div id="cal-popup" class="cal-popup" style="display:none">
     <span class="cal-popup-close" onclick="closePopup()">×</span>
     <h4 id="pp-name"></h4>
@@ -152,14 +154,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('pp-ota').textContent         = fmt(ext.ota_fee);
             document.getElementById('pp-price').textContent       = ext.price ? 'RM ' + parseFloat(ext.price).toFixed(2) : '—';
             document.getElementById('pp-view').href               = '/admin/book/' + e.id;
-            // Position popup near click
-            var popup = document.getElementById('cal-popup');
-            popup.style.display = 'block';
-            var rect = info.el.getBoundingClientRect();
-            var top  = rect.bottom + window.scrollY + 8;
-            var left = Math.min(rect.left + window.scrollX, window.innerWidth - 320);
-            popup.style.top  = top + 'px';
-            popup.style.left = Math.max(8, left) + 'px';
+            // Centred on the screen (Najihah, 16 Oct 2026): placed beside the event it ran
+            // off the bottom of the page for bookings in the lower weeks.
+            document.getElementById('cal-popup').style.display = 'block';
+            document.getElementById('cal-backdrop').style.display = 'block';
         }
     });
     cal.render();
@@ -169,16 +167,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return Math.round((new Date(e) - new Date(s)) / 86400000);
     }
 
-    document.addEventListener('click', function(ev) {
-        var popup = document.getElementById('cal-popup');
-        if (popup.style.display !== 'none' && !popup.contains(ev.target) && !ev.target.closest('.fc-event')) {
-            popup.style.display = 'none';
-        }
-    });
+    document.addEventListener('keydown', function(ev) { if (ev.key === 'Escape') closePopup(); });
 });
 
 function closePopup() {
     document.getElementById('cal-popup').style.display = 'none';
+    document.getElementById('cal-backdrop').style.display = 'none';
 }
 </script>
 @endpush
