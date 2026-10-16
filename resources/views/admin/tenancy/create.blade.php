@@ -13,6 +13,7 @@
 .tb-sh{display:grid;grid-template-columns:28px minmax(0,1fr);gap:2px 10px;align-items:center;margin-bottom:12px}.tb-sh .n{grid-row:span 2;align-self:start;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}.tb-sh h2{margin:0;font-size:15.5px;font-weight:700}.tb-sh p{grid-column:2;margin:0;font-size:12.5px;color:var(--muted)}
 .tb .field{display:flex;flex-direction:column;gap:4px;min-width:0}.tb .lab{font-size:12px;font-weight:600;color:var(--muted)}
 .tb input[type=text],.tb input[type=date],.tb input[type=number],.tb textarea{width:100%;font:400 14px/1.4 inherit;color:var(--ink);background:var(--surface-2);border:1.5px solid var(--line-strong);border-radius:8px;padding:8px 10px;min-height:40px}.tb input:focus-visible,.tb textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.tb input.dt{font-variant-numeric:tabular-nums}.tb input.dt.is-bad{border-color:#b91c1c;background:#fef2f2}
 .tb input[type=number]{-moz-appearance:textfield;font-variant-numeric:tabular-nums}.tb input[type=number]::-webkit-outer-spin-button,.tb input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .tb .money-in{position:relative;display:block}.tb .money-in input{padding-left:36px}.tb .money-in::before{content:"RM";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--faint);pointer-events:none}
 .tb .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:460px){.tb .pair{grid-template-columns:1fr}}
@@ -173,6 +174,25 @@
   function r2(x) { return Math.round((x + Number.EPSILON) * 100) / 100; }
   function money(n) { var neg = n < -0.004; return (neg ? "−RM " : "RM ") + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   function num(el) { var v = parseFloat(el.value); return isFinite(v) ? v : 0; }
+  /* Typed dates (Sam, 16 Oct 2026): accept 17/9/2026, 17-09-26, 17 Sep 2026, 17.9.2026 or 2026-09-17; show dd/mm/yyyy; keep ISO on data-iso. */
+  function toIso(txt) {
+    var t = String(txt || "").trim(); if (!t) return "";
+    var m, y, mo, d;
+    if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+    else if ((m = t.match(/^(\d{1,2})[\/\-. ](\d{1,2})[\/\-. ](\d{2}|\d{4})$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; if (y < 100) y += 2000; }
+    else if ((m = t.match(/^(\d{1,2})[\/\-. ]?([A-Za-z]{3,})[\/\-. ,]*(\d{2}|\d{4})?$/))) { d = +m[1]; mo = MONTHS.map(function (x) { return x.toLowerCase(); }).indexOf(m[2].slice(0, 3).toLowerCase()) + 1; y = m[3] ? +m[3] : new Date().getFullYear(); if (y < 100) y += 2000; }
+    else return null;
+    if (!mo || mo > 12 || !d || d > 31 || y < 2000 || y > 2100) return null;
+    var dt = new Date(Date.UTC(y, mo - 1, d)); if (dt.getUTCMonth() !== mo - 1) return null;
+    return y + "-" + (mo < 10 ? "0" : "") + mo + "-" + (d < 10 ? "0" : "") + d;
+  }
+  function showDate(iso) { if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso || ""; var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+  function dval(el) { return el ? (el.dataset.iso || "") : ""; }
+  function syncDate(el) {
+    var iso = toIso(el.value);
+    if (iso === null) { el.dataset.iso = ""; el.classList.add("is-bad"); return; }
+    el.dataset.iso = iso; el.classList.remove("is-bad");
+  }
   function parseDate(s) { if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; var p = s.split("-"); var t = Date.UTC(+p[0], +p[1] - 1, +p[2]); return isNaN(t) ? null : t; }
   function fmt(t) { if (t === null) return "—"; var d = new Date(t); return d.getUTCDate() + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
   function fmtShort(t) { if (t === null) return "—"; var d = new Date(t); return d.getUTCDate() + " " + MONTHS[d.getUTCMonth()]; }
@@ -190,8 +210,8 @@
   function billRow(data) {
     var i = ++uid, el = document.createElement("div"); el.className = "bill";
     el.innerHTML = '<div class="bill-top"><input type="text" class="b-label" maxlength="60" aria-label="Bill name" placeholder="Bill name" value="' + esc(data.label || "") + '"><button type="button" class="kill" aria-label="Remove this bill">×</button></div>' +
-      '<div class="bill-fields"><label class="field"><span class="lab">Period from</span><input type="date" class="b-start" value="' + esc(data.start || "") + '"></label>' +
-      '<label class="field"><span class="lab">Period to</span><input type="date" class="b-end" value="' + esc(data.end || "") + '"></label>' +
+      '<div class="bill-fields"><label class="field"><span class="lab">Period from</span><input type="text" class="dt b-start" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="12" autocomplete="off" value="' + esc(showDate(data.start || "")) + '" data-iso="' + esc(data.start || "") + '"></label>' +
+      '<label class="field"><span class="lab">Period to</span><input type="text" class="dt b-end" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="12" autocomplete="off" value="' + esc(showDate(data.end || "")) + '" data-iso="' + esc(data.end || "") + '"></label>' +
       '<label class="field amt-cell"><span class="lab">Bill amount</span><span class="money-in"><input type="number" step="0.01" min="0" class="b-amt" placeholder="0.00" value="' + esc(data.amount || "") + '"></span></label></div>' +
       '<div class="bill-out off"><span class="t">Leave the amount empty if this bill doesn\'t apply.</span><span class="n">—</span></div>';
     return el;
@@ -208,8 +228,8 @@
   function unitCard(data) {
     var i = ++uid, el = document.createElement("div"); el.className = "unit";
     el.innerHTML = '<div class="unit-top"><span class="unit-badge" aria-hidden="true">A</span><input type="text" class="u-name" maxlength="60" aria-label="Unit name" placeholder="Unit number, e.g. H-30-3A" value="' + esc(data.name || "") + '"><button type="button" class="kill kill-unit" aria-label="Remove this unit">×</button></div>' +
-      '<div class="unit-body"><div class="pair"><label class="field"><span class="lab">In this unit from</span><input type="date" class="u-in" value="' + esc(data.from || "") + '"></label>' +
-      '<label class="field"><span class="lab">In this unit until</span><input type="date" class="u-out" value="' + esc(data.to || "") + '"></label></div>' +
+      '<div class="unit-body"><div class="pair"><label class="field"><span class="lab">In this unit from</span><input type="text" class="dt u-in" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="12" autocomplete="off" value="' + esc(showDate(data.from || "")) + '" data-iso="' + esc(data.from || "") + '"></label>' +
+      '<label class="field"><span class="lab">In this unit until</span><input type="text" class="dt u-out" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="12" autocomplete="off" value="' + esc(showDate(data.to || "")) + '" data-iso="' + esc(data.to || "") + '"></label></div>' +
       '<div class="readout idle u-days">Key in both dates to see the days in this unit.</div><div class="bills-label">Bills for this unit</div><div class="rows u-bills"></div>' +
       '<button type="button" class="tbtn add u-addbill">+ Add a bill for this unit</button></div>';
     var box = el.querySelector(".u-bills"); (data.bills || []).forEach(function (b) { box.appendChild(billRow(b)); });
@@ -229,8 +249,8 @@
     var st = { tenant: $("tenant").value, bookref: $("bookref").value, preparedBy: $("preparedby").value, property: $("property").value, remarks: $("remarks").value,
                deposit: $("deposit").value, arrears: $("arrears").value, inclusive: $("incl-out").checked, units: [], addons: [] };
     unitsBox.querySelectorAll(".unit").forEach(function (ue) {
-      var u = { name: ue.querySelector(".u-name").value, from: ue.querySelector(".u-in").value, to: ue.querySelector(".u-out").value, bills: [] };
-      ue.querySelectorAll(".bill").forEach(function (b) { u.bills.push({ label: b.querySelector(".b-label").value, start: b.querySelector(".b-start").value, end: b.querySelector(".b-end").value, amount: b.querySelector(".b-amt").value }); });
+      var u = { name: ue.querySelector(".u-name").value, from: dval(ue.querySelector(".u-in")), to: dval(ue.querySelector(".u-out")), bills: [] };
+      ue.querySelectorAll(".bill").forEach(function (b) { u.bills.push({ label: b.querySelector(".b-label").value, start: dval(b.querySelector(".b-start")), end: dval(b.querySelector(".b-end")), amount: b.querySelector(".b-amt").value }); });
       st.units.push(u);
     });
     addonsBox.querySelectorAll(".addon").forEach(function (ae) {
@@ -253,7 +273,7 @@
     var flags = [], totalStayDays = 0, spanStart = null, spanEnd = null, billTotal = 0, stmtHTML = "", anyBill = false, textUnits = [];
     for (var u = 0; u < unitEls.length; u++) {
       var ue = unitEls[u], letter = LETTERS[u] || "+", rawName = ue.querySelector(".u-name").value.trim(), name = rawName || ("Unit " + letter);
-      var uin = parseDate(ue.querySelector(".u-in").value), uoutRaw = parseDate(ue.querySelector(".u-out").value);
+      var uin = parseDate(dval(ue.querySelector(".u-in"))), uoutRaw = parseDate(dval(ue.querySelector(".u-out")));
       var occEnd = uoutRaw === null ? null : (inclusive ? uoutRaw : uoutRaw - DAY), stayDays = 0, bad = false;
       if (uin !== null && occEnd !== null) { stayDays = days(uin, occEnd); if (stayDays < 1) { stayDays = 0; bad = true; } }
       var ud = ue.querySelector(".u-days");
@@ -263,7 +283,7 @@
       var unitLines = "", unitTotal = 0, unitText = [], unitHasBill = false, billEls = ue.querySelectorAll(".bill");
       for (var k = 0; k < billEls.length; k++) {
         var r = billEls[k], label = r.querySelector(".b-label").value.trim() || "Unnamed bill", amt = num(r.querySelector(".b-amt"));
-        var bs = parseDate(r.querySelector(".b-start").value), be = parseDate(r.querySelector(".b-end").value), out = r.querySelector(".bill-out");
+        var bs = parseDate(dval(r.querySelector(".b-start"))), be = parseDate(dval(r.querySelector(".b-end"))), out = r.querySelector(".bill-out");
         if (!amt) { setOut(out, "off", "Leave the amount empty if this bill doesn't apply.", "—"); continue; }
         unitHasBill = true; anyBill = true;
         if (bs === null || be === null) { setOut(out, "warn", "Key in the billing period printed on this bill.", "—"); unitLines += lineHTML(label, "Billing period not keyed in", 0, true); flags.push(name + " – " + label + ": amount keyed in, but the billing period is missing."); continue; }
@@ -380,15 +400,18 @@
 
   var form = $("tb-form");
   form.addEventListener("submit", function (e) { e.preventDefault(); });
-  form.addEventListener("input", function (e) { var t = e.target; if (t && t.classList && t.classList.contains("a-qty")) { var row = t.closest(".addon"); if (row) row.dataset.touched = "1"; } compute(); });
-  form.addEventListener("change", function (e) { var t = e.target; if (t && t.classList && t.classList.contains("b-start") && t.value) { var row = t.closest(".bill"), endEl = row && row.querySelector(".b-end"); if (endEl && !endEl.value) endEl.value = endOfMonth(t.value); } compute(); });
+  form.addEventListener("input", function (e) { var t = e.target; if (t && t.classList && t.classList.contains("dt")) syncDate(t); if (t && t.classList && t.classList.contains("a-qty")) { var row = t.closest(".addon"); if (row) row.dataset.touched = "1"; } compute(); });
+  form.addEventListener("change", function (e) { var t = e.target;
+    if (t && t.classList && t.classList.contains("dt")) { syncDate(t); if (t.dataset.iso) t.value = showDate(t.dataset.iso); }
+    if (t && t.classList && t.classList.contains("b-start") && t.dataset.iso) { var row = t.closest(".bill"), endEl = row && row.querySelector(".b-end"); if (endEl && !endEl.value.trim()) { endEl.dataset.iso = endOfMonth(t.dataset.iso); endEl.value = showDate(endEl.dataset.iso); } }
+    compute(); });
   form.addEventListener("click", function (e) {
     if (!e.target.closest) return;
     var add = e.target.closest(".u-addbill"); if (add) { var box = add.closest(".unit").querySelector(".u-bills"); var row = billRow({}); box.appendChild(row); row.querySelector(".b-label").focus(); return; }
     var killUnit = e.target.closest(".kill-unit"); if (killUnit) { var card = killUnit.closest(".unit"); if (card && unitsBox.querySelectorAll(".unit").length > 1) { card.remove(); renumber(); compute(); } return; }
     var k = e.target.closest(".kill"); if (k) { var r2el = k.closest(".bill") || k.closest(".addon"); if (r2el) { r2el.remove(); compute(); } }
   });
-  $("add-unit").addEventListener("click", function () { var prev = unitsBox.querySelector(".unit:last-child"), seed = blankUnit(); if (prev) { var prevOut = prev.querySelector(".u-out").value; if (prevOut) seed.from = prevOut; } var card = unitCard(seed); unitsBox.appendChild(card); renumber(); compute(); card.querySelector(".u-name").focus(); card.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
+  $("add-unit").addEventListener("click", function () { var prev = unitsBox.querySelector(".unit:last-child"), seed = blankUnit(); if (prev) { var prevOut = dval(prev.querySelector(".u-out")); if (prevOut) seed.from = prevOut; } var card = unitCard(seed); unitsBox.appendChild(card); renumber(); compute(); card.querySelector(".u-name").focus(); card.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
   $("add-addon").addEventListener("click", function () { var row = addonRow({ qty: "1" }); addonsBox.appendChild(row); row.querySelector(".a-label").focus(); });
   $("btn-clear").addEventListener("click", function () { if (!confirm("Clear everything and start over?")) return; load(blank()); $("tenant").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
   $("btn-final").addEventListener("click", finalise);
