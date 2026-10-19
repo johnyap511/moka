@@ -36,7 +36,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
         return $this->rows->map(fn ($r) => [
             $r->id, $r->group_key ? $r->group_index . ' of ' . $r->group_size : '', $r->created_at->format('Y-m-d H:i'), $r->status, $r->due_on?->format('Y-m-d'),
             $r->name, $r->property, $r->unit_no, $r->check_out->format('Y-m-d'),
-            $r->bank_holder, $r->bank_account, $r->bank_name, $r->phone, $r->email,
+            $r->bank_holder, $r->bank_account ?: ($r->qr_path ? 'QR on file' : ''), $r->bank_name, $r->phone, $r->email,
             $r->booking_id, $r->match, $r->match_note, '',
             $r->paid_at?->format('Y-m-d'), $r->payer->name ?? '', $r->amount_paid, $r->reference,
             $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,

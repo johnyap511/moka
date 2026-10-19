@@ -367,7 +367,7 @@ class Refunds
         }
         $in = [
             'name' => $r->name, 'email' => $r->email, 'phone' => $r->phone, 'property' => $r->property, 'unit_no' => $unit,
-            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account,
+            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path,
             'rating_clean' => $r->rating_clean, 'rating_service' => $r->rating_service, 'comments' => $r->comments,
             'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
         ];
@@ -462,7 +462,8 @@ class Refunds
             'check_out'      => $in['check_out'],
             'bank_name'      => $in['bank_name'],
             'bank_holder'    => $in['bank_holder'],
-            'bank_account'   => preg_replace('/\s+/', '', $in['bank_account']),
+            'bank_account'   => preg_replace('/\s+/', '', (string) $in['bank_account']),
+            'qr_path'        => $in['qr_path'] ?? null,
             'rating_clean'   => $in['rating_clean'] ?? null,
             'rating_service' => $in['rating_service'] ?? null,
             'comments'       => $in['comments'] ?? null,

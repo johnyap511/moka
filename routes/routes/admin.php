@@ -204,6 +204,7 @@ Route::post('/refunds/{refund}/attach', 'Admin\RefundController@attach')->name('
 Route::post('/refunds/{refund}/split', 'Admin\RefundController@split')->name('admin.refunds.split');
 Route::post('/refunds/{refund}/deduct', 'Admin\RefundController@deduct')->name('admin.refunds.deduct');
 Route::post('/refunds/{refund}/received', 'Admin\RefundController@received')->name('admin.refunds.received');
+Route::get('/refunds/{refund}/qr', 'Admin\RefundController@qr')->name('admin.refunds.qr');
 
 // Sales commission from eZee's Transaction Detail Report (29 Sep 2026)
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');

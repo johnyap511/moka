@@ -11,7 +11,7 @@ Live since 12 Oct 2026. Replaces the Google Form.
 
 ## Guest
 
-Fills in: name as per reservation, contact number, email, property, unit, check-out date, bank name, account holder, account number, two ratings, optional comments, and optionally the team member who served them with a rating. The guest sees only "Thank you, your request is in". They never see booking details.
+Fills in: name as per reservation, contact number, email, property, unit, check-out date, bank name, account holder, account number (or, for Alipay / Touch 'n Go, an uploaded QR code image, 19 Oct 2026; Finance opens it from the Bank & payment pane), two ratings, optional comments, and optionally the team member who served them with a rating. The guest sees only "Thank you, your request is in". They never see booking details.
 
 ## One guest, several units
 

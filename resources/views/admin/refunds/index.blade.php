@@ -305,7 +305,8 @@
                         @if($canManage)
                             <div class="rf-bank"><span>{{ $r->bank_account }}</span><button type="button" data-copy="{{ $r->bank_account }}" onclick="navigator.clipboard.writeText(this.dataset.copy).then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='copy',1200)})">copy</button></div>
                             <div>{{ $r->bank_holder }} · {{ $r->bank_name }}</div>
-                        @else<div class="rf-bank">{{ $r->maskedAccount() }}</div><div>{{ $r->bank_name }}</div>@endif
+                            @if($r->qr_path)<div style="margin-top:4px"><a href="{{ route('admin.refunds.qr', $r) }}" target="_blank" class="rf-more">View QR code</a> <span class="rf-muted">uploaded by the guest{{ $r->bank_account ? '' : ', no account number' }}</span></div>@endif
+                        @else<div class="rf-bank">{{ $r->maskedAccount() }}</div><div>{{ $r->bank_name }}{{ $r->qr_path ? ' · QR on file' : '' }}</div>@endif
                         @if($r->status === 'paid')<div style="margin-top:6px">Paid <b>RM {{ number_format($r->amount_paid ?? 0, 2) }}</b> on {{ $r->paid_at?->format('d M H:i') }} by {{ $r->payer->name ?? '' }}{{ $r->reference ? ' · ref ' . $r->reference : '' }}</div>@endif
                         @if($canManage && $pending)
                         <form method="post" action="{{ route('admin.refunds.paid', $r) }}" class="rf-paid-form rf-forms" data-received="{{ $r->received_at ? 1 : 0 }}" style="margin-top:8px">@csrf<input name="amount_paid" type="number" step="0.01" min="0" placeholder="RM" value="{{ $due !== null ? number_format($due, 2, '.', '') : '' }}" style="width:90px"><input name="reference" placeholder="Bank ref" maxlength="120"><button class="btn btn-primary rf-sm" type="submit">Mark paid</button></form>

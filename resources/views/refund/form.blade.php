@@ -19,7 +19,7 @@
 <div class="alert">Some details need a second look. Please check the fields marked in red.</div>
 @endif
 
-<form method="post" action="{{ route('refund.store', $link->token) }}" novalidate id="rf">
+<form method="post" action="{{ route('refund.store', $link->token) }}" novalidate id="rf" enctype="multipart/form-data">
     @csrf
     <div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
@@ -76,7 +76,7 @@
         <div class="field">
             <label for="bank_name"><span class="req">Bank name</span></label>
             <input type="text" id="bank_name" name="bank_name" value="{{ old('bank_name') }}" class="{{ $e('bank_name') }}" required maxlength="80" list="banks">
-            <datalist id="banks"><option>Maybank</option><option>CIMB Bank</option><option>Public Bank</option><option>RHB Bank</option><option>Hong Leong Bank</option><option>AmBank</option><option>Bank Islam</option><option>Bank Rakyat</option><option>OCBC Bank</option><option>UOB</option><option>HSBC</option><option>Standard Chartered</option><option>Affin Bank</option><option>Alliance Bank</option><option>Touch 'n Go eWallet</option></datalist>
+            <datalist id="banks"><option>Maybank</option><option>CIMB Bank</option><option>Public Bank</option><option>RHB Bank</option><option>Hong Leong Bank</option><option>AmBank</option><option>Bank Islam</option><option>Bank Rakyat</option><option>OCBC Bank</option><option>UOB</option><option>HSBC</option><option>Standard Chartered</option><option>Affin Bank</option><option>Alliance Bank</option><option>Touch 'n Go eWallet</option><option>Alipay</option></datalist>
             @error('bank_name')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
@@ -85,9 +85,14 @@
             @error('bank_holder')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="bank_account"><span class="req">Account number</span> <small>Digits only</small></label>
+            <label for="bank_account"><span class="req" id="acct-req">Account number</span> <small id="acct-hint">Digits only</small></label>
             <input type="text" id="bank_account" name="bank_account" value="{{ old('bank_account') }}" class="{{ $e('bank_account') }}" inputmode="numeric" autocomplete="off" required maxlength="40">
             @error('bank_account')<div class="err">{{ $message }}</div>@enderror
+        </div>
+        <div class="field" id="qr-field" hidden>
+            <label for="qr">QR code <small>Alipay or Touch 'n Go: upload your receive-money QR instead of the account number</small></label>
+            <input type="file" id="qr" name="qr" accept="image/png,image/jpeg,image/webp" class="{{ $e('qr') }}">
+            @error('qr')<div class="err">{{ $message }}</div>@enderror
         </div>
     </div>
 
@@ -168,6 +173,10 @@
     more.addEventListener('click',function(e){ var b=e.target.closest('.unit-rm'); if(b){ b.closest('.unit-row').remove(); relabel(); } });
     document.getElementById('rf').addEventListener('input',function(e){ if(e.target.matches('#unit_no, #more-units input')) e.target.value=e.target.value.toUpperCase(); });
     relabel();
+    var bank = document.getElementById('bank_name'), qrf = document.getElementById('qr-field'), acct = document.getElementById('bank_account');
+    function walletMode() { var w = /alipay|touch|tng|e-?wallet/i.test(bank.value); qrf.hidden = !w; acct.required = !w;
+        document.getElementById('acct-req').className = w ? '' : 'req'; document.getElementById('acct-hint').textContent = w ? 'Digits only, or upload your QR code below' : 'Digits only'; }
+    bank.addEventListener('input', walletMode); bank.addEventListener('change', walletMode); walletMode();
     var s=document.getElementById('staff_user_id'),m=document.getElementById('staff-more');
     s&&s.addEventListener('change',function(){m.style.display=this.value?'':'none';});
     var first=document.querySelector('.is-err');first&&first.scrollIntoView({block:'center'});

@@ -65,7 +65,8 @@ class RefundController extends Controller
             'check_out'      => ['required', 'date_format:Y-m-d', 'after:' . now()->subDays(400)->toDateString(), 'before:' . now()->addDays(2)->toDateString()],
             'bank_name'      => ['required', 'string', 'min:2', 'max:80'],
             'bank_holder'    => ['required', 'string', 'min:2', 'max:120'],
-            'bank_account'   => ['required', 'string', 'max:40', 'regex:/^[\d\s-]{6,40}$/'],
+            'bank_account'   => ['required_without:qr', 'nullable', 'string', 'max:40', 'regex:/^[\d\s-]{6,40}$/'],
+            'qr'             => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'rating_clean'   => ['required', 'integer', 'between:1,5'],
             'rating_service' => ['required', 'integer', 'between:1,5'],
             'comments'       => ['nullable', 'string', 'max:2000'],
@@ -89,11 +90,19 @@ class RefundController extends Controller
             'units.*.regex'      => 'Please enter the unit number as shown on your door, e.g. E-23A-01.',
             'units.max'          => 'You can list up to 10 units in one form.',
             'bank_account.regex' => 'Please enter the account number with digits only.',
+            'bank_account.required_without' => 'Enter the account number, or upload your QR code for Alipay / Touch \'n Go.',
+            'qr.mimes'           => 'Please upload the QR as a JPG, PNG or WebP image.',
+            'qr.max'             => 'The QR image is too large; please keep it under 5 MB.',
             'check_out.after'    => 'Please check the check-out date.',
             'check_out.before'   => 'Please check the check-out date.',
             'staff_user_id.in'   => 'Please pick a team member from the list.',
         ]);
 
+        if ($request->hasFile('qr')) {
+            // Kept privately under storage/app with a random name; Finance opens it from the request.
+            $in['qr_path'] = $request->file('qr')->storeAs('refund-qr', \Illuminate\Support\Str::random(32) . '.' . strtolower($request->file('qr')->getClientOriginalExtension()), 'local');
+        }
+        $in['bank_account'] = $in['bank_account'] ?? '';
         Refunds::submitMany($in, array_merge([$in['unit_no']], array_values($in['units'] ?? [])), $link, $request->ip());
 
         return redirect()->route('refund.thanks');

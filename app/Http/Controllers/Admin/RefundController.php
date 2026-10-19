@@ -193,6 +193,14 @@ class RefundController extends Controller
     }
 
     /** A fresh 48-hour link, on request. */
+    /** The guest's uploaded Alipay / Touch 'n Go QR code; bank details are for refunds.manage only. */
+    public function qr(RefundRequest $refund)
+    {
+        abort_unless(admin_can('refunds.manage'), 403);
+        abort_unless($refund->qr_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($refund->qr_path), 404);
+        return response()->file(\Illuminate\Support\Facades\Storage::disk('local')->path($refund->qr_path));
+    }
+
     public function newLink()
     {
         if (!admin_can('refunds.link')) {
