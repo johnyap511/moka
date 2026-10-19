@@ -53,6 +53,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('ezee:notifications')->hourlyAt(10)->withoutOverlapping();
         // Charges posted at checkout do not always change eZee's modified time: re-read yesterday's and today's departures before the 06:00 reconcile.
         $schedule->command('ezee:refresh-departures')->dailyAt('05:40')->withoutOverlapping();
+        // Room list (19 Oct 2026): new units added in eZee (Mesahill) were invisible on the Room Mapping page
+        // because the list had last been pulled by hand on 1 Sep. Refresh it daily before the reconcile.
+        $schedule->command('ezee:sync-rooms')->dailyAt('05:30')->withoutOverlapping();
         // PMS check (15 Oct 2026): after the 06:00 reconcile, compare eZee with Homemoka on unit,
         // dates, status and amount for the last 60 days and keep the differences for a person.
         $schedule->command('pms:reconcile', ['--days' => 60])->dailyAt('06:30')->withoutOverlapping()->runInBackground();
