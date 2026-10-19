@@ -215,7 +215,7 @@
                 </td>
                 <td class="num">
                     @if($r->status === 'paid')<b>RM {{ number_format($r->amount_paid ?? 0, 2) }}</b><div class="rf-muted">paid</div>
-                    @elseif($due !== null)<b>RM {{ number_format($due, 2) }}</b>@if($r->deduction_amount > 0)<div class="rf-deduct">− {{ number_format($r->deduction_amount, 2) }}</div>@endif
+                    @elseif($due !== null)<b>RM {{ number_format($due, 2) }}</b>@if($r->deduction_amount > 0)<div class="rf-deduct" title="{{ $r->deduction_reason }}">deducted {{ number_format($r->deduction_amount, 2) }}</div>@endif
                     @else —@endif
                 </td>
                 <td class="rf-steps">
