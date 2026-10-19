@@ -94,7 +94,7 @@ class Refunds
         return $d;
     }
 
-    private static function compact(string $s): string
+    public static function compact(string $s): string
     {
         return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $s));
     }
@@ -367,7 +367,7 @@ class Refunds
         }
         $in = [
             'name' => $r->name, 'email' => $r->email, 'phone' => $r->phone, 'property' => $r->property, 'unit_no' => $unit,
-            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path,
+            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path, 'bank_country' => $r->bank_country, 'bank_swift' => $r->bank_swift, 'bank_extra_code' => $r->bank_extra_code, 'bank_address' => $r->bank_address,
             'rating_clean' => $r->rating_clean, 'rating_service' => $r->rating_service, 'comments' => $r->comments,
             'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
         ];
@@ -464,6 +464,10 @@ class Refunds
             'bank_holder'    => $in['bank_holder'],
             'bank_account'   => preg_replace('/\s+/', '', (string) $in['bank_account']),
             'qr_path'        => $in['qr_path'] ?? null,
+            'bank_country'   => $in['bank_country'] ?? null,
+            'bank_swift'     => isset($in['bank_swift']) ? strtoupper(trim((string) $in['bank_swift'])) ?: null : null,
+            'bank_extra_code' => $in['bank_extra_code'] ?? null,
+            'bank_address'   => $in['bank_address'] ?? null,
             'rating_clean'   => $in['rating_clean'] ?? null,
             'rating_service' => $in['rating_service'] ?? null,
             'comments'       => $in['comments'] ?? null,

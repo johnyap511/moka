@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RefundLink;
+use App\Models\RefundRequest;
 use App\Support\Refunds;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -65,7 +66,13 @@ class RefundController extends Controller
             'check_out'      => ['required', 'date_format:Y-m-d', 'after:' . now()->subDays(400)->toDateString(), 'before:' . now()->addDays(2)->toDateString()],
             'bank_name'      => ['required', 'string', 'min:2', 'max:80'],
             'bank_holder'    => ['required', 'string', 'min:2', 'max:120'],
-            'bank_account'   => ['required_without:qr', 'nullable', 'string', 'max:40', 'regex:/^[\d\s-]{6,40}$/'],
+            'bank_account'   => ['required_without:qr', 'nullable', 'string', 'max:40', $request->boolean('overseas') ? 'regex:/^[A-Za-z0-9 -]{6,40}$/' : 'regex:/^[\d\s-]{6,40}$/'],
+            'overseas'       => ['nullable', 'in:1'],
+            'bank_country'   => ['exclude_unless:overseas,1', 'required', 'string', 'min:2', 'max:60'],
+            'bank_swift'     => ['exclude_unless:overseas,1', 'required', 'string', 'regex:/^[A-Za-z0-9]{8}([A-Za-z0-9]{3})?$/'],
+            'bank_extra_code' => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9 -]{2,40}$/'],
+            'bank_address'   => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:200'],
+            'confirm_duplicate' => ['nullable', 'in:1'],
             'qr'             => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'rating_clean'   => ['required', 'integer', 'between:1,5'],
             'rating_service' => ['required', 'integer', 'between:1,5'],
@@ -92,20 +99,49 @@ class RefundController extends Controller
             'bank_account.regex' => 'Please enter the account number with digits only.',
             'bank_account.required_without' => 'Enter the account number, or upload your QR code for Alipay / Touch \'n Go.',
             'qr.mimes'           => 'Please upload the QR as a JPG, PNG or WebP image.',
+            'bank_account.regex' => $request->boolean('overseas') ? 'Please enter the account number or IBAN with letters and digits only.' : 'Please enter the account number with digits only.',
+            'bank_country.required' => 'Tell us which country your bank is in.',
+            'bank_swift.required' => 'Please enter your bank\'s SWIFT / BIC code.',
+            'bank_swift.regex'   => 'A SWIFT / BIC code has 8 or 11 letters and digits, e.g. DBSSSGSG.',
+            'bank_extra_code.regex' => 'Please check the routing / sort / IFSC code.',
             'qr.max'             => 'The QR image is too large; please keep it under 5 MB.',
             'check_out.after'    => 'Please check the check-out date.',
             'check_out.before'   => 'Please check the check-out date.',
             'staff_user_id.in'   => 'Please pick a team member from the list.',
         ]);
 
+        // A repeat of the same stay within 7 days is almost always a guest unsure the first one
+        // went through (19 Oct 2026: 5 of the first 100 requests). Stop and show them, unless
+        // they tick "different stay".
+        if (!$request->boolean('confirm_duplicate')) {
+            $digits = Refunds::digits($in['phone']);
+            $prior = RefundRequest::where('created_at', '>=', now()->subDays(7))->where('status', '<>', 'rejected')
+                ->whereDate('check_out', $in['check_out'])->where('phone_digits', $digits)->get()
+                ->first(fn ($r) => Refunds::compact($r->unit_no) === Refunds::compact($in['unit_no']));
+            if ($prior) {
+                return back()->withInput()->with('dup', ['id' => $prior->id, 'when' => $prior->created_at->format('j M, H:i'), 'unit' => $prior->property . ' ' . $prior->unit_no, 'due' => $prior->due_on?->format('l, j M') ?? 'the 3rd working day']);
+            }
+        }
+        if (!$request->boolean('overseas')) {
+            $in['bank_country'] = $in['bank_swift'] = $in['bank_extra_code'] = $in['bank_address'] = null;
+        }
         if ($request->hasFile('qr')) {
             // Kept privately under storage/app with a random name; Finance opens it from the request.
             $in['qr_path'] = $request->file('qr')->storeAs('refund-qr', \Illuminate\Support\Str::random(32) . '.' . strtolower($request->file('qr')->getClientOriginalExtension()), 'local');
         }
         $in['bank_account'] = $in['bank_account'] ?? '';
-        Refunds::submitMany($in, array_merge([$in['unit_no']], array_values($in['units'] ?? [])), $link, $request->ip());
+        $made = Refunds::submitMany($in, array_merge([$in['unit_no']], array_values($in['units'] ?? [])), $link, $request->ip());
 
-        return redirect()->route('refund.thanks');
+        // Receipt so the guest knows it arrived (and does not submit again). Best effort.
+        try {
+            if (!empty($in['email'])) {
+                \Illuminate\Support\Facades\Mail::to($in['email'])->send(new \App\Mail\RefundReceived($made));
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return redirect()->route('refund.thanks')->with('refs', ['ids' => array_map(fn ($r) => $r->id, $made), 'due' => $made[0]->due_on?->format('l, j M Y'), 'email' => $in['email'] ?? null]);
     }
 
     public function thanks()

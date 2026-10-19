@@ -13,6 +13,11 @@ Live since 12 Oct 2026. Replaces the Google Form.
 
 Fills in: name as per reservation, contact number, email, property, unit, check-out date, bank name, account holder, account number (or, for Alipay / Touch 'n Go, an uploaded QR code image, 19 Oct 2026; Finance opens it from the Bank & payment pane), two ratings, optional comments, and optionally the team member who served them with a rating. The guest sees only "Thank you, your request is in". They never see booking details.
 
+## Overseas banks and repeat submissions (19 Oct 2026)
+- "My bank is outside Malaysia" reveals country, SWIFT/BIC (required), routing / sort / BSB / IFSC (optional) and bank address; the account field accepts an IBAN. Finance sees them in the Bank & payment pane ("Overseas, via Wise") and in the export's last four columns.
+- A second request for the same phone, unit and check-out within 7 days is stopped with a notice showing the earlier reference and due date; the guest can tick "different stay" to go ahead.
+- The thank-you page shows the reference number(s) and the guest gets a plain-text receipt by email (`App\Mail\RefundReceived`).
+
 ## One guest, several units
 
 The guest taps "+ Add another unit" on the form (up to ten units in one form; each extra row has a remove button). One request is created per unit, each matched to its own booking and tagged "1 of 2", "2 of 2". Tick both and use Mark selected as paid with one bank reference: one transfer to the guest, one row per eZee deposit. If a guest crammed two units into one box ("01-28 and 01-30"), type the other unit in the row's **Split** box: a second request is created with the same bank details and grouped with the first.

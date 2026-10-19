@@ -28,7 +28,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
     public function headings(): array
     {
         // Order per Finance (Sakinah, 14 Oct 2026): bank and contact right after the stay, workflow columns at the end.
-        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received'];
+        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Bank country', 'SWIFT', 'Routing code', 'Bank address'];
     }
 
     public function array(): array
@@ -42,6 +42,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
             $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
             $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : null, $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(),
             $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
+            $r->bank_country, $r->bank_swift, $r->bank_extra_code, $r->bank_address,
         ])->all();
     }
 
@@ -60,7 +61,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
 
     public function columnWidths(): array
     {
-        return ['A' => 9, 'B' => 8, 'C' => 16, 'D' => 9, 'E' => 11, 'F' => 26, 'G' => 20, 'H' => 12, 'I' => 11, 'J' => 26, 'K' => 18, 'L' => 16, 'M' => 15, 'N' => 26, 'O' => 9, 'P' => 10, 'Q' => 40, 'R' => 24, 'S' => 11, 'T' => 14, 'U' => 11, 'V' => 14, 'W' => 10, 'X' => 8, 'Y' => 16, 'Z' => 10, 'AA' => 9, 'AB' => 10, 'AC' => 24, 'AD' => 16, 'AE' => 10, 'AF' => 22];
+        return ['A' => 9, 'B' => 8, 'C' => 16, 'D' => 9, 'E' => 11, 'F' => 26, 'G' => 20, 'H' => 12, 'I' => 11, 'J' => 26, 'K' => 18, 'L' => 16, 'M' => 15, 'N' => 26, 'O' => 9, 'P' => 10, 'Q' => 40, 'R' => 24, 'S' => 11, 'T' => 14, 'U' => 11, 'V' => 14, 'W' => 10, 'X' => 8, 'Y' => 16, 'Z' => 10, 'AA' => 9, 'AB' => 10, 'AC' => 24, 'AD' => 16, 'AE' => 10, 'AF' => 22, 'AG' => 14, 'AH' => 12, 'AI' => 14, 'AJ' => 30];
     }
 
     public function styles(Worksheet $sheet): array
