@@ -72,6 +72,11 @@ class RefundController extends Controller
             'bank_swift'     => ['exclude_unless:overseas,1', 'required', 'string', 'regex:/^[A-Za-z0-9]{8}([A-Za-z0-9]{3})?$/'],
             'bank_extra_code' => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9 -]{2,40}$/'],
             'bank_address'   => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:200'],
+            'holder_dob'     => ['exclude_unless:overseas,1', 'required', 'string', 'max:10', function ($attr, $value, $fail) {
+                $d = self::parseDob($value);
+                if (!$d) { $fail('Please enter the date of birth as dd/mm/yyyy, e.g. 25/08/1990.'); return; }
+                if ($d->gt(now()->subYears(16)) || $d->lt(now()->subYears(100))) { $fail('Please check the date of birth.'); }
+            }],
             'confirm_duplicate' => ['nullable', 'in:1'],
             'qr'             => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'rating_clean'   => ['required', 'integer', 'between:1,5'],
@@ -101,6 +106,7 @@ class RefundController extends Controller
             'qr.mimes'           => 'Please upload the QR as a JPG, PNG or WebP image.',
             'bank_account.regex' => $request->boolean('overseas') ? 'Please enter the account number or IBAN with letters and digits only.' : 'Please enter the account number with digits only.',
             'bank_country.required' => 'Tell us which country your bank is in.',
+            'holder_dob.required' => 'The transfer service needs the account holder\'s date of birth.',
             'bank_swift.required' => 'Please enter your bank\'s SWIFT / BIC code.',
             'bank_swift.regex'   => 'A SWIFT / BIC code has 8 or 11 letters and digits, e.g. DBSSSGSG.',
             'bank_extra_code.regex' => 'Please check the routing / sort / IFSC code.',
@@ -123,7 +129,9 @@ class RefundController extends Controller
             }
         }
         if (!$request->boolean('overseas')) {
-            $in['bank_country'] = $in['bank_swift'] = $in['bank_extra_code'] = $in['bank_address'] = null;
+            $in['bank_country'] = $in['bank_swift'] = $in['bank_extra_code'] = $in['bank_address'] = $in['holder_dob'] = null;
+        } else {
+            $in['holder_dob'] = self::parseDob($in['holder_dob'])?->toDateString();
         }
         if ($request->hasFile('qr')) {
             // Kept privately under storage/app with a random name; Finance opens it from the request.
@@ -142,6 +150,19 @@ class RefundController extends Controller
         }
 
         return redirect()->route('refund.thanks')->with('refs', ['ids' => array_map(fn ($r) => $r->id, $made), 'due' => $made[0]->due_on?->format('l, j M Y'), 'email' => $in['email'] ?? null]);
+    }
+
+    /** dd/mm/yyyy, d-m-yyyy, d.m.yyyy or yyyy-mm-dd. */
+    private static function parseDob(?string $v): ?\Carbon\Carbon
+    {
+        $v = trim((string) $v);
+        foreach (['d/m/Y', 'd-m-Y', 'd.m.Y', 'Y-m-d'] as $f) {
+            $d = \DateTime::createFromFormat('!' . $f, $v);
+            if ($d && $d->format($f) === $v) {
+                return \Carbon\Carbon::instance($d);
+            }
+        }
+        return null;
     }
 
     public function thanks()

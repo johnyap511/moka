@@ -367,7 +367,7 @@ class Refunds
         }
         $in = [
             'name' => $r->name, 'email' => $r->email, 'phone' => $r->phone, 'property' => $r->property, 'unit_no' => $unit,
-            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path, 'bank_country' => $r->bank_country, 'bank_swift' => $r->bank_swift, 'bank_extra_code' => $r->bank_extra_code, 'bank_address' => $r->bank_address,
+            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path, 'bank_country' => $r->bank_country, 'bank_swift' => $r->bank_swift, 'bank_extra_code' => $r->bank_extra_code, 'bank_address' => $r->bank_address, 'holder_dob' => $r->holder_dob?->toDateString(),
             'rating_clean' => $r->rating_clean, 'rating_service' => $r->rating_service, 'comments' => $r->comments,
             'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
         ];
@@ -468,6 +468,7 @@ class Refunds
             'bank_swift'     => isset($in['bank_swift']) ? strtoupper(trim((string) $in['bank_swift'])) ?: null : null,
             'bank_extra_code' => $in['bank_extra_code'] ?? null,
             'bank_address'   => $in['bank_address'] ?? null,
+            'holder_dob'     => $in['holder_dob'] ?? null,
             'rating_clean'   => $in['rating_clean'] ?? null,
             'rating_service' => $in['rating_service'] ?? null,
             'comments'       => $in['comments'] ?? null,

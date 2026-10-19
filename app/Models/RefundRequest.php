@@ -24,6 +24,7 @@ class RefundRequest extends Model
         'deduction_at' => 'datetime',
         'ops_cutoff_at' => 'datetime',
         'received_at'  => 'datetime',
+        'holder_dob'   => 'date',
     ];
 
     public function booking()
