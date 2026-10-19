@@ -99,18 +99,35 @@
                 </div>
             </div>
 
-            {{-- Group Field --}}
+            <div class="form-group">
+                <label class="form-label" for="profit">Profit Sharing <span style="color:var(--text-secondary);font-weight:400">(owner:Moka)</span></label>
+                <select id="profit" name="profit" class="form-select">
+                    <option value="">Select Profit Sharing</option>
+                    @foreach(\App\Support\ListingOptions::PROFIT_SHARING as $v => $label)
+                        <option value="{{ $v }}" {{ (string) old('profit') === (string) $v ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Group Field: pooled units need the group and a weight by size (ground rule 23) --}}
             <div id="groupSection" style="{{ old('type') === 'group' ? '' : 'display:none' }}">
-                <div class="form-group">
-                    <label class="form-label" for="group_id">Assign to Group</label>
-                    <select id="group_id" name="group_id" class="form-select">
-                        <option value="">— Select a group —</option>
-                        @foreach($groups as $group)
-                            <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>
-                                {{ $group->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="group_id">Assign to Group</label>
+                        <select id="group_id" name="group_id" class="form-select">
+                            <option value="">— Select a group —</option>
+                            @foreach($groups as $group)
+                                <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>
+                                    {{ $group->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pool_weight">Pool weight <span style="color:var(--text-secondary);font-weight:400">(by size: 900 for a 3BR, 600 for a studio)</span></label>
+                        <input type="number" step="0.01" min="0" id="pool_weight" name="pool_weight" class="form-input" value="{{ old('pool_weight', 1) }}">
+                        <div class="form-help">The owner's share of the pool = this weight ÷ the total of all weights in the group.</div>
+                    </div>
                 </div>
             </div>
 
