@@ -195,6 +195,11 @@ class ListingController extends Controller
             return back()->with('error', 'A listing with this name and title exist!')->withInput();
         }
 
+        // Utilities on create (19 Oct 2026): same flags as update(); unticked rows store nothing.
+        foreach (['water', 'internet', 'electricity', 'mfsf'] as $u) {
+            $data[$u] = $request->input($u . 'O') == 1 ? $request->input($u) : null;
+        }
+
         $listing = Listing::create($data);
         $key     = sha1($listing->id);
         $listing->update(['key' => $key]);
@@ -358,6 +363,9 @@ class ListingController extends Controller
         // dd($data);
         $listing->update($data);
 
+        // Charges & Deposits were removed from the edit page (19 Oct 2026, not used);
+        // touch listing_price_details only when a form still posts those fields.
+        if ($request->hasAny(['discount_has', 'insurance_has', 'promo_has', 'advance_rental', 'security_deposit', 'utility_deposit'])) {
         $priceDetailData = $request->only(
             'discount_has',
             'discount_fixed',
@@ -387,6 +395,7 @@ class ListingController extends Controller
             ListingPriceDetail::create($priceDetailData);
         } else {
             $listingPriceDetail->update($priceDetailData);
+        }
         }
 
         // change options in utility report

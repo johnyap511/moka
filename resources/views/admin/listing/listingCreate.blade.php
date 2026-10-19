@@ -163,6 +163,32 @@
 
             <div class="divider"></div>
 
+            {{-- Utilities: same block as the edit page. The letter codes drive how each cost
+                 is split in the owner report (App\Support\ListingOptions). --}}
+            <div class="font-600" style="font-size:14px;margin-bottom:4px">Utilities</div>
+            <div class="text-sm text-secondary" style="margin-bottom:10px">Tick what applies and choose how each cost is split</div>
+            @foreach([['water','waterO','Water'],['internet','internetO','Internet'],['electricity','electricityO','Electricity'],['mfsf','mfsfO','MF + SF']] as [$field, $flag, $label])
+                @php $current = old($field); $on = old($flag); @endphp
+                <div class="form-row" style="grid-template-columns:220px 1fr;align-items:center">
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                            <input type="checkbox" name="{{ $flag }}" value="1" {{ $on ? 'checked' : '' }}
+                                   onchange="this.closest('.form-row').querySelector('select').disabled = !this.checked">
+                            <span class="form-label" style="margin:0">{{ $label }}</span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <select name="{{ $field }}" class="form-select" {{ $on ? '' : 'disabled' }}>
+                            @foreach(\App\Support\ListingOptions::UTILITY_OPTIONS as $code => $optLabel)
+                                <option value="{{ $code }}" {{ $current === $code ? 'selected' : '' }}>{{ $optLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @endforeach
+
+            <div class="divider"></div>
+
             {{-- Actions --}}
             <div class="flex gap-2" style="justify-content:flex-end">
                 <a href="/admin/listing" class="btn btn-secondary">Cancel</a>
