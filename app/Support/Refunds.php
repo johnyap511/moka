@@ -34,6 +34,7 @@ class Refunds
         'Arte Cheras by MOKA'  => 'Arte Cheras',
         'Queensville by MOKA'  => 'Queensville',
         'Damai 88 by MOKA'     => 'Damai 88',
+        'Mesahill by MOKA'     => 'Mesahill',
     ];
 
     /** The link currently valid, or null. */

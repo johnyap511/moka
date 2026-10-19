@@ -24,7 +24,7 @@ class PortfolioAnalytics
         // Unit names are typed by hand ("EkoCheras" and "Ekocheras", "Bell Suite" and "Bell Suites"): one property each.
         return [
             'ekocheras' => 'EkoCheras', 'bellsuite' => 'Bell Suites', 'bellsuites' => 'Bell Suites', 'damai' => 'Damai 88',
-            'artecheras' => 'Arte Cheras', 'forum' => 'Forum', 'alinea' => 'Alinea', 'queensville' => 'Queensville', 'klgateway' => 'KL Gateway',
+            'artecheras' => 'Arte Cheras', 'forum' => 'Forum', 'alinea' => 'Alinea', 'queensville' => 'Queensville', 'klgateway' => 'KL Gateway', 'mesahill' => 'Mesahill',
         ][$key] ?? $base;
     }
 

@@ -30,7 +30,7 @@ class EzeeRevenueExport
         '19676' => 'EkoCheras',
         '20317' => 'Bell Suites',
         '20318' => 'Forum / Damai 88',
-        '20319' => 'Arte Cheras / Queensville / KL Gateway',
+        '20319' => 'Arte Cheras / Queensville / KL Gateway / Mesahill',
         '20320' => 'Alinea Suites',
     ];
 
@@ -800,7 +800,7 @@ class EzeeRevenueExport
             str_starts_with($n, 'eko')                                                                 => '19676',
             str_starts_with($n, 'bell')                                                                => '20317',
             str_starts_with($n, 'forum') || str_starts_with($n, 'damai')                               => '20318',
-            str_starts_with($n, 'arte') || str_starts_with($n, 'queens') || str_starts_with($n, 'kl gate') => '20319',
+            str_starts_with($n, 'arte') || str_starts_with($n, 'queens') || str_starts_with($n, 'kl gate') || str_starts_with($n, 'mesahill') => '20319',
             str_starts_with($n, 'alinea')                                                              => '20320',
             default                                                                                    => null,
         };

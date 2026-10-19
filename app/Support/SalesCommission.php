@@ -26,7 +26,7 @@ class SalesCommission
 {
     public const HOTELS = [
         '19676' => 'EkoCheras', '20317' => 'Bell Suites', '20318' => 'Forum / Damai 88',
-        '20319' => 'Arte / Queensville / KL Gateway', '20320' => 'Alinea',
+        '20319' => 'Arte / Queensville / KL Gateway / Mesahill', '20320' => 'Alinea',
     ];
 
     private const NEEDED = ['Reservation #', 'Folio #', 'Arrival', 'Dept.', 'Room #', 'Guest Name', 'Business Source',
