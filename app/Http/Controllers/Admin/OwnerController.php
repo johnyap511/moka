@@ -47,26 +47,46 @@ class OwnerController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->only("name", "last_name", "email", "phone", "password", "status", "country_code");
+        // The form sends name, email, phone, password and status only (19 Oct 2026: it also
+        // required last_name and country_code, which the form never had, so no owner could
+        // be created). Phone keeps its digits; a blank password emails a set-password link.
+        $request->merge(['phone' => preg_replace('/\D+/', '', (string) $request->input('phone'))]);
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:150',
-            'last_name' => 'required|string|max:150',
-            'email' => 'required|string|max:200',
-            'country_code' => 'required|numeric',
-            'phone' => 'required|numeric',
-            'password' => 'required|string|max:100',
-            'status' => 'required|integer',
+            'name'     => 'required|string|max:150',
+            'email'    => 'required|email|max:200|unique:users,email',
+            'phone'    => 'required|digits_between:7,15',
+            'password' => 'nullable|string|min:8|max:100|confirmed',
+            'status'   => 'required|integer',
+        ], [
+            'name.required'      => 'Enter the owner\'s name.',
+            'email.required'     => 'Enter an email address.',
+            'email.email'        => 'Enter a valid email address.',
+            'email.unique'       => 'An account with this email already exists.',
+            'phone.required'     => 'Enter a phone number.',
+            'phone.digits_between' => 'Enter the phone number with digits only, e.g. 0123456789.',
+            'password.min'       => 'The password needs at least 8 characters, or leave it blank to email a set-password link.',
+            'password.confirmed' => 'The two passwords do not match.',
+            'status.required'    => 'Choose an account status.',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-
-        $data['password'] = Hash::make($data['password']);
+        $sendLink = $request->input('password') === null || $request->input('password') === '';
+        $data = $request->only('name', 'email', 'phone', 'status');
+        $data['last_name']    = '';
+        $data['country_code'] = '60';
+        $data['password']     = Hash::make($sendLink ? \Illuminate\Support\Str::random(32) : $request->input('password'));
         $user = User::create($data);
 
         $role = Role::find(3);
         $user->attachRole($role);
+        if ($sendLink) {
+            $sent = \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email, 'id' => $user->id]) === \Illuminate\Support\Facades\Password::RESET_LINK_SENT;
+            return redirect('/admin/owners')->with($sent ? 'success' : 'error', $sent
+                ? $user->name . ' created. A set-your-password link has been emailed to ' . $user->email . ' (valid 60 minutes).'
+                : $user->name . ' created, but the email could not be sent. Edit the owner to set a password.');
+        }
         return redirect('/admin/owners')->with('success', 'Owner is created successfully!');
     }
 

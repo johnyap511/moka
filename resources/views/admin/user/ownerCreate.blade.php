@@ -61,8 +61,7 @@
                             id="password"
                             name="password"
                             class="form-input"
-                            placeholder="Min. 8 characters"
-                            required
+                            placeholder="Min. 8 characters, or leave blank to email a link"
                         >
                         @error('password')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
@@ -74,7 +73,6 @@
                             name="password_confirmation"
                             class="form-input"
                             placeholder="Repeat password"
-                            required
                         >
                     </div>
                 </div>
