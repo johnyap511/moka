@@ -29,8 +29,25 @@ class Guests
         }
         $e164 = self::e164($eb->Mobile, $eb->Country);
         $dial = self::dialOf($e164) ?: self::dialCode($eb->Country) ?: '60';
-        if (!$user && $phone) {
+        if (!$user && $phone && !self::isGenericPhone($phone)) {
             $user = User::whereRaw("REGEXP_REPLACE(IFNULL(phone,''), '[^0-9]', '') = ?", [$phone])->orderBy('id')->first();
+        }
+        // A contact detail shared by different people is a channel relay, not a guest
+        // (20 Oct 2026: Trip.com's lodgingsupport@ address and per-property virtual numbers
+        // had 53 different guests on one profile, renamed on every sync). Same email or
+        // phone but a different name means a different person: start a new profile.
+        if ($user && !self::sameName($user, $first, $last)) {
+            $user = null;
+        }
+        // Relay contact: reuse only a profile carrying that same contact and the same name
+        // (one profile per guest, several segments of one stay).
+        if (!$user && (($email && self::isGenericEmail($email)) || ($phone && self::isGenericPhone($phone)))) {
+            $user = User::where(function ($q) use ($email, $phone) {
+                    if ($email) $q->whereRaw('LOWER(email) = ?', [$email]);
+                    if ($phone) $q->orWhereRaw("REGEXP_REPLACE(IFNULL(phone,''), '[^0-9]', '') = ?", [$phone]);
+                })
+                ->whereRaw('LOWER(name) = ? AND LOWER(IFNULL(last_name,\'\')) = ?', [strtolower($first), strtolower($last)])
+                ->orderBy('id')->first();
         }
         if (!$user && !$email && !$phone) {
             $user = User::whereRaw('LOWER(name) = ? AND LOWER(IFNULL(last_name,\'\')) = ?', [strtolower($first), strtolower($last)])
@@ -40,10 +57,10 @@ class Guests
         }
 
         if ($user) {
-            // Keep the profile current and complete; never blank a known detail.
+            // Keep the profile complete; never blank a known detail, never rename a real guest.
             $fill = [];
-            if (self::hasCounter($user->name) || $user->name !== $first) $fill['name'] = $first;
-            if ($last !== '' && (string) $user->last_name !== $last) $fill['last_name'] = $last;
+            if (self::hasCounter($user->name)) $fill['name'] = $first;
+            if ($last !== '' && (string) $user->last_name === '') $fill['last_name'] = $last;
             if (!$user->email && $email) $fill['email'] = $email;
             if (!$user->phone && $eb->Mobile) $fill['phone'] = trim((string) $eb->Mobile);
             if (!$user->country_code || preg_match('/[A-Za-z]/', (string) $user->country_code)) $fill['country_code'] = $dial;
@@ -198,7 +215,24 @@ class Guests
     /** A site's own support mailbox on a reservation is not the guest: never match guests on it. */
     public static function isGenericEmail(?string $email): bool
     {
-        return (bool) preg_match('/^(lodgingsupport|support|noreply|no-reply|reservations?|booking|info|hello)@/i', (string) $email);
+        $e = (string) $email;
+        return (bool) preg_match('/^(lodgingsupport|support|noreply|no-reply|reservations?|booking|info|hello|cs_suppliers)@/i', $e)
+            || (bool) preg_match('/@(m\.expediapartnercentral\.com|hotel\.traveloka\.com)$/i', $e);   // one relay address per property, not per guest
+    }
+
+    /** Placeholder or relay numbers: all one digit, Expedia's 111…, Trip.com's per-property virtual lines (6015 46000 xxx). */
+    public static function isGenericPhone(?string $digits): bool
+    {
+        $d = (string) $digits;
+        return $d === '' || preg_match('/^(\d)\1+$/', $d) || str_starts_with($d, '601546000') || str_starts_with($d, '1546000');
+    }
+
+    /** The reservation's guest name shares a word with the profile's name (order and case do not matter). */
+    public static function sameName($user, string $first, string $last): bool
+    {
+        $a = array_filter(preg_split('/[\s\/,.-]+/', strtolower(self::cleanName($user->name) . ' ' . $user->last_name)));
+        $b = array_filter(preg_split('/[\s\/,.-]+/', strtolower($first . ' ' . $last)));
+        return !$a || !$b || (bool) array_intersect($a, $b);
     }
 
     /** Digits only; null when too short to identify anyone. */
