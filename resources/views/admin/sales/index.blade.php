@@ -103,6 +103,10 @@
 @endif
 
 @if(!$own)
+    @if(!empty($prevPending) && admin_can('sales.manage'))
+    <div class="sc-approve"><div><b>{{ \Carbon\Carbon::parse($prevPending . '-01')->format('F Y') }} is still provisional.</b> <span class="sc-muted">Approve it once its uploads and KPI inputs are complete, so the commission amounts are confirmed.</span></div>
+        <a href="{{ route('admin.sales.index', ['month' => $prevPending]) }}" class="btn btn-primary btn-sm">Open {{ \Carbon\Carbon::parse($prevPending . '-01')->format('F') }}</a></div>
+    @endif
     @if($approval)
     <div class="sc-approved"><span class="sc-chip sc-chip--final">Approved</span> {{ $monthName }} was approved by {{ $approver ?: 'the office' }} on {{ \Carbon\Carbon::parse($approval->approved_at)->format('j M Y') }} — figures are final.
         @if(admin_is_super())<form method="post" action="{{ route('admin.sales.unapprove') }}" class="sc-inline" onsubmit="return confirm('Remove the approval for {{ $monthName }}? Figures go back to provisional and will recompute.')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="sc-link">Undo</button></form>@endif

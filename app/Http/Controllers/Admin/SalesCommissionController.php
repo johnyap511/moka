@@ -17,7 +17,8 @@ class SalesCommissionController extends Controller
         $own = $all ? null : SalesCommission::personFor(Auth::user());
         abort_unless($all || ($own && admin_can('sales.own')), 403, 'Your login is not tied to a sales person yet. Ask the office to tie it on the Sales Commission page.');
 
-        $ym = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : date('Y-m', strtotime('first day of last month'));
+        // Opens on the current month (Sam, 20 Oct 2026); managers step back to approve last month at month-end.
+        $ym = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : date('Y-m');
         $person = $own ?: ($request->input('person') ?: null);
         $data = SalesCommission::month($ym, $person);
         $team = SalesScheme::month($ym);
@@ -26,6 +27,8 @@ class SalesCommissionController extends Controller
             'history' => SalesScheme::history($person),
             'prev' => date('Y-m', strtotime($ym . '-01 -1 month')), 'next' => date('Y-m', strtotime($ym . '-01 +1 month')),
             'final' => SalesCommission::isFinal($ym), 'approval' => SalesScheme::approval($ym), 'payout' => SalesCommission::payoutLabel($ym), 'sop' => is_file(SalesScheme::sopPath()),
+            // Last month still provisional? Shown as a reminder on the current month.
+            'prevPending' => (function () use ($ym) { $p = date('Y-m', strtotime($ym . '-01 -1 month')); return $ym === date('Y-m') && !SalesScheme::approval($p) ? $p : null; })(),
             'coverage' => DB::table('sales_report_uploads')->select('hotel_code', DB::raw('MAX(period_to) last_day'), DB::raw('MAX(created_at) last_upload'))->groupBy('hotel_code')->get()->keyBy('hotel_code')];
         if ($person && isset($team['rows'][$person])) {
             $view['deferred'] = SalesScheme::deferred($person, $team['rows'][$person]->id);
