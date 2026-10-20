@@ -230,10 +230,20 @@ class Guests
     /** The reservation's guest name shares a word with the profile's name (order and case do not matter). */
     public static function sameName($user, string $first, string $last): bool
     {
-        $a = array_filter(preg_split('/[\s\/,.-]+/', strtolower(self::cleanName($user->name) . ' ' . $user->last_name)));
-        $b = array_filter(preg_split('/[\s\/,.-]+/', strtolower($first . ' ' . $last)));
-        return !$a || !$b || (bool) array_intersect($a, $b);
+        $tok = function (string $n): array {
+            $t = array_filter(preg_split('/[\s\/,.-]+/', strtolower($n)), fn ($w) => $w !== '' && !in_array($w, self::PARTICLES, true));
+            return array_values($t);
+        };
+        $a = $tok(self::cleanName($user->name) . ' ' . $user->last_name);
+        $b = $tok($first . ' ' . $last);
+        if (!$a || !$b) {   // nothing but particles on one side: compare the whole name
+            return strtolower(trim(self::cleanName($user->name) . ' ' . $user->last_name)) === strtolower(trim($first . ' ' . $last));
+        }
+        return (bool) array_intersect($a, $b);
     }
+
+    /** Words so common in Malaysian names that sharing one proves nothing. */
+    private const PARTICLES = ['bin', 'binti', 'bt', 'b', 'a/l', 'a/p', 'al', 'ap', 'mohd', 'mohamad', 'mohammad', 'muhammad', 'muhd', 'mohamed', 'md', 'nur', 'nurul', 'siti', 'abdul', 'abd', 'ahmad', 'haji', 'hj', 'hajjah', 'mr', 'mrs', 'ms', 'dr', 'dato', 'datuk', 'datin', 'tan', 'sri', 'the', 'guest'];
 
     /** Digits only; null when too short to identify anyone. */
     public static function normalisePhone($phone): ?string
