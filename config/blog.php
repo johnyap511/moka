@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'motogp-sepang-2026-short-stay-pricing-guide',
+            'view'        => 'motogp-sepang-2026-short-stay-pricing-guide',
+            'title'       => 'MotoGP at Sepang 2026: Pricing Guide for KL Owners | MOKA',
+            'heading'     => 'MotoGP is back at Sepang: a pricing plan for short-stay owners in KL',
+            'description' => 'MotoGP returns to Sepang on 30 October, weeks after F1\'s record 261,000-spectator weekend. A six-step pricing plan for KL, Putrajaya and KLIA short-stay owners.',
+            'published'   => '2026-10-19',
+            'updated'     => '2026-10-19',
+            'image'       => 'new-theme23/images/projects/skyawani-4/8.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/curvo/6.jpg', 'A MOKA-managed unit at Curvo'],
+                ['new-theme23/images/projects/the-valley/8.jpg', 'A MOKA-managed unit at The Valley'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want your unit priced for race weekend?',
+            'cta_body'    => 'We set minimum stays and rate steps for every event weekend and report what each unit earned against its normal rate.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-19-october-2026',
+            'view'        => 'short-stay-news-malaysia-sea-19-october-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 19 Oct 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 19 October 2026',
+            'description' => 'MotoGP sells 80% of tickets after F1\'s record crowd, Budget 2027 cuts stamp duty, and Tourism Malaysia woos Vietnam and Indonesia. What it means for owners.',
+            'published'   => '2026-10-19',
+            'updated'     => '2026-10-19',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/nasi-lemak.jpg', 'Food and culture feature high in Malaysia\'s pitch to Vietnamese and Indonesian travellers'],
+                ['new-theme23/images/projects/skyawani-5/5.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'maxim-risen-property-management-cheras',
             'view'        => 'maxim-risen-property-management-cheras',
             'title'       => 'Maxim Risen Property Management & Airbnb Operator Cheras | MOKA',
