@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'budget-2027-what-short-stay-owners-need-to-know',
+            'view'        => 'budget-2027-what-short-stay-owners-need-to-know',
+            'title'       => 'Budget 2027: What Short-Stay Owners Need to Know | MOKA',
+            'heading'     => 'Budget 2027: what it means if you run a short-stay unit',
+            'description' => 'Budget 2027 raises Langkawi and Labuan duty-free to RM10,000, extends stamp duty relief for first-time buyers to 2030, and adds a RM20 billion guarantee scheme.',
+            'published'   => '2026-10-12',
+            'updated'     => '2026-10-12',
+            'image'       => 'new-theme23/images/projects/skyawani-5/5.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/skyawani-5/6.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+                ['new-theme23/images/projects/curvo/6.jpg', 'Innspace interior at Curvo'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Buying your first short-stay unit?',
+            'cta_body'    => "Send us your target unit and timeline and we'll help you weigh Budget 2027's stamp duty window against your purchase plans.",
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-12-october-2026',
+            'view'        => 'short-stay-news-malaysia-sea-12-october-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 12 Oct 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 12 October 2026',
+            'description' => "Budget 2027 raises Langkawi and Labuan duty-free to RM10,000, haze returns to Johor, and F1's Sepang weekend added RM345 million for local businesses.",
+            'published'   => '2026-10-12',
+            'updated'     => '2026-10-12',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/jb-city-traffic.jpg', 'Johor recorded this week\'s worst haze readings'],
+                ['new-theme23/images/blog/kk-beach-sunset.jpg', 'Malaysia\'s tourism push now runs through 2027'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'maxim-risen-property-management-cheras',
             'view'        => 'maxim-risen-property-management-cheras',
             'title'       => 'Maxim Risen Property Management & Airbnb Operator Cheras | MOKA',
