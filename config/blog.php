@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'penang-short-term-rental-licence-deadline-november-2026',
+            'view'        => 'penang-short-term-rental-licence-deadline-november-2026',
+            'title'       => 'Penang Short-Stay Licence Deadline: 1 Nov 2026 | MOKA',
+            'heading'     => 'Penang\'s short-stay licence deadline: what to do before 1 November 2026',
+            'description' => 'Penang gives short-stay operators until 1 November 2026 to apply for a TIP licence. What it costs, why operators object, and what to do before the deadline.',
+            'published'   => '2026-10-26',
+            'updated'     => '2026-10-26',
+            'image'       => 'new-theme23/images/blog/villa-pool.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/curvo/6.jpg', 'A MOKA-managed unit at Curvo'],
+                ['new-theme23/images/projects/the-valley/8.jpg', 'A MOKA-managed unit at The Valley'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Own a short-stay unit in Penang?',
+            'cta_body'    => 'We handle the consent, licence and renewal cycle for the Penang owners we manage. Send us your unit and title type and we will tell you where you stand.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-26-october-2026',
+            'view'        => 'short-stay-news-malaysia-sea-26-october-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 26 Oct 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 26 October 2026',
+            'description' => 'National STRA rules head to Cabinet, Budget 2027 gives tourism RM935m, Penang licence deadline hits 1 Nov, and the RTS Link slips to February. For owners.',
+            'published'   => '2026-10-26',
+            'updated'     => '2026-10-26',
+            'image'       => 'new-theme23/images/blog/jb-city-traffic.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/singapore-supertrees.jpg', 'Singapore, across the Causeway from Johor Bahru'],
+                ['new-theme23/images/projects/skyawani-5/5.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'maxim-risen-property-management-cheras',
             'view'        => 'maxim-risen-property-management-cheras',
             'title'       => 'Maxim Risen Property Management & Airbnb Operator Cheras | MOKA',
