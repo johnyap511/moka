@@ -111,6 +111,8 @@
     <div class="sc-approved"><span class="sc-chip sc-chip--final">Approved</span> {{ $monthName }} was approved by {{ $approver ?: 'the office' }} on {{ \Carbon\Carbon::parse($approval->approved_at)->format('j M Y') }} — figures are final.
         @if(admin_is_super())<form method="post" action="{{ route('admin.sales.unapprove') }}" class="sc-inline" onsubmit="return confirm('Remove the approval for {{ $monthName }}? Figures go back to provisional and will recompute.')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="sc-link">Undo</button></form>@endif
     </div>
+    @elseif($ym < date('Y-m') && admin_can('sales.manage') && count($rows) && empty($kpiLock))
+    <div class="sc-approve"><div><b>{{ $monthName }} is provisional.</b> <span class="sc-muted">Step 1: the team saves the KPI inputs below, which locks them. Step 2: approve the month, which freezes every figure.</span></div></div>
     @elseif($ym < date('Y-m') && admin_can('sales.manage') && count($rows))
     <div class="sc-approve"><div><b>{{ $monthName }} is provisional.</b> <span class="sc-muted">Approve once KPI inputs and uploads are complete: figures freeze, uploads can no longer change this month, and the 30% is booked as owed.</span></div>
         <form method="post" action="{{ route('admin.sales.approve') }}" onsubmit="return confirm('Approve {{ $monthName }}? Payouts: {{ $rm($sum('pay_now')) }} now, {{ $rm($sum('deferred')) }} deferred. This locks the month.')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="btn btn-primary btn-sm">Approve {{ $monthName }}</button></form>
@@ -304,9 +306,16 @@ $PAGE = 25;
                 <li><b>Disciplinary</b>: live sanction affecting bonus (§9.4).</li>
             </ul></details>
         </div>
+        @php $kpiLocked = !empty($kpiLock); $kpiRo = $kpiLocked && !admin_is_super(); @endphp
+        @if($kpiLocked)
+        <div class="sc-approved" style="margin-bottom:10px"><span class="sc-chip sc-chip--final">Locked</span> KPI inputs for {{ $monthName }} were saved by {{ $kpiLock->by ?: 'the office' }} on {{ \Carbon\Carbon::parse($kpiLock->locked_at)->format('j M Y H:i') }}.{{ $approval ? ' The month is approved and final.' : ' Approve the month to make everything final.' }}
+            @if(admin_is_super() && !$approval)<form method="post" action="{{ route('admin.sales.kpi.unlock') }}" class="sc-inline" onsubmit="return confirm('Unlock the KPI inputs for {{ $monthName }} so they can be corrected?')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="btn btn-secondary btn-sm" type="submit">Unlock to correct</button></form>@endif
+        </div>
+        @endif
         @if(admin_can('sales.manage'))
         <form method="post" action="{{ route('admin.sales.kpi') }}">
             @csrf<input type="hidden" name="ym" value="{{ $ym }}">
+            @if($kpiRo)<fieldset disabled style="border:0;padding:0;margin:0;min-width:0">@endif
             <div class="table-wrap"><table class="sc-table sc-kpi">
                 <thead><tr><th>Sales person</th><th class="ctr">Full month</th><th class="ctr">Absences</th><th class="ctr">Unapproved</th><th class="ctr">Late (min)</th><th class="ctr">Disciplinary</th><th>Note</th></tr></thead>
                 <tbody>
@@ -321,7 +330,8 @@ $PAGE = 25;
                 @endforeach
                 </tbody>
             </table></div>
-            <div class="sc-pane__foot"><button type="submit" class="btn btn-primary btn-sm">Save {{ $monthName }}</button><span class="sc-muted">Once a month, before payroll.</span></div>
+            @if($kpiRo)</fieldset>@endif
+            @if(!$kpiRo)<div class="sc-pane__foot"><button type="submit" class="btn btn-primary btn-sm">{{ $kpiLocked ? 'Save correction' : 'Save and lock ' . $monthName }}</button><span class="sc-muted">{{ $kpiLocked ? 'Super admin correction; the inputs stay locked.' : 'Saving locks these inputs. Then approve the month.' }}</span></div>@endif
         </form>
         @endif
     </div></section>

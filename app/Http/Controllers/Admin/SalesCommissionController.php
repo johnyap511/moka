@@ -26,6 +26,7 @@ class SalesCommissionController extends Controller
             'statement' => $person ? ($team['rows'][$person] ?? null) : null,
             'history' => SalesScheme::history($person),
             'prev' => date('Y-m', strtotime($ym . '-01 -1 month')), 'next' => date('Y-m', strtotime($ym . '-01 +1 month')),
+            'kpiLock' => (function () use ($ym) { $l = DB::table('sales_kpi_locks')->where('ym', $ym)->first(); if ($l) { $l->by = DB::table('users')->where('id', $l->locked_by)->value('name'); } return $l; })(),
             'final' => SalesCommission::isFinal($ym), 'approval' => SalesScheme::approval($ym), 'payout' => SalesCommission::payoutLabel($ym), 'sop' => is_file(SalesScheme::sopPath()),
             // Last month still provisional? Shown as a reminder on the current month.
             'prevPending' => (function () use ($ym) { $p = date('Y-m', strtotime($ym . '-01 -1 month')); return $ym === date('Y-m') && !SalesScheme::approval($p) ? $p : null; })(),
@@ -102,7 +103,11 @@ class SalesCommissionController extends Controller
     {
         abort_unless(admin_can('sales.manage'), 403);
         $request->validate(['ym' => 'required|regex:/^\d{4}-\d{2}$/', 'kpi' => 'required|array']);
-        // KPI inputs are HR facts, so a final month may still be corrected; the page says so.
+        $ym = $request->input('ym');
+        // Saved once = locked (Sam, 28 Oct 2026). A super admin may unlock to correct the record.
+        if (DB::table('sales_kpi_locks')->where('ym', $ym)->exists() && !admin_is_super()) {
+            return back()->with('error', 'KPI inputs for ' . date('F Y', strtotime($ym . '-01')) . ' are locked. Ask a super admin to unlock them if a correction is needed.');
+        }
         foreach ($request->input('kpi') as $pid => $k) {
             if (!DB::table('sales_persons')->where('id', (int) $pid)->exists()) {
                 continue;
@@ -114,7 +119,19 @@ class SalesCommissionController extends Controller
             ]);
         }
 
-        return back()->with('success', 'KPI inputs saved for ' . date('F Y', strtotime($request->input('ym') . '-01')) . '.');
+        DB::table('sales_kpi_locks')->updateOrInsert(['ym' => $ym], ['locked_at' => now(), 'locked_by' => Auth::id()]);
+
+        return back()->with('success', 'KPI inputs saved and locked for ' . date('F Y', strtotime($ym . '-01')) . '. Approve the month to make everything final.');
+    }
+
+    /** Super admin only: reopen the KPI inputs to correct the record. */
+    public function unlockKpi(Request $request)
+    {
+        abort_unless(admin_is_super(), 403);
+        $request->validate(['ym' => 'required|regex:/^\d{4}-\d{2}$/']);
+        DB::table('sales_kpi_locks')->where('ym', $request->input('ym'))->delete();
+
+        return back()->with('success', 'KPI inputs for ' . date('F Y', strtotime($request->input('ym') . '-01')) . ' are open again. Save to lock them.');
     }
 
     /** A manual adjustment: a clawback, a management-approved booking, a correction. */
@@ -179,6 +196,9 @@ class SalesCommissionController extends Controller
         $ym = $request->input('ym');
         if ($ym >= date('Y-m')) {
             return back()->with('error', 'A month can be approved once it has ended.');
+        }
+        if (!DB::table('sales_kpi_locks')->where('ym', $ym)->exists()) {
+            return back()->with('error', 'Save the KPI inputs for ' . \Carbon\Carbon::parse($ym . '-01')->format('F Y') . ' first; approval seals them with the month.');
         }
         SalesScheme::approve($ym, Auth::id());
 
