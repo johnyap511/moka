@@ -30,12 +30,12 @@
 </div>
 
 @if(admin_can('refunds.link'))
-@php $rfLink = \App\Support\Refunds::link(Auth::id()); $rfMsg = "Dear Guest,\n\nDeposit Refund Form\n" . $rfLink->url() . "\n\nKindly remind, the form need to be done before 3pm same day in order fasten the refund process\n\nIG: https://instagram.com/mokahomemy\nFB: https://facebook.com/mokahomemy\n\nThank You ☺️"; @endphp
+@php $rfLink = \App\Support\Refunds::link(Auth::id()); $rfMsg = \App\Support\Refunds::template($rfLink); @endphp
 <div class="card" style="margin-bottom:16px"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px">
     <div><b>Today's deposit refund link</b><div style="font-size:12px;color:var(--text-secondary)">Paste into the check-out message. Valid until {{ $rfLink->expires_at->format('D d M, g:ia') }}. A new link is issued every morning at 9am; yesterday's keeps working until then.</div></div>
     <code id="rf-dash-url" style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:4px 8px;font-size:12px">{{ $rfLink->url() }}</code>
-    <button type="button" class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('rf-dash-msg').value).then(()=>{this.textContent='Copied';setTimeout(()=>this.textContent='Copy WhatsApp message',1500)})">Copy WhatsApp message</button>
-    <button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('rf-dash-url').textContent).then(()=>{this.textContent='Copied';setTimeout(()=>this.textContent='Copy link only',1500)})">Copy link only</button>
+    <button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('rf-dash-url').textContent).then(()=>{this.textContent='Copied';setTimeout(()=>this.textContent='Copy link',1500)})">Copy link</button>
+    <button type="button" class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('rf-dash-msg').value).then(()=>{this.textContent='Copied';setTimeout(()=>this.textContent='Copy template',1500)})">Copy template</button>
     <textarea id="rf-dash-msg" style="display:none">{{ $rfMsg }}</textarea>
 </div></div>
 @endif

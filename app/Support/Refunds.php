@@ -25,6 +25,15 @@ class Refunds
     public const WORKING_DAYS = 3;
     public const MAX_PER_PHONE_PER_DAY = 3;
 
+    /** The WhatsApp message the front desk sends with the day's link (wording by Sam, 28 Oct 2026). */
+    public static function template(RefundLink $link): string
+    {
+        return "Dear Guest,\n\nDeposit Refund Form\n" . $link->url() . "\n\n"
+            . "Kindly complete the form before 3pm on the same day to help speed up the refund process. "
+            . "Please note that this link is valid for 24 hours only, so do complete it within the validity period\n\n"
+            . "IG: https://instagram.com/mokahomemy\nFB: https://facebook.com/mokahomemy\n\nThank You ☺️";
+    }
+
     /** Property names the guest picks from, with the listing-name prefix each one maps to. */
     public const PROPERTIES = [
         'EkoCheras by MOKA'    => 'Ekocheras',
