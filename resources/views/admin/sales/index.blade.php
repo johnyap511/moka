@@ -155,7 +155,7 @@
                         <td class="num">{{ $rm($r->sales) }}</td>
                         <td class="sc-tier"><div class="sc-bar sc-bar--sm {{ $tierCls($r->tier_reached) }}"><i style="width:{{ $tierPct($r->sales) }}%"></i><u style="left:50%"></u><u style="left:66.7%"></u></div><span>{{ $tierLabel($r->tier_reached) }}</span></td>
                         <td>{!! $kpiChip($gateText($r)) !!}</td>
-                        <td class="num">{{ $rm($r->personal) }}</td>@if($hasBonus)<td class="num">{{ $r->bonus > 0 ? $rm($r->bonus) : '—' }}</td>@endif @if($hasAdj)<td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td>@endif<td class="num sc-focus"><b>{{ $rm($r->pay_now) }}</b></td><td class="num sc-dim">{{ $rm($r->deferred) }}</td></tr>
+                        <td class="num">@if($r->personal == 0 && $r->gross > 0)<span class="sc-muted" title="2% earned but not payable: KPI not met" style="text-decoration:line-through">{{ $rm($r->gross) }}</span><div class="sc-muted" style="font-size:10.5px">not eligible</div>@else{{ $rm($r->personal) }}@endif</td>@if($hasBonus)<td class="num">{{ $r->bonus > 0 ? $rm($r->bonus) : '—' }}</td>@endif @if($hasAdj)<td class="num">{{ $r->adjustments != 0 ? $rm($r->adjustments) : '—' }}</td>@endif<td class="num sc-focus"><b>{{ $rm($r->pay_now) }}</b></td><td class="num sc-dim">{{ $rm($r->deferred) }}</td></tr>
                 @empty
                     <tr><td colspan="9" class="sc-empty">No sales persons yet. Upload the reports for a month.</td></tr>
                 @endforelse
