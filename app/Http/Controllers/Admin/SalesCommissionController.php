@@ -194,6 +194,22 @@ class SalesCommissionController extends Controller
         return redirect()->route('admin.sales.index', ['month' => $request->input('ym')])->with('success', 'Approval removed; the month is provisional again.');
     }
 
+    /** The month's stay list as Excel: managers and above only (guest names and revenue). */
+    public function export(Request $request)
+    {
+        abort_unless(admin_can('sales.export'), 403);
+        $ym = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('month')) ? $request->input('month') : date('Y-m');
+        $person = $request->input('person') ?: null;
+        $data = SalesCommission::month($ym, $person);
+        try {
+            \App\DataLog::create(['related_id' => 0, 'title' => 'Sales stays exported', 'data' => json_encode(['month' => $ym, 'person' => $person, 'rows' => count($data['stays']), 'by' => Auth::user()?->name]), 'status' => 1]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+        $name = 'Sales stays ' . \Carbon\Carbon::parse($ym . '-01')->format('M Y') . ($person ? ' - ' . preg_replace('/[^A-Za-z0-9 ]+/', '', $person) : '') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Export\SalesStaysExport($data['stays'], $ym), $name);
+    }
+
     /** The SOP, readable by anyone who can see the page. */
     public function sop()
     {

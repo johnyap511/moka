@@ -244,7 +244,7 @@ $PAGE = 25;
     <div class="card-body">
         <div class="sc-stays__head">
             <h3 class="sc-h3">Stays, {{ $monthName }}{{ $person ? ' · ' . $person : '' }}</h3>
-            <div class="sc-stays__tools"><input type="search" class="sc-search" placeholder="Search guest, RES, folio or unit" data-stay-search><span class="sc-muted">{{ count($data['stays']) }} stays{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</span></div>
+            <div class="sc-stays__tools"><input type="search" class="sc-search" placeholder="Search guest, RES, folio or unit" data-stay-search><span class="sc-muted">{{ count($data['stays']) }} stays{{ $cross ? ' · ' . $cross . ' cross-month' : '' }}</span>@if(admin_can('sales.export') && count($data['stays']))<a href="{{ route('admin.sales.export', array_filter(['month' => $ym, 'person' => $person])) }}" class="btn btn-secondary btn-sm">Export Excel</a>@endif</div>
         </div>
         @if(!count($data['stays']))
             <p class="sc-empty">Nothing for {{ $monthName }}.</p>

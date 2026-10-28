@@ -216,6 +216,7 @@ Route::post('/sales-commission/unapprove', 'Admin\SalesCommissionController@unap
 Route::post('/sales-commission/adjustment', 'Admin\SalesCommissionController@addAdjustment')->name('admin.sales.adjustment');
 Route::post('/sales-commission/adjustment/{id}/delete', 'Admin\SalesCommissionController@deleteAdjustment')->name('admin.sales.adjustment.delete');
 Route::post('/sales-commission/payout', 'Admin\SalesCommissionController@addPayout')->name('admin.sales.payout');
+Route::get('/sales-commission/export', 'Admin\SalesCommissionController@export')->name('admin.sales.export');
 Route::get('/sales-commission/sop', 'Admin\SalesCommissionController@sop')->name('admin.sales.sop');
 Route::post('/sales-commission/sop', 'Admin\SalesCommissionController@uploadSop')->name('admin.sales.sop.upload');
 Route::post('/sales-commission/upload/{id}/delete', 'Admin\SalesCommissionController@deleteUpload')->name('admin.sales.upload.delete');
