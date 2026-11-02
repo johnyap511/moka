@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'weeknd-bukit-jalil-2026-short-stay-pricing-guide',
+            'view'        => 'weeknd-bukit-jalil-2026-short-stay-pricing-guide',
+            'title'       => 'The Weeknd at Bukit Jalil: KL Pricing Guide | MOKA',
+            'heading'     => 'The Weeknd is back at Bukit Jalil: a pricing plan for KL short-stay owners',
+            'description' => 'The Weeknd plays two sold-out nights at Bukit Jalil on 4 and 5 November. A pricing plan for short-stay owners near Kuala Lumpur this weekend.',
+            'published'   => '2026-11-02',
+            'updated'     => '2026-11-02',
+            'image'       => 'new-theme23/images/projects/skyawani-4/4.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/villa-pool.jpg', 'Stadium weekends pull demand into units well beyond the venue itself'],
+                ['new-theme23/images/projects/skyawani-5/5.jpg', 'A MOKA-managed unit at Sky Awani 5'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want your unit priced for the next event weekend?',
+            'cta_body'    => 'We set the minimum stay and the rate steps ourselves and report what each unit earned against its normal rate.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-2-november-2026',
+            'view'        => 'short-stay-news-malaysia-sea-2-november-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 2 Nov 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 2 November 2026',
+            'description' => "KPKT's guideline heads to Cabinet, Malaysia logs 32.2 million arrivals to September, Penang's licence deadline has passed, and a sold-out KL weekend.",
+            'published'   => '2026-11-02',
+            'updated'     => '2026-11-02',
+            'image'       => 'new-theme23/images/blog/jb-city-traffic.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/singapore-supertrees.jpg', "Southeast Asia's short-stay rules are moving at different speeds this quarter"],
+                ['new-theme23/images/projects/curvo/6.jpg', 'A MOKA-managed unit at Curvo'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'maxim-risen-property-management-cheras',
             'view'        => 'maxim-risen-property-management-cheras',
             'title'       => 'Maxim Risen Property Management & Airbnb Operator Cheras | MOKA',
