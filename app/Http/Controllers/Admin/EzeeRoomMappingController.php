@@ -187,10 +187,16 @@ class EzeeRoomMappingController extends Controller
             if ($roomName === null || $roomName === '') {
                 continue;
             }
+            // A blank dropdown means "no change", never "clear": saving the page used to write
+            // NULL for every unmapped row, which wiped mappings set moments earlier elsewhere
+            // (19 Oct 2026). Unmapping a unit is done with Archive.
+            if ($listingId === null || $listingId === '') {
+                continue;
+            }
 
             EzeeRoomMapping::updateOrCreate(
                 ['ezee_group_id' => $groupId !== '' ? $groupId : null, 'room_name' => $roomName],
-                ['listing_id' => $listingId ?: null]
+                ['listing_id' => (int) $listingId]
             );
             $saved++;
         }
