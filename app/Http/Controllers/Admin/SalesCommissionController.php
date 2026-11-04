@@ -98,6 +98,34 @@ class SalesCommissionController extends Controller
         return back()->with('success', 'Saved.');
     }
 
+    /** Add a sales person before their first eZee report (name must match eZee's Sales Person field exactly). */
+    public function addPerson(Request $request)
+    {
+        abort_unless(admin_can('sales.manage'), 403);
+        $request->validate(['name' => 'required|string|max:100', 'user_id' => 'nullable|integer|exists:users,id', 'confirmed_on' => 'nullable|date'],
+            ['name.required' => 'Enter the name exactly as it appears in eZee.']);
+        $name = trim($request->input('name'));
+        if (DB::table('sales_persons')->whereRaw('LOWER(name) = ?', [strtolower($name)])->exists()) {
+            return back()->with('error', $name . ' is already on the list.');
+        }
+        $userId = $request->input('user_id') ?: null;
+        if ($userId && DB::table('sales_persons')->where('user_id', $userId)->exists()) {
+            return back()->with('error', 'That login is already tied to another sales person.');
+        }
+        DB::table('sales_persons')->insert(['name' => $name, 'user_id' => $userId, 'confirmed_on' => $request->input('confirmed_on') ?: null, 'created_at' => now(), 'updated_at' => now()]);
+        return back()->with('success', $name . ' added. Stays tagged to that name in eZee reports will count from now.');
+    }
+
+    /** Pull any new Sales Person names from the uploaded reports (also happens on every page load). */
+    public function refreshPersons()
+    {
+        abort_unless(admin_can('sales.manage'), 403);
+        $before = DB::table('sales_persons')->count();
+        SalesCommission::syncPersons();
+        $new = DB::table('sales_persons')->count() - $before;
+        return back()->with('success', $new ? $new . ' new sales person' . ($new === 1 ? '' : 's') . ' found in the uploaded reports.' : 'No new names in the uploaded reports. A name appears once a report carrying it is uploaded, or add it by hand.');
+    }
+
     /** The month's HR inputs for everyone: absences, unapproved absence, lateness, disciplinary, employed full month. */
     public function saveKpi(Request $request)
     {

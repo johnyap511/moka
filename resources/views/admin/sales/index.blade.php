@@ -400,6 +400,17 @@ $PAGE = 25;
         </table>
         </details>
         @endif
+        @if(admin_can('sales.manage'))
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px dashed var(--border,#e5e7eb);border-radius:8px">
+            <form method="post" action="{{ route('admin.sales.person.add') }}" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">@csrf
+                <label style="display:grid;gap:3px;font-size:11.5px;color:var(--text-secondary)">Name exactly as in eZee<input name="name" required maxlength="100" placeholder="e.g. Lya" style="padding:5px 8px;border:1px solid var(--border,#e5e7eb);border-radius:6px;font-size:13px;min-width:160px"></label>
+                <label style="display:grid;gap:3px;font-size:11.5px;color:var(--text-secondary)">Login<select name="user_id" style="padding:5px 8px;border:1px solid var(--border,#e5e7eb);border-radius:6px;font-size:13px"><option value="">— not tied yet —</option>@foreach($staff as $u)<option value="{{ $u->id }}">{{ $u->name }} · {{ $u->email }}</option>@endforeach</select></label>
+                <label style="display:grid;gap:3px;font-size:11.5px;color:var(--text-secondary)">Confirmed on<input type="date" name="confirmed_on" style="padding:5px 8px;border:1px solid var(--border,#e5e7eb);border-radius:6px;font-size:13px"></label>
+                <button class="btn btn-primary btn-sm" type="submit">Add sales person</button>
+            </form>
+            <form method="post" action="{{ route('admin.sales.person.refresh') }}" style="margin-left:auto">@csrf<button class="btn btn-secondary btn-sm" type="submit" title="Pick up new names from the uploaded eZee reports">Refresh from uploads</button></form>
+        </div>
+        @endif
         <p class="sc-help" style="margin-top:10px">New sales persons are added automatically from the first uploaded eZee report that carries their name, and tied to a login with the same name@homemoka.com. To remove someone, set their <b>Left on</b> date: from the next month they disappear from the page and the team count; their past months stay. Deactivating a login on Users → Admin sets this date for you.</p>
     </div></section>
 

@@ -210,6 +210,8 @@ Route::get('/refunds/{refund}/qr', 'Admin\RefundController@qr')->name('admin.ref
 Route::get('/sales-commission', 'Admin\SalesCommissionController@index')->name('admin.sales.index');
 Route::post('/sales-commission/upload', 'Admin\SalesCommissionController@upload')->name('admin.sales.upload');
 Route::post('/sales-commission/person', 'Admin\SalesCommissionController@mapPerson')->name('admin.sales.person');
+Route::post('/sales-commission/person/add', 'Admin\SalesCommissionController@addPerson')->name('admin.sales.person.add');
+Route::post('/sales-commission/person/refresh', 'Admin\SalesCommissionController@refreshPersons')->name('admin.sales.person.refresh');
 Route::post('/sales-commission/kpi', 'Admin\SalesCommissionController@saveKpi')->name('admin.sales.kpi');
 Route::post('/sales-commission/kpi/unlock', 'Admin\SalesCommissionController@unlockKpi')->name('admin.sales.kpi.unlock');
 Route::post('/sales-commission/approve', 'Admin\SalesCommissionController@approve')->name('admin.sales.approve');
