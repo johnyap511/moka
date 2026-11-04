@@ -45,7 +45,7 @@
     $tierPct = fn ($sales) => min(100, $sales / 300);
     $tierCls = fn ($t) => $t >= 3 ? 'sc-bar--t3' : ($t >= 1 ? 'sc-bar--t1' : 'sc-bar--t0');
     $teamLine = function () use ($team, $rm0) {
-        if ($team['pool']) return 'Tier ' . $team['tier'] . ' pool ' . $rm0($team['pool']) . ' unlocked · ' . $team['hit'] . ' of ' . $team['counted'] . ' reached it';
+        if ($team['pool']) return 'Tier ' . $team['tier'] . ' pool ' . $rm0($team['pool']) . ' unlocked · ' . $team['hit'] . ' of ' . $team['counted'] . ' reached it' . (!empty($team['excluded']) ? ' · ' . implode(', ', $team['excluded']) . ' not counted (not full month)' : '');
         $hit15 = count(array_filter($team['rows'], fn ($r) => $r->sales >= 15000));
         $gap = max(0, ($team['needed'] ?? 0) - $hit15);
         return $hit15 . ' of ' . $team['counted'] . ' at RM15k · ' . ($gap ? $gap . ' more unlocks the RM500 pool' : 'pool needs ' . ($team['needed'] ?? 0));
@@ -96,13 +96,16 @@
     <div class="sc-tile sc-tile--main"><span>{{ $nextMonth }} payout · everyone</span><b>{{ $rm($sum('pay_now')) }}</b><em class="sc-chip {{ $final ? 'sc-chip--final' : 'sc-chip--prov' }}">{{ $final ? 'Final' : 'Provisional' }}</em></div>
     <div class="sc-tile"><span>Direct sales</span><b>{{ $rm($sum('sales')) }}</b><em>{{ array_sum(array_column($data['people'], 'stays')) }} stays · {{ array_sum(array_column($data['people'], 'nights')) }} nights</em></div>
     <div class="sc-tile"><span>Commission</span><b>{{ $rm($sum('personal')) }}</b><em>{{ $sum('gross') != $sum('personal') ? $rm($sum('gross')) . ' before KPIs' : '2%, all KPIs met' }}</em></div>
-    <div class="sc-tile"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>{{ $teamLine() }}</em></div>
+    <div class="sc-tile {{ $team['pool'] && !empty($team['excluded']) ? 'sc-tile--hold' : '' }}"><span>Team bonus</span><b>{{ $rm($sum('bonus')) }}</b><em>{{ $teamLine() }}</em></div>
     <div class="sc-tile"><span>Held to year end</span><b>{{ $rm($sum('deferred')) }}</b><em>30%, after audit</em></div>
     @if($warnings)<div class="sc-tile sc-tile--warn"><span>On hold</span><b>{{ $rm($held) }}</b><em>{{ $warnings }} stays changed in eZee</em></div>@endif
 </div>
 @endif
 
 @if(!$own)
+    @if($team['pool'] && !empty($team['excluded']))
+    <div class="sc-approve" style="border-color:#f59e0b;background:#fffbeb"><div><b>Check the team bonus.</b> <span class="sc-muted">The RM {{ number_format($team['pool']) }} pool was unlocked with {{ implode(' and ', $team['excluded']) }} left out of the team count because "Full month" is unticked for them. That box means employed for the whole month, not attendance; leave goes under Absences. With everyone counted, {{ $team['needed_all'] ?? '' }}</span></div></div>
+    @endif
     @if(!empty($prevPending) && admin_can('sales.manage'))
     <div class="sc-approve"><div><b>{{ \Carbon\Carbon::parse($prevPending . '-01')->format('F Y') }} is still provisional.</b> <span class="sc-muted">Approve it once its uploads and KPI inputs are complete, so the commission amounts are confirmed.</span></div>
         <a href="{{ route('admin.sales.index', ['month' => $prevPending]) }}" class="btn btn-primary btn-sm">Open {{ \Carbon\Carbon::parse($prevPending . '-01')->format('F') }}</a></div>
@@ -299,7 +302,7 @@ $PAGE = 25;
         <div class="sc-pane__head">
             <div><h3 class="sc-h3">KPI inputs, {{ $monthName }}</h3><p class="sc-help">From HR's clock-in and leave records. Sales is checked automatically.{{ $final ? ' Month is final: edit only to correct the record.' : '' }}</p></div>
             <details class="sc-why"><summary>Rules</summary><ul>
-                <li><b>Full month</b>: employed the whole month, counted in the 80% team threshold (§3.3).</li>
+                <li><b>Full month</b>: employed for the whole month (joined before the 1st, not left). Untick only for a mid-month joiner or leaver. Leave, EL or MC go under <b>Absences</b>, not here. Unticking removes the person from the team count, which can wrongly unlock the pool.</li>
                 <li><b>Absences</b>: MC, unpaid leave, no-shows, minus approved Medical Exceptions (§8.3). 1 = 50%, 2+ = nil.</li>
                 <li><b>Unapproved</b>: one absence without approval = nil.</li>
                 <li><b>Late (min)</b>: minutes over the month against shift start; over 120 = nil.</li>
@@ -317,7 +320,7 @@ $PAGE = 25;
             @csrf<input type="hidden" name="ym" value="{{ $ym }}">
             @if($kpiRo)<fieldset disabled style="border:0;padding:0;margin:0;min-width:0">@endif
             <div class="table-wrap"><table class="sc-table sc-kpi">
-                <thead><tr><th>Sales person</th><th class="ctr">Full month</th><th class="ctr">Absences</th><th class="ctr">Unapproved</th><th class="ctr">Late (min)</th><th class="ctr">Disciplinary</th><th>Note</th></tr></thead>
+                <thead><tr><th>Sales person</th><th class="ctr" title="Employed for the whole month. Leave goes under Absences.">Full month</th><th class="ctr">Absences</th><th class="ctr">Unapproved</th><th class="ctr">Late (min)</th><th class="ctr">Disciplinary</th><th>Note</th></tr></thead>
                 <tbody>
                 @foreach($rows as $r)
                     <tr><td><b>{{ $r->name }}</b><div class="sc-muted">{{ ucfirst($r->status) }}</div></td>

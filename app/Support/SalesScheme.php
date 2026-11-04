@@ -240,7 +240,16 @@ class SalesScheme
             $r->total       = round($entitlement + $r->adjustments, 2);
         }
 
-        return ['rows' => $rows, 'tier' => $tier, 'pool' => $pool, 'counted' => count($counted), 'needed' => self::needed(count($counted)), 'eligible' => count($eligible),
+        // Staff confirmed and present but ticked "not employed the full month": the team pool was
+        // computed without them. Shown on the page so a mis-ticked box cannot quietly unlock a pool.
+        $excluded = array_values(array_map(fn ($r) => $r->name, array_filter($rows, fn ($r) => $r->status === 'full' && !$r->kpi->employed_full_month)));
+        $allFull = array_filter($rows, fn ($r) => $r->status === 'full');
+        $poolAll = 0;
+        foreach (self::TIERS as $t => [$min, $amount]) {
+            if (count(array_filter($allFull, fn ($r) => $r->sales >= $min)) >= self::needed(count($allFull))) { $poolAll = $amount; break; }
+        }
+        $neededAll = $poolAll ? 'the pool would still be RM ' . number_format($poolAll) . '.' : 'no pool would be unlocked this month.';
+        return ['rows' => $rows, 'tier' => $tier, 'pool' => $pool, 'counted' => count($counted), 'needed' => self::needed(count($counted)), 'eligible' => count($eligible), 'excluded' => $excluded, 'needed_all' => $neededAll,
             'hit' => $tier ? count(array_filter($counted, fn ($r) => $r->sales >= self::TIERS[$tier][0])) : 0, 'rate' => $rate];
     }
 
