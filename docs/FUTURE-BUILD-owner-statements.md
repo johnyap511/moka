@@ -13,7 +13,10 @@ them there (today they are sent by hand on WhatsApp); email them too; archive fi
   Moka net profit, and the unit's PDF and Excel path inside the zip. `OwnerReports::captureResults`
   runs when a pack finishes; `php artisan reports:capture --all` backfills (July, August, September
   2026 packs captured on 6 Nov 2026). Group members carry their pooled per-unit figure and the group
-  statement as their file.
+  statement as their file. Backfill result (6 Nov 2026): July 139 units, August 139, September 137; totals
+  equal each run's compilation to the cent; 107 / 107 / 105 owners. Four units have no Homemoka listing and
+  so no owner yet: J-06-01, J-30-11, RS-15-01 (New Storeroom) (office rents) and The Olive; create listings
+  (with the owner account) for them before owner statements go live.
 - **Owner identity**: `listings.user_id` is the owner account; the owner portal (`/owner`, role
   owner) already shows each owner only their own units (rule: MAKE SURE THAT OWNER ONLY VIEW THEIR
   OWN UNIT). An owner with several units gets several rows per month.
