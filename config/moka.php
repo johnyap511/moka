@@ -12,6 +12,18 @@ return [
      */
     'reported_through' => env('MOKA_REPORTED_THROUGH', '2026-08'),
 
+    // PMS month sheet (Sam, 6 Nov 2026): the thresholds of the reconciliation rules, in RM
+    // unless stated. A stay longer than ltr_min_nights is treated as long term; differences
+    // within sst_rounding are exact, within rounding are accumulated SST rounding; a whole-stay
+    // difference below materiality is immaterial; deposit is the security deposit eZee holds.
+    'pms_check' => [
+        'ltr_min_nights' => (int) env('MOKA_PMS_LTR_MIN_NIGHTS', 300),
+        'sst_rounding'   => (float) env('MOKA_PMS_SST_ROUNDING', 0.02),
+        'rounding'       => (float) env('MOKA_PMS_ROUNDING', 0.50),
+        'materiality'    => (float) env('MOKA_PMS_MATERIALITY', 100),
+        'deposit'        => (float) env('MOKA_PMS_DEPOSIT', env('MOKA_REFUND_DEPOSIT', 200)),
+    ],
+
     // Sales commission (Sam, 29 Sep 2026): 2% of room charges before SST, every sales person, every source.
     'sales_commission_rate' => (float) env('MOKA_SALES_COMMISSION_RATE', 0.02),
 

@@ -31,6 +31,7 @@
         <input type="month" name="month" value="{{ $month ?: now()->subMonthNoOverflow()->format('Y-m') }}">
         <button class="btn btn-primary btn-sm" type="submit" onclick="this.disabled=true;this.textContent='Checking…';this.form.submit()">Run month check</button>
         <button class="btn btn-sm" type="submit" formaction="{{ route('admin.pms.run') }}" name="month" value="" onclick="this.disabled=true;this.form.submit()">Run 60-day check</button>
+        <a class="btn btn-sm" href="{{ route('admin.pms.sheet', ['month' => $month ?: now()->subMonthNoOverflow()->format('Y-m')]) }}">Month sheet</a>
     </form>
     @endif
 </div>
