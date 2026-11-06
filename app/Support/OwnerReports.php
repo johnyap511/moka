@@ -232,7 +232,9 @@ class OwnerReports
                 'zip_name' => $j['zip_name'] ?? ('Reports_' . $j['month'] . '_' . self::VERSION . '.zip'),
                 'object' => $j['object'], 'size' => filesize($zip),
                 'total_payable' => $j['total_payable'] ?? null, 'total_moka_np' => $j['total_moka_np'] ?? null,
-                'flags' => $j['flags'] ?? [], 'log' => $j['log'] ?? null,
+                'flags' => $j['flags'] ?? [],
+                // Keep the gate override note (if any) above the engine's log.
+                'log' => trim((string) ($run->log ?? '')) !== '' ? rtrim((string) $run->log) . "\n\n" . ($j['log'] ?? '') : ($j['log'] ?? null),
             ]);
             try {
                 self::captureResults($run->fresh());

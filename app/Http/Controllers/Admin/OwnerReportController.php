@@ -149,7 +149,7 @@ class OwnerReportController extends Controller
             'master_sheet' => $request->input('master_sheet'),
             'prev_sheet' => $run->prev_name ? ($request->input('prev_sheet') ?: $run->prev_sheet) : null,
             'overrides' => $overrides,
-            'error' => null, 'log' => null,
+            'error' => null,   // the log keeps the PMS gate override note written at upload
         ]);
         return redirect()->route('admin.reports.show', $run)->with('success', 'Queued. The pack takes a few minutes; this page refreshes itself.');
     }
