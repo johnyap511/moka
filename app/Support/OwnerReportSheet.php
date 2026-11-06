@@ -46,6 +46,9 @@ class OwnerReportSheet
                 $ezeeFolio = $b->server_folio_no;
             }
             $folio = $ezeeFolio !== '' ? $ezeeFolio : $b->folio_no;
+            if ($ezeeFolio === '') {
+                $ezeeFolio = (string) $b->folio_no;   // as the reconciled file: the two columns never disagree
+            }
             $first = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) $ezee->FirstName) : ($b->user->name ?? '');
             $last  = trim((string) ($ezee->FirstName ?? '')) !== '' ? trim((string) ($ezee->LastName ?? '')) : ($b->user->last_name ?? '');
             $out[] = [
