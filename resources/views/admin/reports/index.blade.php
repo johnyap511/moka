@@ -1,6 +1,6 @@
 @extends('admin.layout')
-@section('title', 'Owner reports')
-@section('page-title', 'Owner reports')
+@section('title', 'Report Generator')
+@section('page-title', 'Report Generator')
 
 @section('content')
 @php
@@ -10,7 +10,7 @@
 
 <div class="or-head">
     <div>
-        <h1>Owner reports</h1>
+        <h1>Report Generator</h1>
         <p class="or-sub">Monthly landlord-payout pack (Excel + PDF per unit, groups, compilation). Upload the Master file, confirm the data tab and the month's settings, generate, download the zip. The bookings sheet is built from Homemoka.</p>
     </div>
 </div>

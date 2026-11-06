@@ -1,5 +1,5 @@
 @extends('admin.layout')
-@section('page-title', 'Monthly Report')
+@section('page-title', 'Master Utilities')
 
 @push('styles')
 <style>
@@ -13,7 +13,7 @@
 @section('content')
 <div class="page-header">
     <div>
-        <h1>Monthly Report</h1>
+        <h1>Master Utilities</h1>
         <p>Utility charges &amp; report preview for all listings</p>
     </div>
     {{-- Month picker --}}

@@ -1,6 +1,6 @@
 @extends('admin.layout')
-@section('title', 'Owner reports · ' . $run->monthLabel())
-@section('page-title', 'Owner reports')
+@section('title', 'Report Generator · ' . $run->monthLabel())
+@section('page-title', 'Report Generator')
 
 @section('content')
 @php
