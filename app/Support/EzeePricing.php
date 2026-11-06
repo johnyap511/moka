@@ -174,14 +174,26 @@ class EzeePricing
     {
         $nights = self::nights($ezee->Start, $ezee->End);
 
-        $priceNight  = $nights > 0 ? (self::grossRoomTotal($ezee) / $nights) : 0.0;
+        // EZEE's TotalDiscount means two things (checked on the data, 6 Nov 2026).
+        // Negative: a real price discount, already netted in TotalAmountAfterTax
+        // ((BeforeTax − |discount|) × 1.08 = AfterTax; RES31803: 1,099.91 − 164.99 → 1,009.75).
+        // The owner report takes rate × nights as revenue and never reads a discount
+        // column, so the nightly rate carried here must be the net one. Positive: a
+        // few sen of payment rounding that leaves AfterTax untouched; subtracted from
+        // the total as before. Until this, a negative discount was added, and four
+        // October 2026 stays were over-reported.
+        $rawDiscount = (float) ($ezee->TotalDiscount ?? 0);
+        $netted      = $rawDiscount < 0 ? round(-$rawDiscount, 2) : 0.0;
+        $discount    = $rawDiscount > 0 ? $rawDiscount : 0.0;
+        $grossRoom   = max(0.0, self::grossRoomTotal($ezee) - $netted);
+
+        $priceNight  = $nights > 0 ? ($grossRoom / $nights) : 0.0;
         // A day-use (Start = End) has no nightly rate but its room charge is still revenue.
-        $roomTotal   = $nights > 0 ? $priceNight * $nights : self::grossRoomTotal($ezee);
+        $roomTotal   = $nights > 0 ? $priceNight * $nights : $grossRoom;
         // With EZEE's breakdown, the cleaning fee is the cleaning and channel
         // lines only; deposits and incidentals are not revenue of the stay.
         $fromCharges = self::cleaningFromCharges($ezee);
         $cleaningFee = $fromCharges ? $fromCharges['cleaning'] : (float) ($ezee->TotalExtraCharge ?? 0);
-        $discount    = (float) ($ezee->TotalDiscount ?? 0);
 
         $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
         $sstRate  = $bookedOn < self::SST_DATE ? 0.06 : 0.08;
@@ -209,6 +221,10 @@ class EzeePricing
             'sst_cf'       => $sstCf,
             'ota_fee'      => $otaFee,
             'total'        => $roomTotal + $cleaningFee + $sst + $sstCf - $discount,
+            // What a booking stores as discount_fee (the rounding kind only) and the
+            // price discount already netted into price_night, for the remark.
+            'discount_fee'     => $discount,
+            'discount_netted'  => $netted,
         ];
     }
 

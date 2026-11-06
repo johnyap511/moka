@@ -637,10 +637,11 @@ class EzeeAutoAssign
                 'sst_cf'       => $breakdown['sst_cf'],
                 'price'        => $breakdown['total'],
                 'tourism_tax'  => $breakdown['sst'],
-                'discount_fee' => $ezeeBooking->TotalDiscount ?? 0,
+                'discount_fee' => $breakdown['discount_fee'] ?? 0,
                 'source'       => Channel::canonical($ezeeBooking->Source),
                 'status'       => 5,
-                'remark'       => ((string) $ezeeBooking->Start === (string) $ezeeBooking->End ? 'Day use (hourly): company revenue, not on the owner\'s calendar | ' : '') . 'Auto-assigned from EZEE room ' . $ezeeBooking->RoomName,
+                'remark'       => ((string) $ezeeBooking->Start === (string) $ezeeBooking->End ? 'Day use (hourly): company revenue, not on the owner\'s calendar | ' : '') . 'Auto-assigned from EZEE room ' . $ezeeBooking->RoomName
+                    . (($breakdown['discount_netted'] ?? 0) > 0 ? sprintf(' | EZEE discount RM %.2f netted in the rate', $breakdown['discount_netted']) : ''),
             ]);
 
             // status 8 marks the EZEE record assigned; without it the list still
