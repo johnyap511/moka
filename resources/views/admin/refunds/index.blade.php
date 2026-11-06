@@ -241,7 +241,7 @@
                 <div class="rf-panel">
                     <div class="rf-pane">
                         <h4>Booking</h4>
-                        @if($b)<div><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">Booking #{{ $b->id }}</a> · {{ $b->listing->name ?? '' }}<div class="rf-muted">{{ trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }} · {{ $b->folio_no }}</div></div>
+                        @if($b)<div><a href="/admin/book/{{ $b->id }}/edit" target="_blank" rel="noopener">Booking #{{ $b->id }}</a> · {{ $b->listing->name ?? '' }}<div class="rf-muted">{{ trim(($b->user->name ?? '') . ' ' . ($b->user->last_name ?? '')) }} · {{ \Carbon\Carbon::parse($b->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($b->check_out)->format('d M') }} · {{ $b->source }} · {{ $b->server_folio_no ?: $b->folio_no }}</div></div>
                         @else<div class="rf-muted">No booking linked yet.</div>@endif
                         @if($r->match_note)<div class="rf-note">{{ $r->match_note }}</div>@endif
                         @if($r->siblings->isNotEmpty())
@@ -266,7 +266,7 @@
                             <div class="rf-sugg"><div class="rf-sugg-h">Likely bookings</div>
                                 @foreach($r->suggestions as $s)@php $sb = $s['booking']; @endphp
                                 <form method="post" action="{{ route('admin.refunds.attach', $r) }}" class="rf-sugg-row">@csrf<input type="hidden" name="booking_id" value="{{ $sb->id }}">
-                                    <div class="rf-sugg-t"><b>{{ $sb->listing->name ?? '' }}</b> · {{ trim(($sb->user->name ?? '') . ' ' . ($sb->user->last_name ?? '')) ?: '—' }}<div class="rf-muted">{{ \Carbon\Carbon::parse($sb->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($sb->check_out)->format('d M') }} · {{ $sb->source }} · {{ $sb->folio_no }} · {{ $s['why'] }}</div></div>
+                                    <div class="rf-sugg-t"><b>{{ $sb->listing->name ?? '' }}</b> · {{ trim(($sb->user->name ?? '') . ' ' . ($sb->user->last_name ?? '')) ?: '—' }}<div class="rf-muted">{{ \Carbon\Carbon::parse($sb->check_in)->format('d M') }}–{{ \Carbon\Carbon::parse($sb->check_out)->format('d M') }} · {{ $sb->source }} · {{ $sb->server_folio_no ?: $sb->folio_no }} · {{ $s['why'] }}</div></div>
                                     <button class="btn btn-secondary rf-sm" type="submit">Pick</button>
                                 </form>
                                 @endforeach
