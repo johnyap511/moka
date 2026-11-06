@@ -21,7 +21,7 @@ class Channel
     public const OWNER     = 'Owner';
 
     /** Direct business: Walk In, PMS, Google, Internet Booking Engine, Monthly Rental, Social Media. Shown as Website, 8% M&A fee. */
-    private const DIRECT = ['walk', 'pms', 'google', 'book on google', 'internet', 'booking engine', 'website', 'web', 'homemoka', 'monthly'];
+    private const DIRECT = ['walk', 'pms', 'google', 'book on google', 'internet', 'booking engine', 'website', 'web', 'homemoka', 'monthly', 'social'];   // social: Facebook/Instagram enquiries are walk-ins (Sam, 6 Nov 2026)
 
     /** Map any raw source (eZee's, or one typed by staff) to the canonical name. */
     public static function canonical(?string $source): string
