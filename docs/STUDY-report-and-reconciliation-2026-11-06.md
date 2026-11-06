@@ -107,3 +107,32 @@ Update 6 Nov (Sam): the two October reports (H-05-06, BS 15-11) were amended aft
 Utility codes on listings (App\Support\ListingOptions::UTILITY_OPTIONS): A Moka pays, split by profit share; B owner pays,
 Moka refunds owner; C owner pays only; D Moka pays only; E add owner only; F add Moka only. NOTE the month-approval page
 (approvalByMonth.blade.php) labels C as "Host Pays All" and D as "Owner Pays All", the opposite of ListingOptions. To confirm with Sam.
+
+## 6. "Homemoka checking Oct'26" files (Sam's manual check inputs, studied 6 Nov 2026)
+Zip: Bookings - Homemoka.xlsx (the old 19-column export, 1,073 October check-ins, title row "MOKA" then header),
+Detail Revenue Report CSV per property (AL 198, BS 206, CHE 98, EKO 397, FOR 227 = 1,126 rows; column set varies per
+property because every extra-charge type is a column), Daily Extra Charge CSV per property (916 lines; Reference =
+"Front Desk Folio-FN…,Room : …"; Remark = Cleaning fee / Surcharge / Per Stay Fees / damage notes).
+Property prefixes → eZee hotel codes: EKO 19676, BS 20317, FOR 20318 (Forum, Damai 88), CHE 20319 (Arte Cheras,
+Queensville, KL Gateway, Mesahill), AL 20320.
+
+What the Detail Revenue Report's Total means (verified on rows): revenue POSTED in the report window, incl. tax,
+incl. extras and the Damage Deposit posted in the window. A tenancy of 364 nights shows October's share (RES27327:
+949.44 vs Homemoka segment 949.45). Scope = arrival or departure in October; rows arriving 29/30 Sep and leaving
+1 Oct appear with Total 0. 11 rows have a blank RES (post-audit folios, rule 26). "Other Payment Method" = payments
+by non-room methods (deposits −200, advance rent); not in the API.
+
+Coverage checks:
+- Report vs API feed (ezee_bookings), hotel + RES: 1,110 of 1,115 RES rows present; the 5 absent are zero-total
+  day-use/walk-ins. Within-October rows, whole folio (TotalAmountAfterTax + TotalExtraCharge + tax − discount):
+  848 agree to the cent, 8 differ (cleaning posted on another date or on the "-1" row), 22 unmatched only by my
+  quick unit-name normaliser. So the API carries the same money as the report; the month sheet can work from it.
+- API rows touching October not in the report: 6 dead 2024 rows (ignored by the engine), one extra-room row,
+  and RES31688 (EkoCheras walk-in 15 Oct–15 Nov, RM 3,794.40, no folio) — worth a look.
+- Report vs Homemoka export, RES + unit: within October 739 agree, 76 differ; the differences are the deposit
+  (RM 200/224, Homemoka rightly excludes it), extras posted on the folio, room moves held on two units, and the
+  genuinely missing bookings the reverse check listed. Cross-month rows differ by construction (posted share vs segment).
+
+Implication for the build: Sam's manual check = report Total vs Homemoka Total per booking, deposits/extras set aside.
+The month sheet already does the same from the API, booking by booking, and flags the rest. Part B should also give
+staff the per-property OTA + cleaning subtotals (group tabs) and the "posted this month" view for cross-month stays.
