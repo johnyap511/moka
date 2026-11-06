@@ -95,7 +95,17 @@ class PmsMonthSheet
             $summary[$s] = count(array_filter($rows, fn ($r) => $r['status'] === $s));
         }
         $summary['ours'] = round(array_sum(array_map(fn ($r) => (float) ($r['ours'] ?? 0), $rows)), 2);
-        $summary['theirs'] = round(array_sum(array_map(fn ($r) => (float) ($r['theirs'] ?? 0), $rows)), 2);
+        // Each eZee reservation once, however many segments hold it here.
+        $seen = [];
+        $summary['theirs'] = 0.0;
+        foreach ($rows as $r) {
+            $key = $r['res'] ?: 'b' . $r['booking_id'];
+            if ($r['theirs'] !== null && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $summary['theirs'] += (float) $r['theirs'];
+            }
+        }
+        $summary['theirs'] = round($summary['theirs'], 2);
 
         return ['month' => $ym, 'from' => $from, 'to' => $to, 'rows' => $rows, 'summary' => $summary, 'thresholds' => $this->cfg];
     }
@@ -135,7 +145,7 @@ class PmsMonthSheet
             'booking_id' => $b->id, 'res' => $eb?->SubBookingId, 'folio' => $b->server_folio_no ?: $b->folio_no,
             'unit' => $unit?->name ?? '?', 'check_in' => $cin, 'check_out' => $cout, 'nights' => (int) $b->nights,
             'source' => $source, 'ezee_source' => $eb?->Source, 'ours' => $ours,
-            'theirs' => null, 'diff' => null, 'status' => self::OK, 'code' => '', 'reason' => '', 'action' => '',
+            'theirs' => null, 'diff' => null, 'stay_ours' => null, 'status' => self::OK, 'code' => '', 'reason' => '', 'action' => '',
             'extra_room' => $isExtra, 'segment' => $chain->count() > 1,
         ];
         $verdict = function (string $status, string $code, string $reason, string $action = '') use (&$row) {
@@ -171,15 +181,22 @@ class PmsMonthSheet
         $ezNights = (int) $bd['nights'];
         $row['theirs'] = $theirs;
         $row['diff']   = round($ours - $theirs, 2);
+        if ($chain->count() > 1) {
+            // The eZee figure is the whole stay; the difference that matters is against all its rows.
+            $row['stay_ours'] = round((float) $chain->sum('price'), 2);
+            $row['diff'] = round($row['stay_ours'] - $theirs, 2);
+        }
 
         // 3. Long-term rental on either side: the monthly rent is what it is.
         $ltr = fn ($s) => stripos((string) $s, 'long term') !== false;
         if ($ltr($source) || $ltr($eb->Source)) {
+            $row['diff'] = null;   // monthly rent against a whole-tenancy figure: no comparison is made
             return $verdict(self::OK, 'LTR', $note . 'Long Term Rental' . ($ltr($source) && !$ltr($eb->Source) ? ' here; eZee source ' . $eb->Source : '') . '.');
         }
 
         // 4. A tenancy-length stay booked as a short stay.
         if ($ezNights > $this->cfg['ltr_min_nights']) {
+            $row['diff'] = null;
             return $verdict(self::NOT_OK, 'WRONG-SOURCE', $note . 'eZee stay is ' . $ezNights . ' nights but the source is ' . ($eb->Source ?: 'blank') . ', not Long Term Rental.',
                 'Correct the source in eZee (and here) so the 8% fee and owner share are right.');
         }
@@ -194,9 +211,9 @@ class PmsMonthSheet
         }
 
         // 6. Agreement, with the two rounding tolerances.
-        $diff = $row['diff'];
+        $diff = $chain->count() > 1 ? round($ours - $theirs, 2) : $row['diff'];
         $segNote = $viaSibling || $chain->count() > 1 ? ' This booking is one segment of a stay held as ' . $chain->count() . ' rows.' : '';
-        if (abs($diff) <= $this->cfg['sst_rounding']) {
+        if ($chain->count() === 1 && abs($diff) <= $this->cfg['sst_rounding']) {
             return $verdict(self::OK, 'OK', $note . 'Agrees with eZee' . ($diff != 0 ? ' (SST rounding ' . number_format($diff, 2) . ')' : '') . '.');
         }
         if (abs($diff) < $this->cfg['rounding'] && $chain->count() === 1) {
