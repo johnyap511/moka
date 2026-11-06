@@ -265,7 +265,8 @@ class OwnerReports
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $n = $zip->getNameIndex($i);
             $names[] = $n;
-            if ($compIndex === null && str_contains($n, '/Excel/') && str_contains($n, 'Compilation') && str_ends_with($n, '.xlsx')) {
+            // The folder is "Group & Compilation", so match the file name, not the path.
+            if ($compIndex === null && str_contains($n, '/Excel/') && str_starts_with(basename($n), 'Compilation') && str_ends_with($n, '.xlsx')) {
                 $compIndex = $i;
             }
         }
