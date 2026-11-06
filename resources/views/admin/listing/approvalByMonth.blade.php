@@ -133,7 +133,9 @@
             @csrf
             @method('PUT')
             @php
-            $utilOpts = ['' => 'Please Select', 'A' => 'Split by Profit %', 'B' => 'Split (Special)', 'C' => 'Host Pays All', 'D' => 'Owner Pays All', 'E' => 'Owner Pays All (Alt)'];
+            {{-- Same codes and wording as the listing edit page; this page once carried its own
+                 list with C and D the wrong way round (fixed 6 Nov 2026). --}}
+            $utilOpts = ['' => 'Please Select'] + \App\Support\ListingOptions::UTILITY_OPTIONS;
             @endphp
             @foreach([
                 ['water',       'Water'],
