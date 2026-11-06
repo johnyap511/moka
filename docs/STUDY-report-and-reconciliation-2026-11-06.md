@@ -74,3 +74,31 @@ RetrieveFolioDetails, RetrieveBookingDetails, RetrievePaymentDetails, RetrieveLi
 GetFolioDetails) are rejected as invalid.
 Consequence: rules R12/R14 (OPM) are not reproducible from the API; R13 (RM200 deposit) is, via the deposit
 ExtraCharge line (already in ezee_bookings.extra_charges) and TotalPayment minus charges; R9–R11 fully covered.
+
+## 5. October 2026 golden files (from Sam, 6 Nov 2026)
+Files: Reconciled_October2026_FINAL.xlsx, Master Utilities_102026_v2.xlsx (generated 4 Nov 09:27), Reports_102026_V21.zip.
+- Reconciled workbook tabs: Note, Moka (1073 rows, the old 19-column Bookings export by check-in month), EZ (eZee detail
+  revenue report, 69 columns), Checkk (forward check), List (253-row Moka↔eZee name map), BS, BS Group (19: 15 studio + 4 3BR),
+  Alinea Group (12), Mesahill Group (14), EZ Not in Moka (reverse check), Rate Alerts.
+- Master data tab "Utilities Oct 2026": 160 units, 40 columns, 4 adjustment slots. Report types: Individual 104 (19 Long Term),
+  Grouping 53 (4 Long Term), 3 "NO REPORT". Profit shares 75:25 (83), 80:20 (44), 100:0 (29), 70:30 (4). 17 Logic phrasings.
+  Other tabs: Min Guarantee (8 units), Issues, Anomalies, Reconciliation, Version Info.
+- Zip: 231 files, Excel + PDF; Individual 89, Long Term 19, Group 3, Compilation 1. Compilation types: Individual 61,
+  Individual (Rent) 27, Long Term 15, Long Term (Rent) 4, BS Studio 15, BS 3BR 4, Alinea 12, Mesahill 14.
+
+Homemoka comparison:
+- Moka sheet = Homemoka bookings with check-in in October and status 5 (live): 1073 vs 1079. The 6 extra rows in Homemoka
+  are 7 bookings keyed on 4 Nov from the "EZ Not in Moka" list (BS 15-11 FN23263; H-05-06 FN33189/33231/33270/33294/33313;
+  Extra Room 1 FN33310) minus one extra-room move. So Homemoka CAN generate the Moka sheet itself.
+- Group tabs match Homemoka group membership exactly (BS 19, Alinea 12). Mesahill: file 14 active; Homemoka group has 19
+  (PB-39-11, PB-40-03, PB-41-10, PB-41-17, PB-42-06 are the not-started ones).
+- Master unit names: 153 of 160 match a Homemoka listing. Unmatched: RS-15-01 (New Storeroom), J-30-11, J-06-01,
+  PB-40-04, PB-40-10, PB-40-11 (not created in Homemoka), The Olive (not a listing).
+- listings.profit is NOT reliable as profit share: 45 mismatches vs the master (mostly NULL where master says 100:0;
+  E-13-11 and E-3A-09 say 30 where master says 75:25). Master is the truth; a unit finance settings table is needed.
+
+FINDING (for Sam): the October reports in the zip were generated from the Moka sheet BEFORE the 4 Nov fixes.
+R_EkoCheras H-05-06 lists 10 bookings and lacks the five stays 16–23, 23–25, 25–26, 27–28, 28 Oct–1 Nov (incl. the
+7-night walk-in RM1,188); R_Bell Suites 15-11 lists 3 bookings and lacks the 22–23 Oct Airbnb (RM211.57).
+If these zips were sent to owners, those two owners were under-reported for October. Sam to decide (rule 27).
+Lesson for the build: the reverse-check fixes must land in Homemoka BEFORE the Moka sheet is produced; the gate enforces this.
