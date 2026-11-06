@@ -147,7 +147,9 @@
         <div><span class="k">Guest</span><span class="v">{{ trim(($ezee->FirstName ?? $user->name ?? '') . ' ' . ($ezee->LastName ?? $user->last_name ?? '')) ?: '—' }}</span></div>
         <div><span class="k">Unit</span><span class="v">{{ $listing->name ?? '—' }}</span></div>
         <div><span class="k">Channel</span><span class="badge badge-blue">{{ $channel ?: '—' }}</span></div>
-        <div><span class="k">Folio</span><span class="v">{{ $ezee->folio_no ?? $book->server_folio_no ?? $book->folio_no ?? '—' }}</span></div>
+        @php $ezeeFolio = $ezee->folio_no ?? $book->server_folio_no ?? null; @endphp
+        <div><span class="k">eZee folio</span><span class="v">{{ $ezeeFolio ?: '—' }}</span></div>
+        @if($book->folio_no && $book->folio_no !== $ezeeFolio)<div><span class="k">MOKA ref</span><span class="v">{{ $book->folio_no }}</span></div>@endif
         <div><span class="k">eZee</span>
             @if($ezee)
                 <span class="badge badge-teal">{{ $ezee->SubBookingId }} · {{ $ezee->RoomName }} · {{ $ezee->ezee_current_status ?: $ezee->ezee_status }}</span>
@@ -223,8 +225,9 @@
                     <input type="number" name="infant" class="form-input" min="0" value="{{ old('infant', $book->infant ?? 0) }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Folio no.</label>
+                    <label class="form-label">MOKA folio ref</label>
                     <input type="text" name="folio_no" class="form-input" value="{{ old('folio_no', $book->folio_no) }}">
+                    @if($ezeeFolio && $ezeeFolio !== $book->folio_no)<div class="form-hint" style="font-size:12px;color:var(--text-secondary);margin-top:4px">eZee folio is <b>{{ $ezeeFolio }}</b>. This ref was built from the eZee transaction id when the booking was created; eZee numbers folios differently, so the two can differ.</div>@endif
                 </div>
                 <div class="form-group">
                     <label class="form-label">Reservation source</label>
