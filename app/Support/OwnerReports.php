@@ -234,8 +234,102 @@ class OwnerReports
                 'total_payable' => $j['total_payable'] ?? null, 'total_moka_np' => $j['total_moka_np'] ?? null,
                 'flags' => $j['flags'] ?? [], 'log' => $j['log'] ?? null,
             ]);
+            try {
+                self::captureResults($run->fresh());
+            } catch (\Throwable $e) {
+                report($e);   // the pack is done; a capture problem must not mark the run as failed
+            }
         } catch (\Throwable $e) {
             $run->update(['status' => 'error', 'finished_at' => now(), 'error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Read the finished pack and keep one row per unit in report_unit_results: payable to the
+     * landlord, Moka net profit, category, the owner at the time, and the unit's report file
+     * inside the zip (Sam, 6 Nov 2026: the basis for owner statements, yearly statements and
+     * profit analysis). Re-runnable: rows for the run are replaced. Returns the row count.
+     */
+    public static function captureResults(ReportRun $run): int
+    {
+        $zipPath = $run->file('report.zip');
+        if ($run->status !== 'done' || !is_file($zipPath)) {
+            return 0;
+        }
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath) !== true) {
+            throw new \RuntimeException('Cannot open the report zip of run #' . $run->id);
+        }
+        $names = [];
+        $compIndex = null;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $n = $zip->getNameIndex($i);
+            $names[] = $n;
+            if ($compIndex === null && str_contains($n, '/Excel/') && str_contains($n, 'Compilation') && str_ends_with($n, '.xlsx')) {
+                $compIndex = $i;
+            }
+        }
+        if ($compIndex === null) {
+            $zip->close();
+            throw new \RuntimeException('No compilation workbook in the zip of run #' . $run->id);
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'comp');
+        file_put_contents($tmp, $zip->getFromIndex($compIndex));
+        $zip->close();
+        $ws = IOFactory::createReader('Xlsx')->setReadDataOnly(true)->load($tmp)->getSheet(0);
+        $rows = $ws->toArray(null, true, false, false);
+        @unlink($tmp);
+
+        // Unit names as the engine prints them vs Homemoka listing names: case, spaces, a
+        // "Mesahill " prefix, "Bell Suite" vs "Bell Suites", and bracketed suffixes.
+        $key = function (string $s): string {
+            $s = strtolower(trim(preg_replace('/\s*\(.*?\)\s*/', ' ', $s)));
+            $s = str_replace(['bell suites', 'bell suite'], 'bs', $s);
+            $s = preg_replace('/^mesahill\s+/', '', $s);
+            return preg_replace('/\s+/', '', $s);
+        };
+        $listings = [];
+        foreach (\App\Listing::withoutGlobalScopes()->get(['id', 'name', 'user_id']) as $l) {
+            $listings[$key((string) $l->name)] = $l;
+        }
+        $groupFile = ['Group BS' => 'Group BS_', 'Group Alinea' => 'Group Alinea_', 'Group Mesahill' => 'Group Mesahill_'];
+        $find = function (string $needle, string $ext) use ($names): ?string {
+            foreach ($names as $n) {
+                if (str_ends_with($n, '.' . $ext) && str_contains($n, $needle)) {
+                    return $n;
+                }
+            }
+            return null;
+        };
+
+        $header = null;
+        $out = [];
+        foreach ($rows as $r) {
+            if ($header === null) {
+                if (isset($r[1]) && trim((string) $r[1]) === 'Unit') {
+                    $header = true;
+                }
+                continue;
+            }
+            $unit = trim((string) ($r[1] ?? ''));
+            $cat  = trim((string) ($r[2] ?? ''));
+            if ($unit === '' || $cat === '' || !is_numeric($r[3] ?? null) || stripos($unit, 'total') !== false) {
+                continue;
+            }
+            $l = $listings[$key($unit)] ?? null;
+            $needle = str_starts_with($cat, 'Group ') ? ($groupFile[preg_replace('/\s*\(.*\)$/', '', $cat)] ?? null) : '/R_' . $unit . '_';
+            $out[] = [
+                'run_id' => $run->id, 'month' => $run->month, 'unit' => mb_substr($unit, 0, 120),
+                'listing_id' => $l?->id, 'owner_id' => $l?->user_id ?: null, 'category' => mb_substr($cat, 0, 40),
+                'payable' => round((float) $r[3], 2), 'moka_np' => is_numeric($r[4] ?? null) ? round((float) $r[4], 2) : null,
+                'pdf_path' => $needle ? $find($needle, 'pdf') : null, 'xlsx_path' => $needle ? $find($needle, 'xlsx') : null,
+                'captured_at' => now(),
+            ];
+        }
+        \App\Models\ReportUnitResult::where('run_id', $run->id)->delete();
+        foreach (array_chunk($out, 200) as $chunk) {
+            \App\Models\ReportUnitResult::insert($chunk);
+        }
+        return count($out);
     }
 }
