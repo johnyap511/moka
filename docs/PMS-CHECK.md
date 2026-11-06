@@ -51,3 +51,28 @@ checked against the property management system <time of latest run>."
 `app/Http/Controllers/Admin/PmsDifferenceController.php`, `resources/views/admin/pms/index.blade.php`,
 models `PmsDifference`, `PmsReconcileRun`; gate in `Admin\OwnerReportController::store`.
 Permissions: ezee.view to see, ezee.manage to run and resolve.
+
+## Month sheet (6 Nov 2026, Part A of the reconciliation build)
+Operations → PMS check → **Month sheet** (`/admin/pms-check/sheet?month=YYYY-MM`, ezee.view). Every booking
+checking in during the month, next to its eZee figure, with a verdict and what to do; eZee reservations with no
+Homemoka booking (open kind A) at the end as EZEE ONLY. Read-only; `App\Support\PmsMonthSheet`. Excel download of
+all rows (`/pms-check/sheet/export`). Default view shows only rows needing attention.
+
+Rules, in order, first match wins (from Sam's reconciliation tool v6.7, adapted to Homemoka data):
+1. Open PMS difference on the booking → NOT OK `DIFF-<kind>`: resolve it on the list first.
+2. No live eZee record: Owner source → OK; zero value → OK; else NOT OK `NO-EZEE`.
+3. Long Term Rental on either side → OK `LTR` (no amount comparison).
+4. eZee stay longer than `ltr_min_nights` (300) with a non-LTR source → NOT OK `WRONG-SOURCE`.
+5. Day use (no night): extra room → OK; owner unit → REVIEW `DAY-USE` (not billable to the owner).
+6. Single-row stay: within `sst_rounding` (0.02) → OK; within `rounding` (0.50) → OK `ROUNDING`.
+7. "-N" split room: room charge agrees → OK `SPLIT` (cleaning sits on the sibling row).
+8. Stay held as several rows (month segments, room move): whole stay vs eZee. Agrees → OK `SEGMENT`; explained by
+   extras/deposit/cleaning → OK; below `materiality` (RM 100) → OK `CROSS-MONTH`; else REVIEW `CROSS-MONTH`.
+9. Single-row difference explained by eZee extras that are not revenue (`EXTRAS`), the RM 200 deposit (`DEPOSIT`),
+   or a cleaning fee with/without SST on the other side of a month end (`CLEANING`) → OK.
+10. Otherwise NOT OK `UNEXPLAINED`: open the folio in eZee and compare the itemised list.
+EZEE ONLY rows: `EZ-MISSING` (owner unit, billable: add the booking), `EZ-EXTRA` (extra room, manual check),
+`EZ-DAYUSE`, `EZ-ZERO`. Thresholds in `config/moka.php` `pms_check` (env MOKA_PMS_*).
+Not reproducible from the eZee API, so not implemented: "other payment method" rules (the API gives one lump
+TotalPayment and no method breakdown; checked 6 Nov 2026).
+October 2026 run: 1,081 rows, 1,052 OK, 5 REVIEW, 22 NOT OK, 2 eZee-only, 2.7 s.
