@@ -23,7 +23,7 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 9. OTA fee:
    - OTA channels (Booking.com, Expedia, Airbnb, Traveloka, ...): the commission eZee reports for that booking.
    - Net-rate channels (Agoda, Trip.com, Tiket.com): 0, the rate is already net.
-   - Direct channels (Walk In, PMS, Google, Internet, Booking Engine, Monthly Rental): shown as "Website",
+   - Direct channels (Walk In, PMS, Google, Internet, Booking Engine, Monthly Rental, Social Media): shown as "Website",
      8% M&A fee on the room charge excl. tax only, never on the cleaning fee.
    - Long Term Rental: shown as "Long Term Rental", no fee.
 10. Total = rate × nights + SST + cleaning + SST(CF) − discount. The OTA fee is shown, not deducted.
@@ -32,7 +32,7 @@ and app/Support/EzeePricing.php (amounts); the admin portal shows this page unde
 ## C. Channel names (one list, everywhere)
 12. Booking.com, Agoda, Expedia, Airbnb, Trip.com, Traveloka, Tiket.com, Website, Long Term Rental, Owner.
     eZee's source is mapped to this list (CTrip/Ctrip/Ctrip.com → Trip.com; Traveloka codes stripped;
-    Walk In/PMS/Google/Internet/Booking Engine/Monthly Rental → Website).
+    Walk In/PMS/Google/Internet/Booking Engine/Monthly Rental/Social Media → Website).
 
 ## D. Process
 13. Month end: Revenue Export (EZEE) to check → fix in eZee → wait for the hourly sync → Bookings export (old format) → Cowork reports.

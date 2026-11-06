@@ -20,7 +20,7 @@ class Channel
     public const LTR       = 'Long Term Rental';
     public const OWNER     = 'Owner';
 
-    /** Direct business: Walk In, PMS, Google, Internet Booking Engine, Monthly Rental. Shown as Website, 8% M&A fee. */
+    /** Direct business: Walk In, PMS, Google, Internet Booking Engine, Monthly Rental, Social Media. Shown as Website, 8% M&A fee. */
     private const DIRECT = ['walk', 'pms', 'google', 'book on google', 'internet', 'booking engine', 'website', 'web', 'homemoka', 'monthly'];
 
     /** Map any raw source (eZee's, or one typed by staff) to the canonical name. */
