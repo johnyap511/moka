@@ -31,7 +31,7 @@
         return $r->kpi->absences === 1 ? '50%: one absence' : 'KPIs met';
     };
     $tierLabel = fn ($t) => $t ? 'Tier ' . $t : 'Below Tier 1';
-    $sopLink = $sop ? '<a href="' . route('admin.sales.sop') . '" target="_blank">Read the Commission SOP (v2.0)</a>' : 'SOP not uploaded yet';
+    $sopLink = $sop ? '<a href="' . route('admin.sales.sop') . '" target="_blank">Read the Commission SOP (v2.1)</a>' : 'SOP not uploaded yet';
 @endphp
 
 @php
@@ -57,7 +57,8 @@
 <div class="sc-head">
     <div>
         <h1>{{ $own ? 'My Commission' : 'Sales Commission' }}</h1>
-        <p class="sc-sub">2% on direct bookings · 70% paid next month, 30% at year end · {!! $sopLink !!}</p>
+        <p class="sc-sub">2% on direct bookings · 70% paid next month, 30% at year end · Team bonus when 80% of confirmed staff reach Tier 1 (SOP §9)</p>
+        @if($sop)<a class="sc-sop-btn" href="{{ route('admin.sales.sop') }}" target="_blank" rel="noopener">📄 Read the Commission SOP (v2.1)</a>@endif
     </div>
     <div class="sc-nav">
         <a class="sc-nav__btn" href="{{ $q($prev) }}" title="{{ $mon($prev) }}">‹</a>
@@ -487,7 +488,7 @@ tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.ta
 @push('scripts')
 <style>
 .sc-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
-.sc-head h1{margin:0 0 2px;font-size:20px}.sc-sub{margin:0;font-size:12.5px;color:var(--text-secondary);max-width:720px;line-height:1.45}
+.sc-head h1{margin:0 0 2px;font-size:20px}.sc-sop-btn{display:inline-block;margin-top:8px;padding:6px 12px;border:1px solid var(--primary,#0f766e);border-radius:8px;color:var(--primary,#0f766e);font-size:13px;font-weight:600;text-decoration:none}.sc-sop-btn:hover{background:var(--primary,#0f766e);color:#fff}.sc-sub{margin:0;font-size:12.5px;color:var(--text-secondary);max-width:720px;line-height:1.45}
 .sc-nav{display:flex;align-items:center;gap:6px}.sc-nav__btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff;font-size:17px;color:inherit;text-decoration:none}.sc-nav__btn:hover{background:#f8fafc}
 .sc-nav__form{display:flex;gap:6px}.sc-nav__form input,.sc-nav__form select{padding:6px 8px;font-size:13px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#fff}
 .sc-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px}
