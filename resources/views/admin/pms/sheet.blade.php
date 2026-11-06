@@ -63,7 +63,7 @@
             <td>{{ $r['unit'] }}@if($r['extra_room'])<div class="ms-muted">extra room</div>@endif</td>
             <td style="white-space:nowrap">{{ \Carbon\Carbon::parse($r['check_in'])->format('j M') }} → {{ \Carbon\Carbon::parse($r['check_out'])->format('j M') }}<div class="ms-muted">{{ $r['nights'] }} night{{ $r['nights'] == 1 ? '' : 's' }}{{ $r['segment'] ? ' · segment' : '' }}</div></td>
             <td>{{ $r['source'] ?: '—' }}@if($r['ezee_source'] && strcasecmp((string) $r['ezee_source'], (string) $r['source']) !== 0)<div class="ms-muted">eZee: {{ $r['ezee_source'] }}</div>@endif</td>
-            <td class="num">{{ $fmt($r['ours']) }}@if($r['stay_ours'] !== null)<div class="ms-muted">stay {{ $fmt($r['stay_ours']) }}</div>@endif</td>
+            <td class="num">{{ $fmt($r['ours']) }}@if(($r['stay_ours'] ?? null) !== null)<div class="ms-muted">stay {{ $fmt($r['stay_ours']) }}</div>@endif</td>
             <td class="num">{{ $fmt($r['theirs']) }}</td>
             <td class="num">{{ $r['diff'] === null ? '—' : number_format($r['diff'], 2) }}</td>
             <td class="ms-why">{{ $r['reason'] }}@if($r['action'])<b>→ {{ $r['action'] }}</b>@endif</td>

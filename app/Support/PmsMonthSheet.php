@@ -304,7 +304,7 @@ class PmsMonthSheet
             'booking_id' => null, 'res' => $d->sub_booking_id, 'folio' => $eb?->folio_no,
             'unit' => $l?->name ?? $d->unit, 'check_in' => substr((string) $d->stay_from, 0, 10), 'check_out' => substr((string) $d->stay_to, 0, 10),
             'nights' => $eb ? EzeePricing::breakdown($eb)['nights'] : null, 'source' => null, 'ezee_source' => $eb?->Source,
-            'ours' => null, 'theirs' => $total, 'diff' => null, 'status' => self::EZEE_ONLY, 'extra_room' => $isExtra, 'segment' => false,
+            'ours' => null, 'theirs' => $total, 'diff' => null, 'stay_ours' => null, 'status' => self::EZEE_ONLY, 'extra_room' => $isExtra, 'segment' => false,
         ];
         if ($isExtra) {
             $row += ['code' => 'EZ-EXTRA', 'reason' => 'eZee stay on an extra room with no Homemoka booking: company revenue, not billable to an owner.', 'action' => 'Check it is a real stay; add it here only if the room is managed.'];
