@@ -4,6 +4,14 @@
 
 @section('content')
 @php
+    // Input files kept with the run; a name is a link when the file is still on disk.
+    $inputLink = fn (string $which, ?string $name) => $name
+        ? (is_file($run->file(['master' => 'master.xlsx', 'recon' => 'recon.xlsx', 'prev' => 'prev.xlsx'][$which]))
+            ? '<a href="' . route('admin.reports.input', [$run, $which]) . '" title="Download this file"><b>' . e($name) . '</b></a>'
+            : '<b>' . e($name) . '</b>')
+        : '';
+@endphp
+@php
     $rm = fn ($v) => $v === null ? '—' : 'RM ' . number_format($v, 2);
     $editable = in_array($run->status, ['draft', 'error']);
     $busy = in_array($run->status, ['queued', 'running']);
@@ -23,7 +31,7 @@
 @if($busy)
 <div class="card"><div class="card-body">
     <div class="or-progress"><div class="or-spin"></div><div><b>{{ $run->status === 'queued' ? 'Waiting to start' : 'Generating' }}</b> — about 2 to 10 minutes. This page refreshes itself; you can leave and come back.</div></div>
-    <p class="or-files" style="margin:10px 0 0">Master <b>{{ $run->master_name }}</b> · tab <b>{{ $run->master_sheet }}</b> · bookings <b>{{ $run->recon_name }}</b>@if($run->prev_name) · previous <b>{{ $run->prev_name }}</b>@endif</p>
+    <p class="or-files" style="margin:10px 0 0">Master {!! $inputLink('master', $run->master_name) !!} · tab <b>{{ $run->master_sheet }}</b> · bookings {!! $inputLink('recon', $run->recon_name) !!}@if($run->prev_name) · previous {!! $inputLink('prev', $run->prev_name) !!}@endif</p>
 </div></div>
 <script>
 (function(){var u=@json(route('admin.reports.status', $run));function t(){fetch(u,{headers:{'Accept':'application/json'}}).then(r=>r.json()).then(j=>{if(j.status!=='queued'&&j.status!=='running')location.reload();}).catch(()=>{});}setInterval(t,5000);})();
@@ -40,7 +48,7 @@
 <div class="card"><div class="card-body">
     <div class="or-actions">
         <a class="btn btn-primary" href="{{ route('admin.reports.download', $run) }}">Download zip</a>
-        <span class="or-files">Master <b>{{ $run->master_name }}</b> · tab <b>{{ $run->master_sheet }}</b> · bookings <b>{{ $run->recon_name }}</b>@if($run->prev_name) · previous <b>{{ $run->prev_name }}</b>@endif</span>
+        <span class="or-files">Master {!! $inputLink('master', $run->master_name) !!} · tab <b>{{ $run->master_sheet }}</b> · bookings {!! $inputLink('recon', $run->recon_name) !!}@if($run->prev_name) · previous {!! $inputLink('prev', $run->prev_name) !!}@endif</span>
     </div>
     @if($run->flags)
     <h3 class="or-h3" style="margin-top:14px">Review before sending</h3>
@@ -61,7 +69,7 @@
 <div class="card"><div class="card-body">
     <form method="post" action="{{ route('admin.reports.generate', $run) }}" class="or-form">
         @csrf
-        <p class="or-files" style="margin:0">Master <b>{{ $run->master_name }}</b> · bookings <b>{{ $run->recon_name }}</b>@if($run->prev_name) · previous <b>{{ $run->prev_name }}</b>@else · no previous master (new/removed units will not be flagged)@endif</p>
+        <p class="or-files" style="margin:0">Master {!! $inputLink('master', $run->master_name) !!} · bookings {!! $inputLink('recon', $run->recon_name) !!}@if($run->prev_name) · previous {!! $inputLink('prev', $run->prev_name) !!}@else · no previous master (new/removed units will not be flagged)@endif</p>
 
         <div>
             <div style="font-weight:600;margin-bottom:4px">Which tab in the master holds {{ $run->monthLabel() }}'s data?</div>

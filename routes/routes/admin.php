@@ -188,6 +188,7 @@ Route::get('/owner-reports/{run}', 'Admin\OwnerReportController@show')->name('ad
 Route::post('/owner-reports/{run}/generate', 'Admin\OwnerReportController@generate')->name('admin.reports.generate');
 Route::get('/owner-reports/{run}/status', 'Admin\OwnerReportController@status')->name('admin.reports.status');
 Route::get('/owner-reports/{run}/download', 'Admin\OwnerReportController@download')->name('admin.reports.download');
+Route::get('/owner-reports/{run}/input/{which}', 'Admin\OwnerReportController@input')->name('admin.reports.input');
 Route::post('/owner-reports/{run}/delete', 'Admin\OwnerReportController@destroy')->name('admin.reports.destroy');
 
 // Deposit refunds: guest requests, Finance marks paid, guest feedback KPI (11 Oct 2026)

@@ -165,6 +165,21 @@ class OwnerReportController extends Controller
         return response()->download($run->file('report.zip'), $run->zip_name ?: 'report.zip');
     }
 
+    /**
+     * The input files kept with the run, so staff can open the bookings workbook Homemoka
+     * built (or the files they uploaded) as the evidence of what the engine was given (Sam, 6 Nov 2026).
+     */
+    public function input(ReportRun $run, string $which)
+    {
+        $files = [
+            'master' => ['master.xlsx', 'Master_Utilities_' . $run->month . '.xlsx'],
+            'recon'  => ['recon.xlsx', 'Reconciled_' . $run->month . ($run->recon_name && str_starts_with($run->recon_name, 'Built by Homemoka') ? '_Homemoka' : '') . '.xlsx'],
+            'prev'   => ['prev.xlsx', 'Master_Prev_Month_' . $run->month . '.xlsx'],
+        ];
+        abort_unless(isset($files[$which]) && is_file($run->file($files[$which][0])), 404);
+        return response()->download($run->file($files[$which][0]), $files[$which][1]);
+    }
+
     /** Only unfinished runs can go: a finished pack is the record of what owners received. */
     public function destroy(ReportRun $run)
     {
