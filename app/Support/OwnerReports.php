@@ -317,7 +317,14 @@ class OwnerReports
             if ($unit === '' || $cat === '' || !is_numeric($r[3] ?? null) || stripos($unit, 'total') !== false) {
                 continue;
             }
-            $l = $listings[$key($unit)] ?? null;
+            $uk = $key($unit);
+            $l  = $listings[$uk] ?? null;
+            if (!$l) {
+                // The master names Forum and office units without the property ("RS-35-10",
+                // "J-06-01"): take the one listing whose name ends with the unit code.
+                $hits = array_values(array_filter(array_keys($listings), fn ($k) => str_ends_with($k, $uk) && strlen($k) > strlen($uk)));
+                $l = count($hits) === 1 ? $listings[$hits[0]] : null;
+            }
             $needle = str_starts_with($cat, 'Group ') ? ($groupFile[preg_replace('/\s*\(.*\)$/', '', $cat)] ?? null) : '/R_' . $unit . '_';
             $out[] = [
                 'run_id' => $run->id, 'month' => $run->month, 'unit' => mb_substr($unit, 0, 120),
