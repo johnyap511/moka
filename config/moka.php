@@ -12,6 +12,16 @@ return [
      */
     'reported_through' => env('MOKA_REPORTED_THROUGH', '2026-08'),
 
+    // Owner reports, Part B (Sam, 6 Nov 2026): the pooled groups whose tabs Homemoka writes into the
+    // reconciled workbook for the engine. 'group' matches the start of the Homemoka group name;
+    // 'markers' maps a group type to the engine's marker (Bell Suites is split by points), 'marker'
+    // is the single label for an evenly split pool. A new pooled group is a row here plus the engine.
+    'report_groups' => [
+        ['tab' => 'BS Group',       'group' => 'Bell Suites', 'markers' => ['Type A' => 'STUDIO', 'Type B' => '3BR']],
+        ['tab' => 'Alinea Group',   'group' => 'Alinea',      'marker' => 'ALINEA'],
+        ['tab' => 'Mesahill Group', 'group' => 'Mesahill',    'marker' => 'MESAHILL'],
+    ],
+
     // PMS month sheet (Sam, 6 Nov 2026): the thresholds of the reconciliation rules, in RM
     // unless stated. A stay longer than ltr_min_nights is treated as long term; differences
     // within sst_rounding are exact, within rounding are accumulated SST rounding; a whole-stay

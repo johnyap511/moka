@@ -31,7 +31,7 @@
                 <label>Master file <small>Master_Utilities.xlsx</small>
                     <input type="file" name="master" accept=".xlsx" required>
                 </label>
-                <label>Bookings sheet <small>optional: leave empty and Homemoka builds it from the month's bookings (the “Moka” sheet); or upload a Reconciled_FINAL.xlsx</small>
+                <label>Bookings sheet <small>optional: leave empty and Homemoka builds it from the month's bookings (the “Moka” sheet plus the BS, Alinea and Mesahill group tabs); or upload a Reconciled_FINAL.xlsx</small>
                     <input type="file" name="recon" accept=".xlsx">
                 </label>
                 <details class="or-adv">
