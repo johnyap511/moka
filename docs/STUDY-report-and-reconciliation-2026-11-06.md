@@ -152,3 +152,19 @@ ENGINE WARNING: the Cloud Run engine (~/moka-report-service/engine/moka_reports.
 group (gather() reads BS and Alinea only; compilation order lacks "Group Mesahill"). Sam's October zip has a
 Mesahill statement, so his local engine is newer. The service must be updated with the current moka_reports.py
 before any cloud run of October or later; until then the cloud output would omit Mesahill.
+
+## 8. Dry run (6 Nov 2026, local, Excel only)
+Inputs: Homemoka-generated October workbook (35e7a79), Sam's Master Utilities_102026_v2.xlsx, Sam's
+moka_reports_OCTOBER.py (Downloads, 6 Nov 13:51: dynamic adjustment slots, LT_OVERRIDE retired, no Mesahill),
+toolkit logo, no previous master. Engine output: 129 unit reports, Group BS + Alinea, compilation.
+Compared with Reports_102026_V21.zip (Excel): 110 files in common, 103 identical to the cent, 7 differ, all expected:
+Compilation (Mesahill units listed as individuals because this engine copy has no Mesahill), H-05-06 and BS 15-11
+(bookings keyed 4 Nov), Damai 88 12-6, H-26-13A, RS-39-10, SS-09-02 (bookings 68946, 70820, 71338, 70836 edited
+after the file). Group BS and Group Alinea statements identical.
+Mesahill (engine copy lacks it): recomputed from Homemoka's Mesahill tab + master with the spec §8 formula:
+Sales 10,069.90 (room 8,500.86 + cleaning 1,569.04), 2% maint 201.40, OPEX 3,261.81 (OTA 1,692.77 + cleaning
+1,569.04, no utilities in the master), operating profit 6,606.69, net 80% 5,285.35, per unit 377.53 (14 units),
+Moka 94.38 per unit: equals Sam's Group Mesahill statement and compilation rows.
+Conclusion: Homemoka's workbook is a drop-in replacement for the hand-made Reconciled_FINAL.xlsx.
+Outstanding: the engine copy with Mesahill (the one that made the 10:52 zip) is not on this Mac nor on Cloud Run;
+needed in ~/moka-report-service/engine before the November cloud run.
