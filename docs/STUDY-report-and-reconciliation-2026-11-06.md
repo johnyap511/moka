@@ -102,3 +102,8 @@ R_EkoCheras H-05-06 lists 10 bookings and lacks the five stays 16–23, 23–25,
 7-night walk-in RM1,188); R_Bell Suites 15-11 lists 3 bookings and lacks the 22–23 Oct Airbnb (RM211.57).
 If these zips were sent to owners, those two owners were under-reported for October. Sam to decide (rule 27).
 Lesson for the build: the reverse-check fixes must land in Homemoka BEFORE the Moka sheet is produced; the gate enforces this.
+
+Update 6 Nov (Sam): the two October reports (H-05-06, BS 15-11) were amended after the issue was found; no action.
+Utility codes on listings (App\Support\ListingOptions::UTILITY_OPTIONS): A Moka pays, split by profit share; B owner pays,
+Moka refunds owner; C owner pays only; D Moka pays only; E add owner only; F add Moka only. NOTE the month-approval page
+(approvalByMonth.blade.php) labels C as "Host Pays All" and D as "Owner Pays All", the opposite of ListingOptions. To confirm with Sam.
