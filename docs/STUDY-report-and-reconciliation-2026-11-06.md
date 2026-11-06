@@ -136,3 +136,19 @@ Coverage checks:
 Implication for the build: Sam's manual check = report Total vs Homemoka Total per booking, deposits/extras set aside.
 The month sheet already does the same from the API, booking by booking, and flags the rest. Part B should also give
 staff the per-property OTA + cleaning subtotals (group tabs) and the "posted this month" view for cross-month stays.
+
+## 7. Part B built (6 Nov 2026): Homemoka writes the reconciled workbook
+`App\Support\OwnerReportSheet::write($ym, $path)` (existed since 11 Oct for the Moka sheet) now also writes the
+BS Group / Alinea Group / Mesahill Group tabs and a 20th column "Posted this month". Groups configured in
+`config/moka.php` `report_groups` (tab, Homemoka group name prefix, markers). Member rule: not archived at month
+end and started renting (first live booking by month end). Owner reports page: leave the Bookings sheet empty and
+the workbook is built at "Upload and continue" (commit 734d575, b1 folio fallback after).
+Proof against Reconciled_October2026_FINAL.xlsx: group tabs identical to the cent (BS 9,101.30 / 6,533.31;
+Alinea 4,796.82 / 3,977.30; Mesahill 1,692.77 / 1,569.04; same members and markers). Moka sheet: 1,072 common rows
+identical except 4 bookings edited after 4 Nov (70820, 70836, 68946, 71338), 7 rows added 4 Nov, 1 voided (71466).
+Posted this month = Total on every October row (all stays end by 1 Nov or are month segments).
+
+ENGINE WARNING: the Cloud Run engine (~/moka-report-service/engine/moka_reports.py, 6 Oct 2026) has no Mesahill
+group (gather() reads BS and Alinea only; compilation order lacks "Group Mesahill"). Sam's October zip has a
+Mesahill statement, so his local engine is newer. The service must be updated with the current moka_reports.py
+before any cloud run of October or later; until then the cloud output would omit Mesahill.
