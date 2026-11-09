@@ -49,3 +49,18 @@ them there (today they are sent by hand on WhatsApp); email them too; archive fi
   record of what owners received).
 - Owner change on a unit: rows keep the owner at capture time, so a yearly statement goes to the
   owner who was paid that month.
+
+## Engine gaps found in the October 2026 checking (9 Nov 2026)
+From the team's feedback on the October pack; each needs an engine change (payout logic or layout, Sam's
+sign-off) and is a reason to key standing unit settings in Homemoka (Part C) rather than retype them monthly.
+1. **"No management fee" switch for a long-term unit** (J-17-15): the engine always deducts 10%; today the only
+   way is a pair of adjustments every month.
+2. **Carry-forward of a negative month** (J-08-12): a loss month is not brought into the next month's statement
+   automatically; it has to be typed as an adjustment.
+3. **Configurable pooled groups** (Forum "Ter's group"): only Bell Suites, Alinea and Mesahill are pooled, by name,
+   in the engine. A new pool should be a settings row (members, split %, even or by points, maintenance %).
+4. **MF&SF line on rent-unit reports** (Moka self-rent H-09-10, H-13A-3A, J-27-11, J-28-06): the report pays the
+   fixed rent and cannot print "rent 3,000 less MF&SF 313.50"; finance nets it in the Rental column instead.
+Minor: no IWK (sewerage) column in the master; it goes in as a maintenance item or adjustment.
+Also seen: the master's Long Term flag and Logic were stale for H-23-3A, J-23A-02 and SS-31-17, and several
+maintenance items were missing or mistyped. Standing settings per unit in Homemoka would carry over month to month.
