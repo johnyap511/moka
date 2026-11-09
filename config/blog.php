@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'penang-short-stay-fee-changes-2027',
+            'view'        => 'penang-short-stay-fee-changes-2027',
+            'title'       => 'Penang\'s 2027 Short-Stay Fee Changes Explained | MOKA',
+            'heading'     => 'Penang halves its short-stay licence fee for 2027 — what the amendment means for owners',
+            'description' => "Penang's short-stay by-law amendments take effect 1 Jan 2027: the annual fee is halved to RM500 and the flat TIP fee becomes a tiered scale by room count.",
+            'published'   => '2026-11-09',
+            'updated'     => '2026-11-09',
+            'image'       => 'new-theme23/images/projects/skyawani-4/4.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/skyawani-4/5.jpg', 'Innspace interior at Sky Awani 4'],
+                ['new-theme23/images/projects/skyawani-4/7.jpg', 'A MOKA-managed unit at Sky Awani 4'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Own a unit in Penang?',
+            'cta_body'    => 'We handle the consent, licence and renewal cycle for the owners we manage, and track every fee change as it lands.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
+            'slug'        => 'short-stay-news-malaysia-sea-9-november-2026',
+            'view'        => 'short-stay-news-malaysia-sea-9-november-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 9 Nov 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 9 November 2026',
+            'description' => "Floods close in on Kelantan and Pahang, Penang halves its 2027 licence fee, The Weeknd's KL finale snarls transport, and Kota Kinabalu's airport debate reopens.",
+            'published'   => '2026-11-09',
+            'updated'     => '2026-11-09',
+            'image'       => 'new-theme23/images/blog/kk-beach-sunset.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/nasi-lemak.jpg', "Food is often the first thing short-haul visitors mention about Malaysia"],
+                ['new-theme23/images/projects/the-valley/8.jpg', 'A MOKA-managed unit at The Valley'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-2-november-2026',
             'view'        => 'short-stay-news-malaysia-sea-2-november-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 2 Nov 2026 | MOKA',
