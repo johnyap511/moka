@@ -185,7 +185,18 @@ class EzeePricing
         $rawDiscount = (float) ($ezee->TotalDiscount ?? 0);
         $netted      = $rawDiscount < 0 ? round(-$rawDiscount, 2) : 0.0;
         $discount    = $rawDiscount > 0 ? $rawDiscount : 0.0;
-        $grossRoom   = max(0.0, self::grossRoomTotal($ezee) - $netted);
+
+        $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
+        $sstRate  = $bookedOn < self::SST_DATE ? 0.06 : 0.08;
+
+        // With a price discount, the room charge the guest paid is EZEE's after-tax figure
+        // less the tax. BeforeTax − discount is close but not exact: the discount is
+        // sometimes keyed tax-inclusive (RES31963: 178.00 − 71.28 = 106.72, yet the guest
+        // was charged 120.96 = 112.00 + 8%), which left the owner RM 5.28 short (audit, 10 Nov 2026).
+        $afterTax  = (float) ($ezee->TotalAmountAfterTax ?? 0);
+        $grossRoom = $netted > 0 && $afterTax > 0
+            ? round($afterTax / (1 + $sstRate), 2)
+            : max(0.0, self::grossRoomTotal($ezee) - $netted);
 
         $priceNight  = $nights > 0 ? ($grossRoom / $nights) : 0.0;
         // A day-use (Start = End) has no nightly rate but its room charge is still revenue.
@@ -194,9 +205,6 @@ class EzeePricing
         // lines only; deposits and incidentals are not revenue of the stay.
         $fromCharges = self::cleaningFromCharges($ezee);
         $cleaningFee = $fromCharges ? $fromCharges['cleaning'] : (float) ($ezee->TotalExtraCharge ?? 0);
-
-        $bookedOn = $ezee->created_at ? $ezee->created_at->format('Y-m-d') : date('Y-m-d');
-        $sstRate  = $bookedOn < self::SST_DATE ? 0.06 : 0.08;
 
         $sst   = self::floor2($roomTotal * $sstRate);
         // EZEE's own tax on the extras when the pull carried it (an Agoda
@@ -319,7 +327,7 @@ class EzeePricing
         }
 
         // Ground rule 9 (confirmed 4 Sep 2026): direct business — Walk In, PMS,
-        // Google, Internet Booking Engine, Monthly Rental — is "Website" and
+        // Google, Internet Booking Engine, Monthly Rental, Social Media — is "Website" and
         // carries the 8% M&A fee on the room charge before tax, never on the
         // cleaning fee. Long Term Rental carries no fee.
         // Not gated by the cutover: stamped months are never repriced, and every

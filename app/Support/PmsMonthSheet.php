@@ -74,14 +74,18 @@ class PmsMonthSheet
         // eZee rows linked to these bookings, one query.
         $linked = EzeeBooking::where('status', '<>', 1)->whereIn('book_id', $ids)->get()->keyBy('book_id');
 
-        // Open differences for the month, by booking (B–H) and by reservation (A).
-        $open = PmsDifference::open()->where('month', $ym)->get();
+        // Open differences that touch the month, by booking (B–H) and by reservation (A). A
+        // difference is filed under the month its stay starts in, so a stay running in from
+        // September would be invisible to October if only the filed month were read (found in
+        // the 10 Nov 2026 audit: four such items touched October).
+        $open = PmsDifference::open()->where(fn ($q) => $q->where('month', $ym)
+            ->orWhere(fn ($q2) => $q2->where('stay_from', '<=', $to)->where('stay_to', '>', $from)))->get();
         $openByBooking = $open->whereNotNull('booking_id')->groupBy('booking_id');
         $openA = $open->where('kind', 'A');
 
         $rows = [];
         foreach ($bookings as $b) {
-            $rows[] = $this->classify($b, $linked, $openByBooking->get($b->id, collect()));
+            $rows[] = $this->classify($b, $linked, $openByBooking);
         }
         // Unit, then date: the order staff read the owner statements in.
         usort($rows, fn ($x, $y) => [$x['unit'], $x['check_in'], $x['booking_id']] <=> [$y['unit'], $y['check_in'], $y['booking_id']]);
@@ -111,7 +115,7 @@ class PmsMonthSheet
     }
 
     /** One Homemoka booking → its sheet row. */
-    private function classify(Booking $b, Collection $linked, Collection $openDiffs): array
+    private function classify(Booking $b, Collection $linked, Collection $openByBooking): array
     {
         $unit    = $b->listing;
         $isExtra = $unit && stripos((string) $unit->name, 'Extra Room') !== false;
@@ -141,6 +145,10 @@ class PmsMonthSheet
             }
         }
 
+        // A difference is recorded against the linked booking; every segment of that stay carries it.
+        $openDiffs = $chain->flatMap(fn ($m) => $openByBooking->get($m->id, collect()))
+            ->merge($openByBooking->get($b->id, collect()))->unique('id')->values();
+
         $row = [
             'booking_id' => $b->id, 'res' => $eb?->SubBookingId, 'folio' => $b->server_folio_no ?: $b->folio_no,
             'unit' => $unit?->name ?? '?', 'check_in' => $cin, 'check_out' => $cout, 'nights' => (int) $b->nights,
@@ -148,7 +156,14 @@ class PmsMonthSheet
             'theirs' => null, 'diff' => null, 'stay_ours' => null, 'status' => self::OK, 'code' => '', 'reason' => '', 'action' => '',
             'extra_room' => $isExtra, 'segment' => $chain->count() > 1,
         ];
-        $verdict = function (string $status, string $code, string $reason, string $action = '') use (&$row) {
+        $ctx = null;   // [eZee row, its breakdown] once known: lets an OK verdict be checked further
+        $verdict = function (string $status, string $code, string $reason, string $action = '') use (&$row, &$ctx, $b, $chain) {
+            if ($status === self::OK && $ctx) {
+                // The amount agreeing is not enough: the fee and the source decide what the owner gets.
+                if ($more = $this->extraChecks($b, $ctx[0], $ctx[1], $chain, $code)) {
+                    [$status, $code, $reason, $action] = $more;
+                }
+            }
             $row['status'] = $status;
             $row['code']   = $code;
             $row['reason'] = $reason;
@@ -177,6 +192,7 @@ class PmsMonthSheet
         }
 
         $bd      = EzeePricing::breakdown($eb);
+        $ctx     = [$eb, $bd];
         $theirs  = round((float) $bd['total'], 2);
         $ezNights = (int) $bd['nights'];
         $row['theirs'] = $theirs;
@@ -255,6 +271,36 @@ class PmsMonthSheet
 
         return $verdict(self::NOT_OK, 'UNEXPLAINED', $note . 'Here RM ' . number_format($ours, 2) . ', eZee RM ' . number_format($theirs, 2) . ': difference RM ' . number_format($diff, 2) . ' not explained by rounding, extras, cleaning or deposit.' . $segNote,
             'Open folio ' . ($eb->folio_no ?: $b->folio_no) . ' in eZee and compare the itemised list with booking #' . $b->id . '; correct whichever side is wrong.');
+    }
+
+    /**
+     * Checks beyond the total, applied to a row that would otherwise be OK (audit, 10 Nov 2026).
+     * The owner report takes rate × nights less the M&A fee as revenue, so a wrong fee or a wrong
+     * source misstates the payout even when the booking total agrees with eZee to the cent.
+     * Returns [status, code, reason, action] or null.
+     */
+    private function extraChecks(Booking $b, EzeeBooking $eb, array $bd, Collection $chain, string $code): ?array
+    {
+        $ltr = fn ($s) => stripos((string) $s, 'long term') !== false;
+        if ($ltr($b->source) !== $ltr($eb->Source)) {
+            return [self::NOT_OK, 'SOURCE', sprintf('Source here is %s but eZee says %s. The M&A fee and the report type follow the source.', $b->source ?: 'blank', $eb->Source ?: 'blank'),
+                'Make the source the same on both sides (eZee is final), then check the fee.'];
+        }
+        if (in_array($code, ['LTR', 'DAY-USE'], true) || stripos((string) $b->source, 'owner') !== false || preg_match('/-\d+$/', (string) $eb->SubBookingId)) {
+            return null;
+        }
+        $nights = (int) $bd['nights'];
+        if ($nights <= 0 || (int) $chain->sum('nights') !== $nights) {
+            return null;
+        }
+        $ours   = round((float) $chain->sum('ota_fee'), 2);
+        $theirs = round((float) $bd['ota_fee'], 2);
+        if (abs($ours - $theirs) > $this->cfg['rounding']) {
+            return [self::NOT_OK, 'FEE', sprintf('M&A fee here RM %s, by eZee\'s figures RM %s (difference RM %s). The owner\'s revenue is the room charge less this fee.',
+                number_format($ours, 2), number_format($theirs, 2), number_format($ours - $theirs, 2)),
+                'Check the channel and the commission in eZee, then correct the fee on booking #' . $b->id . '.'];
+        }
+        return null;
     }
 
     /**

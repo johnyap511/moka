@@ -67,6 +67,20 @@
 
 @if($editable)
 <div class="card"><div class="card-body">
+    @if(!empty($coverage) && (count($coverage['missing']) || count($coverage['unknown'])))
+    <div style="border:1px solid #f59e0b;background:#fffbeb;color:#78350f;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+        <b>Check the master before generating.</b>
+        @if(count($coverage['missing']))
+        <div style="margin-top:6px">These units have bookings in {{ $run->monthLabel() }} but <b>no row in the master</b>, so they would get no report:</div>
+        <ul style="margin:4px 0 0 18px;padding:0">
+            @foreach($coverage['missing'] as $m)<li>{{ $m['unit'] }}: {{ $m['bookings'] }} booking{{ $m['bookings'] == 1 ? '' : 's' }}, RM {{ number_format($m['total'], 2) }}</li>@endforeach
+        </ul>
+        @endif
+        @if(count($coverage['unknown']))
+        <div style="margin-top:6px">These master rows match <b>no Homemoka unit</b> (office rents and special units are expected here; anything else is a name to correct): {{ implode(', ', $coverage['unknown']) }}</div>
+        @endif
+    </div>
+    @endif
     <form method="post" action="{{ route('admin.reports.generate', $run) }}" class="or-form">
         @csrf
         <p class="or-files" style="margin:0">Master {!! $inputLink('master', $run->master_name) !!} · bookings {!! $inputLink('recon', $run->recon_name) !!}@if($run->prev_name) · previous {!! $inputLink('prev', $run->prev_name) !!}@else · no previous master (new/removed units will not be flagged)@endif</p>

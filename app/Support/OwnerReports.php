@@ -246,6 +246,87 @@ class OwnerReports
         }
     }
 
+    /** One spelling for a unit name, whoever wrote it: the engine, the master or Homemoka. */
+    public static function unitKey(string $s): string
+    {
+        $s = strtolower(trim(preg_replace('/\s*\(.*?\)\s*/', ' ', $s)));
+        $s = str_replace(['bell suites', 'bell suite'], 'bs', $s);
+        $s = preg_replace('/^mesahill\s+/', '', $s);
+        return preg_replace('/\s+/', '', $s);
+    }
+
+    /**
+     * Before a pack is generated: which Homemoka units have bookings this month but no row in
+     * the uploaded master (the engine would silently give them no report), and which master
+     * rows match no Homemoka unit. Extra rooms are company revenue and are left out.
+     * Found necessary in the 10 Nov 2026 audit (Ekocheras H-23-12, RM 3,053 of October bookings,
+     * was not in the master). Returns null when the master tab is not known yet.
+     *
+     * @return array{missing: array<int, array{unit: string, bookings: int, total: float}>, unknown: array<int, string>}|null
+     */
+    public static function coverage(ReportRun $run): ?array
+    {
+        if (!$run->master_sheet || !is_file($run->file('master.xlsx'))) {
+            return null;
+        }
+        $reader = IOFactory::createReader('Xlsx')->setReadDataOnly(true)->setLoadSheetsOnly([$run->master_sheet]);
+        $rows = $reader->load($run->file('master.xlsx'))->getSheet(0)->toArray(null, true, false, false);
+        $master = [];
+        foreach (array_slice($rows, 2) as $r) {
+            $name = trim((string) ($r[1] ?? ''));
+            if ($name !== '') {
+                $master[self::unitKey($name)] = $name;
+            }
+        }
+        $inMaster = function (string $k) use ($master): bool {
+            if (isset($master[$k])) {
+                return true;
+            }
+            foreach ($master as $mk => $_) {
+                if (strlen($mk) >= 6 && (str_ends_with($k, $mk) || str_ends_with($mk, $k))) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        $units = [];
+        foreach (OwnerReportSheet::rows($run->month) as $row) {
+            $name = (string) $row[5];
+            if ($name === '' || stripos($name, 'Extra Room') !== false) {
+                continue;
+            }
+            $units[$name]['bookings'] = ($units[$name]['bookings'] ?? 0) + 1;
+            $units[$name]['total'] = ($units[$name]['total'] ?? 0) + (float) $row[17];
+        }
+        $missing = [];
+        foreach ($units as $name => $u) {
+            if (!$inMaster(self::unitKey($name))) {
+                $missing[] = ['unit' => $name, 'bookings' => $u['bookings'], 'total' => round($u['total'], 2)];
+            }
+        }
+        usort($missing, fn ($a, $b) => $b['total'] <=> $a['total']);
+        $listingKeys = [];
+        foreach (\App\Listing::withoutGlobalScopes()->pluck('name') as $n) {
+            $listingKeys[self::unitKey((string) $n)] = true;
+        }
+        $unknown = [];
+        foreach ($master as $mk => $name) {
+            $hit = isset($listingKeys[$mk]);
+            if (!$hit) {
+                foreach ($listingKeys as $lk => $_) {
+                    if (strlen($mk) >= 6 && str_ends_with($lk, $mk)) {
+                        $hit = true;
+                        break;
+                    }
+                }
+            }
+            if (!$hit) {
+                $unknown[] = $name;
+            }
+        }
+        return ['missing' => $missing, 'unknown' => $unknown];
+    }
+
     /**
      * Read the finished pack and keep one row per unit in report_unit_results: payable to the
      * landlord, Moka net profit, category, the owner at the time, and the unit's report file
@@ -285,12 +366,7 @@ class OwnerReports
 
         // Unit names as the engine prints them vs Homemoka listing names: case, spaces, a
         // "Mesahill " prefix, "Bell Suite" vs "Bell Suites", and bracketed suffixes.
-        $key = function (string $s): string {
-            $s = strtolower(trim(preg_replace('/\s*\(.*?\)\s*/', ' ', $s)));
-            $s = str_replace(['bell suites', 'bell suite'], 'bs', $s);
-            $s = preg_replace('/^mesahill\s+/', '', $s);
-            return preg_replace('/\s+/', '', $s);
-        };
+        $key = fn (string $s): string => self::unitKey($s);
         $listings = [];
         foreach (\App\Listing::withoutGlobalScopes()->get(['id', 'name', 'user_id']) as $l) {
             $listings[$key((string) $l->name)] = $l;

@@ -200,9 +200,21 @@ class PmsReconcile
         return self::run($start->toDateString(), $start->copy()->endOfMonth()->toDateString(), 'month', $ym, $userId);
     }
 
+    /**
+     * Open differences, optionally for a month: those filed under it or whose stay touches it.
+     * A stay that starts in September and runs into October is filed under September, and
+     * its difference changes October's figures too (audit, 10 Nov 2026).
+     */
     public static function openCount(?string $month = null): int
     {
-        return PmsDifference::open()->when($month, fn ($q) => $q->where('month', $month))->count();
+        if (!$month) {
+            return PmsDifference::open()->count();
+        }
+        $start = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $from  = $start->toDateString();
+        $to    = $start->copy()->endOfMonth()->toDateString();
+        return PmsDifference::open()->where(fn ($q) => $q->where('month', $month)
+            ->orWhere(fn ($q2) => $q2->where('stay_from', '<=', $to)->where('stay_to', '>', $from)))->count();
     }
 
     public static function latestRun(): ?PmsReconcileRun

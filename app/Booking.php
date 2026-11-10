@@ -57,8 +57,41 @@ class Booking extends Model
      *
      * Cancelled bookings (status 1) neither block nor are blocked.
      */
+    /** Fields whose change alters what an owner is paid or when a stay is counted. */
+    private const AUDITED = ['listing_id', 'check_in', 'check_out', 'nights', 'price_night', 'cleaning_fee', 'sst', 'sst_cf', 'ota_fee', 'discount_fee', 'price', 'source', 'status', 'folio_no'];
+
     protected static function booted()
     {
+        // Every change a signed-in person makes to a booking's money, dates, unit, source or
+        // status is written to data_logs with the old and new value (audit, 10 Nov 2026: eight
+        // October bookings were re-keyed by hand on 3 Nov and nothing recorded who or what).
+        // Jobs have no signed-in user and keep their own assignment log.
+        static::updating(function (self $booking) {
+            try {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                if (!$user) {
+                    return;
+                }
+                $changes = [];
+                foreach (self::AUDITED as $f) {
+                    if ($booking->isDirty($f)) {
+                        $from = $booking->getOriginal($f);
+                        $to   = $booking->getAttribute($f);
+                        if (is_numeric($from) && is_numeric($to) && abs((float) $from - (float) $to) < 0.005) {
+                            continue;
+                        }
+                        $changes[$f] = ['from' => $from, 'to' => $to];
+                    }
+                }
+                if ($changes) {
+                    DataLog::create(['related_id' => (int) $booking->id, 'title' => 'Booking edited', 'status' => 1,
+                        'data' => json_encode(['booking' => (int) $booking->id, 'changes' => $changes, 'by' => $user->name ?? ('user ' . $user->id), 'user_id' => $user->id])]);
+                }
+            } catch (\Throwable $e) {
+                report($e);   // an audit failure must never block the edit
+            }
+        });
+
         static::saving(function (self $booking) {
             if (static::$skipOverlapCheck) {
                 return;

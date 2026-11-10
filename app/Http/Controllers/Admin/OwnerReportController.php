@@ -119,7 +119,16 @@ class OwnerReportController extends Controller
                 $prefill = OwnerReports::defaults(); $source = $prefill ? 'the engine defaults' : null;
             }
         }
+        $coverage = null;
+        if (in_array($run->status, ['draft', 'error'])) {
+            try {
+                $coverage = OwnerReports::coverage($run);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
         return view('admin.reports.show', [
+            'coverage' => $coverage,
             'run' => $run,
             'form' => OwnerReports::formFromOverrides($prefill ?: []),
             'formSource' => $source,
