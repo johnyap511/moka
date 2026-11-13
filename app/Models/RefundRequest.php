@@ -18,6 +18,8 @@ class RefundRequest extends Model
     protected $casts = [
         'bank_holder'  => 'encrypted',
         'bank_account' => 'encrypted',
+        'guest_address' => 'encrypted',
+        'wise_id'      => 'encrypted',
         'check_out'    => 'date',
         'due_on'       => 'date',
         'paid_at'      => 'datetime',

@@ -102,9 +102,12 @@
                 <div class="field" style="margin-top:12px"><label for="holder_dob"><span class="req">Account holder's date of birth</span> <small>Required by the transfer service, e.g. 25/08/1990</small></label>
                 <input type="text" id="holder_dob" name="holder_dob" value="{{ old('holder_dob') }}" class="{{ $e('holder_dob') }}" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="bday">
                 @error('holder_dob')<div class="err">{{ $message }}</div>@enderror</div>
-                <div class="field" style="margin-top:12px"><label for="bank_address">Bank address <small>Optional, helps the transfer go through</small></label>
-                <input type="text" id="bank_address" name="bank_address" value="{{ old('bank_address') }}" class="{{ $e('bank_address') }}" maxlength="200">
-                @error('bank_address')<div class="err">{{ $message }}</div>@enderror</div>
+                <div class="field" style="margin-top:12px"><label for="guest_address">Guest address <small>Optional, helps the transfer go through</small></label>
+                <input type="text" id="guest_address" name="guest_address" value="{{ old('guest_address') }}" class="{{ $e('guest_address') }}" maxlength="200" autocomplete="street-address">
+                @error('guest_address')<div class="err">{{ $message }}</div>@enderror</div>
+                <div class="field" style="margin-top:12px"><label for="wise_id">Wise tag / email / phone number (in Wise) <small>Only if using Wise</small></label>
+                <input type="text" id="wise_id" name="wise_id" value="{{ old('wise_id') }}" class="{{ $e('wise_id') }}" maxlength="120" autocapitalize="none">
+                @error('wise_id')<div class="err">{{ $message }}</div>@enderror</div>
             </div>
         </div>
         <div class="field">

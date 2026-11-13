@@ -71,7 +71,8 @@ class RefundController extends Controller
             'bank_country'   => ['exclude_unless:overseas,1', 'required', 'string', 'min:2', 'max:60'],
             'bank_swift'     => ['exclude_unless:overseas,1', 'required', 'string', 'regex:/^[A-Za-z0-9]{8}([A-Za-z0-9]{3})?$/'],
             'bank_extra_code' => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9 -]{2,40}$/'],
-            'bank_address'   => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:200'],
+            'guest_address'  => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:200'],
+            'wise_id'        => ['exclude_unless:overseas,1', 'nullable', 'string', 'max:120'],
             'holder_dob'     => ['exclude_unless:overseas,1', 'required', 'string', 'max:10', function ($attr, $value, $fail) {
                 $d = self::parseDob($value);
                 if (!$d) { $fail('Please enter the date of birth as dd/mm/yyyy, e.g. 25/08/1990.'); return; }
@@ -129,7 +130,7 @@ class RefundController extends Controller
             }
         }
         if (!$request->boolean('overseas')) {
-            $in['bank_country'] = $in['bank_swift'] = $in['bank_extra_code'] = $in['bank_address'] = $in['holder_dob'] = null;
+            $in['bank_country'] = $in['bank_swift'] = $in['bank_extra_code'] = $in['guest_address'] = $in['wise_id'] = $in['holder_dob'] = null;
         } else {
             $in['holder_dob'] = self::parseDob($in['holder_dob'])?->toDateString();
         }

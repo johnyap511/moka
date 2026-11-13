@@ -376,7 +376,7 @@ class Refunds
         }
         $in = [
             'name' => $r->name, 'email' => $r->email, 'phone' => $r->phone, 'property' => $r->property, 'unit_no' => $unit,
-            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path, 'bank_country' => $r->bank_country, 'bank_swift' => $r->bank_swift, 'bank_extra_code' => $r->bank_extra_code, 'bank_address' => $r->bank_address, 'holder_dob' => $r->holder_dob?->toDateString(),
+            'check_out' => $r->check_out->toDateString(), 'bank_name' => $r->bank_name, 'bank_holder' => $r->bank_holder, 'bank_account' => $r->bank_account, 'qr_path' => $r->qr_path, 'bank_country' => $r->bank_country, 'bank_swift' => $r->bank_swift, 'bank_extra_code' => $r->bank_extra_code, 'bank_address' => $r->bank_address, 'guest_address' => $r->guest_address, 'wise_id' => $r->wise_id, 'holder_dob' => $r->holder_dob?->toDateString(),
             'rating_clean' => $r->rating_clean, 'rating_service' => $r->rating_service, 'comments' => $r->comments,
             'staff_user_id' => $r->staff_user_id, 'staff_rating' => $r->staff_rating, 'staff_comment' => $r->staff_comment, 'marketing_opt_in' => $r->marketing_opt_in,
         ];
@@ -476,7 +476,9 @@ class Refunds
             'bank_country'   => $in['bank_country'] ?? null,
             'bank_swift'     => isset($in['bank_swift']) ? strtoupper(trim((string) $in['bank_swift'])) ?: null : null,
             'bank_extra_code' => $in['bank_extra_code'] ?? null,
-            'bank_address'   => $in['bank_address'] ?? null,
+            'bank_address'   => $in['bank_address'] ?? null,   // no longer asked (13 Nov 2026); kept for copies of older requests
+            'guest_address'  => isset($in['guest_address']) ? (trim((string) $in['guest_address']) ?: null) : null,
+            'wise_id'        => isset($in['wise_id']) ? (trim((string) $in['wise_id']) ?: null) : null,
             'holder_dob'     => $in['holder_dob'] ?? null,
             'rating_clean'   => $in['rating_clean'] ?? null,
             'rating_service' => $in['rating_service'] ?? null,

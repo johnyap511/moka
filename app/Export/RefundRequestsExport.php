@@ -28,7 +28,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
     public function headings(): array
     {
         // Order per Finance (Sakinah, 14 Oct 2026): bank and contact right after the stay, workflow columns at the end.
-        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Folio', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Bank country', 'SWIFT', 'Routing code', 'Bank address', 'Holder DOB'];
+        return ['Request', 'Group', 'Submitted', 'Status', 'Due', 'Guest', 'Property', 'Folio', 'Unit', 'Check-out', 'Account holder', 'Account number', 'Bank', 'Phone', 'Email', 'Booking', 'Match', 'Note', 'Finance review', 'Paid on', 'Paid by', 'Amount paid', 'Reference', 'Cleanliness', 'Service', 'Team member', 'Staff rating', 'Deposit', 'Deduction', 'Deduction reason', 'Ops cut-off', 'Refund due', 'Deposit received', 'Bank country', 'SWIFT', 'Routing code', 'Bank address', 'Holder DOB', 'Guest address', 'Wise tag / email / phone'];
     }
 
     public function array(): array
@@ -42,7 +42,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
             $r->rating_clean, $r->rating_service, $r->staff ? trim($r->staff->name . ' ' . $r->staff->last_name) : '', $r->staff_rating,
             $r->deposit_amount, $r->deduction_amount > 0 ? $r->deduction_amount : null, $r->deduction_reason, $r->ops_cutoff_at?->format('Y-m-d H:i'), $r->refundDue(),
             $r->received_at ? $r->received_at->format('Y-m-d') . ' ' . ($r->receiver->name ?? '') : '',
-            $r->bank_country, $r->bank_swift, $r->bank_extra_code, $r->bank_address, $r->holder_dob?->format('Y-m-d'),
+            $r->bank_country, $r->bank_swift, $r->bank_extra_code, $r->bank_address, $r->holder_dob?->format('Y-m-d'), $r->guest_address, $r->wise_id,
         ])->all();
     }
 
@@ -61,7 +61,7 @@ class RefundRequestsExport extends DefaultValueBinder implements FromArray, With
 
     public function columnWidths(): array
     {
-        $w = [9, 8, 16, 9, 11, 26, 20, 10, 12, 11, 26, 18, 16, 15, 26, 9, 10, 40, 24, 11, 14, 11, 14, 10, 8, 16, 10, 9, 10, 24, 16, 10, 22, 14, 12, 14, 30, 12];
+        $w = [9, 8, 16, 9, 11, 26, 20, 10, 12, 11, 26, 18, 16, 15, 26, 9, 10, 40, 24, 11, 14, 11, 14, 10, 8, 16, 10, 9, 10, 24, 16, 10, 22, 14, 12, 14, 30, 12, 34, 28];
         $out = [];
         foreach ($w as $i => $width) {
             $out[\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1)] = $width;
