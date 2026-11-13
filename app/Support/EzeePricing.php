@@ -261,9 +261,21 @@ class EzeePricing
             return $room;
         }
 
-        return self::storedNetOfFee($room + (float) ($ezee->TotalExtraCharge ?? 0), $commission)
-            ? self::round2($room + $commission)
-            : $room;
+        $extras = (float) ($ezee->TotalExtraCharge ?? 0);
+        $isNet  = self::storedNetOfFee($room + $extras, $commission);
+        if (!$isNet && !self::airbnbFit($room + $extras, $commission)['gross']) {
+            // Airbnb charges its fee on room + cleaning. A late check-out or another extra
+            // keyed on the folio is not part of that base, and with it in the sum neither
+            // reading fits, so the row fell through to "gross" and the owner was charged
+            // the fee twice (RES6517 in Sep 2026, RES7022 in Nov 2026; audit of 13 Nov 2026).
+            // Try the cleaning lines alone before giving up.
+            $cl = self::cleaningFromCharges($ezee);
+            if ($cl !== null && abs($cl['cleaning'] - $extras) > 0.5) {
+                $isNet = self::storedNetOfFee($room + (float) $cl['cleaning'], $commission);
+            }
+        }
+
+        return $isNet ? self::round2($room + $commission) : $room;
     }
 
     /**
@@ -524,26 +536,31 @@ class EzeePricing
      */
     private static function storedNetOfFee(float $base, float $commission): bool
     {
-        if ($base <= 0 || $commission <= 0) {
-            return false;
-        }
-
-        $asGross = $commission / $base * 100;
-        $asNet   = $commission / ($base + $commission) * 100;
-
-        $grossFits = $netFits = false;
-        foreach (self::AIRBNB_RATES as $rate) {
-            if (abs($asGross - $rate) < 0.15) {
-                $grossFits = true;
-            }
-            if (abs($asNet - $rate) < 0.15) {
-                $netFits = true;
-            }
-        }
+        $fit = self::airbnbFit($base, $commission);
 
         // Ambiguous or unrecognised rates fall through to the gross reading,
         // which is the business's stated default.
-        return $netFits && !$grossFits;
+        return $fit['net'] && !$fit['gross'];
+    }
+
+    /** Does the commission equal a known Airbnb rate of this base read as gross, or as net of the fee? */
+    private static function airbnbFit(float $base, float $commission): array
+    {
+        $grossFits = $netFits = false;
+        if ($base > 0 && $commission > 0) {
+            $asGross = $commission / $base * 100;
+            $asNet   = $commission / ($base + $commission) * 100;
+            foreach (self::AIRBNB_RATES as $rate) {
+                if (abs($asGross - $rate) < 0.15) {
+                    $grossFits = true;
+                }
+                if (abs($asNet - $rate) < 0.15) {
+                    $netFits = true;
+                }
+            }
+        }
+
+        return ['gross' => $grossFits, 'net' => $netFits];
     }
 
     private static function nights($start, $end): int
