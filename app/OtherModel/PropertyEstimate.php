@@ -19,4 +19,10 @@ class PropertyEstimate extends Model
     protected $fillable = [
         'name', 'address', 'email', 'phone', 'bedroom', 'type', 'status'
     ];
+
+    // status: 1 = new (not yet contacted), 2 = followed up.
+    const STATUS_NEW = 1;
+    const STATUS_FOLLOWED_UP = 2;
+
+    protected $casts = ['followed_up_at' => 'datetime'];
 }

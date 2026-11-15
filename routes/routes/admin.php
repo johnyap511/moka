@@ -132,6 +132,7 @@ Route::get('/subscribe', 'Admin\HomeController@subscribeList');
 // Setting
 Route::get('/setting/admin-roles', 'Admin\AdminRoleController@index')->name('admin.roles.index');
 Route::get('/setting/estimate', 'Admin\SettingController@estimate');
+Route::post('/setting/estimate/{id}/follow-up', 'Admin\SettingController@estimateFollowUp');
 Route::delete('/setting/estimate/{id}', 'Admin\SettingController@estimateDestroy');
 Route::get('/setting/logs', 'Admin\SettingController@logs');
 Route::resource('/setting/zone', 'Admin\ZoneController');
