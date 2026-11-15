@@ -570,7 +570,7 @@ class WebController extends Controller
         \App\OtherModel\PropertyEstimate::create($data);
         // The enquiry is saved first; the email is best-effort so the owner never sees a failure.
         try {
-            \Illuminate\Support\Facades\Mail::to('hello@homemoka.com')->send(new \App\Mail\EstimateRequested($data));
+            \Illuminate\Support\Facades\Mail::to(config('moka.owner_enquiry_to', ['hello@homemoka.com']))->send(new \App\Mail\EstimateRequested($data));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Estimate email not sent: ' . $e->getMessage(), ['name' => $data['name'] ?? null]);
         }

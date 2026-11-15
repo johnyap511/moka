@@ -66,6 +66,9 @@ return [
         'phone' => '+603-6789 2288',
     ],
 
+    // Who is emailed when an owner sends the estimate form on the website (Sam, 15 Nov 2026).
+    'owner_enquiry_to' => ['hello@homemoka.com', 'louiss@homemoka.com'],
+
     'turnstile_site'   => env('MOKA_TURNSTILE_SITE'),
     'turnstile_secret' => env('MOKA_TURNSTILE_SECRET'),
 ];
