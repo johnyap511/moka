@@ -28,6 +28,27 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'penang-short-stay-fee-changes-2027',
+            'view'        => 'penang-short-stay-fee-changes-2027',
+            'title'       => 'Penang\'s 2027 Short-Stay Fee Changes Explained | MOKA',
+            'heading'     => 'Penang halves its short-stay licence fee for 2027 — what the amendment means for owners',
+            'description' => "Penang's short-stay by-law amendments take effect 1 Jan 2027: the annual fee is halved to RM500 and the flat TIP fee becomes a tiered scale by room count.",
+            'published'   => '2026-11-15',
+            'updated'     => '2026-11-15',
+            'image'       => 'new-theme23/images/projects/skyawani-4/4.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/skyawani-4/5.jpg', 'Innspace interior at Sky Awani 4'],
+                ['new-theme23/images/projects/skyawani-4/7.jpg', 'A MOKA-managed unit at Sky Awani 4'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Own a short-stay unit?',
+            'cta_body'    => 'We track every rule and fee change for the owners we manage, so you do not have to.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
             'slug'        => 'short-stay-news-malaysia-sea-2-november-2026',
             'view'        => 'short-stay-news-malaysia-sea-2-november-2026',
             'title'       => 'Short-Stay News Malaysia & SEA: 2 Nov 2026 | MOKA',
