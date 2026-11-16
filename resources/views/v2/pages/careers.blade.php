@@ -8,12 +8,14 @@
     $picked    = old('role', request('role', 'general'));
     $picked    = $roleSlugs->contains($picked) ? $picked : 'general';
     $sent      = session('success');
+    $roleCount = count($roles);
+    // Teams as Sam set them on 16 Nov 2026: Operations covers front desk and revenue; HR is the fifth team.
     $teams = [
-        ['Operations', 'Housekeeping, maintenance and keeping every unit ready before the guest arrives.', 'M3 12l9-8 9 8M5 10v10h14V10'],
-        ['Guest sales and front desk', 'Reservations, pricing, check-ins and looking after guests during their stay.', 'M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z'],
-        ['Business development', 'Meeting owners, agents and developers, and bringing new units to MOKA.', 'M17 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M10 10a4 4 0 100-8 4 4 0 000 8zm11 10v-2a4 4 0 00-3-3.9M15 2.1a4 4 0 010 7.8'],
+        ['Operations', 'Front desk, pricing and revenue, housekeeping and maintenance. Everything that keeps a stay running.', 'M3 12l9-8 9 8M5 10v10h14V10'],
+        ['Business development', 'Meeting owners, agents and developers, and bringing new units to MOKA.', 'M3 17l6-6 4 4 8-8M15 7h6v6'],
         ['Marketing', 'Our website, listings, content and the campaigns that bring direct bookings.', 'M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zm13-3a5 5 0 010 8m3-11a9 9 0 010 14'],
         ['Finance and accounts', 'Owner reports, payments and the month-end numbers owners rely on.', 'M4 20V10m6 10V4m6 16v-7m4 7H2'],
+        ['Human resources', 'Hiring, training and supporting the people who look after our guests.', 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm10-3v6m3-3h-6'],
     ];
 @endphp
 
@@ -44,180 +46,312 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
-    <link rel="stylesheet" href="{{ asset('new-theme23/css/solutions23.css') }}">
     <style>
-    .cr-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
-    .cr-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:999px;font-family:Bold;font-size:17px;text-decoration:none;border:2px solid transparent;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-    .cr-btn--go{background:var(--blog-orange);color:#fff}.cr-btn--go:hover{background:#e55a28;color:#fff}
-    .cr-btn--line{border-color:rgba(255,255,255,.55);color:#fff}.cr-btn--line:hover{border-color:#fff;background:rgba(255,255,255,.1);color:#fff}
-    .cr-btn--teal{background:var(--blog-teal);color:#fff}.cr-btn--teal:hover{background:var(--blog-orange);color:#fff}
-    .cr-btn:focus-visible,.cr-form :focus-visible,.cr-role summary:focus-visible{outline:3px solid rgba(255,107,53,.55);outline-offset:2px}
-    .cr-body{background:#fff;padding:64px 20px 80px;color:var(--blog-ink)}
-    .cr-body,.cr-body p,.cr-body li,.blog-hero__meta{text-align:left}
-    .cr-inner{max-width:1120px;margin:0 auto}
-    .cr-sec{margin:0 0 64px;scroll-margin-top:96px}
-    .cr-sec h2{font-family:Bold;font-size:clamp(24px,3.2vw,30px);line-height:1.2;color:var(--blog-teal);margin:0 0 10px}
-    .cr-lead{font-size:17.5px;line-height:1.65;color:#33403f;max-width:66ch;margin:0 0 26px}
-    .cr-teams{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;list-style:none;margin:0;padding:0}
-    .cr-team{border:1px solid var(--blog-rule);border-radius:16px;padding:20px 18px;background:#fff}
-    .cr-team svg{width:28px;height:28px;stroke:var(--blog-orange);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin:0 0 12px;display:block}
-    .cr-team h3{font-family:SemiBold;font-size:17px;line-height:1.3;color:var(--blog-teal);margin:0 0 6px}
-    .cr-team p{font-size:15px;line-height:1.55;color:#4a5856;margin:0}
-    .cr-roles{display:grid;gap:14px}
-    .cr-role{border:1px solid var(--blog-rule);border-radius:16px;background:#fff;transition:border-color .15s,box-shadow .15s}
-    .cr-role[open],.cr-role:hover{border-color:#c9d6d4;box-shadow:0 6px 22px rgba(0,61,60,.07)}
-    .cr-role summary{list-style:none;cursor:pointer;padding:20px 56px 20px 24px;position:relative;border-radius:16px}
-    .cr-role summary::-webkit-details-marker{display:none}
-    .cr-role summary::after{content:"";position:absolute;right:24px;top:28px;width:10px;height:10px;border-right:2px solid var(--blog-teal);border-bottom:2px solid var(--blog-teal);transform:rotate(45deg);transition:transform .15s}
-    .cr-role[open] summary::after{transform:rotate(225deg);top:33px}
-    .cr-role h3{font-family:Bold;font-size:20px;line-height:1.3;color:var(--blog-ink);margin:0 0 6px}
-    .cr-role .meta{display:flex;flex-wrap:wrap;gap:8px;margin:0}
-    .cr-role .meta span{font-family:SemiBold;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--blog-teal);background:#e8f4f3;border-radius:999px;padding:5px 11px}
-    .cr-role .more{padding:0 24px 22px}
-    .cr-role .more p{font-size:16.5px;line-height:1.6;color:#33403f;margin:0 0 10px}
-    .cr-role .more ul{margin:0 0 16px;padding-left:20px;font-size:16px;line-height:1.6;color:#33403f}
-    .cr-role--plain{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding:20px 24px}
-    .cr-role--plain .txt{flex:1 1 380px;min-width:0}
-    .cr-role--plain .sum{font-size:16.5px;line-height:1.55;color:#33403f;margin:10px 0 0}
-    .cr-role--plain .cr-btn{min-width:120px}
-    .cr-none{background:#f4f8f7;border-radius:16px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between}
-    .cr-none p{font-size:16.5px;line-height:1.6;color:#33403f;margin:0;flex:1 1 320px}
-    .cr-apply{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:56px;align-items:start}
-    .cr-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px}
+    /* Careers. One brand system: teal, orange, cream; the roof shape from the logo frames the photo. */
+    .cr{--teal:#003d3c;--orange:#ff6b35;--cream:#faf8f4;--ink:#1d2b2a;--muted:#5c6b6a;--rule:#e4e0d8;--mint:#e3f1ef;color:var(--ink);font-family:SansPro_Regular,sans-serif;background:#fff}
+    .cr p,.cr li,.cr h1,.cr h2,.cr h3,.cr span,.cr label{text-align:left}
+    .cr-wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+    .cr-eyebrow{font-family:SemiBold;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);margin:0 0 16px}
+    .cr h2{font-family:Bold;font-size:clamp(28px,3.6vw,42px);line-height:1.1;letter-spacing:-.01em;color:var(--teal);margin:0 0 14px}
+    .cr-lead{font-size:18px;line-height:1.65;color:#3b4a48;max-width:36em;margin:0}
+    .cr-sec{padding:88px 0;scroll-margin-top:84px}
+    .cr-sec--cream{background:var(--cream)}
+    .cr-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px 40px;margin:0 0 40px}
+    .cr-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;font-family:Bold;font-size:17.5px;line-height:1;text-decoration:none;border:2px solid transparent;cursor:pointer;transition:background .18s,color .18s,border-color .18s,transform .18s}
+    .cr-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+    .cr-btn:hover svg{transform:translateX(3px)}
+    .cr-btn--go{background:var(--orange);color:#fff}.cr-btn--go:hover{background:#e9591f;color:#fff}
+    .cr-btn--line{border-color:rgba(255,255,255,.5);color:#fff}.cr-btn--line:hover{border-color:#fff;background:rgba(255,255,255,.08);color:#fff}
+    .cr-btn:focus-visible,.cr-job:focus-visible,.cr-form :focus-visible{outline:3px solid rgba(255,107,53,.6);outline-offset:3px}
+
+    /* Hero */
+    .cr-hero{background:var(--teal);color:#fff;padding:150px 0 0;position:relative;overflow:hidden}
+    .cr-hero__grid{position:relative;display:grid;grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr);gap:56px;align-items:end}
+    .cr-hero__copy{padding:18px 0 92px}
+    .cr-hero h1{font-family:Bold;font-size:clamp(36px,4.5vw,58px);line-height:1.06;letter-spacing:-.02em;color:#fff;margin:0 0 22px;text-wrap:balance}
+    .cr-hero h1 em{font-style:normal;color:var(--orange);display:block}
+    .cr-hero__lead{font-size:clamp(17.5px,1.55vw,20.5px);line-height:1.6;color:rgba(255,255,255,.84);max-width:33em;margin:0 0 32px}
+    .cr-actions{display:flex;flex-wrap:wrap;gap:12px}
+    .cr-hero__art{position:relative;padding-bottom:56px}
+    .cr-hero__art img{display:block;width:100%;aspect-ratio:1/1.04;object-fit:cover;-webkit-clip-path:url(#cr-house);clip-path:url(#cr-house);background:#0d4f4d}
+    .cr-chip{position:absolute;display:flex;align-items:center;gap:12px;background:#fff;color:var(--ink);border-radius:18px;padding:12px 18px 12px 12px;box-shadow:0 18px 40px rgba(0,0,0,.25)}
+    .cr-chip i{flex:none;width:40px;height:40px;border-radius:12px;background:var(--mint);display:flex;align-items:center;justify-content:center}
+    .cr-chip i svg{width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .cr-chip b{display:block;font-family:Bold;font-size:17px;line-height:1.15;color:var(--teal)}
+    .cr-chip small{display:block;font-size:13.5px;line-height:1.2;color:var(--muted)}
+    .cr-chip--a{left:-28px;bottom:150px}.cr-chip--b{right:-8px;bottom:84px}
+
+    /* Facts band */
+    .cr-facts{background:var(--cream);border-bottom:1px solid var(--rule)}
+    .cr-facts ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+    .cr-facts li{padding:34px 28px;border-left:1px solid var(--rule)}
+    .cr-facts li:first-child{border-left:0;padding-left:0}
+    .cr-facts b{display:block;font-family:Bold;font-size:clamp(26px,2.8vw,36px);line-height:1.05;letter-spacing:-.01em;color:var(--teal)}
+    .cr-facts span{display:block;font-size:15.5px;line-height:1.4;color:var(--muted);margin-top:6px}
+
+    /* Teams */
+    .cr-teams{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+    .cr-team{background:var(--cream);border-radius:22px;padding:26px 22px 28px;transition:transform .2s,box-shadow .2s,background .2s}
+    .cr-team:hover{transform:translateY(-4px);background:#fff;box-shadow:0 18px 40px rgba(0,61,60,.12)}
+    .cr-team i{width:48px;height:48px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 0 18px;box-shadow:0 2px 0 var(--rule)}
+    .cr-team:hover i{background:var(--mint);box-shadow:none}
+    .cr-team svg{width:24px;height:24px;stroke:var(--orange);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .cr-team h3{font-family:Bold;font-size:18.5px;line-height:1.25;color:var(--teal);margin:0 0 8px}
+    .cr-team p{font-size:15.5px;line-height:1.55;color:#4a5856;margin:0}
+
+    /* Roles */
+    .cr-count{font-family:SemiBold;font-size:14px;letter-spacing:.04em;color:var(--teal);background:var(--mint);border-radius:999px;padding:9px 16px;white-space:nowrap}
+    .cr-jobs{background:#fff;border:1px solid var(--rule);border-radius:26px;overflow:hidden;box-shadow:0 20px 50px rgba(0,61,60,.06)}
+    .cr-job{display:grid;grid-template-columns:54px minmax(0,1fr) auto 50px;gap:8px 22px;align-items:center;padding:26px 28px;color:inherit;text-decoration:none;border-top:1px solid var(--rule);transition:background .18s}
+    .cr-job:first-child{border-top:0}
+    .cr-job:hover{background:#fff8f4;color:inherit}
+    .cr-job .no{font-family:SemiBold;font-size:15px;letter-spacing:.06em;color:var(--orange)}
+    .cr-job h3{font-family:Bold;font-size:clamp(19px,1.9vw,23px);line-height:1.25;color:var(--ink);margin:0 0 4px}
+    .cr-job .sum{font-size:16px;line-height:1.5;color:var(--muted);margin:0}
+    .cr-job .pts{margin:8px 0 0;padding-left:18px;font-size:15.5px;line-height:1.55;color:var(--muted)}
+    .cr-job .tags{display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:8px}
+    .cr-job .tags span{font-family:SemiBold;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--teal);background:var(--mint);border-radius:999px;padding:6px 12px;white-space:nowrap}
+    .cr-job .tags span.t{background:#fff0e9;color:#c2410c}
+    .cr-job .go{width:50px;height:50px;border-radius:50%;border:1.5px solid var(--rule);display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s,transform .18s}
+    .cr-job .go svg{width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .18s}
+    .cr-job:hover .go{background:var(--orange);border-color:var(--orange);transform:translateX(4px)}
+    .cr-job:hover .go svg{stroke:#fff}
+    .cr-job--open{background:var(--cream)}
+    .cr-job--open .no svg{width:22px;height:22px;stroke:var(--orange);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+
+    /* Steps */
+    .cr-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;counter-reset:st;position:relative}
+    .cr-steps li:not(:last-child)::after{content:"";position:absolute;left:72px;right:-12px;top:27px;border-top:2px dashed #cfdad8}
+    .cr-steps li{counter-increment:st;position:relative;padding-top:78px}
+    .cr-steps li::before{content:counter(st);position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;background:var(--teal);color:#fff;font-family:Bold;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px #fff}
+    .cr-steps h3{font-family:Bold;font-size:20px;line-height:1.25;color:var(--teal);margin:0 0 8px}
+    .cr-steps p{font-size:16.5px;line-height:1.6;color:#4a5856;margin:0;max-width:22em}
+
+    /* Apply */
+    .cr-apply{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:64px;align-items:start}
+    .cr-aside{position:sticky;top:112px}
+    .cr-need{list-style:none;margin:26px 0 30px;padding:0;display:grid;gap:14px}
+    .cr-need li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.45;color:#33403f}
+    .cr-need svg{flex:none;width:24px;height:24px;margin-top:1px;stroke:var(--orange);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .cr-where{border-top:1px solid var(--rule);padding-top:22px;display:grid;gap:6px}
+    .cr-where p{font-size:16px;line-height:1.55;color:#4a5856;margin:0}
+    .cr-where b{font-family:SemiBold;color:var(--teal)}
+    .cr-where a{color:var(--teal);font-family:SemiBold;text-decoration:underline;text-underline-offset:3px}.cr-where a:hover{color:var(--orange)}
+    .cr-card{background:#fff;border-radius:28px;padding:38px 38px 40px;box-shadow:0 30px 70px rgba(0,61,60,.12);border:1px solid #efece5}
+    .cr-card h3.t{font-family:Bold;font-size:24px;color:var(--teal);margin:0 0 6px}
+    .cr-card p.s{font-size:16px;color:var(--muted);margin:0 0 26px}
+    .cr-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}
     .cr-f{min-width:0}.cr-f--wide{grid-column:1/-1}
-    .cr-form label.lb{display:block;font-family:SemiBold;font-size:15.5px;color:var(--blog-teal);margin:0 0 6px}
-    .cr-form label.lb small{font-family:SansPro_Regular,sans-serif;font-size:14px;color:#6b7775}
-    .cr-form input[type=text],.cr-form input[type=email],.cr-form input[type=tel],.cr-form input[type=url],.cr-form select,.cr-form textarea{width:100%;min-height:50px;border:1px solid #cfd8d6;border-radius:12px;padding:12px 16px;font-size:16.5px;font-family:SansPro_Regular,sans-serif;color:var(--blog-ink);background:#fff;margin:0;box-sizing:border-box;-webkit-appearance:none;appearance:none}
-    .cr-form select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23003d3c' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:12px;padding-right:42px}
-    .cr-form input:focus,.cr-form select:focus,.cr-form textarea:focus{outline:none;border-color:var(--blog-orange);box-shadow:0 0 0 3px rgba(255,107,53,.15)}
-    .cr-form [aria-invalid=true]{border-color:#b91c1c}
+    .cr-form .lb{display:block;font-family:SemiBold;font-size:15.5px;color:var(--teal);margin:0 0 7px}
+    .cr-form .lb small{font-family:SansPro_Regular,sans-serif;font-size:14px;color:#7a8684}
+    .cr-form input[type=text],.cr-form input[type=email],.cr-form input[type=tel],.cr-form input[type=url],.cr-form select,.cr-form textarea{width:100%;min-height:54px;border:1.5px solid #d9e0de;border-radius:14px;padding:13px 16px;font-size:16.5px;font-family:SansPro_Regular,sans-serif;color:var(--ink);background:#fcfdfc;margin:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s,background .15s}
+    .cr-form select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23003d3c' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 18px center;background-size:12px;padding-right:44px;font-family:SemiBold}
+    .cr-form input:hover,.cr-form select:hover,.cr-form textarea:hover{border-color:#b9c7c5}
+    .cr-form input:focus,.cr-form select:focus,.cr-form textarea:focus{outline:none;border-color:var(--orange);background:#fff;box-shadow:0 0 0 4px rgba(255,107,53,.14)}
+    .cr-form [aria-invalid=true]{border-color:#b91c1c;background:#fffafa}
     .cr-form textarea{min-height:150px;resize:vertical;display:block}
-    .cr-form .hint{font-size:14px;color:#6b7775;margin:6px 0 0;display:flex;justify-content:space-between;gap:12px}
-    .cr-form .err{color:#b91c1c;font-size:14.5px;margin:6px 0 0}
-    .cr-file{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border:1.5px dashed #b9c7c5;border-radius:12px;padding:14px 16px;background:#fafcfb}
+    .cr-form .hint{font-size:14px;color:#7a8684;margin:7px 0 0;display:flex;justify-content:space-between;gap:12px}
+    .cr-form .err{color:#b91c1c;font-size:14.5px;margin:7px 0 0}
+    .cr-file{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border:1.5px dashed #b9c7c5;border-radius:14px;padding:14px 16px;background:#f7faf9}
     .cr-file input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
-    .cr-file label.pick{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--blog-teal);color:var(--blog-teal);font-family:SemiBold;font-size:15.5px;cursor:pointer;background:#fff;margin:0}
-    .cr-file label.pick:hover{background:var(--blog-teal);color:#fff}
-    .cr-file input:focus-visible + label.pick{outline:3px solid rgba(255,107,53,.55);outline-offset:2px}
-    .cr-file .name{font-size:15px;color:#33403f;word-break:break-all;flex:1 1 160px}
+    .cr-file label.pick{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--teal);color:var(--teal);font-family:SemiBold;font-size:15.5px;cursor:pointer;background:#fff;margin:0;transition:background .15s,color .15s}
+    .cr-file label.pick svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .cr-file label.pick:hover{background:var(--teal);color:#fff}
+    .cr-file input:focus-visible + label.pick{outline:3px solid rgba(255,107,53,.6);outline-offset:2px}
+    .cr-file .name{font-size:15px;color:#4a5856;word-break:break-all;flex:1 1 160px}
     .cr-file button.clear{background:none;border:0;padding:8px;color:#b91c1c;font-family:SemiBold;font-size:14.5px;cursor:pointer;min-height:44px}
-    .cr-agree{display:flex;gap:12px;align-items:flex-start;font-family:SansPro_Regular,sans-serif;font-size:15.5px;line-height:1.5;color:#33403f;margin:0;cursor:pointer}
-    .cr-agree input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--blog-teal)}
-    .cr-agree a{color:var(--blog-teal);text-decoration:underline}
-    .cr-send{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
-    .cr-send .cr-btn[disabled]{opacity:.65;cursor:progress}
-    .cr-send span{font-size:14.5px;color:#6b7775}
-    .cr-alert{grid-column:1/-1;background:#fdf1f0;border-left:4px solid #b91c1c;border-radius:0 10px 10px 0;padding:12px 16px;font-size:15.5px;line-height:1.5;color:#7f1d1d}
-    .cr-done{background:#e8f4f3;border-radius:16px;padding:28px 26px;color:var(--blog-teal)}
-    .cr-done svg{width:40px;height:40px;stroke:var(--blog-teal);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 0 12px}
-    .cr-done h3{font-family:Bold;font-size:22px;margin:0 0 8px;color:var(--blog-teal)}
-    .cr-done p{font-size:16.5px;line-height:1.6;margin:0 0 16px;color:#1d2b2a}
-    .cr-done a{color:var(--blog-teal);font-family:SemiBold}
-    .cr-side{display:grid;gap:16px;position:sticky;top:104px}
-    .cr-card{border:1px solid var(--blog-rule);border-radius:16px;padding:22px 24px;background:#fff}
-    .cr-card .k{font-family:SemiBold;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--blog-orange);margin:0 0 10px}
-    .cr-card p{font-size:16px;line-height:1.6;color:#33403f;margin:0 0 6px}
-    .cr-card ol{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:12px}
-    .cr-card ol li{counter-increment:s;position:relative;padding-left:40px;font-size:16px;line-height:1.5;color:#33403f}
-    .cr-card ol li::before{content:counter(s);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;background:var(--blog-teal);color:#fff;font-family:Bold;font-size:14px;display:flex;align-items:center;justify-content:center}
-    .cr-card a{color:var(--blog-teal);font-family:SemiBold;text-decoration:none}.cr-card a:hover{color:var(--blog-orange)}
+    .cr-agree{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.5;color:#4a5856;margin:0;cursor:pointer}
+    .cr-agree input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--teal)}
+    .cr-agree a{color:var(--teal);text-decoration:underline}
+    .cr-send{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-top:4px}
+    .cr-send .cr-btn{min-width:220px}.cr-send .cr-btn[disabled]{opacity:.65;cursor:progress}
+    .cr-send span{font-size:14.5px;color:#7a8684}
+    .cr-alert{grid-column:1/-1;background:#fdf1f0;border-left:4px solid #b91c1c;border-radius:0 12px 12px 0;padding:13px 16px;font-size:15.5px;line-height:1.5;color:#7f1d1d}
+    .cr-done{text-align:center;padding:26px 8px 12px}
+    .cr-done svg{width:64px;height:64px;stroke:var(--teal);fill:var(--mint);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 18px}
+    .cr-done h3{font-family:Bold;font-size:28px;color:var(--teal);margin:0 0 10px;text-align:center}
+    .cr-done p{font-size:17.5px;line-height:1.6;color:#33403f;margin:0 auto 22px;max-width:26em;text-align:center}
+    .cr-done a{color:var(--teal);font-family:SemiBold;text-decoration:underline;text-underline-offset:3px}
     .cr-bar{display:none}
-    @media (max-width:1000px){.cr-teams{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media (max-width:900px){.cr-apply{grid-template-columns:1fr;gap:32px}.cr-side{position:static}}
+
+    @media (max-width:1100px){.cr-teams{grid-template-columns:repeat(3,minmax(0,1fr))}.cr-chip--a{left:-10px}.cr-job .tags{flex-wrap:wrap;max-width:230px}}
+    @media (max-width:900px){
+        .cr-hero{padding-top:128px}
+        .cr-hero__grid{grid-template-columns:1fr;gap:8px}
+        .cr-hero__copy{padding-bottom:36px}
+        .cr-hero__art{max-width:460px;width:100%;margin:0 auto;padding-bottom:44px}
+        .cr-chip--a{left:0;bottom:120px}.cr-chip--b{right:0;bottom:64px}
+        .cr-facts ul{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .cr-facts li{padding:24px 20px;border-top:1px solid var(--rule)}
+        .cr-facts li:nth-child(odd){border-left:0;padding-left:0}
+        .cr-facts li:nth-child(-n+2){border-top:0}
+        .cr-sec{padding:64px 0}
+        .cr-job{grid-template-columns:minmax(0,1fr) 46px;padding:22px 20px;gap:10px 14px}
+        .cr-job .no{display:none}
+        .cr-job .tags{grid-column:1;grid-row:2;justify-content:flex-start;max-width:none;flex-wrap:wrap}
+        .cr-job .go{grid-column:2;grid-row:1 / span 2;width:46px;height:46px}
+        .cr-steps{grid-template-columns:1fr;gap:26px}
+        .cr-steps li:not(:last-child)::after{left:27px;right:auto;top:64px;bottom:-22px;border-top:0;border-left:2px dashed #cfdad8}
+        .cr-steps li{padding:4px 0 0 80px;min-height:56px}
+        .cr-steps p{max-width:none}
+        .cr-apply{grid-template-columns:1fr;gap:36px}
+        .cr-aside{position:static}
+    }
     @media (max-width:640px){
-        .cr-body{padding:44px 16px 96px}.cr-sec{margin-bottom:48px}
+        .cr-wrap{padding:0 18px}
+        .cr-sec{padding:52px 0}
+        .cr-head{margin-bottom:28px}
+        .cr-actions .cr-btn{flex:1 1 100%}
+        .cr-chip{padding:9px 14px 9px 9px;border-radius:14px}.cr-chip i{width:34px;height:34px;border-radius:10px}.cr-chip b{font-size:15.5px}.cr-chip small{font-size:12.5px}
         .cr-teams{grid-template-columns:1fr;gap:10px}
-        .cr-team{display:grid;grid-template-columns:28px 1fr;column-gap:14px;padding:16px}.cr-team svg{grid-row:1/3;margin:2px 0 0}.cr-team h3{font-size:16.5px}
+        .cr-team{display:grid;grid-template-columns:48px 1fr;column-gap:16px;padding:18px;border-radius:18px}
+        .cr-team i{grid-row:1/3;margin:0}.cr-team h3{font-size:17.5px;margin-bottom:4px}
+        .cr-jobs{border-radius:20px}
+        .cr-card{padding:24px 18px 26px;border-radius:22px}
         .cr-form{grid-template-columns:1fr}
-        .cr-hero-actions .cr-btn{flex:1 1 100%}
-        .cr-role summary{padding:18px 48px 18px 18px}.cr-role summary::after{right:18px}.cr-role .more{padding:0 18px 20px}
-        .cr-role--plain{padding:18px}.cr-role--plain .cr-btn{width:100%}
         .cr-send .cr-btn{width:100%}
-        .cr-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);border-top:1px solid var(--blog-rule);transform:translateY(110%);transition:transform .2s}
+        .cr-sec--apply{padding-bottom:104px}
+        .cr-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.97);border-top:1px solid var(--rule);transform:translateY(110%);transition:transform .22s}
         .cr-bar.on{transform:none}.cr-bar .cr-btn{width:100%}
     }
-    @media (prefers-reduced-motion:reduce){.cr-btn,.cr-role,.cr-role summary::after,.cr-bar{transition:none}}
+    @media (prefers-reduced-motion:reduce){.cr *,.cr-bar{animation:none!important;transition:none!important}}
     </style>
 @endpush
 
 @section('content')
     @include('auth.newTheme.partials.header')
 
-    <div class="blog-hero">
-        <div class="blog-hero__inner">
-            <div class="blog-hero__eyebrow">Careers</div>
-            <h1>Work with MOKA</h1>
-            <p class="blog-hero__meta">We run homes like hotels for their owners. If you care about guests, clean rooms and getting the details right, we would like to hear from you.</p>
-            <div class="cr-hero-actions">
-                <a class="cr-btn cr-btn--go" href="#apply">Apply now</a>
-                <a class="cr-btn cr-btn--line" href="#roles">See open roles</a>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><clipPath id="cr-house" clipPathUnits="objectBoundingBox"><path d="M.43 .05 Q.5 0 .57 .05 L.93 .31 Q1 .36 1 .45 L1 .9 Q1 1 .9 1 L.1 1 Q0 1 0 .9 L0 .45 Q0 .36 .07 .31 Z"/></clipPath></defs></svg>
+    @php $arrow = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'; @endphp
+
+    <div class="cr">
+        <header class="cr-hero">
+            <div class="cr-wrap cr-hero__grid">
+                <div class="cr-hero__copy">
+                    <p class="cr-eyebrow">Careers at MOKA</p>
+                    <h1>Hosting is what we do. <em>Come do it with us.</em></h1>
+                    <p class="cr-hero__lead">We run homes like hotels for their owners. If you care about guests, clean rooms and getting the details right, there is a place for you here.</p>
+                    <div class="cr-actions">
+                        <a class="cr-btn cr-btn--go" href="#roles">See open roles {!! $arrow !!}</a>
+                        <a class="cr-btn cr-btn--line" href="#apply">Apply now</a>
+                    </div>
+                </div>
+                <div class="cr-hero__art">
+                    <img src="{{ asset('new-theme23/images/projects/skyawani-4/1.webp') }}" width="1280" height="1600" alt="Dining and living area of an apartment managed by MOKA" fetchpriority="high" decoding="async">
+                    <div class="cr-chip cr-chip--a"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg></i><span><b>Since 2018</b><small>hosting in Malaysia</small></span></div>
+                    <div class="cr-chip cr-chip--b"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-9 0h12a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg></i><span><b>{{ $roleCount ?: 'Open' }} {{ $roleCount === 1 ? 'open role' : ($roleCount ? 'open roles' : 'applications') }}</b><small>{{ $roleCount ? 'apply online in minutes' : 'tell us what you do best' }}</small></span></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="cr-facts">
+            <div class="cr-wrap">
+                <ul>
+                    <li><b>2018</b><span>The year we started hosting</span></li>
+                    <li><b>5 teams</b><span>From front desk to finance</span></li>
+                    <li><b>{{ $roleCount ?: 'Always' }}{{ $roleCount ? ' open' : ' open' }}</b><span>{{ $roleCount ? ($roleCount === 1 ? 'Role to apply for today' : 'Roles to apply for today') : 'To a good application' }}</span></li>
+                    <li><b>EkoCheras</b><span>Our base in Kuala Lumpur</span></li>
+                </ul>
             </div>
         </div>
-    </div>
 
-    <div class="cr-body">
-        <div class="cr-inner">
-            <section class="cr-sec" aria-labelledby="cr-h-teams">
-                <h2 id="cr-h-teams">Where you could work</h2>
-                <p class="cr-lead">MOKA has managed short-stay, monthly and corporate rentals since 2018, from our office at EkoCheras in Kuala Lumpur and on site in the buildings we run. The work falls into five teams.</p>
+        <section class="cr-sec" aria-labelledby="cr-h-teams">
+            <div class="cr-wrap">
+                <div class="cr-head">
+                    <div>
+                        <p class="cr-eyebrow">Where you could work</p>
+                        <h2 id="cr-h-teams">Five teams, one job: a great stay.</h2>
+                    </div>
+                    <p class="cr-lead">MOKA has managed short-stay, monthly and corporate rentals since 2018, from our office at EkoCheras and on site in the buildings we run.</p>
+                </div>
                 <ul class="cr-teams">
                     @foreach($teams as [$name, $text, $icon])
-                        <li class="cr-team"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icon }}"/></svg><h3>{{ $name }}</h3><p>{{ $text }}</p></li>
+                        <li class="cr-team"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icon }}"/></svg></i><h3>{{ $name }}</h3><p>{{ $text }}</p></li>
                     @endforeach
                 </ul>
-            </section>
+            </div>
+        </section>
 
-            <section class="cr-sec" id="roles" aria-labelledby="cr-h-roles">
-                <h2 id="cr-h-roles">Open roles</h2>
-                @if(empty($roles))
-                    <div class="cr-none">
-                        <p>No specific role is listed right now. Send a general application and tell us the kind of work you are looking for.</p>
-                        <a class="cr-btn cr-btn--teal" href="#apply">Send a general application</a>
+        <section class="cr-sec cr-sec--cream" id="roles" aria-labelledby="cr-h-roles">
+            <div class="cr-wrap">
+                <div class="cr-head">
+                    <div>
+                        <p class="cr-eyebrow">Open roles</p>
+                        <h2 id="cr-h-roles">Find your place.</h2>
                     </div>
-                @else
-                    <p class="cr-lead">{{ count($roles) }} {{ count($roles) === 1 ? 'role is' : 'roles are' }} open.{{ collect($roles)->contains(fn ($r) => !empty($r['points'])) ? ' Tap a role to read more.' : '' }}</p>
-                    <div class="cr-roles">
-                        @foreach($roles as $role)
-                            @if(empty($role['points']))
-                            {{-- A role with one line and no bullet points is shown in full, nothing to expand. --}}
-                            <div class="cr-role cr-role--plain" id="role-{{ $role['slug'] }}">
-                                <div class="txt">
-                                    <h3>{{ $role['title'] }}</h3>
-                                    <p class="meta">@foreach(array_filter([$role['type'] ?? null, $role['location'] ?? null]) as $tag)<span>{{ $tag }}</span>@endforeach</p>
-                                    @if(!empty($role['summary']))<p class="sum">{{ $role['summary'] }}</p>@endif
-                                </div>
-                                <a class="cr-btn cr-btn--teal" href="#apply" data-role="{{ $role['slug'] }}">Apply</a>
-                            </div>
-                            @continue
-                            @endif
-                            <details class="cr-role" id="role-{{ $role['slug'] }}" @if($picked === $role['slug'] || count($roles) === 1) open @endif>
-                                <summary>
-                                    <h3>{{ $role['title'] }}</h3>
-                                    <p class="meta">@foreach(array_filter([$role['type'] ?? null, $role['location'] ?? null]) as $tag)<span>{{ $tag }}</span>@endforeach</p>
-                                </summary>
-                                <div class="more">
-                                    @if(!empty($role['summary']))<p>{{ $role['summary'] }}</p>@endif
-                                    @if(!empty($role['points']))<ul>@foreach($role['points'] as $point)<li>{{ $point }}</li>@endforeach</ul>@endif
-                                    <a class="cr-btn cr-btn--teal" href="#apply" data-role="{{ $role['slug'] }}">Apply for this role</a>
-                                </div>
-                            </details>
+                    @if($roleCount)<span class="cr-count">{{ $roleCount }} {{ $roleCount === 1 ? 'role' : 'roles' }} open now</span>@endif
+                </div>
+                <div class="cr-jobs">
+                    @foreach($roles as $i => $role)
+                        <a class="cr-job" href="#apply" data-role="{{ $role['slug'] }}" id="role-{{ $role['slug'] }}">
+                            <span class="no" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                            <span class="txt">
+                                <h3>{{ $role['title'] }}</h3>
+                                @if(!empty($role['summary']))<p class="sum">{{ $role['summary'] }}</p>@endif
+                                @if(!empty($role['points']))<ul class="pts">@foreach($role['points'] as $point)<li>{{ $point }}</li>@endforeach</ul>@endif
+                            </span>
+                            <span class="tags">@if(!empty($role['type']))<span class="t">{{ $role['type'] }}</span>@endif @if(!empty($role['location']))<span>{{ $role['location'] }}</span>@endif</span>
+                            <span class="go" aria-hidden="true">{!! $arrow !!}</span>
+                        </a>
+                    @endforeach
+                    <a class="cr-job cr-job--open" href="#apply" data-role="general">
+                        <span class="no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                        <span class="txt">
+                            <h3>{{ $roleCount ? 'Don’t see your role?' : 'General application' }}</h3>
+                            <p class="sum">Send a general application and tell us the kind of work you are looking for.</p>
+                        </span>
+                        <span class="tags"><span>Any team</span></span>
+                        <span class="go" aria-hidden="true">{!! $arrow !!}</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="cr-sec" aria-labelledby="cr-h-steps">
+            <div class="cr-wrap">
+                <div class="cr-head">
+                    <div>
+                        <p class="cr-eyebrow">How it works</p>
+                        <h2 id="cr-h-steps">Three steps, no runaround.</h2>
+                    </div>
+                </div>
+                <ol class="cr-steps">
+                    <li><h3>Apply online</h3><p>Fill in the short form below. It goes straight to our team.</p></li>
+                    <li><h3>We get in touch</h3><p>If there is a match, we contact you by phone or email.</p></li>
+                    <li><h3>We meet</h3><p>In person at EkoCheras, or online if that is easier.</p></li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="cr-sec cr-sec--cream cr-sec--apply" id="apply" aria-labelledby="cr-h-apply">
+            <div class="cr-wrap cr-apply">
+                <div class="cr-aside">
+                    <p class="cr-eyebrow">Apply</p>
+                    <h2 id="cr-h-apply">Ready when you are.</h2>
+                    <p class="cr-lead">It takes about three minutes. Here is all you need.</p>
+                    <ul class="cr-need">
+                        @foreach(['Your name, email and phone number', 'A few lines about you and the work you want', 'Your CV, if you have one'] as $need)
+                            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>{{ $need }}</li>
                         @endforeach
+                    </ul>
+                    <div class="cr-where">
+                        <p><b>Office</b> · EkoCheras, Jalan Cheras, 56000 Kuala Lumpur</p>
+                        <p><b>On site</b> · the other buildings we manage in Kuala Lumpur and Selangor</p>
+                        <p><b>A question first?</b> · <a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a> or <a href="/contact">send a message</a></p>
                     </div>
-                @endif
-            </section>
+                </div>
 
-            <section class="cr-sec cr-apply" id="apply" aria-labelledby="cr-h-apply" style="margin-bottom:0">
-                <div>
-                    <h2 id="cr-h-apply">Apply</h2>
+                <div class="cr-card">
                     @if($sent)
                         <div class="cr-done" id="cr-done" role="status" tabindex="-1">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.8 12.4l2.8 2.8 5.6-5.8"/></svg>
                             <h3>Application received</h3>
                             <p>{{ $sent }}</p>
                             <a href="/careers#apply">Send another application</a>
                         </div>
                     @else
-                    <p class="cr-lead" style="margin-bottom:22px">It takes about three minutes. Fields marked optional can be left empty.</p>
+                    <h3 class="t">Your application</h3>
+                    <p class="s">Fields marked optional can be left empty.</p>
                     <form method="POST" action="/careers" class="cr-form" id="cr-form" enctype="multipart/form-data" novalidate>
                         @csrf
                         <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
@@ -264,10 +398,10 @@
                         </div>
 
                         <div class="cr-f cr-f--wide">
-                            <span class="lb" id="cr-cv-l" style="display:block;font-family:SemiBold;font-size:15.5px;color:var(--blog-teal);margin:0 0 6px">CV <small style="font-family:SansPro_Regular,sans-serif;font-size:14px;color:#6b7775">(optional)</small></span>
+                            <span class="lb" id="cr-cv-l">CV <small>(optional)</small></span>
                             <div class="cr-file">
                                 <input id="cr-cv" type="file" name="cv" aria-labelledby="cr-cv-l" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                <label class="pick" for="cr-cv">Choose a file</label>
+                                <label class="pick" for="cr-cv"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4M5 20h14"/></svg>Choose a file</label>
                                 <span class="name" id="cr-cv-name">PDF or Word, 5 MB or smaller.</span>
                                 <button type="button" class="clear" id="cr-cv-clear" hidden>Remove</button>
                             </div>
@@ -292,28 +426,8 @@
                     </form>
                     @endif
                 </div>
-                <aside class="cr-side" aria-label="About applying">
-                    <div class="cr-card">
-                        <p class="k">What happens next</p>
-                        <ol>
-                            <li>Your application goes straight to our team.</li>
-                            <li>If there is a match, we contact you by phone or email.</li>
-                            <li>We meet, in person or online.</li>
-                        </ol>
-                    </div>
-                    <div class="cr-card">
-                        <p class="k">Where we are</p>
-                        <p>Office: EkoCheras, Jalan Cheras, 56000 Kuala Lumpur.</p>
-                        <p>On site: the other buildings we manage in Kuala Lumpur and Selangor.</p>
-                    </div>
-                    <div class="cr-card">
-                        <p class="k">A question first?</p>
-                        <p><a href="https://wa.me/message/GJMYMABOT7CSG1" target="_blank" rel="noopener">Chat on WhatsApp</a></p>
-                        <p><a href="/contact">Send us a message</a></p>
-                    </div>
-                </aside>
-            </section>
-        </div>
+            </div>
+        </section>
     </div>
 
     @unless($sent)
@@ -363,7 +477,7 @@
     window.addEventListener('pageshow', function () { var b = $('cr-submit'); b.disabled = false; b.textContent = 'Send application'; });
 
     // Phone: the Apply bar shows between the top buttons and the form.
-    var bar = $('cr-bar'), hero = document.querySelector('.cr-hero-actions');
+    var bar = $('cr-bar'), hero = document.querySelector('.cr-actions');
     if (bar && hero && 'IntersectionObserver' in window) {
         var seen = { hero: true, form: false };
         var set = function () { bar.classList.toggle('on', !seen.hero && !seen.form); };

@@ -45,7 +45,7 @@ return [
             'slug'     => 'maintenance-technician',
             'title'    => 'Maintenance Technician',
             'type'     => 'Full time',
-            'location' => 'EkoCheras and the other buildings we manage',
+            'location' => 'EkoCheras and other sites',
             'summary'  => 'Repair and maintain our units so every one is ready for the next guest.',
             'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
