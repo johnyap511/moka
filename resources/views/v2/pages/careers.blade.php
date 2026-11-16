@@ -168,6 +168,7 @@
     .cr-send span{font-size:14.5px;color:#7a8684}
     .cr-alert{grid-column:1/-1;background:#fdf1f0;border-left:4px solid #b91c1c;border-radius:0 12px 12px 0;padding:13px 16px;font-size:15.5px;line-height:1.5;color:#7f1d1d}
     .cr-done{text-align:center;padding:26px 8px 12px}
+    .cr-done,.cr-alert{scroll-margin-top:120px}
     .cr-done svg{width:64px;height:64px;stroke:var(--teal);fill:var(--mint);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 18px}
     .cr-done h3{font-family:Bold;font-size:28px;color:var(--teal);margin:0 0 10px;text-align:center}
     .cr-done p{font-size:17.5px;line-height:1.6;color:#33403f;margin:0 auto 22px;max-width:26em;text-align:center}
@@ -440,8 +441,13 @@
 (function () {
     var $ = function (id) { return document.getElementById(id); };
     var done = $('cr-done'), alertBox = $('cr-alert'), form = $('cr-form');
-    if (done) { done.focus({ preventScroll: true }); done.scrollIntoView({ block: 'center' }); }
-    if (alertBox) { var bad = form.querySelector('[aria-invalid=true]'); (bad || alertBox).focus({ preventScroll: true }); alertBox.scrollIntoView({ block: 'start' }); }
+    // After sending, the visitor must land on the result: the confirmation, or the list of what to fix.
+    // Run now and again once the page has finished loading, because the browser's own jump runs in between.
+    var show = function () {
+        if (done) { done.scrollIntoView({ block: 'center', behavior: 'instant' }); done.focus({ preventScroll: true }); }
+        if (alertBox) { alertBox.scrollIntoView({ block: 'start', behavior: 'instant' }); var bad = form.querySelector('[aria-invalid=true]'); (bad || alertBox).focus({ preventScroll: true }); }
+    };
+    if (done || alertBox) { show(); window.addEventListener('load', function () { setTimeout(show, 60); }); }
     if (!form) { return; }
 
     // Role buttons choose the role in the form.

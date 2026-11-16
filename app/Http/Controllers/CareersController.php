@@ -47,7 +47,7 @@ class CareersController extends Controller
             'agree.accepted' => 'Please tick the box to let us keep your details for this application.',
         ]);
         if ($validator->fails()) {
-            return redirect('/careers#apply')->withErrors($validator)->withInput();
+            return redirect('/careers#cr-alert')->withErrors($validator)->withInput();
         }
 
         $data = $request->only('name', 'email', 'phone', 'role', 'link', 'message');
@@ -75,7 +75,7 @@ class CareersController extends Controller
 
         // A bot's post is kept for the record without its file, and never emailed; the bot sees the usual thank-you.
         if ($spam !== null) {
-            return redirect('/careers#apply')->with('success', $thanks);
+            return redirect('/careers#cr-done')->with('success', $thanks);
         }
 
         try {
@@ -103,6 +103,6 @@ class CareersController extends Controller
             Log::warning('Job application email not sent: ' . $e->getMessage(), ['id' => $application->id]);
         }
 
-        return redirect('/careers#apply')->with('success', $thanks);
+        return redirect('/careers#cr-done')->with('success', $thanks);
     }
 }
