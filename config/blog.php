@@ -28,6 +28,46 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'short-stay-news-malaysia-sea-16-november-2026',
+            'view'        => 'short-stay-news-malaysia-sea-16-november-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 16 Nov 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 16 November 2026',
+            'description' => "Penang extends TIP rules into George Town's heritage core, Thailand's arrivals jump 18%, floods hit Selangor and Perak, and Melaka and Sabah push tourism.",
+            'published'   => '2026-11-16',
+            'updated'     => '2026-11-16',
+            'image'       => 'new-theme23/images/blog/kk-beach-sunset.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/nasi-lemak.jpg', "Food, shopping and heritage keep pulling domestic and regional visitors back"],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'malaysia-national-short-stay-guideline-2026',
+            'view'        => 'malaysia-national-short-stay-guideline-2026',
+            'title'       => "Malaysia's National Short-Stay Guideline | MOKA",
+            'heading'     => "Malaysia's national short-stay rules are nearing Cabinet — what hosts should do now",
+            'description' => "The national STRA guideline is still stuck in review. A state-by-state look at what's actually in force now, the new platform-delisting plan, and what to do.",
+            'published'   => '2026-11-16',
+            'updated'     => '2026-11-16',
+            'image'       => 'new-theme23/images/projects/skyawani-4/8.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/the-valley/8.jpg', 'A MOKA-managed unit at The Valley'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Not sure which rules apply to your unit?',
+            'cta_body'    => "Tell us your state and building and we'll check what's actually in force for you, not just what's proposed.",
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
             'slug'        => 'penang-short-stay-fee-changes-2027',
             'view'        => 'penang-short-stay-fee-changes-2027',
             'title'       => 'Penang\'s 2027 Short-Stay Fee Changes Explained | MOKA',
