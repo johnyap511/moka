@@ -76,6 +76,10 @@
     .cr-role .more{padding:0 24px 22px}
     .cr-role .more p{font-size:16.5px;line-height:1.6;color:#33403f;margin:0 0 10px}
     .cr-role .more ul{margin:0 0 16px;padding-left:20px;font-size:16px;line-height:1.6;color:#33403f}
+    .cr-role--plain{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding:20px 24px}
+    .cr-role--plain .txt{flex:1 1 380px;min-width:0}
+    .cr-role--plain .sum{font-size:16.5px;line-height:1.55;color:#33403f;margin:10px 0 0}
+    .cr-role--plain .cr-btn{min-width:120px}
     .cr-none{background:#f4f8f7;border-radius:16px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between}
     .cr-none p{font-size:16.5px;line-height:1.6;color:#33403f;margin:0;flex:1 1 320px}
     .cr-apply{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:56px;align-items:start}
@@ -127,6 +131,7 @@
         .cr-form{grid-template-columns:1fr}
         .cr-hero-actions .cr-btn{flex:1 1 100%}
         .cr-role summary{padding:18px 48px 18px 18px}.cr-role summary::after{right:18px}.cr-role .more{padding:0 18px 20px}
+        .cr-role--plain{padding:18px}.cr-role--plain .cr-btn{width:100%}
         .cr-send .cr-btn{width:100%}
         .cr-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);border-top:1px solid var(--blog-rule);transform:translateY(110%);transition:transform .2s}
         .cr-bar.on{transform:none}.cr-bar .cr-btn{width:100%}
@@ -170,9 +175,21 @@
                         <a class="cr-btn cr-btn--teal" href="#apply">Send a general application</a>
                     </div>
                 @else
-                    <p class="cr-lead">{{ count($roles) }} {{ count($roles) === 1 ? 'role is' : 'roles are' }} open. Tap a role to read more.</p>
+                    <p class="cr-lead">{{ count($roles) }} {{ count($roles) === 1 ? 'role is' : 'roles are' }} open.{{ collect($roles)->contains(fn ($r) => !empty($r['points'])) ? ' Tap a role to read more.' : '' }}</p>
                     <div class="cr-roles">
                         @foreach($roles as $role)
+                            @if(empty($role['points']))
+                            {{-- A role with one line and no bullet points is shown in full, nothing to expand. --}}
+                            <div class="cr-role cr-role--plain" id="role-{{ $role['slug'] }}">
+                                <div class="txt">
+                                    <h3>{{ $role['title'] }}</h3>
+                                    <p class="meta">@foreach(array_filter([$role['type'] ?? null, $role['location'] ?? null]) as $tag)<span>{{ $tag }}</span>@endforeach</p>
+                                    @if(!empty($role['summary']))<p class="sum">{{ $role['summary'] }}</p>@endif
+                                </div>
+                                <a class="cr-btn cr-btn--teal" href="#apply" data-role="{{ $role['slug'] }}">Apply</a>
+                            </div>
+                            @continue
+                            @endif
                             <details class="cr-role" id="role-{{ $role['slug'] }}" @if($picked === $role['slug'] || count($roles) === 1) open @endif>
                                 <summary>
                                     <h3>{{ $role['title'] }}</h3>
