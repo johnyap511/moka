@@ -79,7 +79,7 @@
                 'founder'     => ['@type' => 'Person', 'name' => 'Sam Kong'],
                 'knowsAbout'  => ['Airbnb management', 'Short-term rental management', 'Monthly rental', 'Corporate housing', 'Property management Kuala Lumpur', 'Property management Cheras', 'Condo renovation and furnishing', 'EkoCheras', 'Maxim Risen'],
                 'department'  => ['@type' => 'Organization', 'name' => 'Innspace by MOKA', 'description' => 'Renovation and interior design for rental units; SkyWorld Solution+ panel renovator.', 'url' => url('/designs')],
-                'areaServed'  => [['@type' => 'Country', 'name' => 'Malaysia'], ['@type' => 'City', 'name' => 'Kuala Lumpur'], ['@type' => 'AdministrativeArea', 'name' => 'Selangor'], ['@type' => 'City', 'name' => 'George Town, Penang'], ['@type' => 'City', 'name' => 'Johor Bahru'], ['@type' => 'City', 'name' => 'Kota Kinabalu'], ['@type' => 'Place', 'name' => 'Cheras, Kuala Lumpur']],
+                'areaServed'  => [['@type' => 'Country', 'name' => 'Malaysia'], ['@type' => 'City', 'name' => 'Kuala Lumpur'], ['@type' => 'AdministrativeArea', 'name' => 'Selangor'], ['@type' => 'City', 'name' => 'Kota Kinabalu'], ['@type' => 'Place', 'name' => 'Cheras, Kuala Lumpur']],
                 'telephone'   => '+60 3 6789 2288',
                 'email'       => 'hello@homemoka.com',
                 // Google Business Profile ("EkoCheras by Moka", knowledge graph /g/11frnkj_bz) and the share link Sam gave on 8 Sep 2026.

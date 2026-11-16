@@ -57,7 +57,8 @@ class RobotsController extends Controller
         $llms    = url('/llms.txt');
         $private = "Allow: /\n        Disallow: /admin\n        Disallow: /owner\n        Disallow: /user\n        Disallow: /login\n        Disallow: /register\n        Disallow: /password\n        Disallow: /payment\n        Disallow: /logout";
         $answerBots = implode("\n", array_map(fn ($ua) => "User-agent: {$ua}\n        {$private}", [
-            'OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
+            // GPTBot (OpenAI's training crawler) is allowed on Sam's instruction, 16 Nov 2026.
+            'OAI-SearchBot', 'ChatGPT-User', 'GPTBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
             'Bingbot', 'Google-Extended', 'Applebot', 'DuckAssistBot', 'Meta-ExternalFetcher', 'YouBot',
         ]));
 
@@ -92,11 +93,8 @@ class RobotsController extends Controller
         # ---------------------------------------------------------------------
         {$answerBots}
         # ---------------------------------------------------------------------
-        # Training-only crawlers: no. Content may be cited, not used to train
-        # models (Content-Signal above says the same).
+        # Other training-only crawlers: no. OpenAI's GPTBot is allowed above.
         # ---------------------------------------------------------------------
-        User-agent: GPTBot
-        Disallow: /
         User-agent: ClaudeBot
         Disallow: /
         User-agent: CCBot

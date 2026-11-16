@@ -59,7 +59,7 @@
                     <div><svg viewBox="0 0 24 24"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.3 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z"/></svg><div><b>Superhost and Preferred Host</b>Airbnb and Booking.com</div></div>
                     <div><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.5 5 3 5 1.3 5 3.2-2.2 3.3-5 3.3-5-1.4-5-3.3"/></svg><div><b>Commission only</b>No upfront fee, no lock-in</div></div>
                     <div><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><div><b>Owner portal</b>Bookings, calendar and revenue, live</div></div>
-                    <div><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg><div><b>Across Malaysia</b>KL, Selangor, Penang, JB, Kota Kinabalu</div></div>
+                    <div><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg><div><b>Across Malaysia</b>KL, Selangor, Kota Kinabalu</div></div>
                 </div>
             </div>
         </section>
@@ -114,7 +114,7 @@
                     <p>Local teams, the same standards and the same owner portal in every city. Pick your area for what units there earn and the rules that apply.</p>
                 </div>
                 <div class="sx-aud sx-aud--cities">
-                    @foreach([['airbnb-management-kuala-lumpur','Kuala Lumpur','KLCC, Bukit Bintang, Bangsar South, Cheras, Setapak'],['airbnb-management-selangor','Selangor','Petaling Jaya, Subang, Setia Alam, Sepang and KLIA'],['airbnb-management-penang','Penang','George Town, Bayan Lepas and the mainland, licensed under the 2026 by-laws'],['airbnb-management-johor-bahru','Johor Bahru','JB city, Iskandar Puteri and Medini for the Singapore market'],['airbnb-management-kota-kinabalu','Kota Kinabalu','City centre, Jesselton and Likas']] as [$slug,$city,$desc])
+                    @foreach([['airbnb-management-kuala-lumpur','Kuala Lumpur','KLCC, Bukit Bintang, Bangsar South, Cheras, Setapak'],['airbnb-management-selangor','Selangor','Petaling Jaya, Subang, Setia Alam, Sepang and KLIA'],['airbnb-management-kota-kinabalu','Kota Kinabalu','City centre, Jesselton and Likas']] as [$slug,$city,$desc])
                     <a href="/solutions/{{ $slug }}">
                         <div class="sx-ico sx-ico--orange"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg></div>
                         <h3>{{ $city }}</h3>

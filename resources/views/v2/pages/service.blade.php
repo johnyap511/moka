@@ -115,7 +115,7 @@
                 ['q' => 'How long does it take to get started?', 'a' => 'From signing with MOKA to your first booking is typically 2–4 weeks for properties that are ready, or 6–10 weeks if renovation is involved.'],
                 ['q' => 'Can I still use my property when I want?', 'a' => 'Absolutely. Owner stays are always accommodated. Simply block your preferred dates in the MOKA dashboard and we manage everything around your schedule.'],
                 ['q' => 'How do I track my property\'s performance?', 'a' => 'You get full access to the MOKA Owner Dashboard — a real-time portal showing bookings, revenue, occupancy, cleaning schedules, and maintenance logs.'],
-                ['q' => 'Which areas does MOKA operate in?', 'a' => 'MOKA currently operates across Klang Valley, Penang, Johor Bahru, and Kota Kinabalu. We are expanding to new regions — contact us to check availability in your area.'],
+                ['q' => 'Which areas does MOKA operate in?', 'a' => 'MOKA currently operates across Klang Valley and Kota Kinabalu. We are expanding to new regions — contact us to check availability in your area.'],
             ];
             @endphp
 

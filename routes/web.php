@@ -30,6 +30,9 @@ Route::middleware('lang')->group(function () {
     Route::get('/about',        'Auth\WebController@newAbout');
     Route::get('/solutions',        'Auth\WebController@solutions');
     Route::get('/solutions/preview', fn () => redirect('/solutions', 301));
+    // MOKA does not manage units in Penang or Johor (Sam, 16 Nov 2026): the two city pages are gone.
+    Route::redirect('/solutions/airbnb-management-penang', '/solutions/airbnb-management-malaysia', 301);
+    Route::redirect('/solutions/airbnb-management-johor-bahru', '/solutions/airbnb-management-malaysia', 301);
     Route::get('/solutions/{slug}', 'Auth\WebController@solution')->where('slug', '[a-z0-9-]+');
     // The old site's paths that Google still links to (Sep 2026): send them to the closest page, permanently.
     foreach (['/properties' => '/solutions/short-term-rental-management', '/property' => '/solutions/short-term-rental-management', '/listings' => '/solutions/short-term-rental-management', '/short-stay-listing' => '/solutions/short-term-rental-management', '/short-stay' => '/solutions/short-term-rental-management', '/rent' => '/solutions/monthly-rental', '/hosts' => '/get/estimate', '/host' => '/get/estimate', '/services' => '/service', '/faq' => '/service', '/menu' => '/'] as $from => $to) {

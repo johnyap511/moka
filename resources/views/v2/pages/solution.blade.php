@@ -16,7 +16,7 @@
 <script type="application/ld+json">{!! json_encode([
     '@context' => 'https://schema.org',
     '@graph' => [
-        ['@type' => 'Service', 'name' => strip_tags($page['h1']), 'serviceType' => $page['label'], 'provider' => ['@id' => url('/') . '/#organization'], 'areaServed' => ['Kuala Lumpur', 'Selangor', 'Penang', 'Johor Bahru', 'Kota Kinabalu'], 'description' => $page['description'], 'url' => url('/solutions/' . $page['slug'])],
+        ['@type' => 'Service', 'name' => strip_tags($page['h1']), 'serviceType' => $page['label'], 'provider' => ['@id' => url('/') . '/#organization'], 'areaServed' => ['Kuala Lumpur', 'Selangor', 'Kota Kinabalu'], 'description' => $page['description'], 'url' => url('/solutions/' . $page['slug'])],
         ['@type' => 'FAQPage', 'mainEntity' => array_map(fn ($f) => ['@type' => 'Question', 'name' => $f['q'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']]], $page['faqs'] ?? [])],
         ['@type' => 'BreadcrumbList', 'itemListElement' => [['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')], ['@type' => 'ListItem', 'position' => 2, 'name' => 'Solutions', 'item' => url('/solutions')], ['@type' => 'ListItem', 'position' => 3, 'name' => $page['label'], 'item' => url('/solutions/' . $page['slug'])]]],
     ],
@@ -27,7 +27,7 @@
     $groups = [
         'For you'      => ['for-homeowners', 'for-property-investors', 'for-property-developers', 'for-property-agents'],
         'By stay type' => ['airbnb-management-malaysia', 'short-term-rental-management', 'monthly-rental', 'corporate-housing'],
-        'By city'      => ['airbnb-management-kuala-lumpur', 'airbnb-management-selangor', 'airbnb-management-penang', 'airbnb-management-johor-bahru', 'airbnb-management-kota-kinabalu'],
+        'By city'      => ['airbnb-management-kuala-lumpur', 'airbnb-management-selangor', 'airbnb-management-kota-kinabalu'],
     ];
     $bySlug = collect($all)->keyBy('slug');
     $group  = collect($groups)->filter(fn ($slugs) => in_array($page['slug'], $slugs))->keys()->first();

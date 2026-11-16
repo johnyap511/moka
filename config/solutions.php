@@ -13,8 +13,8 @@
 | Facts on these pages come from the service page, the about page and the
 | ground rules: commission-only fee, 2–4 weeks to first booking (6–10 with
 | renovation), listed on Airbnb, Booking.com, Agoda and more, dynamic pricing,
-| hotel-standard housekeeping, owner dashboard, Klang Valley / Penang /
-| Johor Bahru / Kota Kinabalu. Nothing here promises a return.
+| hotel-standard housekeeping, owner dashboard, Klang Valley /
+| Kota Kinabalu. Nothing here promises a return.
 |
 */
 
@@ -51,7 +51,7 @@ return [
             'slug'        => 'airbnb-management-malaysia',
             'label'       => 'Airbnb management',
             'title'       => 'Airbnb Management Company in Malaysia | MOKA',
-            'description' => 'Full-service Airbnb management in Kuala Lumpur, Selangor, Penang, Johor Bahru and Kota Kinabalu. Listing, pricing, guests and housekeeping handled on a commission-only fee.',
+            'description' => 'Full-service Airbnb management in Kuala Lumpur, Selangor and Kota Kinabalu. Listing, pricing, guests and housekeeping handled on a commission-only fee.',
             'eyebrow'     => 'Airbnb management Malaysia',
             'h1'          => 'Airbnb management, <em>done properly</em>',
             'sub'         => 'MOKA runs your Airbnb end to end: photography, listing, pricing, guest messages, check-in, cleaning and reviews. You see every booking and every ringgit in your owner dashboard.',
@@ -60,7 +60,7 @@ return [
                 ['h2' => 'What a Malaysian Airbnb host actually has to do', 'p' => 'A listing that earns well is a full-time job: answering enquiries within minutes, adjusting prices for school holidays and events, coordinating cleaners between a 12pm check-out and a 3pm check-in, replacing a broken kettle the same day, and chasing five-star reviews. Most owners underestimate this until the first bad month.', 'bullets' => []],
                 ['h2' => 'What MOKA takes off your hands', 'p' => 'One team, one fee, one dashboard.', 'bullets' => ['Professional photography, copywriting and listing set-up on Airbnb, Booking.com, Agoda and more', 'Dynamic pricing that moves nightly rates with demand', '24/7 guest communication, smart-lock check-in and issue resolution within the hour', 'Hotel-standard turnover cleaning, fresh linen and restocked amenities after every stay', 'Review management and a monthly performance report']],
                 ['h2' => 'How the fee works', 'p' => 'MOKA is commission-only. There is no upfront charge and no fixed monthly retainer: we earn a percentage of the rental revenue we generate for you, so our interest and yours are the same. The exact rate depends on the property and the plan, and you get it in writing before anything starts.', 'bullets' => []],
-                ['h2' => 'Where we operate', 'p' => 'Klang Valley, Penang, Johor Bahru and Kota Kinabalu today, with new areas opening. Ask us about yours.', 'bullets' => []],
+                ['h2' => 'Where we operate', 'p' => 'Klang Valley and Kota Kinabalu today, with new areas opening. Ask us about yours.', 'bullets' => []],
             ],
             'faqs' => [
                 ['q' => 'How quickly can my unit start earning?', 'a' => 'Typically 2 to 4 weeks from signing for a unit that is ready to list, or 6 to 10 weeks when renovation is needed.'],
@@ -84,7 +84,7 @@ return [
                 ['h2' => 'Guests handled, unit protected', 'p' => 'Guest vetting before confirmation, smart-lock check-in, 24/7 support, and hotel-standard cleaning after every departure. Damage deposits and house rules are enforced on every platform.', 'bullets' => []],
             ],
             'faqs' => [
-                ['q' => 'Is short-term rental allowed in my building?', 'a' => 'It depends on the building management and, in some states, local guidelines. MOKA already operates in many Klang Valley, Penang, Johor Bahru and Kota Kinabalu developments and will tell you plainly whether yours is suitable before you commit.'],
+                ['q' => 'Is short-term rental allowed in my building?', 'a' => 'It depends on the building management and, in some states, local guidelines. MOKA already operates in many Klang Valley and Kota Kinabalu developments and will tell you plainly whether yours is suitable before you commit.'],
                 ['q' => 'What does MOKA charge?', 'a' => 'A percentage of rental revenue, nothing upfront. The rate depends on the property and plan and is agreed in writing first.'],
             ],
         ],
@@ -113,13 +113,13 @@ return [
             'slug'        => 'corporate-housing',
             'label'       => 'Corporate housing',
             'title'       => 'Corporate Housing in Kuala Lumpur and Malaysia | MOKA',
-            'description' => 'Furnished corporate housing for relocating staff, project teams and business travellers in Kuala Lumpur, Selangor, Penang and Johor Bahru, with one invoice and one point of contact.',
+            'description' => 'Furnished corporate housing for relocating staff, project teams and business travellers in Kuala Lumpur and Selangor, with one invoice and one point of contact.',
             'eyebrow'     => 'Corporate housing',
             'h1'          => 'Corporate housing your finance team <em>will thank you for</em>',
             'sub'         => 'Furnished apartments for staff relocations, project teams and extended business travel. One agreement, one monthly invoice, one number to call.',
             'updated'     => '2026-09-08',
             'sections'    => [
-                ['h2' => 'Built for companies, not just travellers', 'p' => 'A hotel is expensive after the second week and a lease is too rigid for a six-month project. MOKA places your people in furnished condominiums and serviced apartments near where they work, for as long as they need, with housekeeping and internet included.', 'bullets' => ['Serviced units across Kuala Lumpur, Petaling Jaya, Cheras, Penang, Johor Bahru and Kota Kinabalu', 'Weekly or monthly terms, extendable', 'Consolidated invoicing and SST-compliant tax invoices', 'Housekeeping, linen and maintenance included', 'A dedicated contact for your HR or admin team']],
+                ['h2' => 'Built for companies, not just travellers', 'p' => 'A hotel is expensive after the second week and a lease is too rigid for a six-month project. MOKA places your people in furnished condominiums and serviced apartments near where they work, for as long as they need, with housekeeping and internet included.', 'bullets' => ['Serviced units across Kuala Lumpur, Petaling Jaya, Cheras and Kota Kinabalu', 'Weekly or monthly terms, extendable', 'Consolidated invoicing and SST-compliant tax invoices', 'Housekeeping, linen and maintenance included', 'A dedicated contact for your HR or admin team']],
                 ['h2' => 'For property owners', 'p' => 'Corporate guests are the steadiest short-stay demand there is: longer stays, fewer changeovers, and companies that pay on time. If you own a well-located unit, MOKA can place it in the corporate pool alongside nightly bookings.', 'bullets' => []],
             ],
             'faqs' => [
@@ -160,7 +160,7 @@ return [
             'sections'    => [
                 ['h2' => 'Why investors choose managed short-stay', 'p' => 'A well-run short-stay unit in the right building outperforms a long lease, and it stays furnished and maintained to a hotel standard because guests demand it. The risk is operational: pricing, changeovers and guest issues. That is what MOKA removes.', 'bullets' => []],
                 ['h2' => 'What you get as an investor', 'p' => '', 'bullets' => ['A revenue estimate before you buy, based on real bookings in comparable units', 'Renovation to a short-stay specification, with durability in mind', 'Listing on Airbnb, Booking.com, Agoda, Expedia and more, priced dynamically', 'Pooled income on group listings, shared by unit size, so one empty week does not fall on one owner', 'Monthly statements with rate, nights, cleaning, taxes and fees itemised', 'An owner dashboard for every unit, any month, on your phone']],
-                ['h2' => 'Grow with the same team', 'p' => 'MOKA already runs multiple units in developments across Kuala Lumpur, Cheras, Petaling Jaya, Penang, Johor Bahru and Kota Kinabalu. Adding a unit to a building we already operate is fast, because the housekeeping and guest teams are already there.', 'bullets' => []],
+                ['h2' => 'Grow with the same team', 'p' => 'MOKA already runs multiple units in developments across Kuala Lumpur, Cheras, Petaling Jaya and Kota Kinabalu. Adding a unit to a building we already operate is fast, because the housekeeping and guest teams are already there.', 'bullets' => []],
             ],
             'faqs' => [
                 ['q' => 'Can you advise which unit to buy?', 'a' => 'We can tell you what comparable units earn under MOKA management and which buildings work for short-stay. We do not give investment advice; the decision is yours.'],
@@ -204,7 +204,7 @@ return [
             ],
             'faqs' => [
                 ['q' => 'Do I need to register as a partner?', 'a' => 'A short conversation is enough. Tell us about your client and we take it from there; the referral terms are confirmed in writing before onboarding.'],
-                ['q' => 'Can I refer clients outside the Klang Valley?', 'a' => 'Yes, in Penang, Johor Bahru and Kota Kinabalu today, and we will tell you if an area is not yet covered.'],
+                ['q' => 'Can I refer clients outside the Klang Valley?', 'a' => 'Yes, in Kota Kinabalu today, and we will tell you if an area is not yet covered.'],
             ],
         ],
 
@@ -248,48 +248,6 @@ return [
                 ['q' => 'Do you manage units near KLIA?', 'a' => 'Yes. Bell Suites at Sunsuria City is one of our largest operations, serving airline crews, transit passengers and Xiamen University families.'],
                 ['q' => 'Is Petaling Jaya good for short stays?', 'a' => 'Yes, for business and medical travel. PJ units earn more steadily across the year than tourist areas, and suit a mix of nightly and monthly stays.'],
                 ['q' => 'Can I visit your office?', 'a' => 'Yes. MOKA is at Menara Lien Hoe, Tropicana, Petaling Jaya. Message us to arrange a time.'],
-            ],
-        ],
-
-        [
-            'slug'        => 'airbnb-management-penang',
-            'label'       => 'Airbnb management Penang',
-            'title'       => 'Airbnb & Short-Stay Management in Penang | MOKA',
-            'description' => 'MOKA manages short-stay and monthly units in Penang and handles building consent and licensing under the 2026 short-term accommodation by-laws. Free estimate.',
-            'eyebrow'     => 'Airbnb management Penang',
-            'h1'          => 'Short-stay management in <em>Penang</em>, licensed and compliant',
-            'sub'         => 'Penang is the first state to license short-term stays. MOKA operates units on the island and the mainland, and handles the consent, licence and reporting cycle so owners stay on the right side of MBPP and MBSP.',
-            'updated'     => '2026-09-11',
-            'sections'    => [
-                ['h2' => 'What changed in Penang in 2026', 'p' => 'The Private Short-term Accommodation By-Laws 2026 require a council licence for any paid stay of up to six months. On the island, only commercial-titled strata such as serviced apartments and SoHo can be licensed; residential-titled condominiums cannot. The mainland allows a wider list. Every licence needs the building’s 75 percent consent, renewed yearly.', 'bullets' => ['Licence applications due before 1 November 2026', 'Building consent by special resolution, renewed each January', 'Fees from RM1,000 a year plus an accommodation fee per unit']],
-                ['h2' => 'How MOKA handles it for you', 'p' => 'We tell you honestly whether your unit can be licensed, prepare the paperwork, work with your JMB or MC on the resolution, and keep the yearly renewals and December reporting on our calendar, not yours.', 'bullets' => ['Title and building check before anything is listed', 'Licence application and renewals with MBPP or MBSP', 'Monthly furnished stays under a tenancy for units that cannot be licensed nightly']],
-                ['h2' => 'Where in Penang we manage', 'p' => 'George Town and the heritage zone for leisure travellers, Bayan Lepas and the Free Industrial Zone for engineers and project teams on weekly and monthly stays, and Seberang Perai on the mainland where more property types qualify.', 'bullets' => []],
-            ],
-            'faqs' => [
-                ['q' => 'My Penang condo is residential-titled. Can I still earn from it?', 'a' => 'Not nightly on the island under the 2026 by-laws. MOKA can run it as monthly furnished stays under a tenancy agreement, which sit outside the short-stay definition, or as a conventional tenancy.'],
-                ['q' => 'Who applies for the licence, the owner or MOKA?', 'a' => 'The application is in the owner’s name, and MOKA prepares and files it with you, including the building consent.'],
-                ['q' => 'Where can I read the full rules?', 'a' => 'Our guide to Penang’s short-term rental by-laws on the MOKA blog explains the property types, fees and deadlines in plain language.'],
-            ],
-        ],
-
-        [
-            'slug'        => 'airbnb-management-johor-bahru',
-            'label'       => 'Airbnb management Johor Bahru',
-            'title'       => 'Airbnb & Short-Stay Management in Johor Bahru | MOKA',
-            'description' => 'MOKA manages short-stay and monthly units in Johor Bahru and Iskandar Malaysia for the Singapore market and corporate relocations. Commission-only, free estimate.',
-            'eyebrow'     => 'Airbnb management Johor Bahru',
-            'h1'          => 'Short-stay management in <em>Johor Bahru</em>',
-            'sub'         => 'JB earns from Singapore. Weekend families, cross-border commuters and companies housing staff on the Malaysian side keep well-run units busy all year. MOKA runs them to the standard Singapore guests expect.',
-            'updated'     => '2026-09-11',
-            'sections'    => [
-                ['h2' => 'Why JB works for owners', 'p' => 'The Singapore dollar goes a long way in Johor Bahru, and demand follows it: weekend stays from Singapore, longer stays from employees who work across the Causeway, and corporate housing for companies expanding into Iskandar Malaysia. The JB–Singapore RTS Link adds a new wave of commuters.', 'bullets' => ['Weekend and school-holiday families from Singapore', 'Weekly and monthly stays for cross-border workers', 'Corporate housing for relocations into Iskandar Puteri and Medini']],
-                ['h2' => 'Where in JB we manage', 'p' => 'JB city centre and Bukit Chagar for the Causeway and RTS, Iskandar Puteri and Medini for Legoland families and corporate stays, and the Tebrau and Mount Austin belt for value-seeking families.', 'bullets' => []],
-                ['h2' => 'How the fee works', 'p' => 'Commission-only. No upfront charge, no monthly retainer, and every booking, fee and payout visible in the owner portal, whether you live in JB, KL or Singapore.', 'bullets' => []],
-            ],
-            'faqs' => [
-                ['q' => 'I live in Singapore. Can MOKA manage my JB unit remotely?', 'a' => 'Yes. Many MOKA owners live outside Malaysia. Guests, cleaning and maintenance are handled locally, and your owner portal shows every booking and payout.'],
-                ['q' => 'Does my JB building allow short stays?', 'a' => 'It depends on the building’s by-laws. Send us the address and we will check before anything is listed.'],
-                ['q' => 'Is monthly rental better than nightly in JB?', 'a' => 'Often a mix works best: nightly on weekends and holidays, monthly to cross-border workers in between. MOKA switches a unit between the two as demand changes.'],
             ],
         ],
 

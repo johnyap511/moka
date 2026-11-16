@@ -25,7 +25,7 @@
         no say in them.
     </p>
     <p>
-        We manage units for owners across Kuala Lumpur, Selangor, Penang, Johor and Sabah. When a council
+        We manage units for owners across Kuala Lumpur, Selangor and Sabah. When a council
         changes a rule, it lands on our desk first and on our owners' statements second. Being inside the
         association means we hear about changes while they are still proposals, and we can put owners'
         concerns forward before they are settled.

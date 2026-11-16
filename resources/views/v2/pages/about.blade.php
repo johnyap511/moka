@@ -225,7 +225,7 @@
                 ['2020', 'Pandemic Pivot',        'Adapted swiftly to evolving travel patterns, supporting hosts through uncertainty and securing long-stay bookings.'],
                 ['2021', 'Superhost Status',      'Achieved Airbnb Superhost status — recognising our consistently exceptional guest experience standards.'],
                 ['2022', 'RM10M Revenue Milestone','Crossed RM10 million in cumulative revenue generated for Malaysian homeowners through the MOKA platform.'],
-                ['2023', 'Malaysia Expansion',   'Expanded beyond KL to Penang, Johor Bahru, and Kota Kinabalu — growing the MOKA family nationwide.'],
+                ['2023', 'Malaysia Expansion',   'Expanded beyond KL to Kota Kinabalu — growing the MOKA family nationwide.'],
                 ['2024', 'MOKA v2 Launch',       'Launched a reimagined platform giving owners full visibility into performance, bookings, and revenue in real time.'],
             ] as $i => [$year, $title, $desc])
                 <div class="timeline-item {{ $i % 2 === 0 ? 'timeline-item--left' : 'timeline-item--right' }}" data-reveal data-delay="{{ min($i * 80, 400) }}">

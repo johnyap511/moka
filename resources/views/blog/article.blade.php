@@ -109,7 +109,7 @@
 
                     <div class="blog-author">
                         <img src="{{ asset('images/app/icon-192.png') }}" alt="MOKA" width="56" height="56">
-                        <div><b>Written by the MOKA team</b><span>Malaysia's short-stay property management company. Superhost and Preferred Host, managing units in KL, Selangor, Penang, Johor Bahru and Kota Kinabalu.</span></div>
+                        <div><b>Written by the MOKA team</b><span>Malaysia's short-stay property management company. Superhost and Preferred Host, managing units in KL, Selangor and Kota Kinabalu.</span></div>
                     </div>
 
                     {{-- Posts about renovation need a different call to action from

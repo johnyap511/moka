@@ -102,8 +102,8 @@
             a complaint.</li>
     </ol>
     <p>
-        MOKA operates units in Penang and handles the consent, licence and reporting cycle for
-        owners we manage. If you are unsure where your unit stands, send us the address and we
-        will tell you.
+        MOKA does not manage units in Penang. We follow its rules closely because Penang is the
+        first state to enforce a short-stay licence, and we keep this guide up to date as the
+        rules change.
     </p>
 @endsection

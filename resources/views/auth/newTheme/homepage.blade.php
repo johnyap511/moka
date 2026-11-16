@@ -959,7 +959,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @push('schema')
 <script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => [
     ['@type' => 'Question', 'name' => 'Is a KL homestay cheaper than a hotel?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Usually. A MOKA-managed homestay or serviced apartment in Kuala Lumpur is priced below a comparable hotel room, with more space, a kitchen and self check-in, while being cleaned and serviced to hotel standards.']],
-    ['@type' => 'Question', 'name' => 'Does MOKA manage serviced apartments and serviced residences?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Yes. MOKA manages serviced apartments, serviced residences and condominium units in Kuala Lumpur, Selangor, Penang, Johor Bahru and Kota Kinabalu as short-stay, monthly and corporate housing for their owners.']],
+    ['@type' => 'Question', 'name' => 'Does MOKA manage serviced apartments and serviced residences?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Yes. MOKA manages serviced apartments, serviced residences and condominium units in Kuala Lumpur, Selangor and Kota Kinabalu as short-stay, monthly and corporate housing for their owners.']],
     ['@type' => 'Question', 'name' => 'How do I list my KL unit on Airbnb with MOKA?', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Request a free income estimate on homemoka.com. MOKA then handles styling, photography, listings on Airbnb, Booking.com and Agoda, pricing, guests and housekeeping, and pays owners monthly.']],
 ]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
