@@ -31,3 +31,9 @@
 .legal-card a { color: var(--blog-teal); font-family: SemiBold; text-decoration: none; }
 @media (max-width: 991px) { .legal-layout { grid-template-columns: 1fr; gap: 28px; } .legal-aside { position: static; } .legal-toc { display: none; } }
 @media (max-width: 600px) { .legal-hero { padding-top: 140px; padding-bottom: 40px; } .legal-body { padding: 36px 18px 56px; } .legal-article { font-size: 16px; } .legal-article h2 { font-size: 20px; } }
+
+/* 16 Nov 2026: sub-headings (used by the Bahasa Malaysia notice) and the "updated" box on legal pages. */
+.legal-article h3 { font-family: SemiBold; font-size: 18px; line-height: 1.35; color: var(--blog-teal); margin: 28px 0 10px; }
+.legal-article .blog-callout { margin: 0 0 22px; }
+.legal-article .blog-callout p { margin: 0; }
+.legal-article a { color: var(--blog-teal); text-decoration: underline; text-underline-offset: 3px; }

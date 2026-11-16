@@ -100,7 +100,7 @@
         <div class="mk-bottom">
             <div class="mk-brand">
                 <a href="/" aria-label="MOKA home"><img src="{{ asset('new-theme23/images/logo.png') }}" alt="MOKA" loading="lazy"></a>
-                <p>Malaysia's &#35;1 property management company.<br>{{ date('Y') }} © Owned and operated by Moka Venture Sdn Bhd. All rights reserved.<br><span class="mk-legal">MOKA® and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. Beware of impersonation: we only communicate from @homemoka.com addresses and +603 6789 2288, and never ask for payment to personal accounts.</span></p>
+                <p>Short-stay property management in Malaysia since 2018.<br>{{ date('Y') }} © Owned and operated by Moka Venture Sdn. Bhd. (Registration No. 202001018827 (1375147-V)). All rights reserved.<br><span class="mk-legal">MOKA® and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. Beware of impersonation: we only communicate from @homemoka.com addresses and +603 6789 2288, and never ask for payment to personal accounts.</span></p>
             </div>
             <form class="mk-news" method="POST" action="/subscribe" aria-label="Newsletter">
                 @csrf

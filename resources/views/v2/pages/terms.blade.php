@@ -1,6 +1,6 @@
 @extends('auth.newTheme.layout')
 @section('seo_title', 'Terms of Use | MOKA')
-@section('seo_description', 'The terms and conditions for using the MOKA website, booking through it and using the owner portal.')
+@section('seo_description', 'The terms for using the MOKA website and owner portal: what the site is for, accounts, estimates, acceptable use, your legal rights and how to contact us.')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('new-theme23/css/blog23.css') }}?v={{ filemtime(public_path('new-theme23/css/blog23.css')) }}">
@@ -21,157 +21,108 @@
     <div class="legal-body">
         <div class="legal-layout">
             <article class="legal-article" id="legalArticle">
-<p>This page sets out the terms and conditions (&ldquo;<strong>Terms</strong>&rdquo;) and by accessing our website at www.homemoka.com &ldquo;<strong>Website</strong>&rdquo; or registering as a user of the Website, you agree to be bound by the Terms and our Privacy Notice. Please note that this is a binding legal agreement between you and Moka Venture Sdn. Bhd. (Company No.: 202001018827)(&ldquo;<strong>the Company</strong>&rdquo;). If you do not agree with all of these Terms, you should exit from the Website.</p>
-<p>In these Terms, "we", "us", "our" or &ldquo;Moka Venture" refers to the Company, and "you" or "your" refers to you as the user of Our Website.</p>
-<p>We reserve the rights to modify these Terms, for any reason at any time, by posting a new version on our Website; these changes do not affect rights and obligations that arose prior to such changes. Your continued use of our Website following the posting of modified Terms will be subject to the Terms in effect at the time of your use. Please review these Terms periodically for changes. the updated version(s) of the Terms shall supersede all previous versions of the Terms with automatic effect, without any further action by us. You acknowledge and agree that you shall be bound by the terms of the most recent version of the Terms found on the Website.</p>
-<h2>Introduction</h2>
+@if(now()->lt(\Carbon\Carbon::parse('2026-12-17')))
+<div class="blog-callout"><p><strong>Updated on 16 November 2026.</strong> These Terms were rewritten to describe what this Website does today. Stays are no longer booked on this Website, so the booking and listing terms have been removed.</p></div>
+@endif
+<p><strong>Last updated: 16 November 2026</strong></p>
+<p>These terms (&ldquo;<strong>Terms</strong>&rdquo;) apply to your use of homemoka.com and the MOKA owner portal (together, the &ldquo;<strong>Website</strong>&rdquo;). The Website is operated by Moka Venture Sdn. Bhd. (Registration No. 202001018827 (1375147-V)) (&ldquo;<strong>MOKA</strong>&rdquo;, &ldquo;<strong>we</strong>&rdquo;, &ldquo;<strong>us</strong>&rdquo;).</p>
+<p>By using the Website you agree to these Terms and to our <a href="/policy">Personal Data Protection Notice</a>. If you do not agree, please do not use the Website.</p>
+
+<h2>What this Website is for</h2>
+<p>The Website gives information about our property management services and lets you:</p>
 <ul>
-<li>We provide a technical interface that enables commercial and private user(s) (&ldquo;<strong>Member(s)</strong>&rdquo;) to, including but not limited to publish, offer, search for, and book services. Members who publish and offer services are known as host(s)<strong> (&ldquo;Host(s)</strong>&rdquo;) and Members who search for, book, or use services are known as guest(s) (&ldquo;<strong>Guest(s)&rdquo;</strong>). Hosts may offer a range of permitted services including accommodation (&ldquo;<strong>Accommodation</strong>&rdquo;), activities, excursions, and events and a variety of travel (collectively, &ldquo;<strong>Host Services</strong>,&rdquo; and each Host Service offering, a &ldquo;<strong>Listing</strong>&rdquo;).</li>
+<li>ask for an income estimate for your property, or send us an enquiry;</li>
+<li>apply for a job with us;</li>
+<li>sign in to the owner portal, if you are a property owner we manage for; and</li>
+<li>submit a refund request, if we have sent you a link to do so.</li>
 </ul>
+<p><strong>Stays are not booked on this Website.</strong> Stays in the homes we manage are booked through staymoka.com, through third-party booking platforms, or directly with our team. Each booking is governed by the booking terms, house rules and cancellation policy shown to you when you book, and not by these Terms.</p>
+<p><strong>Property owners.</strong> Our services to an owner, and the fees and payments between us, are governed by the management agreement signed with that owner. If these Terms and a signed agreement differ, the signed agreement applies.</p>
+
+<h2>Who may use the Website</h2>
+<p>You must be at least 18 years old and able to enter into a binding contract under Malaysian law. If you use the Website for a company or another person, you confirm that you are authorised to act for them.</p>
+
+<h2>Owner portal accounts</h2>
 <ul>
-<li>If you are a&nbsp;Host, you are responsible for understanding and complying with all laws, rules, regulations and contracts with third parties that apply to your Host Services.</li>
+<li>The information you give us to open or maintain an account must be accurate, current and complete.</li>
+<li>Keep your password confidential. You are responsible for activity carried out through your account, except where it results from our fault.</li>
+<li>Tell us immediately if you suspect that someone else has used your account.</li>
+<li>The owner portal shows booking and income information for your property for your convenience. Statements and payments are made under your management agreement.</li>
+<li>We may suspend or close an account if the information given is false, if the account is misused, or if the management agreement has ended.</li>
 </ul>
-<p><strong>BOOKING &amp; ACCOUNT REGISTRATION</strong></p>
+
+<h2>Estimates and information</h2>
+<p>An income estimate is our indication of what a property may earn, based on bookings in comparable units. It is not a guarantee, a promise of income or a valuation, and actual results can be higher or lower. Articles and guides on the Website are general information and are not legal, tax or financial advice. Please take your own professional advice before making a decision.</p>
+
+<h2>Enquiries, job applications and refund requests</h2>
 <ul>
-<li>You are required to provide accurate, current and complete information including the full name, email, bank account number in order to register for an account with us.</li>
+<li>Information you send us through the Website must be true and must be your own, or sent with the permission of the person it belongs to.</li>
+<li>Sending an enquiry, an estimate request or a job application does not create a contract for services or employment.</li>
+<li>A refund request is assessed under the cancellation policy and booking terms that applied to your booking. Where a refund is approved, we pay it to the account you give us within 14 working days of approval. Please check the account details carefully, because we cannot recover a payment sent to an account you entered wrongly.</li>
 </ul>
+
+<h2>Acceptable use</h2>
+<p>You agree not to:</p>
 <ul>
-<li>You may be able to access and/or use part of the Website without registration. However, you must register an account in order to book one of the Host Services or publishing or offering the Host Services.</li>
+<li>use the Website for anything unlawful, fraudulent or harmful;</li>
+<li>send content that is false, misleading, defamatory, obscene, threatening or discriminatory, or that infringes another person&rsquo;s rights;</li>
+<li>impersonate another person, or misrepresent your connection with a person or company;</li>
+<li>try to gain access to accounts, systems or data you are not authorised to use;</li>
+<li>introduce viruses or other harmful code, or interfere with the operation or security of the Website; or</li>
+<li>copy or collect content or data from the Website by automated means, or send automated or bulk submissions through our forms, without our written permission.</li>
 </ul>
+
+<h2>Intellectual property</h2>
+<p>MOKA&reg; and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. They may not be reproduced, imitated or used in any name, listing, advertisement, website, social media account or messaging profile without our written permission. We act against impersonation: MOKA communicates only from @homemoka.com email addresses, our published telephone numbers and our verified social media accounts, and never asks for deposits or payments to personal bank accounts. Report suspected misuse to hello@homemoka.com.</p>
+<p>All content on the Website, including text, photographs, graphics, layout and software, belongs to us or to our licensors and is protected by copyright and other intellectual property laws. You may view and print pages for your own personal, non-commercial use. You may not otherwise copy, modify, distribute or use the content without our written permission.</p>
+
+<h2>Links and third-party services</h2>
+<p>The Website links to websites and services operated by others, such as booking platforms, payment providers, chat and social media. We do not control them and are not responsible for their content, terms or handling of personal data. Your use of them is governed by their own terms.</p>
+
+<h2>Availability of the Website</h2>
+<p>We work to keep the Website available and its information accurate, but we do not promise that it will always be available, uninterrupted or free of errors. We may change, suspend or withdraw any part of the Website. You are responsible for protecting your own device, including by using up-to-date security software.</p>
+
+<h2>Our responsibility to you</h2>
+<p><strong>Your legal rights are not affected.</strong> Nothing in these Terms excludes or limits any guarantee, right or remedy that you have under the Consumer Protection Act 1999 or any other law of Malaysia that cannot lawfully be excluded or limited. Nothing in these Terms excludes or limits our liability for fraud, or for death or personal injury caused by our negligence.</p>
+<p>Subject to the paragraph above, and to the extent the law permits:</p>
 <ul>
-<li>If you are registering an account for a company or other legal entity, you represent and warrant that you have the authority to legally bind that entity and grant the Company all requisite permissions and licenses provided in these Terms.</li>
+<li>the Website and its content are provided for general information and on an &ldquo;as available&rdquo; basis;</li>
+<li>we are not liable for loss of profit, loss of business or opportunity, loss of data, or any indirect or consequential loss arising from your use of, or inability to use, the Website;</li>
+<li>we are not liable for loss caused by events outside our reasonable control, by a third-party website or service, or by your breach of these Terms; and</li>
+<li>we are not liable for loss that was not a reasonably foreseeable result of our breach.</li>
 </ul>
+<p>Our responsibilities for a stay, or for property management services, are set out in the booking terms or the management agreement that applies, and not in these Terms.</p>
+
+<h2>Your responsibility to us</h2>
+<p>If you breach these Terms or use the Website unlawfully, and we suffer loss or face a claim from a third party as a result, you agree to compensate us for the loss and reasonable costs that your breach caused.</p>
+
+<h2>Suspension and termination</h2>
+<p>We may suspend or end your access to the Website if you breach these Terms or if we reasonably believe that your use puts the Website, other users or us at risk. Where it is reasonable to do so, we will tell you first.</p>
+
+<h2>Events outside our control</h2>
+<p>We are not liable for a delay or failure to perform that results from a cause outside our reasonable control, including natural disasters, floods, fire, epidemics or pandemics, war, terrorism, riots, acts or orders of government, strikes, and failures of power, telecommunications or third-party systems.</p>
+
+<h2>Changes to these Terms</h2>
+<p>We may update these Terms. The date at the top shows when they were last changed. For a material change, we will display a notice on this page for 30 days. A change does not affect rights and obligations that arose before it took effect. If you continue to use the Website after a change takes effect, the updated Terms apply to that use.</p>
+
+<h2>General</h2>
 <ul>
-<li>The Company reserves the right to suspend or terminate your account and/or your access to the Website if any information provided during the registration process or thereafter is inaccurate, fraudulent, not current or incomplete. You are responsible for safeguarding your password. You agree that you will not disclose your password to any third party and that you will take sole responsibility for any activities or actions under your account, whether or not you have authorized such activities or actions. You shall immediately notify us of any unauthorized use of your account by contacting us.</li>
+<li><strong>Notices.</strong> We may give you notice by email to the address you have given us, or by a notice on the Website. You may give us notice by email to hello@homemoka.com.</li>
+<li><strong>Transfer.</strong> We may transfer our rights and obligations under these Terms to a successor to our business. You may not transfer yours without our written consent.</li>
+<li><strong>No waiver.</strong> If we do not enforce a right at once, we may still enforce it later.</li>
+<li><strong>Severability.</strong> If a court finds part of these Terms invalid or unenforceable, the rest continues to apply.</li>
+<li><strong>Whole agreement.</strong> These Terms and the Personal Data Protection Notice are the whole agreement between you and us about your use of the Website. They do not replace a booking contract or a management agreement.</li>
 </ul>
-<ul>
-<li>When you book a Listing, you are agreeing to pay all charges for your booking including the Listing price, applicable fees, offline fees, taxes, and any other items identified during checkout (collectively, &ldquo;<strong>Total Price</strong>&rdquo;). When you receive the booking confirmation, a contract for Host Services ("<strong>Reservation</strong>") is formed directly between you and the Host. In addition to these Terms, you will be subject to, and responsible for complying with, all terms of the Reservation, including without limitation, the cancellation policy and any other rules, standards, policies, or requirements identified in the Listing or during checkout that apply to the Reservation. It is your responsibility to read and understand these rules, standards, policies, and requirements prior to booking a Listing.</li>
-</ul>
-<ul>
-<li>A Reservation is a limited license to enter, occupy and use the Accommodation and the Guest may make any request(s) before or during the stay and the request(s) made shall be subject to availability and our and/or the Host&rsquo;s consent.</li>
-</ul>
-<ul>
-<li>The Host retains the right to enter the Accommodation during your stay, to the extent: (i) it is reasonably necessary, (ii) permitted by your contract with the Host, and (iii) consistent with applicable law. If you stay past checkout, the Host has the right to make you leave in a manner consistent with applicable law, including by imposing reasonable overstay penalties. You may not exceed the maximum number of allowed guests.</li>
-</ul>
-<ul>
-<li>All bookings are instant and payment is required upon confirmation. Once you have made a Reservation, a receipt will be sent to your email.</li>
-</ul>
-<ul>
-<li>If you are a Host, all bookings made by Guest through the Website will be instantly confirmed. As such, please regularly update your calendar and accommodation availability. Once a booking is made, the Company will share with you: (i) the first and last name of the Guest; and (ii) a link to the Guest's account profile page.</li>
-</ul>
-<h2>Listing</h2>
-<ul>
-<li>When a Host creates a Listing with us on the Website, some of the questions shall be asked pertaining to the Accommodation including the location, capacity, size, features, and availability of the Accommodation and pricing and related rules and financial terms. Listing will be made publicly available via the Website and the public will be able to view and book the Accommodation via the Website based upon the information provided in your Listing. You understand and agree that once a Guest requests a booking of your accommodation, you are not allowed to charge a higher price than in the booking request.</li>
-</ul>
-<ul>
-<li>The Hosts hereby expressly acknowledge and agree that the Hosts are solely responsible for honoring any confirmed bookings and making available any accommodation reserved through the Website.</li>
-</ul>
-<h2>Modification, Cancellation and Refund</h2>
-<ul>
-<li>If, as a Guest, you wish to cancel a booking, either prior to or after arriving at the Accommodation, the Guest will be subjected to the Company&rsquo;s cancellation &amp; refund policy.</li>
-</ul>
-<ul>
-<li>If a Host cancels a booking, (i) the Company will refund the Total Price for such booking to the Guest within 14 working days from the time of cancellation; and (ii) the Guest will receive an email confirming the cancellation and other related information. If a Host cancels a confirmed booking and you, as a Guest, have not received&nbsp; an&nbsp; email&nbsp; or&nbsp; other&nbsp; communication&nbsp; from&nbsp; the Company,&nbsp; please contact the Company at +603 6789 2288 or email hello@homemoka.com.</li>
-</ul>
-<ul>
-<li>In certain circumstances, the Company may decide, in its sole discretion, that it is necessary or desirable to cancel a booking made via the Website. The Company will refund to the Guest all of the amounts charged to the Guest. You agree that the Company and the relevant Guest or Host will not have any liability for such cancellations or refunds.</li>
-</ul>
-<ul>
-<li>If, as a Host, the Guest cancels a booking, and the Company issues a refund to the Guest in accordance with the Company&rsquo;s cancellation &amp; refund policy, you agree that in the event you have already been paid the Company shall be entitled to recover the amount of any such Guest refund from you.</li>
-</ul>
-<h2>Use of the Website</h2>
-<ul>
-<li>By using the website, Members agree that you will not upload, post or otherwise transmit or make available any content that is not consistent with the Terms including, but not limited to the following:</li>
-</ul>
-<ol>
-<li>Content that endorses or promotes illegal or harmful activity or violence, or is profane, vulgar, obscene, defamatory, threatening, or discriminatory;</li>
-<li>Political, religious, or social commentary;</li>
-<li>Attempts to impersonate another person;</li>
-<li>Content that is fraudulent, false, misleading or deceptive;</li>
-<li>Content that violates another or entity&rsquo;s rights, including intellectual property rights and privacy rights.</li>
-</ol>
-<ul>
-<li>The Members acknowledge and agree that the Members shall be fully responsible for any content that you posted/uploaded onto the Website. Accordingly, if you are a Host, you represent and warrant that any Listing you post and the booking of, or a Guest's stay at, an accommodation in a Listing you post (i) will not breach any agreements you have entered into, such as homeowners association, condominium, lease or rental agreements, and (ii) will (a) be in compliance with all applicable laws and rules and regulations that may apply to any accommodation included in a Listing that you post (including having all required permits, licenses and registrations), and (b) not conflict with the rights of third parties. Please note that the Company assumes no responsibility for a Host's compliance with any agreements with or duties to third parties, applicable laws, rules and regulations. The Company reserves the right, at any time and without prior notice, to remove or disable access to any Listing for any reason, including Listing that the Company, in its sole discretion, considers to be objectionable for any reason, in violation of these Terms .</li>
-</ul>
-<ul>
-<li>The Company recommends the Hosts to obtain appropriate insurance for their accommodation. Please review any insurance policy that you may have for your accommodation carefully, and in particular please make sure that you are familiar with and understand any exclusions to, and any deductibles that may apply for, such insurance policy, including, but not limited to, whether or not your insurance policy will cover the actions or inactions of Guests (and the individuals the Guest invites to the Accommodation, if applicable) while at your accommodation.</li>
-</ul>
-<h2>Intellectual Property Right</h2>
-<p>MOKA® and the MOKA logo are registered trademarks of Moka Venture Sdn Bhd. They may not be reproduced, imitated or used in any name, listing, advertisement, website, social media account or messaging profile without our written permission. We act against impersonation: MOKA communicates only from @homemoka.com email addresses, our published telephone numbers and our verified social media accounts, and never asks for deposits or payments to personal bank accounts. Report suspected misuse to hello@homemoka.com.</p>
-<ul>
-<li>You acknowledge and agree that all copyright, database rights, trademarks and all other intellectual property rights or other property rights relating to the Website, including but not limited to content, in whichever form, and lay out, shall remain at all times vested in us or their respective owner.</li>
-</ul>
-<ul>
-<li>The contents of our Website are intended for your personal non-commercial use only. Graphics and images on this Website are protected by copyright and may not be reproduced or appropriated in any manner without our written permission. Modification of any of the materials or use of the materials for any other purpose will be a violation of our copyright and other intellectual property rights and the copyright and intellectual property rights of the respective owners.</li>
-</ul>
-<ul>
-<li>This Website, technology and processes contained may be the subject of other intellectual property rights owned by us or by third parties. No licence is granted in respect of such intellectual property rights other than as set out in this Terms. Your use of this Website must not in any way infringe the intellectual property rights of any party.</li>
-</ul>
-<h2>Liability and Indemnity</h2>
-<ul>
-<li>The content on this Website is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. You therefore agree that your use of this Website and the services offered on this Website are provided at your sole risk. The Company disclaims:</li>
-</ul>
-<ol>
-<li>all warranties or representations of any kind regarding this Website, its operations or the accuracy, reliability, completeness, usefulness, non-infringement of intellectual property rights, or quality of any information, content or material included herein;</li>
-<li>to the fullest extent permitted by applicable laws, all conditions and warranties, express and implied, including but not limited to implied warranties of merchantability or fitness for a particular purpose or non-infringement;</li>
-</ol>
-<ul>
-<li>all liability to you or anyone else for any direct, indirect, special, consequential or punitive loss or damage (including without limitation loss of revenue, loss of goodwill, loss of reputation and loss of, or damage to, data), incurred or suffered in connection with the use or inability to use this Website whether based in contract, tort or otherwise even if we are informed of their possibility; and</li>
-</ul>
-<ol>
-<li>all liability to you or anyone else if interference with or damage to your computer systems occurs in connection with use of this Website or an external site. You must take your own precautions to ensure that whatever you select for use from this Website is free of viruses or anything else that may interfere with or damage the operation of your computer systems</li>
-</ol>
-<p>In the event of any third-party request, loss, liability, proposition, or expense (including legal fees) brought against the Company arising from or relating to your usage of this Website and/or the services, you agree to defend, indemnify and hold us, our directors, employees, agents, partners, affiliates and other licensed persons, harmless at all time.</p>
-<h2>Termination</h2>
-<ul>
-<li>We reserve the right at our sole discretion to immediately terminate your access to and use of the Website if you shall fail to comply with the Terms.</li>
-</ul>
-<h2>Force Majuere</h2>
-<ul>
-<li>The Company shall not be liable for any delay or failure to perform resulting from causes outside its reasonable control, including, but not limited to, acts of God, natural disasters, war, terrorism, riots, embargoes, acts of civil or military authorities, fire, floods, accidents, pandemics, epidemics or disease, strikes or shortages of transportation facilities, fuel, energy, labor or materials.</li>
-</ul>
-<h2>Notices</h2>
-<ul>
-<li>Any notice required or permitted may be made by e-mail properly addressed to the intended recipient, and in the case of notice to us at the e-mail address provided below.</li>
-</ul>
-<h2>Assignment</h2>
-<ul>
-<li>We may assign, delegate and/or otherwise transfer our rights and obligations hereunder to any person or entity. You shall however not assign, delegate or otherwise transfer any of your rights or obligations hereunder without our prior written consent. The contract formed hereunder shall be binding upon and inure to the benefit of the parties and their respective successors and permitted assigns.</li>
-</ul>
-<h2>Waiver</h2>
-<ul>
-<li>No waiver on our part to exercise, and no delay in exercising, any right, power or provision of the Terms shall operate as a waiver thereof, nor shall any single or partial exercise of any right, power or provision hereunder preclude the exercise of that or any other right, power or provision. The rights and remedies provided in the Terms are cumulative and are not exclusive of any rights or remedies provided by law.</li>
-</ul>
-<h2>Severability</h2>
-<ul>
-<li>Should any part of the Terms be declared invalid or unenforceable by a court of competent jurisdiction, this shall not affect the validity of any remaining portion and such remaining portion shall remain in full force and effect as if the invalid portion of the Terms had been eliminated.</li>
-</ul>
-<h2>Entire Agreement</h2>
-<ul>
-<li>The Terms contain the entire understanding between us with respect to the Website. Neither you nor the Company shall be bound by any express, tacit or implied representation, warranty, promise or the like not recorded herein. Unless otherwise specifically stated these Website terms and conditions supersede and replace all prior commitments, undertakings or representations, whether written or oral, between you and the Company in respect of your use of the Website.</li>
-</ul>
-<p><strong>GOVERNING LAW &amp; JURISDICTION</strong></p>
-<ul>
-<li>The Terms shall be governed by and construed in accordance with the laws of Malaysia and all disputes arising in any way out of or affecting the Terms shall be subject to the exclusive jurisdiction of the courts of Malaysia, to which the parties agree to submit.</li>
-</ul>
-<ul>
-<li>As the Website may be accessed internationally, the users who access the Website are responsible for compliance with the laws of the jurisdictions from which they access the Website, if and to the extent local laws are applicable.</li>
-</ul>
-<h2>Personal Data Protection Policy</h2>
-<ul>
-<li>On registration, you must provide us with accurate, complete registration information and it is your responsibility to update and maintain changes to that information on the Website. We are entitled to rely on any information you provide to us.</li>
-</ul>
-<ul>
-<li>Please refer to our Privacy Notice for our personal data protection policy governing our collection of personal data.</li>
-</ul>
-<ul>
-<li>
-Privacy Policy
-</li>
-<li>
-Terms and Conditions
-</li>
-</ul>
+
+<h2>Governing law and disputes</h2>
+<p>These Terms are governed by the laws of Malaysia, and the courts of Malaysia have jurisdiction over any dispute arising from them. This does not affect any right you have to bring a claim before the Tribunal for Consumer Claims Malaysia or another body that the law makes available to you.</p>
+<p>If you use the Website from outside Malaysia, you are responsible for complying with the laws of the place you are in.</p>
+
+<h2>Personal data</h2>
+<p>We handle personal data as described in our <a href="/policy">Personal Data Protection Notice</a>.</p>
+
+<h2>Contact us</h2>
+<p>Moka Venture Sdn. Bhd. (Registration No. 202001018827 (1375147-V))<br>11.1, 11th Floor Menara Lien Hoe, 8, Persiaran Tropicana, 47410 Petaling Jaya, Selangor, Malaysia<br>Email: hello@homemoka.com<br>Telephone: +603 6789 2288, Monday to Friday, 9am to 6pm</p>
             </article>
             <aside class="legal-aside">
                 <div class="legal-toc" id="legalToc" hidden>
