@@ -50,6 +50,8 @@ class SitemapController extends Controller
         // Blade skips any line containing a literal `<?`, treating it as a raw
         // PHP tag, so the declaration would pass through uncompiled.
         $solutions = collect(config('solutions.pages', []))->map(fn ($p) => ['path' => '/solutions/' . $p['slug'], 'priority' => '0.9', 'changefreq' => 'monthly', 'lastmod' => \Carbon\Carbon::parse($p['updated'])->toAtomString()]);
+        // Open roles with a posted date each have their own page.
+        $solutions = $solutions->concat(collect(config('careers.roles', []))->filter(fn ($r) => ! empty($r['posted']))->map(fn ($r) => ['path' => '/careers/' . $r['slug'], 'priority' => '0.6', 'changefreq' => 'weekly', 'lastmod' => $r['posted']]));
         $posts = collect(config('blog.posts', []))->filter(fn ($p) => $p['published'] <= now()->toDateString())->map(function ($post) {
             return [
                 'slug'    => $post['slug'],

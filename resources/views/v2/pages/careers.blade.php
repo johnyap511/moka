@@ -1,11 +1,12 @@
 {{-- Careers page on the homepage template, blog styling. Route: /careers. Roles come from config/careers.php --}}
 @extends('auth.newTheme.layout')
-@section('seo_title', 'Careers at MOKA | Jobs in Short-Stay Property Management')
-@section('seo_description', 'Work with MOKA, the short-stay property management company based at EkoCheras, Kuala Lumpur. See the open roles and apply online in a few minutes.')
+@section('seo_title', ! empty($focus) ? $focus['title'] . ' | Careers at MOKA' : 'Careers at MOKA | Jobs in Short-Stay Property Management')
+@section('seo_description', ! empty($focus) ? (mb_strlen($focus['summary'] ?? '') > 110 ? $focus['summary'] : trim(($focus['summary'] ?? '') . ' Apply online for this role at MOKA, Kuala Lumpur.')) : 'Work with MOKA, the short-stay property management company based at EkoCheras, Kuala Lumpur. See the open roles and apply online in a few minutes.')
 
 @php
     $roleSlugs = collect($roles)->pluck('slug');
-    $picked    = old('role', request('role', 'general'));
+    $focus     = $focus ?? null;
+    $picked    = old('role', $focus['slug'] ?? request('role', 'general'));
     $picked    = $roleSlugs->contains($picked) ? $picked : 'general';
     $sent      = session('success');
     $roleCount = count($roles);
@@ -25,17 +26,19 @@
             ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'Careers', 'item' => url('/careers')],
         ]];
+        if ($focus) { $crumbs['itemListElement'][] = ['@type' => 'ListItem', 'position' => 3, 'name' => $focus['title'], 'item' => url('/careers/' . $focus['slug'])]; }
         // A role is offered to job search engines only once it carries a 'posted' date.
-        $postings = collect($roles)->filter(fn ($r) => !empty($r['posted']))->map(fn ($r) => [
+        $postings = collect($focus ? [$focus] : [])->filter(fn ($r) => !empty($r['posted']))->map(fn ($r) => [
             '@context' => 'https://schema.org', '@type' => 'JobPosting',
             'title' => $r['title'],
-            'description' => '<p>' . e($r['summary'] ?? $r['title']) . '</p>' . (!empty($r['points']) ? '<ul>' . collect($r['points'])->map(fn ($p) => '<li>' . e($p) . '</li>')->implode('') . '</ul>' : ''),
+            'description' => '<p>' . e($r['summary'] ?? $r['title']) . '</p>' . (!empty($r['points']) ? '<ul>' . collect($r['points'])->map(fn ($p) => '<li>' . e($p) . '</li>')->implode('') . '</ul>' : '') . '<p>' . e(implode(', ', array_filter([$r['type'] ?? null, $r['location'] ?? null]))) . '. Apply online at homemoka.com/careers.</p>',
             'datePosted' => $r['posted'],
             'employmentType' => $r['employment'] ?? 'FULL_TIME',
             'directApply' => true,
-            'url' => url('/careers') . '#role-' . $r['slug'],
-            'hiringOrganization' => ['@type' => 'Organization', '@id' => url('/') . '/#organization', 'name' => 'MOKA', 'sameAs' => url('/')],
-            'jobLocation' => ['@type' => 'Place', 'address' => ['@type' => 'PostalAddress', 'addressLocality' => $r['city'] ?? 'Kuala Lumpur', 'addressRegion' => $r['region'] ?? ($r['city'] ?? 'Kuala Lumpur'), 'addressCountry' => 'MY']],
+            'url' => url('/careers/' . $r['slug']),
+            'identifier' => ['@type' => 'PropertyValue', 'name' => 'MOKA', 'value' => $r['slug']],
+            'hiringOrganization' => ['@type' => 'Organization', '@id' => url('/') . '/#organization', 'name' => 'MOKA', 'sameAs' => url('/'), 'logo' => asset('new-theme23/images/logo.png')],
+            'jobLocation' => ['@type' => 'Place', 'address' => ['@type' => 'PostalAddress', 'streetAddress' => 'EkoCheras, Jalan Cheras', 'postalCode' => '56000', 'addressLocality' => $r['city'] ?? 'Kuala Lumpur', 'addressRegion' => $r['region'] ?? ($r['city'] ?? 'Kuala Lumpur'), 'addressCountry' => 'MY']],
         ] + (!empty($r['closes']) ? ['validThrough' => $r['closes']] : []))->values();
     @endphp
     <script type="application/ld+json">{!! json_encode($crumbs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -72,6 +75,9 @@
     .cr-hero h1 em{font-style:normal;color:var(--orange);display:block}
     .cr-hero__lead{font-size:clamp(17.5px,1.55vw,20.5px);line-height:1.6;color:rgba(255,255,255,.84);max-width:33em;margin:0 0 32px}
     .cr-actions{display:flex;flex-wrap:wrap;gap:12px}
+    .cr-hero__tags{display:flex;flex-wrap:wrap;gap:8px;margin:-6px 0 20px}
+    .cr-hero__tags span{font-family:SemiBold;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.14);border-radius:999px;padding:7px 14px}
+    .cr-hero__pts{margin:-14px 0 30px;padding-left:20px;font-size:17px;line-height:1.6;color:rgba(255,255,255,.84)}
     .cr-hero__art{position:relative;padding-bottom:56px}
     .cr-hero__art img{display:block;width:100%;aspect-ratio:1/1.04;object-fit:cover;-webkit-clip-path:url(#cr-house);clip-path:url(#cr-house);background:#0d4f4d}
     .cr-chip{position:absolute;display:flex;align-items:center;gap:12px;background:#fff;color:var(--ink);border-radius:18px;padding:12px 18px 12px 12px;box-shadow:0 18px 40px rgba(0,0,0,.25)}
@@ -229,6 +235,17 @@
         <header class="cr-hero">
             <div class="cr-wrap cr-hero__grid">
                 <div class="cr-hero__copy">
+                    @if($focus)
+                    <p class="cr-eyebrow"><a href="/careers" style="color:inherit;text-decoration:none">Careers at MOKA</a> · Open role</p>
+                    <h1>{{ $focus['title'] }}</h1>
+                    <p class="cr-hero__tags">@foreach(array_filter([$focus['type'] ?? null, $focus['location'] ?? null]) as $tag)<span>{{ $tag }}</span>@endforeach</p>
+                    <p class="cr-hero__lead">{{ $focus['summary'] ?? '' }}</p>
+                    @if(!empty($focus['points']))<ul class="cr-hero__pts">@foreach($focus['points'] as $point)<li>{{ $point }}</li>@endforeach</ul>@endif
+                    <div class="cr-actions">
+                        <a class="cr-btn cr-btn--go" href="#apply">Apply for this role {!! $arrow !!}</a>
+                        <a class="cr-btn cr-btn--line" href="/careers#roles">All open roles</a>
+                    </div>
+                    @else
                     <p class="cr-eyebrow">Careers at MOKA</p>
                     <h1>Hosting is what we do. <em>Come do it with us.</em></h1>
                     <p class="cr-hero__lead">We run homes like hotels for their owners. If you care about guests, clean rooms and getting the details right, there is a place for you here.</p>
@@ -236,6 +253,7 @@
                         <a class="cr-btn cr-btn--go" href="#roles">See open roles {!! $arrow !!}</a>
                         <a class="cr-btn cr-btn--line" href="#apply">Apply now</a>
                     </div>
+                    @endif
                 </div>
                 <div class="cr-hero__art">
                     <img src="{{ asset('new-theme23/images/projects/skyawani-4/1.webp') }}" width="1280" height="1600" alt="Dining and living area of an apartment managed by MOKA" fetchpriority="high" decoding="async">
@@ -245,6 +263,7 @@
             </div>
         </header>
 
+        @unless($focus)
         <div class="cr-facts">
             <div class="cr-wrap">
                 <ul>
@@ -272,20 +291,24 @@
                 </ul>
             </div>
         </section>
+        @endunless
 
         <section class="cr-sec cr-sec--cream" id="roles" aria-labelledby="cr-h-roles">
             <div class="cr-wrap">
                 <div class="cr-head">
                     <div>
-                        <p class="cr-eyebrow">Open roles</p>
-                        <h2 id="cr-h-roles">Find your place.</h2>
+                        <p class="cr-eyebrow">{{ $focus ? 'More roles' : 'Open roles' }}</p>
+                        <h2 id="cr-h-roles">{{ $focus ? 'Other open roles.' : 'Find your place.' }}</h2>
                     </div>
-                    @if($roleCount)<span class="cr-count">{{ $roleCount }} {{ $roleCount === 1 ? 'role' : 'roles' }} open now</span>@endif
+                    @if($roleCount && ! $focus)<span class="cr-count">{{ $roleCount }} {{ $roleCount === 1 ? 'role' : 'roles' }} open now</span>@endif
                 </div>
                 <div class="cr-jobs">
-                    @foreach($roles as $i => $role)
-                        <a class="cr-job" href="#apply" data-role="{{ $role['slug'] }}" id="role-{{ $role['slug'] }}">
-                            <span class="no" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                    @php $rowNo = 0; @endphp
+                    @foreach($roles as $role)
+                        @continue($focus && $focus['slug'] === $role['slug'])
+                        @php $rowNo++; @endphp
+                        <a class="cr-job" href="/careers/{{ $role['slug'] }}#apply" id="role-{{ $role['slug'] }}">
+                            <span class="no" aria-hidden="true">{{ str_pad((string) $rowNo, 2, '0', STR_PAD_LEFT) }}</span>
                             <span class="txt">
                                 <h3>{{ $role['title'] }}</h3>
                                 @if(!empty($role['summary']))<p class="sum">{{ $role['summary'] }}</p>@endif

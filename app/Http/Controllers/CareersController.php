@@ -20,7 +20,21 @@ class CareersController extends Controller
 {
     public function index()
     {
-        return view('v2.pages.careers', ['roles' => config('careers.roles', [])]);
+        return view('v2.pages.careers', ['roles' => config('careers.roles', []), 'focus' => null]);
+    }
+
+    /**
+     * One page per open role. Job search engines want a job's markup on a page about that job alone,
+     * so the list page carries none. A role that is no longer listed sends the visitor to the list.
+     */
+    public function role(string $slug)
+    {
+        $roles = config('careers.roles', []);
+        $focus = collect($roles)->firstWhere('slug', $slug);
+        if (! $focus) {
+            return redirect('/careers', 301);
+        }
+        return view('v2.pages.careers', ['roles' => $roles, 'focus' => $focus]);
     }
 
     public function store(Request $request)

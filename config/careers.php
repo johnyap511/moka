@@ -31,7 +31,8 @@ return [
     'bcc' => ['sam@homemoka.com'],
 
     // Roles named by Sam on 16 Nov 2026. He asked to keep the descriptions simple: one line each, no bullet points.
-    // No 'posted' date yet, so they are not offered to job search engines until he confirms the wording.
+    // 'posted' dates added 16 Nov 2026 on Sam's instruction: each role has its own page at /careers/{slug}
+    // carrying the job markup. Remove a role here when it is filled; its page then redirects to /careers.
     'roles' => [
         [
             'slug'     => 'front-desk-operations',
@@ -39,7 +40,7 @@ return [
             'type'     => 'Full time',
             'location' => 'EkoCheras, Kuala Lumpur',
             'summary'  => 'Welcome guests, handle check-ins and check-outs, and look after them during their stay.',
-            'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
+            'posted' => '2026-11-16', 'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
         [
             'slug'     => 'maintenance-technician',
@@ -47,7 +48,7 @@ return [
             'type'     => 'Full time',
             'location' => 'EkoCheras and other sites',
             'summary'  => 'Repair and maintain our units so every one is ready for the next guest.',
-            'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
+            'posted' => '2026-11-16', 'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
         [
             'slug'     => 'account-and-finance-executive',
@@ -55,7 +56,7 @@ return [
             'type'     => 'Full time',
             'location' => 'EkoCheras, Kuala Lumpur',
             'summary'  => 'Prepare owner reports, handle payments and keep the accounts accurate.',
-            'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
+            'posted' => '2026-11-16', 'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
         [
             'slug'     => 'business-development-executive',
@@ -63,7 +64,7 @@ return [
             'type'     => 'Full time',
             'location' => 'EkoCheras, Kuala Lumpur',
             'summary'  => 'Meet property owners, agents and developers, and bring new units to MOKA.',
-            'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
+            'posted' => '2026-11-16', 'employment' => 'FULL_TIME', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
         [
             'slug'     => 'internship-program',
@@ -71,7 +72,7 @@ return [
             'type'     => 'Internship',
             'location' => 'EkoCheras, Kuala Lumpur',
             'summary'  => 'Learn how a short-stay property business runs by working with one of our teams. Tell us your course and internship dates when you apply.',
-            'employment' => 'INTERN', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
+            'posted' => '2026-11-16', 'employment' => 'INTERN', 'city' => 'Kuala Lumpur', 'region' => 'Kuala Lumpur',
         ],
     ],
 ];

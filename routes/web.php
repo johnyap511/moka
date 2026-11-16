@@ -56,6 +56,7 @@ Route::middleware('lang')->group(function () {
     /* ── Public Info Pages ──────────────────────────────────────────── */
     Route::get('/careers',         'CareersController@index');
     Route::post('/careers',        'CareersController@store')->middleware('throttle:10,1');
+    Route::get('/careers/{slug}',  'CareersController@role')->where('slug', '[a-z0-9-]+');
     Route::redirect('/career', '/careers', 301);
     Route::redirect('/jobs', '/careers', 301);
     Route::get('/contact',         'Auth\WebController@contact');
