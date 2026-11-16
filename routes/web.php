@@ -54,6 +54,10 @@ Route::middleware('lang')->group(function () {
     Route::get('/language/{lang}', 'Auth\HomeController@setLanguage');
 
     /* ── Public Info Pages ──────────────────────────────────────────── */
+    Route::get('/careers',         'CareersController@index');
+    Route::post('/careers',        'CareersController@store')->middleware('throttle:10,1');
+    Route::redirect('/career', '/careers', 301);
+    Route::redirect('/jobs', '/careers', 301);
     Route::get('/contact',         'Auth\WebController@contact');
     Route::post('/contact',        'Auth\WebController@contactStore')->middleware('throttle:10,1');
     Route::get('/policy',          'Auth\WebController@policy');

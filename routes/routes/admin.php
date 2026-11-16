@@ -134,6 +134,8 @@ Route::get('/setting/admin-roles', 'Admin\AdminRoleController@index')->name('adm
 Route::get('/setting/estimate', 'Admin\SettingController@estimate');
 Route::post('/setting/estimate/{id}/follow-up', 'Admin\SettingController@estimateFollowUp');
 Route::delete('/setting/estimate/{id}', 'Admin\SettingController@estimateDestroy');
+Route::get('/careers', 'Admin\JobApplicationController@index');
+Route::get('/careers/{id}/cv', 'Admin\JobApplicationController@cv')->where('id', '[0-9]+');
 Route::get('/setting/logs', 'Admin\SettingController@logs');
 Route::resource('/setting/zone', 'Admin\ZoneController');
 Route::get('/listing/{listingId}/zone', 'Admin\ZoneController@listingZone');

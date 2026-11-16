@@ -21,6 +21,7 @@ class SitemapController extends Controller
         ['path' => '/about',        'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => '2026-09-10'],
         ['path' => '/designs',      'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => '2026-09-11'],
         ['path' => '/contact',      'priority' => '0.6', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
+        ['path' => '/careers',      'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => '2026-11-16'],
         ['path' => '/policy',       'priority' => '0.3', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
         ['path' => '/terms',        'priority' => '0.3', 'changefreq' => 'yearly',  'lastmod' => '2026-09-08'],
     ];

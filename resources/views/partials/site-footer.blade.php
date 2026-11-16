@@ -54,6 +54,7 @@
                     <li><a href="/service">Our Services</a></li>
                     <li><a href="/designs">Our Designs</a></li>
                     <li><a href="/about">About Us</a></li>
+                    <li><a href="/careers">Careers</a></li>
                     <li><a href="/blog">Blog</a></li>
                 </ul>
             </div>
