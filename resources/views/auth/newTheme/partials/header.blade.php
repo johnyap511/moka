@@ -28,7 +28,7 @@
                             <a href="/login"><i class="fa-solid fa-user d-lg-none"></i><span class="d-lg-none">Owner log in</span><span class="d-none d-lg-inline">Log In</span></a>
                         </li>
                         <li class="nav-item d-none d-lg-block">
-                            <a href="/get/estimate" target="_blank" class="get-est-btn">Get a quick estimate (Free)</a>
+                            <a href="/get/estimate" target="_blank" class="get-est-btn">Get a quick estimate <span class="free">(Free)</span></a>
                         </li>
                     </ul>
                 </div>

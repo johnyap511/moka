@@ -114,3 +114,17 @@
     .header-menu .nav-login>a { display: inline-flex; align-items: center; gap: 10px; border: 2px solid #fff; border-radius: 20px; padding: 3px 18px 6px; font-size: 18px; line-height: 1.3; }
     .header-menu .nav-login>a i { font-size: 15px; }
 }
+
+/* 16 Nov 2026: between 992 and 1279 px the full menu wrapped onto two lines and crowded the logo.
+   Every item now stays on one line, and the type and spacing scale with the window. */
+.header-menu>li, .header-menu>li>a { white-space: nowrap; }
+.get-est-btn .free { color: inherit; }
+@media (min-width:992px) and (max-width:1279.98px) {
+    .header-menu.fs-5 { font-size: clamp(16px, 1.55vw, 18.5px) !important; gap: clamp(10px, 1.3vw, 18px); }
+    .get-est-btn { font-size: clamp(16px, 1.55vw, 18.5px); border-width: 2px; padding: 1px 12px 3px; }
+    .get-est-btn .free { display: none; }
+}
+/* Phones: the header estimate button was 25 px tall, too small to tap. */
+@media (max-width:575px) {
+    .get-est-btn-sm { font-size: 12px; padding: 8px 12px; min-height: 38px; white-space: nowrap; }
+}

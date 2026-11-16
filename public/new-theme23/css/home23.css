@@ -70,3 +70,15 @@
         padding-top: 61px;
     }
 }
+/* 16 Nov 2026: phone fixes for the estimate form on the home page. 16 px text stops iPhones
+   zooming in when a field is tapped; taller fields are easier to hit; and the button leaves
+   room for the WhatsApp bubble that sits at the bottom right of the screen. */
+.form-sec p { text-align: left; }
+@media (max-width:767.98px) {
+    .banner-form input:not([type=checkbox]):not([type=submit]) { font-size: 16px; padding: 12px 16px; }
+    .banner-form .bed-count { padding: 9px 15px; font-size: 16px; }
+    .banner-form input[type=submit] { min-height: 48px; }
+}
+@media (max-width:575.98px) {
+    .banner-form input[type=submit] { width: calc(100% - 80px); }
+}
