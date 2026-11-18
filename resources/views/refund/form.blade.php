@@ -179,10 +179,9 @@
     @endif
 
     @if(config('moka.turnstile_site'))
-    <div class="card" style="padding:14px 18px"><div class="cf-turnstile" data-sitekey="{{ config('moka.turnstile_site') }}" data-theme="light"></div>
+    <div class="card" style="padding:14px 18px">@include('partials.turnstile')
         @error('cf-turnstile-response')<div class="err">{{ $message }}</div>@enderror
     </div>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     @endif
 
     <label class="consent"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in', '1') ? 'checked' : '' }}><span>Send me MOKA offers and news by email or WhatsApp. Unsubscribe any time.</span></label>
