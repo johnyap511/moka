@@ -37,6 +37,7 @@
                     <label><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
                     <a href="/password/reset">Forgot password?</a>
                 </div>
+                @include('partials.turnstile')
                 <button type="submit">Sign in</button>
             </form>
             <p class="foot">Not a MOKA owner yet? <a href="/get/estimate">Get a free estimate</a></p>

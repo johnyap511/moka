@@ -29,6 +29,7 @@
                 @csrf
                 <label for="f-email">Email address</label>
                 <input id="f-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" enterkeyhint="go" spellcheck="false" autocapitalize="off" placeholder="you@example.com">
+                @include('partials.turnstile')
                 <button type="submit">Send reset link</button>
             </form>
             <p class="foot"><a href="/login">Back to sign in</a></p>

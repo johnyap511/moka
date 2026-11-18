@@ -42,6 +42,9 @@ class ResetPasswordController extends Controller
                 : __($status)]);
         }
 
+        // A reset proves the owner of the mailbox, so it lifts the lock that wrong passwords put on the account.
+        \Illuminate\Support\Facades\RateLimiter::clear('login-lock:' . sha1(mb_strtolower(trim((string) $request->email))));
+
         return redirect('/login')->with('status', 'Your password is set. Sign in with it.');
     }
 }

@@ -53,6 +53,7 @@
                 <label><input type="checkbox" name="remember" value="1" checked> Keep me signed in</label>
                 <a href="/password/reset?app=1">Forgot password?</a>
             </div>
+            @include('partials.turnstile')
             <button type="submit">Sign in</button>
         </form>
     </div>

@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
+    const MAX_WRONG = 5;
+    const LOCK_SECONDS = 900;
+
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
@@ -31,16 +35,32 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Account lock: five wrong passwords for one email, from any address, lock that email for
+        // 15 minutes. The route's own limit counts per address, which does nothing against guesses
+        // spread over thousands of addresses. The same reply is given whether or not the email exists.
+        $lockKey = 'login-lock:' . sha1(mb_strtolower(trim((string) $request->email)));
+        if (RateLimiter::tooManyAttempts($lockKey, self::MAX_WRONG)) {
+            $minutes = max(1, (int) ceil(RateLimiter::availableIn($lockKey) / 60));
+            return back()->withErrors(['email' => "Too many wrong attempts. For your security this account is locked for {$minutes} more minute" . ($minutes === 1 ? '' : 's') . '. You can also reset your password.'])->onlyInput('email');
+        }
+
+        if (! \App\Support\Turnstile::passes($request)) {
+            return back()->withErrors(['email' => \App\Support\Turnstile::MESSAGE])->onlyInput('email');
+        }
+
         // Several records can share one email (a staff login and a guest profile): sign in the admin one.
         // Resolve on the auth model (App\User carries the role methods), not App\Models\User.
         $found = \App\Models\User::preferredForEmail($request->email);
         $user  = $found ? \App\User::find($found->id) : null;
         if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            RateLimiter::clear($lockKey);
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
             $user->forceFill(['last_login_at' => now()])->saveQuietly();
             return $this->redirectAfterLogin();
         }
+
+        RateLimiter::hit($lockKey, self::LOCK_SECONDS);
 
         return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
     }
