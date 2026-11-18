@@ -824,8 +824,13 @@
             Smarter Management with MOKA Dashboard
         </h2>
         <div class="d-flex flex-column flex-md-row align-items-center mt-4">
-            <div class="col-md-6 d-flex justify-content-center py-3">
-                <picture><source srcset="{{ asset('new-theme23/images/Asset%205.webp') }}" type="image/webp"><img loading="lazy" src="{{ asset('new-theme23/images/Asset%205.png') }}" alt="" srcset="" class="w-50"></picture>
+            <div class="col-12 col-md-6 d-flex justify-content-center py-3">
+                {{-- Five owner-dashboard screens; the list on the right switches between them (changeImage in the layout). --}}
+                <div class="img-tab w-100 d-flex justify-content-center">
+                    @foreach(['Overview', 'Calendar', 'Performance', 'Cleans', 'Maintenance'] as $n => $screen)
+                    <img loading="lazy" src="{{ asset('new-theme23/images/' . ($n + 1) . '.webp') }}" alt="MOKA owner dashboard: {{ $screen }}" width="600" height="1133" class="w-50{{ $n ? ' d-none' : '' }}">
+                    @endforeach
+                </div>
             </div>
             <div class="col-md-6 py-3">
                 <p class="text-orange-1">
@@ -833,23 +838,23 @@
                     platform and put your home at the heart of it.
                 </p>
                 <ul class="smarter-management-ul">
-                    <li class="my-4">
+                    <li class="my-4" onclick="changeImage(0)" role="button" tabindex="0">
                         <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Overview </p>
                     </li>
-                    <li class="my-4">
+                    <li class="my-4" onclick="changeImage(1)" role="button" tabindex="0">
                         <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Calendar </p>
                     </li>
-                    <li class="my-4">
+                    <li class="my-4" onclick="changeImage(2)" role="button" tabindex="0">
                         <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Performance </p>
                     </li>
-                    <li class="my-4">
+                    <li class="my-4" onclick="changeImage(3)" role="button" tabindex="0">
                         <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Cleans </p>
                     </li>
-                    <li class="my-4">
+                    <li class="my-4" onclick="changeImage(4)" role="button" tabindex="0">
                         <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                         <p class="heading-orange-3"> Maintenance </p>
                     </li>

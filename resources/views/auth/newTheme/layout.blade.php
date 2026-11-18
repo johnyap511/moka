@@ -93,16 +93,44 @@
          });
       });
 
-    // Smarter Management image tabs (services page). Guarded likewise.
+    // Smarter Management screens (home and services pages): the five list items switch the phone screen.
     let imageTab = document.querySelector(".img-tab");
     let imageContainer = imageTab ? imageTab.children : [];
+    let imageTabItems = document.querySelectorAll(".smarter-management-ul li[onclick]");
     function changeImage(index) {
         for (const i of imageContainer) {
             i.classList.add("d-none");
+            i.classList.remove("img-tab__in");
         }
-        if (imageContainer[index]) imageContainer[index].classList.remove("d-none");
+        const shown = imageContainer[index];
+        if (shown) {
+            shown.classList.remove("d-none");
+            void shown.offsetWidth;                 // restart the entrance animation
+            shown.classList.add("img-tab__in");
+        }
+        imageTabItems.forEach(function (li, n) {
+            li.classList.toggle("is-active", n === index);
+            li.setAttribute("aria-pressed", n === index ? "true" : "false");
+        });
     }
-    if (imageTab) changeImage(0);
+    if (imageTab) {
+        changeImage(0);
+        // Enter or Space works like a click, for keyboard users.
+        imageTabItems.forEach(function (li) {
+            li.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); li.click(); }
+            });
+        });
+        // Fetch the hidden screens once the section is near, so a click switches at once.
+        if ("IntersectionObserver" in window) {
+            const io = new IntersectionObserver(function (en) {
+                if (!en[0].isIntersecting) return;
+                for (const i of imageContainer) { i.loading = "eager"; }
+                io.disconnect();
+            }, { rootMargin: "400px" });
+            io.observe(imageTab);
+        }
+    }
 </script>
 
 @stack('scripts')

@@ -969,23 +969,23 @@
                         platform and put your home at the heart of it.
                     </p>
                     <ul class="smarter-management-ul">
-                        <li class="my-4" onclick="changeImage(0)">
+                        <li class="my-4" onclick="changeImage(0)" role="button" tabindex="0">
                             <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                             <p class="heading-orange-3"> Overview </p>
                         </li>
-                        <li class="my-4" onclick="changeImage(1)">
+                        <li class="my-4" onclick="changeImage(1)" role="button" tabindex="0">
                             <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                             <p class="heading-orange-3"> Calendar </p>
                         </li>
-                        <li class="my-4" onclick="changeImage(2)">
+                        <li class="my-4" onclick="changeImage(2)" role="button" tabindex="0">
                             <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                             <p class="heading-orange-3"> Performance </p>
                         </li>
-                        <li class="my-4" onclick="changeImage(3)">
+                        <li class="my-4" onclick="changeImage(3)" role="button" tabindex="0">
                             <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                             <p class="heading-orange-3"> Cleans </p>
                         </li>
-                        <li class="my-4" onclick="changeImage(4)">
+                        <li class="my-4" onclick="changeImage(4)" role="button" tabindex="0">
                             <img loading="lazy" src="{{ asset('new-theme23/images/Asset%2011.png') }}" alt="">
                             <p class="heading-orange-3"> Maintenance </p>
                         </li>

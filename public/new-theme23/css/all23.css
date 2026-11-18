@@ -601,3 +601,17 @@ picture { display: contents; }
 
 /* Images with width/height attributes keep their aspect ratio when CSS sets the width */
 img[width][height] { height: auto; }
+
+/* 18 Nov 2026: the five dashboard items are clickable. The chosen one is full strength with its
+   arrow nudged right; the others are dimmed. The phone screen slides in when it changes. */
+.smarter-management-ul li { opacity: .5; transition: opacity .2s ease; border-radius: 10px; }
+.smarter-management-ul li:hover, .smarter-management-ul li.is-active { opacity: 1; }
+.smarter-management-ul li img { transition: transform .2s ease; }
+.smarter-management-ul li.is-active img, .smarter-management-ul li:hover img { transform: translateX(6px); }
+.smarter-management-ul li:focus-visible { outline: 3px solid rgba(255, 107, 53, .55); outline-offset: 6px; opacity: 1; }
+.smarter-management-ul li:not([onclick]) { opacity: 1; cursor: default; }
+.img-tab img { height: auto; }
+.img-tab__in { animation: imgTabIn .38s cubic-bezier(.2, .7, .2, 1); }
+@keyframes imgTabIn { from { opacity: .35; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .img-tab__in { animation: none; } .smarter-management-ul li, .smarter-management-ul li img { transition: none; } }
+@media (max-width: 767.98px) { .img-tab img.w-50 { width: 62% !important; max-width: 280px; } }
