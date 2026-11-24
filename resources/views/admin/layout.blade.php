@@ -268,6 +268,12 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     </a>
     @endif
     @endif
+    @if(admin_can('reports.push'))
+    <a href="/admin/units-to-push" class="sidebar-link {{ request()->is('admin/units-to-push*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+        Units to push
+    </a>
+    @endif
 
     @if(admin_can('listings.view'))
     <div class="sidebar-section">Properties</div>
