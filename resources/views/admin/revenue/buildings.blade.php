@@ -68,14 +68,17 @@
 
 <div class="rd-card">
     <h2>By building</h2>
+    @php $cl = $d['cleaning']; @endphp
+    <p class="sub">Cleaning fees for {{ $d['month'] }} so far: RM {{ number_format($cl['buildings'] + $cl['other']) }} across the buildings{{ $cl['extra'] > 0 ? ', plus RM ' . number_format($cl['extra']) . ' on extra rooms' : '' }}. They are not part of the room revenue on these pages.</p>
     <div class="rd-wrap">
         <table class="rd-table cards" style="min-width:0">
-            <thead><tr><th>Building</th><th>Units trading</th><th>Room types</th><th>Short-stay nights sold</th><th>Types to add</th><th>Types to fill first</th></tr></thead>
+            <thead><tr><th>Building</th><th>Units trading</th><th>Room types</th><th>Short-stay nights sold</th><th>Types to add</th><th>Types to fill first</th><th>Cleaning fees</th></tr></thead>
             <tbody>
             @foreach($d['byProperty'] as $p)
             <tr><td class="wide"><span class="rd-b">{{ $p['property'] }}</span></td><td data-l="Units trading"><span class="rd-num">{{ $p['units'] }}</span></td><td data-l="Room types">{{ $p['types'] }}</td>
                 <td data-l="Short-stay nights sold">@if($p['pct'] !== null)<div class="bd-m"><span>{{ $p['pct'] }}%</span><div class="rd-meter"><i style="width:{{ min(100, $p['pct']) }}%"></i></div></div>@else<span class="rd-mute">Long stays or too few units</span>@endif</td>
-                <td data-l="Types to add">{{ $p['strong'] ?: '–' }}</td><td data-l="Types to fill first">{{ $p['weak'] ?: '–' }}</td></tr>
+                <td data-l="Types to add">{{ $p['strong'] ?: '–' }}</td><td data-l="Types to fill first">{{ $p['weak'] ?: '–' }}</td>
+                <td data-l="Cleaning fees"><span class="rd-num">{{ $p['cleaning'] > 0 ? 'RM ' . number_format($p['cleaning']) : '–' }}</span>@if($p['cleanCount'])<div class="rd-sub">{{ $p['cleanCount'] }} booking{{ $p['cleanCount'] > 1 ? 's' : '' }}</div>@endif</td></tr>
             @endforeach
             </tbody>
         </table>
@@ -90,6 +93,7 @@
             <li><strong>Add units here:</strong> 70% or more sold, and sold out on at least 14 of the {{ $n }} nights, with three or more units of that type.</li>
             <li><strong>Fill first:</strong> under 50% sold.</li>
             <li><strong>Rate and revenue per unit</strong> are averages for the room type this month so far: nights × nightly rate, before SST, cleaning and channel fees. They are not what the owner receives.</li>
+            <li><strong>Cleaning fees:</strong> the cleaning fee on every booking that checks in this month, before SST, including a channel's surcharge line where eZee posts one. A stay that runs over two months carries its fee in the month it checked in. Deposits and late check-out charges are not in it.</li>
             <li><strong>What this page cannot see:</strong> guests who looked and could not book. A sold-out night shows demand was at least that high, not how much higher. It also does not know the rent or terms an owner would ask.</li>
             <li>Room types are eZee's own names. Units with no bookings in four months are left out.</li>
         </ul>

@@ -523,7 +523,35 @@ class RevenueDesk
             ];
         })->sortByDesc(fn ($x) => $x['pct'] ?? -1)->values();
 
-        return ['today' => $today, 'since' => $b['from'], 'rows' => $rows, 'byProperty' => $byProperty, 'month' => $today->format('F')];
+        // Cleaning fees this month, per building (Sam, 25 Nov 2026). Room revenue on these pages leaves
+        // cleaning out, so it is shown apart. Counted as the Portfolio page counts it: bookings that check
+        // in this month, fee before SST; a stay split by month carries its fee on the first part. Extra
+        // rooms have no owner and no building row, so they are totalled separately.
+        $mStart = $today->copy()->startOfMonth();
+        $fees   = Booking::join('listings', 'listings.id', '=', 'bookings.listing_id')->where('bookings.status', '>=', 5)
+            ->where('bookings.check_in', '>=', $mStart->toDateString())->where('bookings.check_in', '<', $mStart->copy()->addMonth()->toDateString())
+            ->where('bookings.cleaning_fee', '>', 0)->get(['listings.name', 'bookings.cleaning_fee']);
+        $clean = []; $cleanExtra = 0.0; $cleanOther = 0.0;
+        foreach ($fees as $f) {
+            if (stripos((string) $f->name, 'extra room') !== false || stripos((string) $f->name, 'company') !== false) {
+                $cleanExtra += (float) $f->cleaning_fee;
+                continue;
+            }
+            $p = PortfolioAnalytics::propertyOf((string) $f->name);
+            $clean[$p]['amount'] = ($clean[$p]['amount'] ?? 0) + (float) $f->cleaning_fee;
+            $clean[$p]['count']  = ($clean[$p]['count'] ?? 0) + 1;
+        }
+        $byProperty = $byProperty->map(function ($x) use (&$clean) {
+            $c = $clean[$x['property']] ?? ['amount' => 0, 'count' => 0];
+            unset($clean[$x['property']]);
+            return $x + ['cleaning' => round($c['amount'], 2), 'cleanCount' => $c['count']];
+        });
+        foreach ($clean as $c) {   // a building with no trading unit in the table above
+            $cleanOther += $c['amount'];
+        }
+
+        return ['today' => $today, 'since' => $b['from'], 'rows' => $rows, 'byProperty' => $byProperty, 'month' => $today->format('F'),
+            'cleaning' => ['buildings' => round($byProperty->sum('cleaning'), 2), 'extra' => round($cleanExtra, 2), 'other' => round($cleanOther, 2)]];
     }
 
     /**
