@@ -33,6 +33,30 @@
 .up-none{padding:34px 16px;text-align:center;color:var(--mute);font-size:13.5px}
 .up-note{font-size:13px;color:#44403c;line-height:1.55;padding:14px 16px}.up-note summary{cursor:pointer;font-weight:600;color:var(--text,#1d1d1f)}.up-note ul{margin:10px 0 0;padding-left:18px;display:grid;gap:5px}
 .up-banner{background:#fffbeb;border:1px solid #fde68a;color:var(--amber);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px}
+/* The table becomes cards when its own card is too narrow, not by screen width: the sidebar takes 240px on a laptop. */
+.up-card{container-type:inline-size}
+@container (max-width:1130px){
+  .up-legend{display:none}
+  .up-table thead{display:none}.up-table,.up-table tbody{display:block}
+  .up-table tbody tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 10px;padding:14px 16px;border-bottom:1px solid var(--line)}.up-table tbody tr[hidden]{display:none}.up-table tbody tr:last-child{border-bottom:0}
+  .up-table td{display:block;padding:0!important;border:0}
+  .up-table td.up-unit{grid-column:1 / 3;white-space:normal}.up-table td.c-nights{grid-column:3 / -1}.up-table td.up-do{grid-column:1 / -1;max-width:none;min-width:0;order:9}
+  .up-table td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);font-weight:600;margin-bottom:4px}
+  .up-sub{white-space:normal}
+}
+@container (max-width:640px){
+  .up-table tbody tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .up-table td.up-unit,.up-table td.c-nights{grid-column:1 / -1}
+  .up-n{flex:1 1 0;max-width:20px;height:17px}.up-n.we{height:22px}.up-nights{height:22px}
+  .up-d{margin-left:0;margin-top:3px}.up-num{display:block}
+}
+@media (max-width:1100px){
+  .up-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .up-kpi .v{font-size:22px}.up-head{align-items:stretch}.up-search input{width:100%}
+}
+@supports not (container-type:inline-size){
 @media (max-width:1100px){
   .up-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .up-legend{display:none}
@@ -49,6 +73,7 @@
   .up-table td.up-unit,.up-table td.c-nights{grid-column:1 / -1}
   .up-n{flex:1 1 0;max-width:20px;height:17px}.up-n.we{height:22px}.up-nights{height:22px}
   .up-d{margin-left:0;margin-top:3px}.up-num{display:block}
+}
 }
 </style>
 @endpush
@@ -75,7 +100,7 @@
 <div class="up-head">
     <div>
         <h1>Units to push</h1>
-        <p>{{ $today->format('l, j F Y') }} · {{ $d['trading'] }} units trading · room charges before SST</p>
+        <p>{{ $today->format('l, j F Y') }} · {{ $d['trading'] }} units trading · room charges before SST @isset($at) · figures from {{ $at->format('g:i a') }}@endisset</p>
     </div>
     <label class="up-search" aria-label="Find a unit">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>

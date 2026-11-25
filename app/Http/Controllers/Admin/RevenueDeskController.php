@@ -27,20 +27,26 @@ class RevenueDeskController extends Controller
     {
         $this->allow('reports.push');
 
-        return view('admin.revenue.demand', ['d' => RevenueDesk::demand(), 'lead' => RevenueDesk::ahead()['kpi']]);
+        $c = RevenueDesk::cached('demand');
+
+        return view('admin.revenue.demand', ['d' => $c['data'], 'at' => $c['at'], 'lead' => RevenueDesk::cached('ahead')['data']['kpi']]);
     }
 
     public function ahead()
     {
         $this->allow('reports.push');
 
-        return view('admin.revenue.ahead', ['d' => RevenueDesk::ahead(), 'canUnitReport' => admin_can('reports.units')]);
+        $c = RevenueDesk::cached('ahead');
+
+        return view('admin.revenue.ahead', ['d' => $c['data'], 'at' => $c['at'], 'canUnitReport' => admin_can('reports.units')]);
     }
 
     public function buildings()
     {
         $this->allow('reports.push', 'reports.buildings');
 
-        return view('admin.revenue.buildings', ['d' => RevenueDesk::buildings()]);
+        $c = RevenueDesk::cached('buildings');
+
+        return view('admin.revenue.buildings', ['d' => $c['data'], 'at' => $c['at']]);
     }
 }

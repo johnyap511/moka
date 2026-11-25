@@ -43,7 +43,7 @@
 
 <div class="rd-head">
     <h1>Demand ahead</h1>
-    <p>{{ $today->format('l, j F Y') }} · the next {{ R::DAYS }} nights · short-stay units only, long stays are left out</p>
+    <p>{{ $today->format('l, j F Y') }} · the next {{ R::DAYS }} nights · short-stay units only, long stays are left out @isset($at) · figures from {{ $at->format('g:i a') }}@endisset</p>
 </div>
 
 <div class="rd-kpis">
@@ -166,14 +166,14 @@
     <h2>Slow nights in the next {{ R::SOFT_DAYS }} days</h2>
     <p class="sub">Nights where the whole portfolio has sold less than is normal this close in. A promotion works better here than waiting.</p>
     <div class="rd-wrap">
-        <table class="rd-table" style="min-width:0">
+        <table class="rd-table cards" style="min-width:0">
             <thead><tr><th>Night of</th><th>Sold now</th><th>Units left</th><th>Suggested</th></tr></thead>
             <tbody>
             @foreach($d['soft'] as $s)
-            <tr><td class="dm-when"><b>{{ $s['day']->format('D j M') }}</b></td>
-                <td><div class="dm-vs"><span class="now">{{ $s['pct'] }}%</span><span class="was">normal {{ $s['normal'] }}%</span></div></td>
-                <td><span class="rd-num">{{ $s['sale'] - $s['sold'] }}</span></td>
-                <td>{!! $up($s['suggest']) !!}</td></tr>
+            <tr><td class="dm-when wide"><b>{{ $s['day']->format('D j M') }}</b></td>
+                <td data-l="Sold now"><div class="dm-vs"><span class="now">{{ $s['pct'] }}%</span><span class="was">normal {{ $s['normal'] }}%</span></div></td>
+                <td data-l="Units left"><span class="rd-num">{{ $s['sale'] - $s['sold'] }}</span></td>
+                <td class="wide" data-l="Suggested">{!! $up($s['suggest']) !!}</td></tr>
             @endforeach
             </tbody>
         </table>

@@ -28,7 +28,7 @@
 
 <div class="rd-head">
     <h1>Booked ahead</h1>
-    <p>{{ $today->format('l, j F Y') }} · {{ $k['units'] }} units trading · every booking on the books, long stays included</p>
+    <p>{{ $today->format('l, j F Y') }} · {{ $k['units'] }} units trading · every booking on the books, long stays included @isset($at) · figures from {{ $at->format('g:i a') }}@endisset</p>
 </div>
 
 <div class="rd-kpis">

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Booking;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Revenue desk (Sam, 25 Nov 2026): the forward view for the revenue manager.
@@ -39,7 +40,28 @@ class RevenueDesk
     public const LONG_WEEKEND_UP = 15;
 
     /** Shared base: trading units, and per building and night what is sold, on long stay, picked up and at what rate. */
+    public const CACHE_SECONDS = 300;   // bookings arrive from eZee hourly, so five minutes loses nothing
+
     private static array $memo = [];
+
+    /**
+     * The figures for one tab ('push', 'demand', 'ahead', 'buildings'), worked out at most
+     * once every five minutes and shared by everyone who opens the page. Returns
+     * ['at' => when they were worked out, 'data' => the figures]. The key carries the date
+     * and this code's own timestamp, so a new day or a deploy starts fresh.
+     */
+    public static function cached(string $view): array
+    {
+        $stamp = filemtime(__FILE__) . '-' . filemtime(__DIR__ . '/UnitsToPush.php') . '-' . @filemtime(config_path('holidays.php'));
+        $key = 'revenue-desk:' . $view . ':' . now()->toDateString() . ':' . $stamp;
+        try {
+            return Cache::remember($key, self::CACHE_SECONDS, fn () => ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : self::$view()]);
+        } catch (\Throwable $e) {
+            report($e);   // a cache that cannot be written must not take the page down
+
+            return ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : self::$view()];
+        }
+    }
 
     private static function base(?Carbon $today = null): array
     {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\UnitsToPush;
+use App\Support\RevenueDesk;
 
 /**
  * Units to push: which units are behind and have empty nights to sell.
@@ -18,6 +18,8 @@ class UnitsToPushController extends Controller
 
     public function index()
     {
-        return view('admin.units_to_push', ['d' => UnitsToPush::build(), 'canUnitReport' => admin_can('reports.units')]);
+        $c = RevenueDesk::cached('push');
+
+        return view('admin.units_to_push', ['d' => $c['data'], 'at' => $c['at'], 'canUnitReport' => admin_can('reports.units')]);
     }
 }

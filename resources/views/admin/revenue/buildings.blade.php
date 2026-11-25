@@ -33,7 +33,7 @@
 
 <div class="rd-head">
     <h1>Where demand is</h1>
-    <p>{{ $today->format('l, j F Y') }} · by building and room type · short-stay nights over the last {{ $n / 7 }} weeks, since {{ $d['since']->format('j F') }}</p>
+    <p>{{ $today->format('l, j F Y') }} · by building and room type · short-stay nights over the last {{ $n / 7 }} weeks, since {{ $d['since']->format('j F') }} @isset($at) · figures from {{ $at->format('g:i a') }}@endisset</p>
 </div>
 
 <div class="rd-kpis">
@@ -47,7 +47,7 @@
     <h2>By building and room type</h2>
     <p class="sub">Strongest first. "Sold out" counts nights when nine in ten of that type's short-stay units were taken: the clearest sign that more units would sell.</p>
     <div class="rd-wrap">
-        <table class="rd-table cards" style="min-width:0">
+        <table class="rd-table cards wide" style="min-width:0">
             <thead><tr><th>Building and room type</th><th>Short-stay nights sold</th><th>Sold-out nights</th><th>On long stays</th><th>Rate a night</th><th>Revenue per unit</th><th>What it means</th></tr></thead>
             <tbody>
             @foreach($d['rows'] as $r)
@@ -69,13 +69,13 @@
 <div class="rd-card">
     <h2>By building</h2>
     <div class="rd-wrap">
-        <table class="rd-table" style="min-width:0">
+        <table class="rd-table cards" style="min-width:0">
             <thead><tr><th>Building</th><th>Units trading</th><th>Room types</th><th>Short-stay nights sold</th><th>Types to add</th><th>Types to fill first</th></tr></thead>
             <tbody>
             @foreach($d['byProperty'] as $p)
-            <tr><td><span class="rd-b">{{ $p['property'] }}</span></td><td><span class="rd-num">{{ $p['units'] }}</span></td><td>{{ $p['types'] }}</td>
-                <td>@if($p['pct'] !== null)<div class="bd-m"><span>{{ $p['pct'] }}%</span><div class="rd-meter"><i style="width:{{ min(100, $p['pct']) }}%"></i></div></div>@else<span class="rd-mute">Long stays or too few units</span>@endif</td>
-                <td>{{ $p['strong'] ?: '–' }}</td><td>{{ $p['weak'] ?: '–' }}</td></tr>
+            <tr><td class="wide"><span class="rd-b">{{ $p['property'] }}</span></td><td data-l="Units trading"><span class="rd-num">{{ $p['units'] }}</span></td><td data-l="Room types">{{ $p['types'] }}</td>
+                <td data-l="Short-stay nights sold">@if($p['pct'] !== null)<div class="bd-m"><span>{{ $p['pct'] }}%</span><div class="rd-meter"><i style="width:{{ min(100, $p['pct']) }}%"></i></div></div>@else<span class="rd-mute">Long stays or too few units</span>@endif</td>
+                <td data-l="Types to add">{{ $p['strong'] ?: '–' }}</td><td data-l="Types to fill first">{{ $p['weak'] ?: '–' }}</td></tr>
             @endforeach
             </tbody>
         </table>

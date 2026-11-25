@@ -21,12 +21,37 @@
 .rd-insight{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;border-radius:12px;padding:11px 15px;font-size:13.5px;line-height:1.45;margin-bottom:14px}.rd-insight b{font-weight:700}
 .rd-empty{padding:26px 16px;text-align:center;color:var(--mute);font-size:13.5px;border-top:1px solid var(--line)}
 .rd-mute{color:var(--mute)}
+/* A table becomes a stack of cards when its own card is too narrow for it. Measured on the card,
+   not the screen, because the sidebar takes 240px on a laptop. Older browsers fall back to the
+   screen-width rule below, and to scrolling sideways inside the card. */
+.rd-card{container-type:inline-size}
+@container (max-width:980px){
+  .rd-table.cards thead{display:none}.rd-table.cards,.rd-table.cards tbody{display:block}
+  .rd-table.cards tbody tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 10px;padding:14px 16px;border-top:1px solid var(--line)}.rd-table.cards tbody tr[hidden]{display:none}
+  .rd-table.cards td{display:block;padding:0!important;border:0}.rd-table.cards td.wide{grid-column:1 / -1}
+  .rd-table.cards td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);font-weight:600;margin-bottom:4px}
+  .rd-b{white-space:normal}
+}
+@container (max-width:1090px){
+  .rd-table.cards.wide thead{display:none}.rd-table.cards.wide,.rd-table.cards.wide tbody{display:block}
+  .rd-table.cards.wide tbody tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 10px;padding:14px 16px;border-top:1px solid var(--line)}.rd-table.cards.wide tbody tr[hidden]{display:none}
+  .rd-table.cards.wide td{display:block;padding:0!important;border:0}.rd-table.cards.wide td.wide{grid-column:1 / -1}
+  .rd-table.cards.wide td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);font-weight:600;margin-bottom:4px}
+  .rd-b{white-space:normal}
+}
+@container (max-width:600px){
+  .rd-table.cards tbody tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media (max-width:900px){
   .rd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rd-kpi .v{font-size:22px}
+}
+@supports not (container-type:inline-size){
+  @media (max-width:900px){
   .rd-table.cards thead{display:none}.rd-table.cards,.rd-table.cards tbody{display:block}
   .rd-table.cards tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;padding:14px 16px;border-top:1px solid var(--line)}.rd-table.cards tbody tr[hidden]{display:none}
   .rd-table.cards td{display:block;padding:0!important;border:0}.rd-table.cards td.wide{grid-column:1 / -1}
   .rd-table.cards td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);font-weight:600;margin-bottom:4px}
   .rd-b{white-space:normal}
+  }
 }
 </style>
