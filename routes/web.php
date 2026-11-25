@@ -64,7 +64,8 @@ Route::middleware('lang')->group(function () {
     Route::get('/policy',          'Auth\WebController@policy');
     Route::get('/terms',           'Auth\WebController@terms');
     Route::post('/subscribe',      'Auth\WebController@subscribe')->middleware('throttle:10,1');
-    Route::get('/announcement',    'Admin\OwnerController@announcement');
+    // An admin page on a public address: staff only, like everything under /admin (25 Nov 2026).
+    Route::get('/announcement',    'Admin\OwnerController@announcement')->middleware(['auth', 'role:admin', 'admin.active']);
 
     /* ── Deposit refund portal: guest form behind a 48-hour link (11 Oct 2026) ── */
     Route::get('/refund/thank-you', 'RefundController@thanks')->name('refund.thanks');
