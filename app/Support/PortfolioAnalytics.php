@@ -36,6 +36,27 @@ class PortfolioAnalytics
             ->groupBy(fn ($l) => self::propertyOf($l->name))->sortKeys();
     }
 
+    /**
+     * Every real unit, live or archived, grouped by property. Past months need the units
+     * that have since left: with live units only, November 2025 came out RM 9,138 short
+     * (found 25 Nov 2026), which flattered every "against last year" figure.
+     */
+    public static function everyUnit()
+    {
+        return Listing::withoutGlobalScope('notArchived')->orderBy('name')->get()
+            ->reject(fn ($l) => stripos($l->name, 'extra room') !== false || stripos($l->name, 'company') !== false)
+            ->groupBy(fn ($l) => self::propertyOf($l->name))->sortKeys();
+    }
+
+    /** How many months back a unit must have had a booking to count as stock in a month. */
+    public const STOCK_MONTHS = 3;
+
+    /**
+     * $listings is every real unit in scope (see everyUnit()). A unit counts as stock in a
+     * month only if it had a booking in that month or the three before it. Listings that
+     * are switched on but not trading (32 of 187 on 25 Nov 2026) used to sit in the
+     * denominator and pulled occupancy down from 75% to 62%.
+     */
     public static function build($listings, Carbon $sel, string $label): array
     {
         $ids   = $listings->pluck('id')->map(fn ($v) => (int) $v)->all();
@@ -51,10 +72,26 @@ class PortfolioAnalytics
         $fetch = fn ($from, $toEx) => Booking::whereIn('listing_id', $ids)->where('status', '>=', 5)
             ->where('check_out', '>', $from->toDateString())->where('check_in', '<', $toEx->toDateString())
             ->get(['id', 'listing_id', 'check_in', 'check_out', 'nights', 'price_night', 'cleaning_fee', 'sst', 'sst_cf', 'ota_fee', 'price', 'source']);
-        $rows   = $fetch($trendStart, $endEx);
-        $lyRows = $fetch($lyStart, $lyStart->copy()->addMonth());
+        $rows   = $fetch($trendStart->copy()->subMonths(self::STOCK_MONTHS), $endEx);
+        $lyRows = $fetch($lyStart->copy()->subMonths(self::STOCK_MONTHS), $lyStart->copy()->addMonth());
 
-        $month = fn ($rows, Carbon $s) => self::monthStats($rows, $s, $units);
+        // The units that were trading in a month: any booking in that month or the three before.
+        $stock = function ($rows, Carbon $m) {
+            $from = $m->copy()->subMonths(self::STOCK_MONTHS)->toDateString(); $toEx = $m->copy()->addMonth()->toDateString(); $ids = [];
+            foreach ($rows as $b) {
+                if ($b->check_out > $from && $b->check_in < $toEx) {
+                    $ids[$b->listing_id] = true;
+                }
+            }
+            return $ids;
+        };
+        $stockNow = $stock($rows, $start);
+        $units    = count($stockNow);
+        // switched on today, but not trading: shown to the reader so they can be opened for sale or archived
+        // (only for the month we are in: for a past month a unit that joined later is not "idle")
+        $idle = $start->isSameMonth(now()) ? $listings->filter(fn ($l) => (int) $l->status === 1 && !isset($stockNow[$l->id]))->pluck('name')->values()->all() : [];
+
+        $month = fn ($rows, Carbon $s) => self::monthStats($rows, $s, count($stock($rows, $s)));
 
         $now = $month($rows, $start);
         $ly  = $month($lyRows, $lyStart);
@@ -69,6 +106,9 @@ class PortfolioAnalytics
         // Per unit, this month.
         $byUnit = [];
         foreach ($listings as $l) {
+            if (!isset($stockNow[$l->id])) {
+                continue;   // not trading in this month
+            }
             $u = $now['units'][$l->id] ?? ['nights' => 0, 'revenue' => 0.0, 'bookings' => 0];
             $days = $sel->daysInMonth;
             $byUnit[] = [
@@ -93,7 +133,7 @@ class PortfolioAnalytics
         }
 
         return [
-            'label' => $label, 'month' => $sel->format('F Y'), 'lastYear' => $lyStart->format('M Y'), 'units' => $units,
+            'label' => $label, 'month' => $sel->format('F Y'), 'lastYear' => $lyStart->format('M Y'), 'units' => $units, 'idle' => $idle,
             'now' => $now, 'ly' => $ly, 'compare' => $cmp, 'trend' => $trend,
             'byUnit' => $byUnit, 'byProperty' => $byProperty, 'colours' => Channel::colours(),
         ];

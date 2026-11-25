@@ -26,7 +26,9 @@ class PortfolioController extends Controller
         }
         $sel = preg_match('/^\d{4}-\d{2}$/', (string) $request->input('date')) ? Carbon::createFromFormat('Y-m', $request->input('date'))->startOfMonth() : now()->startOfMonth();
 
-        $listings = $property === '' ? $properties->flatten(1) : $properties->get($property);
+        // The picker lists today's buildings; the figures use every unit, archived ones too, so past months stay whole.
+        $every    = PortfolioAnalytics::everyUnit();
+        $listings = $property === '' ? $every->flatten(1) : $every->get($property, collect());
         $data = PortfolioAnalytics::build($listings, $sel, $property === '' ? 'Whole portfolio' : $property);
 
         // "What to decide" looks ahead, so it only makes sense for the month we are in.

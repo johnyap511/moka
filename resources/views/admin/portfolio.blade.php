@@ -40,16 +40,22 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
 
 <form method="GET" action="/admin/portfolio" class="pf-bar">
     <select name="property" class="form-select" aria-label="Scope">
-        <option value="">Whole portfolio · {{ $properties->flatten(1)->count() }} units</option>
+        <option value="">Whole portfolio</option>
         @foreach($properties as $p => $units)
-        <option value="{{ $p }}" {{ $property === $p ? 'selected' : '' }}>{{ $p }} · {{ $units->count() }} units</option>
+        <option value="{{ $p }}" {{ $property === $p ? 'selected' : '' }}>{{ $p }}</option>
         @endforeach
     </select>
     <input type="month" name="date" class="form-input" value="{{ $sel->format('Y-m') }}" aria-label="Month">
     <button type="submit" class="btn btn-primary">Update</button>
 </form>
 
-<div class="pf-head"><h1>{{ $d['label'] }}</h1><span>{{ $d['units'] }} units · {{ $d['month'] }} · nights clipped to the month, room charges before SST · change vs {{ $d['lastYear'] }}</span></div>
+<div class="pf-head"><h1>{{ $d['label'] }}</h1><span>{{ $d['units'] }} units trading · {{ $d['month'] }} · nights clipped to the month, room charges before SST · change vs {{ $d['lastYear'] }}</span></div>
+@if(count($d['idle'] ?? []))
+<details class="pf-card" style="margin-bottom:14px;font-size:13px;line-height:1.5">
+    <summary style="cursor:pointer;font-weight:600">{{ count($d['idle']) }} listing{{ count($d['idle']) > 1 ? 's are' : ' is' }} switched on but not counted: no booking in {{ $d['month'] }} or the three months before</summary>
+    <p style="margin:8px 0 0;color:var(--text-secondary)">They are left out so that occupancy and revenue per unit describe the units that are really trading. Open each one for sale, or archive it: {{ implode(', ', $d['idle']) }}.</p>
+</details>
+@endif
 
 <div class="pf-kpis">
     <div class="pf-kpi hero"><div class="l">Revenue</div><div class="v">{{ $rm($n['revenue']) }}</div><div class="s">room charges {!! $chip($cmp['Revenue']) !!}</div></div>

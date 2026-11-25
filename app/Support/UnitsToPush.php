@@ -105,10 +105,12 @@ class UnitsToPush
                 }
             }
 
+            $tradedBefore = (bool) array_filter($hist, fn (Carbon $m) => !empty($rev[$id][$m->format('Y-m')]));
             $units[] = [
                 'id' => $id, 'name' => $l->name, 'property' => PortfolioAnalytics::propertyOf($l->name),
-                // idle: nothing this month, nothing ahead and nothing in the three months before. Not yet trading, or closed.
-                'status' => $empty14 === 0 && $emptyM === 0 ? 'full' : ($nights === 0 && $empty14 === self::AHEAD_DAYS && !$usual ? 'idle' : 'ok'),
+                // idle: nothing this month, nothing ahead and no booking at all in the three months before. Not yet
+                // trading, or closed. The same rule as the Portfolio page's stock, so the two pages count the same units.
+                'status' => $empty14 === 0 && $emptyM === 0 ? 'full' : ($nights === 0 && $empty14 === self::AHEAD_DAYS && !$tradedBefore ? 'idle' : 'ok'),
                 'room' => $roomOf[$id] ?? '',
                 'ahead' => implode('', array_map(fn ($i) => isset($occ[$id][$today->copy()->addDays($i)->toDateString()]) ? '1' : '0', range(0, self::AHEAD_DAYS - 1))),
                 'empty7' => $emptyBetween($id, $today, $today->copy()->addDays(7)),
