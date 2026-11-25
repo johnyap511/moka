@@ -19,6 +19,10 @@
 .cal-d.hol b{background:#dc2626;color:#fff;border-radius:4px}.cal-d.eve b{background:#fecaca;color:#7f1d1d;border-radius:4px}.cal-d.sea::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:2px;background:#a78bfa;border-radius:1px}
 .cal-key{display:flex;gap:14px;flex-wrap:wrap;padding:0 16px 14px;font-size:11.5px;color:var(--mute);align-items:center}.cal-key span{display:inline-flex;align-items:center;gap:5px}.cal-key .cal-c{width:13px;height:13px;border-radius:3px}.cal-key .sw{display:inline-flex;gap:1px}.cal-key .d{width:14px;height:14px;border-radius:3px;display:inline-block}
 .dm-hol td{vertical-align:middle}
+.rd-chip.ev{background:#fce7f3;color:#9d174d}
+.cal-d.evt::before{content:"";position:absolute;top:-3px;right:0;width:7px;height:7px;border-radius:50%;background:#db2777;box-shadow:0 0 0 1.5px #fff}
+.dm-near{display:grid;gap:6px}.dm-near div{display:flex;align-items:baseline;gap:8px;white-space:nowrap}.dm-near b{font-weight:600;min-width:92px}.dm-near .was{font-size:12px;color:var(--mute)}
+.dm-ev a{color:inherit;text-decoration:none}.dm-ev a:hover{color:var(--teal)}
 @media (max-width:900px){.cal{grid-template-columns:92px max-content}.cal-names div{padding-left:12px;font-size:12px}.dm-do{min-width:0}}
 </style>
 @endpush
@@ -71,7 +75,7 @@
             @foreach($d['act'] as $a)
             <tr>
                 <td class="dm-when wide"><b>{{ $range($a['from'], $a['to']) }}</b><div class="rd-sub">{{ $togo($a['lead']) }}{{ $a['nights'] > 1 ? ' · ' . $a['nights'] . ' nights' : '' }}</div>
-                    <div class="dm-tags"><span class="rd-chip {{ $a['level'] }}">{{ $a['level'] === 'hot' ? 'Spike' : 'Filling early' }}</span>@foreach($a['holidays'] as $h)<span class="rd-chip red">{{ $h }}</span>@endforeach</div></td>
+                    <div class="dm-tags"><span class="rd-chip {{ $a['level'] }}">{{ $a['level'] === 'hot' ? 'Spike' : 'Filling early' }}</span>@foreach($a['holidays'] as $h)<span class="rd-chip red">{{ $h }}</span>@endforeach @foreach($a['events'] ?? [] as $e)<span class="rd-chip ev">{{ $e }}</span>@endforeach</div></td>
                 <td data-l="Building"><span class="rd-b">{{ $a['property'] }}</span></td>
                 <td data-l="Sold now"><div class="dm-vs"><span class="now">{{ $a['pct'] }}%</span><span class="was">normal {{ $a['normal'] }}%</span></div>
                     <div class="rd-meter"><i style="width:{{ min(100, $a['pct']) }}%"></i><u style="left:calc({{ min(100, $a['normal']) }}% - 1px)"></u></div></td>
@@ -102,8 +106,8 @@
             <div class="cal-grid">
                 <div class="cal-row h">
                     @foreach($d['dates'] as $i => $dt)
-                    @php $kinds = array_column($dt['hol'], 'kind'); $names = implode(', ', array_unique(array_column($dt['hol'], 'name'))); $m1 = $i > 0 && $dt['day']->day === 1; @endphp
-                    <div class="cal-d {{ $dt['we'] ? 'we' : '' }} {{ in_array('public', $kinds) ? 'hol' : (in_array('eve', $kinds) ? 'eve' : '') }} {{ in_array('season', $kinds) ? 'sea' : '' }} {{ $m1 ? 'm1' : '' }}" title="{{ $dt['day']->format('l j F') }}{{ $names ? ': ' . $names : '' }}">@if($i === 0 || $dt['day']->day === 1)<span class="mo">{{ $dt['day']->format('M') }}</span>@endif{{ substr($dt['day']->format('D'), 0, 1) }}<b>{{ $dt['day']->day }}</b></div>
+                    @php $kinds = array_column($dt['hol'], 'kind'); $names = implode(', ', array_unique(array_merge(array_column($dt['hol'], 'name'), $dt['ev'] ?? []))); $m1 = $i > 0 && $dt['day']->day === 1; @endphp
+                    <div class="cal-d {{ $dt['we'] ? 'we' : '' }} {{ in_array('public', $kinds) ? 'hol' : (in_array('eve', $kinds) ? 'eve' : '') }} {{ in_array('season', $kinds) ? 'sea' : '' }} {{ !empty($dt['ev']) ? 'evt' : '' }} {{ $m1 ? 'm1' : '' }}" title="{{ $dt['day']->format('l j F') }}{{ $names ? ': ' . $names : '' }}">@if($i === 0 || $dt['day']->day === 1)<span class="mo">{{ $dt['day']->format('M') }}</span>@endif{{ substr($dt['day']->format('D'), 0, 1) }}<b>{{ $dt['day']->day }}</b></div>
                     @endforeach
                 </div>
                 <div class="cal-row all">
@@ -125,8 +129,39 @@
         <span><span class="d" style="background:#dc2626"></span> public holiday</span>
         <span><span class="d" style="background:#fecaca"></span> eve</span>
         <span><span class="d" style="background:#a78bfa;height:3px"></span> school holidays</span>
+        <span><span class="d" style="background:#db2777;width:8px;height:8px;border-radius:50%"></span> big event</span>
     </div>
 </div>
+
+@if(count($d['events'] ?? []))
+<div class="rd-card">
+    <h2>Events coming up</h2>
+    <p class="sub">Concerts, exhibitions, festivals and university convocations in the next {{ R::DAYS }} days, with how the buildings near each venue are selling for those nights. Raise rates near a big event before its bookings arrive.</p>
+    <div class="rd-wrap">
+        <table class="rd-table cards dm-hol dm-ev" style="min-width:0">
+            <thead><tr><th>When</th><th>Event</th><th>Buildings nearby, sold now</th><th>Suggested for them</th></tr></thead>
+            <tbody>
+            @foreach(collect($d['events'])->filter(fn ($e) => count($e['near'])) as $e)
+            <tr>
+                <td class="dm-when" data-l="When"><b>{{ $range($e['from'], $e['to']) }}</b><div class="rd-sub">{{ $togo($e['lead']) }}</div></td>
+                <td data-l="Event"><span class="rd-b" style="white-space:normal">@if($e['url'])<a href="{{ $e['url'] }}" target="_blank" rel="noopener">{{ $e['name'] }}</a>@else{{ $e['name'] }}@endif</span><div class="rd-sub">{{ $e['venue'] }}</div>
+                    <div class="dm-tags"><span class="rd-chip ev">{{ ['stadium' => 'Stadium event', 'arena' => 'Arena event', 'expo' => 'Exhibition', 'festival' => 'Festival', 'convocation' => 'Convocation', 'graduation' => 'Graduation day'][$e['size']] ?? 'Event' }}</span>@if($e['tentative'])<span class="rd-chip grey">Date to confirm</span>@endif</div></td>
+                <td class="wide" data-l="Buildings nearby, sold now">
+                    @if(count($e['near']))<div class="dm-near">@foreach($e['near'] as $nr)<div><b>{{ $nr['property'] }}</b><span class="rd-num">{{ $nr['pct'] }}%</span><span class="was">normal {{ $nr['normal'] }}% · {{ $nr['left'] }} left</span></div>@endforeach</div>
+                    @else<span class="rd-mute">No building of ours near {{ $e['area'] ?: 'this venue' }}</span>@endif</td>
+                <td class="wide" data-l="Suggested for them">@if(count($e['near'])){!! $up($e['suggest']) !!}<div class="rd-sub">{{ $e['filling'] ? 'Already filling ahead of normal.' : ($e['suggest'] > 0 ? 'Not filling yet: set this before bookings arrive.' : 'No lift showing yet. Watch it, and raise if it starts to fill.') }}</div>@else<span class="rd-mute">–</span>@endif</td>
+            </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+    @php $far = collect($d['events'])->filter(fn ($e) => !count($e['near'])); @endphp
+    @if($far->count())
+    <div class="rd-note" style="border-top:1px solid var(--line)"><strong>Also on, with no building of ours nearby:</strong> {{ $far->map(fn ($e) => $e['name'] . ' (' . $range($e['from'], $e['to']) . ', ' . $e['venue'] . ')')->implode('; ') }}.</div>
+    @endif
+    <div class="rd-note" style="border-top:1px solid var(--line)">Events were last checked on {{ \Carbon\Carbon::parse(config('events.checked'))->format('j F Y') }}. "Nearby" is by area: {{ collect(config('events.areas'))->map(fn ($b, $a) => $a . ' (' . implode(', ', $b) . ')')->implode('; ') }}.</div>
+</div>
+@endif
 
 <div class="rd-card">
     <h2>Holidays coming up</h2>
@@ -191,6 +226,7 @@
             <li><strong>Spike:</strong> {{ R::HOT }} points or more above normal, suggest +15%; 40 points or more, +20%. A night {{ R::NEAR_FULL }}% sold gets at least +20%, and 90% sold gets +25%.</li>
             <li><strong>Holiday nights:</strong> at least +{{ R::HOLIDAY_UP }}% for a public holiday or its eve, +{{ R::LONG_WEEKEND_UP }}% when the holiday makes a long weekend, before any spike.</li>
             <li><strong>Slow:</strong> inside {{ R::SOFT_DAYS }} days and {{ abs(R::SOFT) }} points or more below normal. Suggest a promotion or −10%.</li>
+            <li><strong>Events:</strong> for buildings near the venue, at least +{{ R::EVENT_UP['stadium'] }}% for a stadium event and +{{ R::EVENT_UP['convocation'] }}% for a convocation at a nearby university, before any spike. Arena concerts, exhibitions, festivals, one-day graduations and any event whose date is not confirmed are listed to watch, and only get a rise once the bookings show one. The events list is kept by hand and checked about once a month; a late-announced event will not be on it.</li>
             <li><strong>These are starting points from simple rules.</strong> Homemoka knows the rates guests paid, not the rate on sale in eZee today, so apply the % to your current rate. The page cannot see events, competitors or weather. A building with fewer than {{ R::MIN_UNITS }} short-stay units for sale on a night is not rated.</li>
             <li>Holiday dates were checked on {{ \Carbon\Carbon::parse(config('holidays.checked'))->format('j F Y') }}. Dates marked "to confirm" follow the moon sighting or are not yet gazetted.</li>
         </ul>

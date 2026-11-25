@@ -42,6 +42,10 @@ Route::get('/revenue-desk', fn () => redirect('/admin/units-to-push'));
 Route::get('/revenue-desk/demand', 'Admin\RevenueDeskController@demand')->name('admin.revenue.demand');
 Route::get('/revenue-desk/ahead', 'Admin\RevenueDeskController@ahead')->name('admin.revenue.ahead');
 Route::get('/revenue-desk/buildings', 'Admin\RevenueDeskController@buildings')->name('admin.revenue.buildings');
+Route::get('/revenue-desk/market', 'Admin\MarketController@index')->name('admin.revenue.market');
+Route::post('/revenue-desk/market/competitor', 'Admin\MarketController@storeCompetitor');
+Route::post('/revenue-desk/market/competitor/{id}/remove', 'Admin\MarketController@removeCompetitor');
+Route::post('/revenue-desk/market/rates', 'Admin\MarketController@storeRates');
 //Details
 Route::get('/listing/{listingId}/details', 'Admin\ListingController@listingDetails');
 Route::post('/listing/{listingId}/details', 'Admin\ListingController@listingDetailsStore');

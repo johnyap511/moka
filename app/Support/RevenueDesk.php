@@ -37,6 +37,7 @@ class RevenueDesk
     public const SOFT_DAYS  = 14;
     public const NEAR_FULL  = 80;   // % of short-stay units sold
     public const HOLIDAY_UP = 10;   // starting rate rise for a public holiday night or its eve, before it fills
+    public const EVENT_UP   = ['stadium' => 20, 'convocation' => 15, 'arena' => 0, 'expo' => 0, 'festival' => 0, 'graduation' => 0];   // starting rise near an event; smaller events are only watched until the bookings show a lift
     public const LONG_WEEKEND_UP = 15;
 
     /** Shared base: trading units, and per building and night what is sold, on long stay, picked up and at what rate. */
@@ -52,7 +53,7 @@ class RevenueDesk
      */
     public static function cached(string $view, ?string $arg = null): array
     {
-        $stamp = filemtime(__FILE__) . '-' . filemtime(__DIR__ . '/UnitsToPush.php') . '-' . @filemtime(config_path('holidays.php'));
+        $stamp = filemtime(__FILE__) . '-' . filemtime(__DIR__ . '/UnitsToPush.php') . '-' . @filemtime(config_path('holidays.php')) . '-' . @filemtime(config_path('events.php'));
         $key = 'revenue-desk:' . $view . ':' . md5((string) $arg) . ':' . now()->toDateString() . ':' . $stamp;
         $make = fn () => ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : ($view === 'outlook' ? self::outlook($arg) : self::$view())];
         try {
@@ -229,6 +230,40 @@ class RevenueDesk
         return $out;
     }
 
+    /**
+     * Big events from config/events.php that fall inside the window, each with the buildings
+     * near its venue, and a lookup of event names by night and building.
+     *
+     * @return array{0: array<int,array>, 1: array<string,array<string,array<int,string>>>, 2: array<string,array<int,string>>}
+     */
+    public static function events(Carbon $from, Carbon $toEx): array
+    {
+        $f = $from->toDateString(); $t = $toEx->toDateString(); $areas = config('events.areas', []);
+        $list = []; $byNight = []; $byDate = []; $big = [];
+        foreach (config('events.events', []) as $e) {
+            $to = $e['to'] ?? $e['from'];
+            if ($to < $f || $e['from'] >= $t) {
+                continue;
+            }
+            $near = $areas[$e['area'] ?? ''] ?? [];
+            $nights = [];
+            for ($d = Carbon::parse(max($e['from'], $f)); $d->toDateString() <= $to && $d->toDateString() < $t; $d->addDay()) {
+                $k = $d->toDateString(); $nights[] = $k;
+                $byDate[$k][] = $e['name'];
+                if (empty($e['tentative']) && (self::EVENT_UP[$e['size'] ?? ''] ?? 0) > 0) {
+                    $big[$k] = true;   // a confirmed stadium event or convocation
+                }
+                foreach ($near as $p) {
+                    $byNight[$k][$p][] = $e['name'];
+                }
+            }
+            $list[] = $e + ['to' => $to, 'near' => $near, 'nights' => $nights];
+        }
+        usort($list, fn ($a, $b) => $a['from'] <=> $b['from']);
+
+        return [$list, $byNight, $byDate, $big];
+    }
+
     private static function eveName(string $holiday): string
     {
         return ['Christmas Day' => 'Christmas Eve', "New Year's Day" => "New Year's Eve"][$holiday] ?? 'Eve of ' . $holiday;
@@ -256,13 +291,14 @@ class RevenueDesk
         $count = $b['units']->countBy('property')->all();
         $curve = self::curves($b, $count);
         $hol   = self::holidays($today, $b['toEx']);
+        [$evList, $evNight, $evDate, $evBig] = self::events($today, $b['toEx']);
         $props = collect($count)->sortDesc()->keys()->all();
 
         $dates = []; $cells = []; $total = [];
         for ($i = 0; $i < self::DAYS; $i++) {
             $d = $today->copy()->addDays($i); $k = $d->toDateString();
             $we = in_array($d->dayOfWeek, [Carbon::FRIDAY, Carbon::SATURDAY], true) ? 1 : 0;
-            $dates[] = ['date' => $k, 'day' => $d, 'lead' => $i, 'we' => $we, 'hol' => $hol[$k] ?? []];
+            $dates[] = ['date' => $k, 'day' => $d, 'lead' => $i, 'we' => $we, 'hol' => $hol[$k] ?? [], 'ev' => array_values(array_unique($evDate[$k] ?? [])), 'evBig' => !empty($evBig[$k])];
             $tSold = 0; $tSale = 0; $tRate = 0; $tPick = 0; $tExp = 0;
             foreach ($props as $p) {
                 $sale = self::forSale($b['night'], $count, $p, $k);
@@ -296,11 +332,12 @@ class RevenueDesk
             foreach ($dates as $dt) {
                 $c = $cells[$p][$dt['date']];
                 $on = in_array($c['level'], ['hot', 'warm'], true);
+                $ev = $evNight[$dt['date']][$p] ?? [];
                 if ($on && $run && $run['level'] === $c['level']) {
-                    $run['to'] = $dt['day']; $run['cells'][] = $c; $run['hol'] = array_merge($run['hol'], $dt['hol']);
+                    $run['to'] = $dt['day']; $run['cells'][] = $c; $run['hol'] = array_merge($run['hol'], $dt['hol']); $run['ev'] = array_merge($run['ev'], $ev);
                 } else {
                     if ($run) { $act[] = $run; }
-                    $run = $on ? ['property' => $p, 'level' => $c['level'], 'from' => $dt['day'], 'to' => $dt['day'], 'lead' => $dt['lead'], 'cells' => [$c], 'hol' => $dt['hol']] : null;
+                    $run = $on ? ['property' => $p, 'level' => $c['level'], 'from' => $dt['day'], 'to' => $dt['day'], 'lead' => $dt['lead'], 'cells' => [$c], 'hol' => $dt['hol'], 'ev' => $ev] : null;
                 }
             }
             if ($run) { $act[] = $run; }
@@ -312,7 +349,7 @@ class RevenueDesk
                 'property' => $r['property'], 'level' => $r['level'], 'from' => $r['from'], 'to' => $r['to'], 'lead' => $r['lead'], 'nights' => $c->count(),
                 'pct' => (int) round($c->avg('pct')), 'normal' => (int) round($c->avg('normal')), 'left' => (int) $c->sum(fn ($x) => $x['sale'] - $x['sold']),
                 'pickup' => (int) $c->sum('pickup'), 'rate' => $c->whereNotNull('rate')->avg('rate') ? (int) round($c->whereNotNull('rate')->avg('rate')) : null,
-                'suggest' => (int) $c->max('suggest'), 'holidays' => $names,
+                'suggest' => (int) $c->max('suggest'), 'holidays' => $names, 'events' => array_values(array_unique($r['ev'])),
             ];
         }, $act);
         usort($act, fn ($x, $y) => [$x['from']->toDateString(), $x['level'] === 'hot' ? 0 : 1, $x['property']] <=> [$y['from']->toDateString(), $y['level'] === 'hot' ? 0 : 1, $y['property']]);
@@ -339,6 +376,26 @@ class RevenueDesk
                 ];
             }
         }
+        // Events coming up: for each, how the buildings near the venue are selling on the event nights.
+        $events = [];
+        foreach ($evList as $e) {
+            $near = array_values(array_intersect($e['near'], $props));
+            $rows = [];
+            foreach ($near as $p) {
+                $c = collect($e['nights'])->map(fn ($k) => $cells[$p][$k] ?? null)->filter()->where('level', '<>', 'na');
+                if ($c->count()) {
+                    $rows[] = ['property' => $p, 'pct' => (int) round($c->avg('pct')), 'normal' => (int) round($c->avg('normal')), 'left' => (int) $c->sum(fn ($x) => $x['sale'] - $x['sold']), 'suggest' => (int) $c->max('suggest')];
+                }
+            }
+            $floor = empty($e['tentative']) ? (self::EVENT_UP[$e['size'] ?? ''] ?? 0) : 0;   // an unconfirmed date is watched, not priced
+            $events[] = [
+                'name' => $e['name'], 'venue' => $e['venue'] ?? '', 'area' => $e['area'] ?? '', 'size' => $e['size'] ?? '', 'tentative' => !empty($e['tentative']), 'url' => $e['url'] ?? null,
+                'from' => Carbon::parse($e['from']), 'to' => Carbon::parse($e['to']), 'lead' => max(0, (int) $today->diffInDays(Carbon::parse($e['from']), false)),
+                'near' => $rows, 'suggest' => $rows ? max($floor, (int) collect($rows)->max('suggest')) : 0, 'floor' => $floor,
+                'filling' => (bool) collect($rows)->first(fn ($r) => $r['pct'] - $r['normal'] >= self::WARM),
+            ];
+        }
+
         $seasons = collect(config('holidays.seasons', []))->filter(fn ($s) => $s['to'] >= $today->toDateString() && $s['from'] < $b['toEx']->toDateString())
             ->map(fn ($s) => ['name' => $s['name'], 'from' => Carbon::parse($s['from']), 'to' => Carbon::parse($s['to'])])->values()->all();
 
@@ -347,7 +404,7 @@ class RevenueDesk
 
         return [
             'today' => $today, 'props' => $props, 'count' => $count, 'dates' => $dates, 'cells' => $cells, 'total' => $total,
-            'act' => $act, 'soft' => $soft, 'watch' => $watch, 'seasons' => $seasons,
+            'act' => $act, 'soft' => $soft, 'watch' => $watch, 'seasons' => $seasons, 'events' => $events,
             'kpi' => [
                 'hot' => collect($act)->where('level', 'hot')->count(), 'warm' => collect($act)->where('level', 'warm')->count(),
                 'pct30' => $c30 > 0 ? (int) round($s30 / $c30 * 100) : 0, 'pickup30' => $p30,
