@@ -60,6 +60,10 @@ tr.top td:first-child{box-shadow:inset 3px 0 #16a34a}tr.low td:first-child{box-s
     <div class="pf-kpi"><div class="l">Unsold nights</div><div class="v">{{ number_format(max(0, $n['available'] - $n['nights'])) }}</div><div class="s">{{ $d['units'] }} units × {{ $sel->daysInMonth }} days</div></div>
 </div>
 
+@if(!empty($outlook))
+@include('admin.portfolio_decide')
+@endif
+
 <div class="pf-grid">
     <div class="pf-card"><h3>Revenue, last 6 months <small>room charges</small></h3><div class="pf-chart"><canvas id="pf-rev"></canvas></div></div>
     <div class="pf-card"><h3>Occupancy and RevPAR, last 6 months</h3><div class="pf-chart"><canvas id="pf-occ"></canvas></div></div>

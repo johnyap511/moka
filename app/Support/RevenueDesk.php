@@ -50,16 +50,17 @@ class RevenueDesk
      * ['at' => when they were worked out, 'data' => the figures]. The key carries the date
      * and this code's own timestamp, so a new day or a deploy starts fresh.
      */
-    public static function cached(string $view): array
+    public static function cached(string $view, ?string $arg = null): array
     {
         $stamp = filemtime(__FILE__) . '-' . filemtime(__DIR__ . '/UnitsToPush.php') . '-' . @filemtime(config_path('holidays.php'));
-        $key = 'revenue-desk:' . $view . ':' . now()->toDateString() . ':' . $stamp;
+        $key = 'revenue-desk:' . $view . ':' . md5((string) $arg) . ':' . now()->toDateString() . ':' . $stamp;
+        $make = fn () => ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : ($view === 'outlook' ? self::outlook($arg) : self::$view())];
         try {
-            return Cache::remember($key, self::CACHE_SECONDS, fn () => ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : self::$view()]);
+            return Cache::remember($key, self::CACHE_SECONDS, $make);
         } catch (\Throwable $e) {
             report($e);   // a cache that cannot be written must not take the page down
 
-            return ['at' => now(), 'data' => $view === 'push' ? UnitsToPush::build() : self::$view()];
+            return $make();
         }
     }
 
@@ -110,6 +111,7 @@ class RevenueDesk
                 $c = &$night[$p][$k2];
                 if ($long) {
                     $c['long'] = ($c['long'] ?? 0) + 1;
+                    $c['lrate'] = ($c['lrate'] ?? 0) + (float) $b->price_night;
                 } else {
                     $c['sold'] = ($c['sold'] ?? 0) + 1;
                     $c['rate'] = ($c['rate'] ?? 0) + (float) $b->price_night;
@@ -465,5 +467,86 @@ class RevenueDesk
         })->sortByDesc(fn ($x) => $x['pct'] ?? -1)->values();
 
         return ['today' => $today, 'since' => $b['from'], 'rows' => $rows, 'byProperty' => $byProperty, 'month' => $today->format('F')];
+    }
+
+    /**
+     * For the Portfolio page (Sam, 25 Nov 2026): where this month is likely to finish, and
+     * whether short stays or long stays earn more per night in each building. $property
+     * narrows it to one building.
+     *
+     * Likely finish = what is on the books + the short-stay nights that normally still arrive.
+     * For each night left in the month, a building is expected to end as full as it usually
+     * does (last eight weeks, weekends apart); the gap to what is sold now is priced at the
+     * building's recent short-stay rate. An estimate, not a promise.
+     */
+    public static function outlook(?string $property = null): array
+    {
+        $b = self::base(); $today = $b['today'];
+        $count = $b['units']->countBy('property')->all();
+        $props = $property ? array_values(array_filter([$property], fn ($p) => isset($count[$p]))) : array_keys($count);
+        $we    = fn (Carbon $d) => in_array($d->dayOfWeek, [Carbon::FRIDAY, Carbon::SATURDAY], true) ? 1 : 0;
+
+        // the last eight weeks, per building: short stays sold and for sale, their revenue, and long stays
+        $h = []; $all = ['sold' => [0, 0], 'sale' => [0, 0], 'rev' => 0, 'n' => 0];
+        for ($d = $b['from']->copy(); $d->lt($today); $d->addDay()) {
+            $k = $d->toDateString(); $w = $we($d);
+            foreach ($count as $p => $n) {
+                $c = $b['night'][$p][$k] ?? []; $sale = self::forSale($b['night'], $count, $p, $k); $sold = min($sale, $c['sold'] ?? 0);
+                $x = &$h[$p];
+                $x['sold'][$w] = ($x['sold'][$w] ?? 0) + $sold; $x['sale'][$w] = ($x['sale'][$w] ?? 0) + $sale;
+                $x['rev'] = ($x['rev'] ?? 0) + ($c['rate'] ?? 0); $x['n'] = ($x['n'] ?? 0) + ($c['sold'] ?? 0);
+                $x['long'] = ($x['long'] ?? 0) + ($c['long'] ?? 0); $x['lrev'] = ($x['lrev'] ?? 0) + ($c['lrate'] ?? 0);
+                unset($x);
+                $all['sold'][$w] += $sold; $all['sale'][$w] += $sale; $all['rev'] += $c['rate'] ?? 0; $all['n'] += $c['sold'] ?? 0;
+            }
+        }
+        $final = function (string $p, int $w) use ($h, $all, $count) {   // how full the building usually ends a night, %
+            $src = ($count[$p] ?? 0) >= 5 ? ($h[$p] ?? $all) : $all;
+            return ($src['sale'][$w] ?? 0) > 0 ? $src['sold'][$w] / $src['sale'][$w] * 100 : 0;
+        };
+        $allRate = $all['n'] > 0 ? $all['rev'] / $all['n'] : 0;
+
+        // nights left this month: what should still arrive
+        $endEx = $today->copy()->startOfMonth()->addMonth(); $pickupNights = 0; $pickup = 0.0; $left = 0;
+        for ($d = $today->copy(); $d->lt($endEx); $d->addDay()) {
+            $k = $d->toDateString(); $w = $we($d); $left++;
+            foreach ($props as $p) {
+                $sale = self::forSale($b['night'], $count, $p, $k); $sold = min($sale, $b['night'][$p][$k]['sold'] ?? 0);
+                $extra = max(0, $final($p, $w) / 100 * $sale - $sold);
+                $pickupNights += $extra;
+                $pickup += $extra * (($h[$p]['n'] ?? 0) > 0 ? $h[$p]['rev'] / $h[$p]['n'] : $allRate);
+            }
+        }
+
+        $scope = collect($b['push']['units'])->when($property, fn ($c) => $c->where('property', $property));
+        $withUsual = $scope->filter(fn ($u) => ($u['usual'] ?? 0) > 0);
+        $onBooks = (float) $scope->sum('revenue'); $soFar = (float) $withUsual->sum('soFar'); $usual = (float) $withUsual->sum('usual');
+
+        // short stay or long stay: what one night of each earns, per building
+        $mix = [];
+        foreach ($props as $p) {
+            $x = $h[$p] ?? null;
+            if (!$x) { continue; }
+            $sale = array_sum($x['sale']); $sold = array_sum($x['sold']);
+            $revpar = $sale > 0 ? $x['rev'] / $sale : null;                     // short stay: earned per night for sale, empty nights included
+            $longRate = $x['long'] >= 28 ? $x['lrev'] / $x['long'] : null;      // long stay: earned every night
+            // fewer than three units in a building swing too much to compare
+            $verdict = $revpar === null || $longRate === null || $count[$p] < self::MIN_UNITS ? 'na' : ($longRate >= $revpar * 1.1 ? 'long' : ($revpar >= $longRate * 1.1 ? 'short' : 'even'));
+            $mix[] = [
+                'property' => $p, 'units' => $count[$p], 'shortPct' => $sale > 0 ? (int) round($sold / $sale * 100) : null,
+                'shortRate' => $x['n'] > 0 ? (int) round($x['rev'] / $x['n']) : null, 'shortNight' => $revpar === null ? null : (int) round($revpar),
+                'longRate' => $longRate === null ? null : (int) round($longRate), 'longShare' => (int) round($x['long'] / max(1, $count[$p] * self::HISTORY) * 100),
+                // how much more the better one earns, measured against the lower one
+                'verdict' => $verdict, 'gap' => $revpar && $longRate ? (int) round((max($revpar, $longRate) / min($revpar, $longRate) - 1) * 100) : null,
+            ];
+        }
+        usort($mix, fn ($x, $y) => $y['units'] <=> $x['units']);
+
+        return [
+            'today' => $today, 'month' => $today->format('F'), 'daysLeft' => $left, 'since' => $b['from'],
+            'onBooks' => round($onBooks, 2), 'pickup' => round($pickup, 2), 'pickupNights' => (int) round($pickupNights), 'likely' => round($onBooks + $pickup, 2),
+            'soFar' => round($soFar, 2), 'usual' => round($usual, 2), 'pace' => $usual > 0 && $b['push']['passed'] >= UnitsToPush::EARLY_DAYS ? (int) round(($soFar - $usual) / $usual * 100) : null,
+            'counts' => $scope->countBy('status')->all(), 'mix' => $mix,
+        ];
     }
 }
