@@ -313,7 +313,7 @@ $PAGE = 25;
         @php $kpiLocked = !empty($kpiLock); $kpiRo = $kpiLocked && !admin_is_super(); @endphp
         @if($kpiLocked)
         <div class="sc-approved" style="margin-bottom:10px"><span class="sc-chip sc-chip--final">Locked</span> KPI inputs for {{ $monthName }} were saved by {{ $kpiLock->by ?: 'the office' }} on {{ \Carbon\Carbon::parse($kpiLock->locked_at)->format('j M Y H:i') }}.{{ $approval ? ' The month is approved and final.' : ' Approve the month to make everything final.' }}
-            @if(admin_is_super() && !$approval)<form method="post" action="{{ route('admin.sales.kpi.unlock') }}" class="sc-inline" onsubmit="return confirm('Unlock the KPI inputs for {{ $monthName }} so they can be corrected?')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="btn btn-secondary btn-sm" type="submit">Unlock to correct</button></form>@endif
+            @if((admin_is_super() || admin_can('sales.unlock')) && !$approval)<form method="post" action="{{ route('admin.sales.kpi.unlock') }}" class="sc-inline" onsubmit="return confirm('Unlock the KPI inputs for {{ $monthName }} so they can be corrected?')">@csrf<input type="hidden" name="ym" value="{{ $ym }}"><button class="btn btn-secondary btn-sm" type="submit">Unlock to correct</button></form>@endif
         </div>
         @endif
         @if(admin_can('sales.manage'))
