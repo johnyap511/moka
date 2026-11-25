@@ -38,6 +38,10 @@ Route::get('/listing/chart/report', 'Admin\ListingController@report');
 Route::get('/unit-report', 'Admin\UnitReportController@index')->name('admin.unit-report');
 Route::get('/portfolio', 'Admin\PortfolioController@index')->name('admin.portfolio');
 Route::get('/units-to-push', 'Admin\UnitsToPushController@index')->name('admin.units-to-push');
+Route::get('/revenue-desk', fn () => redirect('/admin/units-to-push'));
+Route::get('/revenue-desk/demand', 'Admin\RevenueDeskController@demand')->name('admin.revenue.demand');
+Route::get('/revenue-desk/ahead', 'Admin\RevenueDeskController@ahead')->name('admin.revenue.ahead');
+Route::get('/revenue-desk/buildings', 'Admin\RevenueDeskController@buildings')->name('admin.revenue.buildings');
 //Details
 Route::get('/listing/{listingId}/details', 'Admin\ListingController@listingDetails');
 Route::post('/listing/{listingId}/details', 'Admin\ListingController@listingDetailsStore');

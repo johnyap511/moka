@@ -45,7 +45,8 @@ return [
         'Reports' => [
             'reports.generate' => 'Generate the monthly owner reports',
             'reports.units'    => 'Unit report: owner dashboard for any unit with analysis (admin and managers)',
-            'reports.push'     => 'Units to push: units behind their usual with empty nights to sell (finance and operation managers)',
+            'reports.push'     => 'Revenue desk: units to push, demand ahead, booked ahead (finance and operation managers)',
+            'reports.buildings' => 'Revenue desk, Buildings tab only: demand by building and room type (Business Development)',
         ],
         'Sales' => [
             'sales.view'   => 'View sales commission (all sales persons)',
@@ -84,7 +85,7 @@ return [
                 'settings.view', 'settings.manage',
                 'calendar.view',
                 'sales.view', 'sales.manage', 'sales.own', 'sales.export',
-                'reports.generate', 'reports.units', 'reports.push',
+                'reports.generate', 'reports.units', 'reports.push', 'reports.buildings',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
                 'tenancy.view', 'tenancy.manage',
             ],
@@ -103,7 +104,7 @@ return [
                 'calendar.view',
                 'settings.view',
                 'sales.view', 'sales.manage', 'sales.own', 'sales.export',
-                'reports.generate', 'reports.units', 'reports.push',
+                'reports.generate', 'reports.units', 'reports.push', 'reports.buildings',
                 'refunds.link', 'refunds.view', 'refunds.feedback', 'refunds.deduct',
                 'tenancy.view',
             ],
@@ -137,7 +138,7 @@ return [
                 'calendar.view',
                 'settings.view',
                 'sales.view', 'sales.manage', 'sales.export',
-                'reports.generate', 'reports.units', 'reports.push',
+                'reports.generate', 'reports.units', 'reports.push', 'reports.buildings',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
                 'tenancy.view', 'tenancy.manage',
             ],
@@ -157,6 +158,14 @@ return [
                 'reports.generate',
                 'refunds.link', 'refunds.view', 'refunds.manage', 'refunds.feedback', 'refunds.deduct',
                 'tenancy.view', 'tenancy.manage',
+            ],
+        ],
+        'business_development' => [
+            'label'       => 'Business Development',
+            'description' => 'Sees the Buildings tab of the Revenue desk: where demand is, by building and room type',
+            'permissions' => [
+                'dashboard.view',
+                'reports.buildings',
             ],
         ],
         'sales' => [

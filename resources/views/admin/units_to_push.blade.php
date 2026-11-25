@@ -1,6 +1,6 @@
 @extends('admin.layout')
-@section('title', 'Units to push')
-@section('page-title', 'Units to push')
+@section('title', 'Revenue desk')
+@section('page-title', 'Revenue desk')
 
 @push('styles')
 <style>
@@ -71,6 +71,7 @@
 @endphp
 
 <div class="up">
+@include('admin.revenue._tabs', ['tab' => 'push'])
 <div class="up-head">
     <div>
         <h1>Units to push</h1>
