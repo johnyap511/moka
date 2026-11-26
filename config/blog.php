@@ -28,6 +28,48 @@ return [
     'posts' => [
 
         [
+            'slug'        => 'short-stay-news-malaysia-sea-23-november-2026',
+            'view'        => 'short-stay-news-malaysia-sea-23-november-2026',
+            'title'       => 'Short-Stay News Malaysia & SEA: 23 Nov 2026 | MOKA',
+            'heading'     => 'Short-stay news, Malaysia and Southeast Asia: week of 23 November 2026',
+            'description' => "KPKT pilots its STRA rulebook in Sepang, Penang extends tourist-stay rules to George Town's heritage site, and Singaporean demand builds ahead of the RTS Link.",
+            'published'   => '2026-11-23',
+            'updated'     => '2026-11-23',
+            'image'       => 'new-theme23/images/blog/kk-beach-sunset.jpg',
+            'figures'     => [
+                ['new-theme23/images/projects/the-valley/8.jpg', 'A MOKA-managed unit at The Valley'],
+                ['new-theme23/images/projects/skyawani-4/8.jpg', 'A MOKA-managed unit at Sky Awani 4'],
+            ],
+            'topic'       => 'News',
+            'read_time'   => 5,
+            'cta_heading' => 'Want this read for your building?',
+            'cta_body'    => 'Tell us where your unit is and we will say which of these stories applies and what to do about it.',
+            'cta_label'   => 'Get a free estimate',
+            'cta_url'     => '/get/estimate',
+        ],
+
+        [
+            'slug'        => 'kpkt-stra-pilot-sepang-2026',
+            'view'        => 'kpkt-stra-pilot-sepang-2026',
+            'title'       => 'Inside KPKT\'s STRA Pilot in Sepang | MOKA',
+            'heading'     => 'KPKT just tested its short-stay rulebook in Sepang. Here\'s what it means before it goes nationwide',
+            'description' => 'KPKT and MySTRA piloted the national short-stay rulebook in Sepang this month, testing registration, licensing and compliance before it reaches Cabinet.',
+            'published'   => '2026-11-23',
+            'updated'     => '2026-11-23',
+            'image'       => 'new-theme23/images/blog/nasi-lemak.jpg',
+            'figures'     => [
+                ['new-theme23/images/blog/meeting-table.jpg', 'Regulators and an industry association are now testing the national framework together'],
+                ['new-theme23/images/blog/notepad-flatlay.jpg', 'The pilot is testing registration and compliance paperwork before it goes national'],
+            ],
+            'topic'       => 'Regulations',
+            'read_time'   => 6,
+            'cta_heading' => 'Own a short-stay unit?',
+            'cta_body'    => 'We track every rule, pilot and guideline as it moves toward Cabinet, so you do not have to.',
+            'cta_label'   => 'Talk to us',
+            'cta_url'     => '/contact',
+        ],
+
+        [
             'slug'        => 'penang-short-stay-fee-changes-2027',
             'view'        => 'penang-short-stay-fee-changes-2027',
             'title'       => 'Penang\'s 2027 Short-Stay Fee Changes Explained | MOKA',
