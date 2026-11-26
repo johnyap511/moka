@@ -103,7 +103,7 @@ class RefundController extends Controller
             'units.*.regex'      => 'Please enter the unit number as shown on your door, e.g. E-23A-01.',
             'units.max'          => 'You can list up to 10 units in one form.',
             'bank_account.regex' => 'Please enter the account number with digits only.',
-            'bank_account.required_without' => 'Enter the account number, or upload your QR code for Alipay / Touch \'n Go.',
+            'bank_account.required_without' => 'Enter the account number, or upload your Alipay QR code.',
             'qr.mimes'           => 'Please upload the QR as a JPG, PNG or WebP image.',
             'bank_account.regex' => $request->boolean('overseas') ? 'Please enter the account number or IBAN with letters and digits only.' : 'Please enter the account number with digits only.',
             'bank_country.required' => 'Tell us which country your bank is in.',

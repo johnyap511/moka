@@ -193,7 +193,7 @@ class RefundController extends Controller
     }
 
     /** A fresh 48-hour link, on request. */
-    /** The guest's uploaded Alipay / Touch 'n Go QR code; bank details are for refunds.manage only. */
+    /** The guest's uploaded Alipay QR code (older requests may hold a Touch 'n Go one); bank details are for refunds.manage only. */
     public function qr(RefundRequest $refund)
     {
         abort_unless(admin_can('refunds.manage'), 403);

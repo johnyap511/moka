@@ -121,7 +121,7 @@
             @error('bank_account')<div class="err">{{ $message }}</div>@enderror
         </div>
         <div class="field" id="qr-field" hidden>
-            <label for="qr">QR code <small>Alipay or Touch 'n Go: upload your receive-money QR instead of the account number</small></label>
+            <label for="qr">QR code <small>Alipay: upload your receive-money QR instead of the account number</small></label>
             <input type="file" id="qr" name="qr" accept="image/png,image/jpeg,image/webp" class="{{ $e('qr') }}">
             @error('qr')<div class="err">{{ $message }}</div>@enderror
         </div>
@@ -204,11 +204,11 @@
     document.getElementById('rf').addEventListener('input',function(e){ if(e.target.matches('#unit_no, #more-units input')) e.target.value=e.target.value.toUpperCase(); });
     relabel();
     var bank = document.getElementById('bank_name'), qrf = document.getElementById('qr-field'), acct = document.getElementById('bank_account');
-    function walletMode() { var w = /alipay|touch|tng|e-?wallet/i.test(bank.value); qrf.hidden = !w; acct.required = !w;
+    function walletMode() { var w = /alipay/i.test(bank.value); /* the QR is for Alipay only (Sam, 26 Nov 2026) */ qrf.hidden = !w; acct.required = !w;
         document.getElementById('acct-req').className = w ? '' : 'req'; document.getElementById('acct-hint').textContent = w ? 'Digits only, or upload your QR code below' : 'Digits only'; }
     bank.addEventListener('input', walletMode); bank.addEventListener('change', walletMode); walletMode();
     var ov = document.getElementById('overseas'), ovf = document.getElementById('overseas-fields');
-    function overseasMode() { ovf.hidden = !ov.checked; var lab = document.querySelector('label[for=bank_account] .req, label[for=bank_account] #acct-req'); if (lab) lab.textContent = ov.checked ? 'Account number or IBAN' : 'Account number'; if (!/alipay|touch|tng/i.test(bank.value)) document.getElementById('acct-hint').textContent = ov.checked ? 'Letters and digits, as printed by your bank' : 'Digits only'; }
+    function overseasMode() { ovf.hidden = !ov.checked; var lab = document.querySelector('label[for=bank_account] .req, label[for=bank_account] #acct-req'); if (lab) lab.textContent = ov.checked ? 'Account number or IBAN' : 'Account number'; if (!/alipay/i.test(bank.value)) document.getElementById('acct-hint').textContent = ov.checked ? 'Letters and digits, as printed by your bank' : 'Digits only'; }
     ov.addEventListener('change', overseasMode); overseasMode();
     var s=document.getElementById('staff_user_id'),m=document.getElementById('staff-more');
     s&&s.addEventListener('change',function(){m.style.display=this.value?'':'none';});
