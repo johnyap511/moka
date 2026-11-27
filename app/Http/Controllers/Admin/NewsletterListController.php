@@ -8,7 +8,9 @@ use App\Models\RefundRequest;
 use App\Support\PortfolioAnalytics;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Sales > Newsletter lists (Sam, 27 Nov 2026): one owner list and one guest list, the only two
@@ -31,9 +33,11 @@ class NewsletterListController extends Controller
             'ownerUnits'  => $owners->sum('units'),
             'skipped'     => $skipped,
             'guests'      => $guests->count(),
-            'guestsMonth' => $guests->where('joined', '>=', now()->subDays(30)->toDateString())->count(),
+            'guestsMonth' => $guests->whereIn('source', ['Refund form', 'Website sign-up'])->where('joined', '>=', now()->subDays(30)->toDateString())->count(),
             'fromRefund'  => $guests->where('source', 'Refund form')->count(),
             'fromWebsite' => $guests->where('source', 'Website sign-up')->count(),
+            'fromEarlier' => $guests->whereNotIn('source', ['Refund form', 'Website sign-up'])->count(),
+            'byStay'      => $guests->countBy('stay')->all(),
         ]);
     }
 
@@ -52,8 +56,10 @@ class NewsletterListController extends Controller
 
     /**
      * The one guest list, one row per email address. A guest who ticked the offers box on the
-     * refund form (their latest request), then anyone who signed up on the website and is not
-     * already there. No bank details: only who they are and where they last stayed.
+     * refund form (their latest request), then anyone who signed up on the website, then the
+     * guests brought in from the old Google refund form (table newsletter_guests), each only if
+     * not already there. A guest who asked to stop is left out. No bank details: only who they
+     * are and where they last stayed. 'stay' says how long ago that was, for sending in stages.
      */
     private function guests(): Collection
     {
@@ -80,8 +86,33 @@ class NewsletterListController extends Controller
             }
             $rows[$email] = ['name' => '', 'email' => $email, 'phone' => '', 'building' => '', 'last_out' => '', 'source' => 'Website sign-up', 'joined' => substr((string) $s->created_at, 0, 10)];
         }
+        $stopped = [];
+        if (Schema::hasTable('newsletter_guests')) {
+            foreach (DB::table('newsletter_guests')->orderByDesc('last_check_out')->get() as $g) {
+                $email = strtolower(trim((string) $g->email));
+                if ($g->unsubscribed_at) {
+                    $stopped[$email] = true;
+                    continue;
+                }
+                if (isset($rows[$email])) {
+                    continue;
+                }
+                $rows[$email] = ['name' => (string) $g->name, 'email' => $email, 'phone' => (string) $g->phone, 'building' => (string) $g->building,
+                    'last_out' => (string) $g->last_check_out, 'source' => (string) $g->source, 'joined' => substr((string) $g->created_at, 0, 10)];
+            }
+        }
+        $today = now()->startOfDay();
+        $stay  = function (string $date) use ($today): string {
+            if ($date === '') {
+                return 'Not known';
+            }
+            $months = Carbon::parse($date)->diffInDays($today) / 30.4;
 
-        return collect(array_values($rows))->sortByDesc('joined')->values();
+            return $months <= 6 ? 'A: last 6 months' : ($months <= 12 ? 'B: 6 to 12 months' : ($months <= 24 ? 'C: 1 to 2 years' : ($months <= 36 ? 'D: 2 to 3 years' : 'E: over 3 years')));
+        };
+
+        return collect(array_values(array_diff_key($rows, $stopped)))->map(fn ($r) => $r + ['stay' => $stay($r['last_out'])])
+            ->sortBy([['stay', 'asc'], ['last_out', 'desc']])->values();
     }
 
     public function ownersExport()

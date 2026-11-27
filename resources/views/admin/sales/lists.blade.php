@@ -30,7 +30,12 @@
     <div class="card nl-card">
         <h2>Guests</h2>
         <div class="nl-num">{{ number_format($guests) }}</div>
-        <p class="nl-sub">guests who asked for our news, in one list: {{ number_format($fromRefund) }} ticked "Send me MOKA offers and news" on the deposit refund form, {{ number_format($fromWebsite) }} signed up on the website. {{ number_format($guestsMonth) }} joined in the last 30 days. Each row shows where the guest joined from, with their building and last check-out where we know it.</p>
+        <p class="nl-sub">guests in one list: {{ number_format($fromRefund) }} ticked "Send me MOKA offers and news" on the deposit refund form, {{ number_format($fromWebsite) }} signed up on the website{{ $fromEarlier ? ', and ' . number_format($fromEarlier) . ' are earlier guests from the old refund form (2022 to 2026)' : '' }}. {{ number_format($guestsMonth) }} asked to join in the last 30 days.</p>
+        @if($fromEarlier)
+        <p class="nl-sub" style="margin-top:-6px">By last stay, for sending in stages:
+            @foreach(['A: last 6 months', 'B: 6 to 12 months', 'C: 1 to 2 years', 'D: 2 to 3 years', 'E: over 3 years', 'Not known'] as $k)@if(!empty($byStay[$k])) {{ \Illuminate\Support\Str::contains($k, ': ') ? \Illuminate\Support\Str::after($k, ': ') : 'last stay not known' }} <strong>{{ number_format($byStay[$k]) }}</strong>@if(!$loop->last),@endif @endif @endforeach
+            The file has a "Last stay" column, so each group can be sent on its own.</p>
+        @endif
         <a class="btn btn-primary btn-sm" href="/admin/sales/lists/guests">Download guests (Excel)</a>
     </div>
 </div>
@@ -42,7 +47,7 @@
         <li>Send from the email service, never from a staff mailbox.</li>
         <li>Load the whole file each time. The service remembers who unsubscribed and will not email them again.</li>
         <li>Never remove the unsubscribe link.</li>
-        <li>Guests from the old Google refund form (2022 to 2026) were loaded once, from files kept by Sam. They are not in this download.</li>
+        <li>Earlier guests from the old Google refund form (2022 to 2026) are kept in Homemoka and are part of the guest list. They were never asked about offers, so send to them in stages, newest stays first, and stop if many emails bounce.</li>
     </ol>
 </div>
 @endsection

@@ -17,12 +17,12 @@ class GuestContactsExport extends DefaultValueBinder implements FromArray, WithH
 
     public function headings(): array
     {
-        return ['Name', 'Email', 'Phone', 'Building', 'Last check-out', 'Joined from', 'Joined on'];
+        return ['Name', 'Email', 'Phone', 'Building', 'Last check-out', 'Last stay', 'Joined from', 'Added on'];
     }
 
     public function array(): array
     {
-        return $this->rows->map(fn ($r) => [$r['name'], $r['email'], $r['phone'], $r['building'], $r['last_out'], $r['source'], $r['joined']])->all();
+        return $this->rows->map(fn ($r) => [$r['name'], $r['email'], $r['phone'], $r['building'], $r['last_out'], $r['stay'], $r['source'], $r['joined']])->all();
     }
 
     public function bindValue(Cell $cell, $value)
