@@ -51,6 +51,7 @@
 
                     <form method="POST" action="{{ url('/estimate') }}" class="estimate-form" novalidate>
                         @csrf
+                        <input type="hidden" name="ft" value="{{ \App\Support\FormGuard::token() }}">
                         <input type="hidden" name="type" value="estimate">
                         <input type="hidden" name="bedroom" value="1" id="bedroomHidden">
 

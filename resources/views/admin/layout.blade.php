@@ -275,6 +275,15 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     </a>
     @endif
 
+    {{-- Sales (Sam, 27 Nov 2026): owner enquiries from the website, checked daily; to grow into the sales team's CRM. --}}
+    @if(admin_can('settings.view'))
+    <div class="sidebar-section">Sales</div>
+    <a href="/admin/setting/estimate" class="sidebar-link {{ request()->is('admin/setting/estimate*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Estimates
+    </a>
+    @endif
+
     @if(admin_can('listings.view'))
     <div class="sidebar-section">Properties</div>
     <a href="/admin/listing" class="sidebar-link {{ request()->is('admin/listing*') && !request()->is('admin/listing/*/book*') ? 'active' : '' }}">
@@ -428,10 +437,6 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
     <a href="/admin/setting/amenities" class="sidebar-link {{ request()->is('admin/setting/amenities*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
         Amenities
-    </a>
-    <a href="/admin/setting/estimate" class="sidebar-link {{ request()->is('admin/setting/estimate*') ? 'active' : '' }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Estimates
     </a>
     <a href="/admin/careers" class="sidebar-link {{ request()->is('admin/careers*') ? 'active' : '' }}">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-9 0h12a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>

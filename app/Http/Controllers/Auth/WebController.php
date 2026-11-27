@@ -157,6 +157,14 @@ class WebController extends Controller
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Contact email not sent: ' . $e->getMessage(), ['name' => $data['name']]);
         }
+        // Acknowledge the sender (Sam, 27 Nov 2026). A post marked spam never reaches this line.
+        if (\App\Support\FormGuard::allowAck($request, (string) $data['email'])) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($data['email'])->send(new \App\Mail\EnquiryReceived('contact', (string) $data['name'], ['hello@homemoka.com']));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Contact acknowledgement not sent: ' . $e->getMessage());
+            }
+        }
 
         return back()->with("success", "Message sent. We reply within one working day.");
     }
@@ -573,6 +581,15 @@ class WebController extends Controller
             \Illuminate\Support\Facades\Mail::to(config('moka.owner_enquiry_to', ['hello@homemoka.com']))->send(new \App\Mail\EstimateRequested($data));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Estimate email not sent: ' . $e->getMessage(), ['name' => $data['name'] ?? null]);
+        }
+        // Acknowledge the owner (Sam, 27 Nov 2026): only when the post looks human and within the daily cap,
+        // so the form cannot be used to send our email to strangers. Best-effort, like the office email.
+        if (\App\Support\FormGuard::human($request, $data['name'] . ' ' . $data['address']) && \App\Support\FormGuard::allowAck($request, (string) $data['email'])) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($data['email'])->send(new \App\Mail\EnquiryReceived('estimate', (string) $data['name'], (array) config('moka.owner_enquiry_to', ['hello@homemoka.com'])));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Estimate acknowledgement not sent: ' . $e->getMessage());
+            }
         }
         return back()->with('success', 'Thank you! We will contact you shortly.');
     }

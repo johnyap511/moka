@@ -46,6 +46,7 @@
                       class="estimate-form-steps"
                       novalidate>
                     @csrf
+                    <input type="hidden" name="ft" value="{{ \App\Support\FormGuard::token() }}">
 
                     {{-- Step 1: Property --}}
                     <div class="estimate-step active">

@@ -640,6 +640,7 @@
                         <p class="fs_13 font-white mb-2" style="opacity:.9">For property owners. Looking to book a stay? <a href="https://staymoka.com/" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;font-family:SemiBold">Book on staymoka.com</a></p>
                         <form method="post" action="/estimate" class="banner-form" onsubmit="var b=this.querySelector('[type=submit]'); if(b){b.disabled=true; b.value='Sending…';}">
                             @csrf
+                            <input type="hidden" name="ft" value="{{ \App\Support\FormGuard::token() }}">
                     <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">                            <input type="hidden" name="type" value="estimate">
                             <input type="text" placeholder="Name" name="name" required>
                             <input type="text" placeholder="Your unit's address" name="address" required>
