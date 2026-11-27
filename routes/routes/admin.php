@@ -150,6 +150,7 @@ Route::delete('/sales/messages/{id}', 'Admin\ContactMessageController@destroy')-
 // Sales > Newsletter lists: the two lists that may go into the email service (Sam, 27 Nov 2026)
 Route::get('/sales/lists', 'Admin\NewsletterListController@index');
 Route::get('/sales/lists/owners', 'Admin\NewsletterListController@ownersExport');
+Route::get('/sales/lists/guests', 'Admin\NewsletterListController@guestsExport');
 Route::get('/careers', 'Admin\JobApplicationController@index');
 Route::get('/careers/{id}/cv', 'Admin\JobApplicationController@cv')->where('id', '[0-9]+');
 Route::get('/setting/logs', 'Admin\SettingController@logs');

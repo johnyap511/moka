@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sales > Newsletter lists (Sam, 27 Nov 2026): the only two lists that may be loaded into the
- * email service. Owners with a live unit, and guests who ticked the offers box on the refund
- * form. Nobody else: older guest emails carry no consent record. The email service keeps the
- * unsubscribes, so a fresh download each month only adds new people.
+ * Sales > Newsletter lists (Sam, 27 Nov 2026): one owner list and one guest list, the only two
+ * that go into the email service. Owners: everyone with a live unit. Guests: everyone who asked
+ * for our news, whichever form they used: the offers box on the refund form, or the sign-up box
+ * on the website. The email service keeps the unsubscribes, so a fresh download each month only
+ * adds new people.
  */
 class NewsletterListController extends Controller
 {
@@ -23,15 +24,64 @@ class NewsletterListController extends Controller
         abort_unless(admin_can('settings.view'), 403);
 
         [$owners, $skipped] = $this->owners();
-        $guests = RefundRequest::where('marketing_opt_in', true)->get(['email', 'created_at']);
+        $guests = $this->guests();
 
         return view('admin.sales.lists', [
             'owners'      => $owners->count(),
             'ownerUnits'  => $owners->sum('units'),
             'skipped'     => $skipped,
-            'guests'      => $guests->map(fn ($r) => strtolower(trim((string) $r->email)))->filter()->unique()->count(),
-            'guestsMonth' => $guests->where('created_at', '>=', now()->subDays(30))->map(fn ($r) => strtolower(trim((string) $r->email)))->unique()->count(),
+            'guests'      => $guests->count(),
+            'guestsMonth' => $guests->where('joined', '>=', now()->subDays(30)->toDateString())->count(),
+            'fromRefund'  => $guests->where('source', 'Refund form')->count(),
+            'fromWebsite' => $guests->where('source', 'Website sign-up')->count(),
         ]);
+    }
+
+    public function guestsExport()
+    {
+        abort_unless(admin_can('settings.view'), 403);
+
+        $guests = $this->guests();
+        Log::info('Guest newsletter list exported', ['rows' => $guests->count(), 'by' => auth()->id()]);
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Export\GuestContactsExport($guests), 'moka-guest-contacts-' . now()->format('Ymd') . '.xlsx');
+    }
+
+    /** Website sign-ups count from this day: the 61 older ones (2020 to 2021) are not guests we know. */
+    private const WEBSITE_SIGNUPS_FROM = '2026-11-27';
+
+    /**
+     * The one guest list, one row per email address. A guest who ticked the offers box on the
+     * refund form (their latest request), then anyone who signed up on the website and is not
+     * already there. No bank details: only who they are and where they last stayed.
+     */
+    private function guests(): Collection
+    {
+        $rows = [];
+        foreach (RefundRequest::where('marketing_opt_in', true)->orderBy('id')->get() as $r) {
+            $email = strtolower(trim((string) $r->email));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            $rows[$email] = [
+                'name'     => (string) $r->name,
+                'email'    => $email,
+                'phone'    => (string) $r->phone,
+                'building' => (string) $r->property,
+                'last_out' => $r->check_out ? $r->check_out->format('Y-m-d') : '',
+                'source'   => 'Refund form',
+                'joined'   => $rows[$email]['joined'] ?? $r->created_at->format('Y-m-d'),
+            ];
+        }
+        foreach (DB::table('subscribe')->where('created_at', '>=', self::WEBSITE_SIGNUPS_FROM)->orderBy('id')->get(['email', 'created_at']) as $s) {
+            $email = strtolower(trim((string) $s->email));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || isset($rows[$email])) {
+                continue;
+            }
+            $rows[$email] = ['name' => '', 'email' => $email, 'phone' => '', 'building' => '', 'last_out' => '', 'source' => 'Website sign-up', 'joined' => substr((string) $s->created_at, 0, 10)];
+        }
+
+        return collect(array_values($rows))->sortByDesc('joined')->values();
     }
 
     public function ownersExport()

@@ -15,7 +15,7 @@
 <div class="page-header">
     <div>
         <h1>Newsletter Lists</h1>
-        <p>The only two lists that go into the email service. Download a fresh copy before each newsletter.</p>
+        <p>One owner list and one guest list. These are the only two that go into the email service. Download a fresh copy before each newsletter.</p>
     </div>
 </div>
 
@@ -30,22 +30,19 @@
     <div class="card nl-card">
         <h2>Guests</h2>
         <div class="nl-num">{{ number_format($guests) }}</div>
-        <p class="nl-sub">guests who ticked "Send me MOKA offers and news" on the deposit refund form. {{ number_format($guestsMonth) }} joined in the last 30 days. Comes with their building and last check-out.</p>
-        @if(admin_can('refunds.view'))
-            <a class="btn btn-primary btn-sm" href="{{ route('admin.refunds.contacts') }}">Download guests (Excel)</a>
-        @else
-            <span class="nl-sub">Ask Finance for this list: it is kept with the deposit refunds.</span>
-        @endif
+        <p class="nl-sub">guests who asked for our news, in one list: {{ number_format($fromRefund) }} ticked "Send me MOKA offers and news" on the deposit refund form, {{ number_format($fromWebsite) }} signed up on the website. {{ number_format($guestsMonth) }} joined in the last 30 days. Each row shows where the guest joined from, with their building and last check-out where we know it.</p>
+        <a class="btn btn-primary btn-sm" href="/admin/sales/lists/guests">Download guests (Excel)</a>
     </div>
 </div>
 
 <div class="card nl-rules">
     <h2>Rules, so our emails stay out of spam</h2>
     <ol>
-        <li>Send only to these two lists. Older guest emails and website sign-ups from 2021 have no consent record.</li>
+        <li>Everyone belongs to one of these two lists. A new guest joins by ticking the offers box on the refund form or signing up on the website; nobody is added by hand.</li>
         <li>Send from the email service, never from a staff mailbox.</li>
         <li>Load the whole file each time. The service remembers who unsubscribed and will not email them again.</li>
-        <li>Never remove the unsubscribe link, and never add people by hand who did not ask.</li>
+        <li>Never remove the unsubscribe link.</li>
+        <li>Guests from the old Google refund form (2022 to 2026) were loaded once, from files kept by Sam. They are not in this download.</li>
     </ol>
 </div>
 @endsection

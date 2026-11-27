@@ -185,6 +185,10 @@ class WebController extends Controller
                 ->withInput();
         }
 
+        // A bot is thanked and not saved: sign-ups go into the guest newsletter list (Sam, 27 Nov 2026).
+        if (\App\Support\FormGuard::quickBot($request)) {
+            return back()->with("success", "Subscribed successfully!");
+        }
         $exist = DB::table('subscribe')->where('email', $request->email)->first();
         if (!empty($exist)) {
             return back()->with("error", "You are subscribed before!");

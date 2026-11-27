@@ -97,6 +97,25 @@ class FormGuard
     }
 
     /**
+     * The plainest bot test, for the newsletter sign-up box (Sam, 27 Nov 2026): no form token, or sent
+     * under three seconds after the page loaded. An old token is accepted, so a visitor who left the
+     * page open is not lost.
+     */
+    public static function quickBot(Request $request): bool
+    {
+        if ($request->filled('website_url')) {
+            return true;
+        }
+        try {
+            $issued = (int) Crypt::decryptString((string) $request->input('ft'));
+        } catch (\Throwable $e) {
+            return true;
+        }
+
+        return !$issued || (time() - $issued) < 3;
+    }
+
+    /**
      * May this post trigger an acknowledgement email (Sam, 27 Nov 2026)? An acknowledgement goes to an
      * address the visitor typed, so without a cap a bot could use our forms to email strangers. At most
      * three a day from one connection and one a day to one address; no email if the count cannot be kept.
