@@ -146,6 +146,7 @@ Route::delete('/setting/estimate/{id}', 'Admin\SettingController@estimateDestroy
 // Sales > Contact messages: the website contact form, beside the owner estimate requests (Sam, 27 Nov 2026)
 Route::get('/sales/messages', 'Admin\ContactMessageController@index');
 Route::post('/sales/messages/{id}/follow-up', 'Admin\ContactMessageController@followUp')->where('id', '[0-9]+');
+Route::delete('/sales/messages/{id}', 'Admin\ContactMessageController@destroy')->where('id', '[0-9]+');
 Route::get('/careers', 'Admin\JobApplicationController@index');
 Route::get('/careers/{id}/cv', 'Admin\JobApplicationController@cv')->where('id', '[0-9]+');
 Route::get('/setting/logs', 'Admin\SettingController@logs');

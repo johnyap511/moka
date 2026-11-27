@@ -16,7 +16,7 @@ class SettingController extends Controller
     public function estimate(Request $request)
     {
         // Owner requests from the website estimate form, newest first, with their follow-up status.
-        $show = in_array($request->show, ['new', 'done'], true) ? $request->show : 'all';
+        $show = in_array($request->show, ['new', 'done', 'all'], true) ? $request->show : 'new';   // opens on what still needs a call
         $estimates = PropertyEstimate::query()
             ->when($show === 'new', fn ($q) => $q->where('status', '!=', PropertyEstimate::STATUS_FOLLOWED_UP))
             ->when($show === 'done', fn ($q) => $q->where('status', PropertyEstimate::STATUS_FOLLOWED_UP))
