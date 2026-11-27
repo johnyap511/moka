@@ -184,7 +184,7 @@
     </div>
     @endif
 
-    <label class="consent"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in', '1') ? 'checked' : '' }}><span>Send me MOKA offers and news by email or WhatsApp. Unsubscribe any time.</span></label>
+    <label class="consent"><input type="checkbox" name="marketing_opt_in" value="1" {{ old('marketing_opt_in') ? 'checked' : '' }}><span>Send me MOKA offers and news by email or WhatsApp. Unsubscribe any time.</span></label>
 
     <button class="btn" type="submit" id="rf-submit">Submit refund request</button>
     <div class="lock"><span>🔒</span><span>Encrypted. Seen only by MOKA Finance. We never ask for OTP, passwords or payment.</span></div>

@@ -298,6 +298,10 @@ input[type="month"]::selection,input[type="date"]::selection{background:transpar
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         Contact messages
     </a>
+    <a href="/admin/sales/lists" class="sidebar-link {{ request()->is('admin/sales/lists*') ? 'active' : '' }}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 100-6M5 13a3 3 0 110-6"/></svg>
+        Newsletter lists
+    </a>
     @endif
 
     @if(admin_can('bookings.view') || admin_can('ezee.view') || admin_can('refunds.view') || admin_can('refunds.feedback'))
